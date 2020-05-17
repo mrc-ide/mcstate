@@ -22,3 +22,9 @@ data <- tmp[, c("step", "incid")]
 colnames(data) <- c("day", "new_cases")
 data
 write.csv(data, file = "inst/example/sir/sir_data.csv", row.names = FALSE)
+
+compare_output <- function(model, data, exp_noise = 1e6) {
+  lambda <- model + rexp(n = length(model), rate = exp_noise)
+  dpois(x = data, lambda = lambda, log = TRUE)
+}
+
