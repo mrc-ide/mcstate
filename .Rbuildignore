@@ -3,3 +3,5 @@
 ^README\.Rmd$
 ^\.travis\.yml$
 ^docs$
+^.*\.Rproj$
+^\.Rproj\.user$
