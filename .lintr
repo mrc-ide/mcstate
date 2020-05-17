@@ -4,5 +4,4 @@ linters: with_defaults(
     todo_comment_linter = NULL,
     cyclocomp_linter = NULL
     )
-exclusions: list("tests/testthat.R", "inst/example/sir/odin_sir.R")
-
+exclusions: list("tests/testthat.R")

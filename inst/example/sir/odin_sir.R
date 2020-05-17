@@ -1,3 +1,4 @@
+# nolint start
 update(S) <- S - n_SI
 update(I) <- I + n_SI - n_IR
 update(R) <- R + n_IR
@@ -20,3 +21,4 @@ beta <- user(0.2)
 gamma <- user(0.1)
 
 N <- S + I + R
+# nolint end
