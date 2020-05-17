@@ -14,6 +14,7 @@ n_SI <- rbinom(S, p_SI)
 n_IR <- rbinom(I, p_IR)
 
 output(incid) <- n_SI
+output(time) <- step
 
 S0 <- user(1000)
 I0 <- user(10)
