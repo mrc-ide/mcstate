@@ -5,6 +5,8 @@ addons:
   apt:
     packages:
       - libnode-dev
+r_github_packages:
+  - mrc-ide/dde
 r_packages:
   - covr
 after_success:
