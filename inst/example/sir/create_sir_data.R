@@ -3,7 +3,7 @@
 sir_generator <- odin::odin('odin_sir.R')
 sir <- sir_generator()
 
-set.seed(1)
+set.seed(1986)
 tmp <- sir$run(step = 1:100)
 
 
@@ -21,4 +21,4 @@ legend('topright', legend = comps, fill = cols, bty = 'n', ncol = 3)
 data <- tmp[, c('step', 'incid')]
 colnames(data) <- c('day', 'new_cases')
 data
-write.csv(data, file = 'case_data.csv', row.names = FALSE)
+write.csv(data, file = 'inst/example/sir_data.csv', row.names = FALSE)
