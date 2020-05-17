@@ -21,4 +21,4 @@ legend("topright", legend = comps, fill = cols, bty = "n", ncol = 3)
 data <- tmp[, c("step", "incid")]
 colnames(data) <- c("day", "new_cases")
 data
-write.csv(data, file = "inst/example/sir_data.csv", row.names = FALSE)
+write.csv(data, file = "inst/example/sir/sir_data.csv", row.names = FALSE)
