@@ -28,3 +28,6 @@ compare_output <- function(model, data, exp_noise = 1e6) {
   dpois(x = data, lambda = lambda, log = TRUE)
 }
 
+set.seed(1)
+tmp <- sir$run(100)
+compare_output(tmp[, "incid"], data$new_cases)
