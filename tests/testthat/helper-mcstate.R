@@ -1,6 +1,7 @@
 example_sir <- function() {
-  model <- odin::odin_(mcstate_file("example/sir/odin_sir.R"), verbose = FALSE)()
-  y0 <- model$initial()
+  model <- odin::odin_(mcstate_file("example/sir/odin_sir.R"), verbose = FALSE)
+  sir <- model()
+  y0 <- sir$initial()
 
   compare <- function(state, output, observed, exp_noise = 1e6) {
     incid_modelled <- output[1, ]
@@ -9,13 +10,11 @@ example_sir <- function() {
     dpois(x = incid_observed, lambda = lambda, log = TRUE)
   }
 
-
   set.seed(1986)
-  y <- model$run(1:100, y0)
+  y <- sir$run(1:100, y0)
   data <- data.frame(step_start = y[, "step"],
                      step_end = y[, "step"] + 1L,
                      incid = y[, "incid"])
-
 
   list(model = model, compare = compare, y0 = y0, data = data)
 }
