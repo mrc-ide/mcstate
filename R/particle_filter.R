@@ -1,0 +1,251 @@
+##' @title Particle filter
+##'
+##' @description Create a \code{particle_filter} object for running
+##'   and interacting with a particle filter.  A higher-level
+##'   interface will be implemented later.
+##'
+##' @export
+##' @examples
+##' # A basic SIR model included in the package:
+##' path <- system.file("example/sir/odin_sir.R", package = "mcstate")
+##' gen <- odin::odin_(path)
+##' sir <- gen()
+##'
+##' # Initial conditions for both the model and particle filter
+##' y0 <- sir$initial()
+##'
+##' # Some data that we will fit to:
+##' y <- sir$run(1:100, y0)
+##' data <- data.frame(step_start = y[, "step"],
+##'                    step_end = y[, "step"] + 1L,
+##'                    incid = y[, "incid"])
+##'
+##' # A comparison function
+##' compare <- function(state, output, observed, exp_noise = 1e6) {
+##'   incid_modelled <- output[1, ]
+##'   incid_observed <- observed$incid
+##'   lambda <- incid_modelled +
+##'     rexp(n = length(incid_modelled), rate = exp_noise)
+##'   dpois(x = incid_observed, lambda = lambda, log = TRUE)
+##' }
+##'
+##' # Construct the particle_filter object:
+##' p <- mcstate::particle_filter$new(data, sir, compare)
+##' p$run(y0, 100, TRUE)
+##'
+##' # Our simulated trajectories, with the "real" data superimposed
+##' matplot(0:100, t(p$history[1, , ]), type = "l",
+##'         xlab = "Time", ylab = "State",
+##'         col = "#ff000022", lty = 1, ylim = range(p$history))
+##' matlines(0:100, t(p$history[2, , ]), col = "#ffff0022", lty = 1)
+##' matlines(0:100, t(p$history[3, , ]), col = "#0000ff22", lty = 1)
+##' matpoints(y[, 1], y[, 2:4], pch = 19, col = c("red", "yellow", "blue"))
+particle_filter <- R6::R6Class(
+  "particle_filter",
+  cloneable = FALSE,
+
+  private = list(
+    data = NULL,
+    steps = NULL,
+    n_steps = NULL,
+    compare = NULL
+  ),
+
+  public = list(
+    ##' @field model The odin model being simulated (cannot be
+    ##' re-bound, but can be modified using \code{$set_user()} etc.
+    model = NULL,
+
+    ##' @field state The final state of the last run of the particle filter
+    state = NULL,
+
+    ##' @field history The history of the last run of the particle filter
+    ##' (if enabled with \code{save_history = TRUE}, otherwise NULL
+    history = NULL,
+
+    ##' Create the particle filter
+    ##'
+    ##' @param data The data set to be used for the particle filter.
+    ##' Must be a \code{\link{data.frame}} with at least columns
+    ##' \code{step_start} and \code{step_end}.  Additional columns are
+    ##' used for comparison with the simulation.
+    ##'
+    ##' @param model A stochastic model to use.  Must be an
+    ##' \code{odin_model} object (i.e., a model that has been created
+    ##' from an \code{odin_generator} object)
+    ##'
+    ##' @param compare A comparison function.  Must take arguments
+    ##' \code{state}, \code{output} and \code{data} as arguments.
+    ##' \code{state} is the simulated model state (a matrix with as
+    ##' many rows as there are state variables and as many columns as
+    ##' there are particles.  \code{output} is the output variables, if
+    ##' the model produces them (\code{NULL} otherwise) and \code{data}
+    ##' is a \code{list} of observed data corresponding to the current
+    ##' time's row in the \code{data} object provided here in the
+    ##' constructor.
+    initialize = function(data, model, compare) {
+      assert_is(model, "odin_model")
+      self$model <- model
+      private$data <- particle_filter_validate_data(data)
+      private$steps <- cbind(vnapply(private$data, "[[", "step_start"),
+                             vnapply(private$data, "[[", "step_end"))
+      private$n_steps <- length(private$data)
+      private$compare <- compare
+      lockBinding("model", self)
+    },
+
+    ##' We probably need some special treatment for the initial case
+    ##' but it's not clear that it belongs here, rather than in some
+    ##' function above this, as state is just provided here as a vector
+    ##'
+    ##' Run the particle filter
+    ##'
+    ##' @param state The initial state. Can either be a vector (same
+    ##' state for all particles) or a matrix with \code{n_particles}
+    ##' columns
+    ##'
+    ##' @param n_particles The number of particles to simulate
+    ##'
+    ##' @param save_history Logical, indicating if the history of all
+    ##' particles should be saved
+    ##'
+    ##' @return A single numeric value representing the log-likelihood
+    ##' (\code{-Inf} if the model is impossible)
+    run = function(state, n_particles, save_history = FALSE) {
+      state <- particle_initial_state(state, n_particles)
+      if (save_history) {
+        history <- array(NA_real_, c(dim(state), private$n_steps + 1))
+        history[, , 1] <- state
+      } else {
+        history <- NULL
+      }
+
+      model <- self$model
+
+      log_likelihood <- 0
+      for (t in seq_len(private$n_steps)) {
+        res <- model$run(private$steps[t, ], state, replicate = n_particles,
+                         use_names = FALSE, return_minimal = TRUE)
+        state <- drop_dim(res, 2)
+        output <- drop_dim(attr(res, "output", exact = TRUE), 2)
+        if (save_history) {
+          history[, , t + 1L] <- state
+        }
+
+        log_weights <- private$compare(state, output, private$data[[t]])
+
+        if (!is.null(log_weights)) {
+          weights <- scale_log_weights(log_weights)
+          log_likelihood <- log_likelihood + weights$average
+          if (weights$average == -Inf) {
+            ## Everything is impossible, so stop here
+            break
+          }
+
+          kappa <- particle_resample(weights$weights)
+          state <- state[, kappa, drop = FALSE]
+          if (save_history) {
+            history <- history[, kappa, ]
+          }
+        }
+      }
+
+      self$history <- history
+      self$state <- state
+
+      log_likelihood
+    },
+
+    ##' Create predicted trajectories, based on the final point of a
+    ##' run with the particle filter
+    ##'
+    ##' @param t The steps to predict from, \emph{offset from the final
+    ##' point}. As a result the first time-point of \code{t} must be 0.
+    ##' The predictions will not however, include that point.
+    ##'
+    ##' @param append Logical, indicating if the predictions should be
+    ##' appended onto the previous history of the simulation.
+    ##'
+    ##' @return A 3d array with dimensions representing (1) the state
+    ##' vector, (2) the particle, (3) time
+    predict = function(t, append = FALSE) {
+      if (is.null(self$state)) {
+        stop("Particle filter has not been run")
+      }
+      if (append && is.null(self$history)) {
+        stop("Can't append without history")
+      }
+      if (t[[1]] != 0) {
+        stop("Expected first 't' element to be zero")
+      }
+      step <- private$data[[private$n_steps]]$step_end + t
+      n_particles <- ncol(self$state)
+      res <- self$model$run(step, self$state, replicate = n_particles,
+                            use_names = FALSE, return_minimal = TRUE)
+      res <- aperm(res, c(1, 3, 2))
+      if (append) {
+        res <- dde_abind(self$history, res)
+      }
+      res
+    }
+  ))
+
+
+particle_filter_validate_data <- function(data) {
+  assert_is(data, "data.frame")
+  msg <- setdiff(c("step_start", "step_end"), names(data))
+  if (length(msg)) {
+    stop("Expected columns missing from data: ",
+         paste(squote(msg), collapse = ", "))
+  }
+  if (nrow(data) < 2) {
+    stop("Expected at least two time windows")
+  }
+  ## TODO: step_start and step_end must be integer-like
+  if (all(data$step_start[-1] != data$step_end[-nrow(data)])) {
+    stop("Expected time windows to be adjacent")
+  }
+
+  ## Processing to make future use nicer:
+  lapply(unname(split(data, seq_len(nrow(data)))), as.list)
+}
+
+
+##' @importFrom stats runif
+particle_resample <- function(weights) {
+  n <- length(weights)
+  u <- runif(1, 0, 1 / n) + seq(0, by = 1 / n, length.out = n)
+  cum_weights <- cumsum(weights / sum(weights))
+  findInterval(u, cum_weights) + 1L
+}
+
+
+scale_log_weights <- function(log_weights) {
+  max_log_weights <- max(log_weights)
+  if (max_log_weights == -Inf) {
+    ## if all log_weights at a time-step are -Inf, this should
+    ## terminate the particle filter and output the marginal
+    ## likelihood estimate as -Inf
+    average <- -Inf
+    weights <- rep(NaN, length(log_weights))
+  } else {
+    ## calculation of weights, there is some rescaling here to avoid
+    ## issues where exp(log_weights) might give computationally zero
+    ## values
+    weights <- exp(log_weights - max_log_weights)
+    average <- log(mean(weights)) + max_log_weights
+  }
+  list(weights = weights, average = average)
+}
+
+
+particle_initial_state <- function(state, n_particles) {
+  if (is.matrix(state)) {
+    if (ncol(state) != n_particles) {
+      stop(sprintf("Expected '%d' columns for initial state", n_particles))
+    }
+  } else {
+    state <- matrix(state, length(state), n_particles)
+  }
+  state
+}

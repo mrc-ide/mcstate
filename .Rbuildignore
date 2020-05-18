@@ -6,3 +6,5 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^\.lintr$
+^TODO\.md$
+^scripts$
