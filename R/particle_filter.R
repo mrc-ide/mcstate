@@ -42,6 +42,8 @@
 ##' matpoints(y[, 1], y[, 2:4], pch = 19, col = c("red", "yellow", "blue"))
 particle_filter <- R6::R6Class(
   "particle_filter",
+  cloneable = FALSE,
+
   private = list(
     data = NULL,
     steps = NULL,
@@ -158,7 +160,7 @@ particle_filter <- R6::R6Class(
     ##' run with the particle filter
     ##'
     ##' @param t The steps to predict from, \emph{offset from the final
-    ##' point}. As a result the first timepoint of \code{t} must be 0.
+    ##' point}. As a result the first time-point of \code{t} must be 0.
     ##' The predictions will not however, include that point.
     ##'
     ##' @param append Logical, indicating if the predictions should be

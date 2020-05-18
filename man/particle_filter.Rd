@@ -64,7 +64,6 @@ Create the particle filter}
 \item \href{#method-new}{\code{particle_filter$new()}}
 \item \href{#method-run}{\code{particle_filter$run()}}
 \item \href{#method-predict}{\code{particle_filter$predict()}}
-\item \href{#method-clone}{\code{particle_filter$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -143,7 +142,7 @@ run with the particle filter
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{t}}{The steps to predict from, \emph{offset from the final
-point}. As a result the first timepoint of \code{t} must be 0.
+point}. As a result the first time-point of \code{t} must be 0.
 The predictions will not however, include that point.}
 
 \item{\code{append}}{Logical, indicating if the predictions should be
@@ -154,22 +153,6 @@ appended onto the previous history of the simulation.}
 \subsection{Returns}{
 A 3d array with dimensions representing (1) the state
 vector, (2) the particle, (3) time
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_filter$clone(deep = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
 }
 }
 }
