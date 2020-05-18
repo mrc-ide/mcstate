@@ -4,7 +4,7 @@ test_that("run particle filter on sir model", {
   dat <- example_sir()
 
   p <- particle_filter$new(dat$data, dat$compare, FALSE)
-  res <- p$run(dat$y0, dat$model, 42)
+  res <- p$run(dat$y0, dat$model(), 42)
   expect_is(res, "numeric")
 
   expect_is(p$state, "matrix")
