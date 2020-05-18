@@ -9,6 +9,7 @@ particle_filter <- R6::R6Class(
 
     state = NULL,
     history = NULL,
+    model = NULL,
 
     initialize = function(data, compare, save_history = TRUE) {
       self$data <- particle_filter_validate_data(data)
@@ -62,16 +63,30 @@ particle_filter <- R6::R6Class(
 
       self$history <- history
       self$state <- state
+      self$model <- model # TODO
 
       log_likelihood
     },
 
-    predict = function(t) {
-      ## TODO: option of combined?
+    predict = function(t, append = FALSE) {
+      if (is.null(self$state)) {
+        stop("Particle filter has not been run")
+      }
+      if (append && is.null(self$history)) {
+        stop("Can't append without history")
+      }
+      if (t[[1]] != 0) {
+        stop("Expected first 't' element to be zero")
+      }
       step <- self$data[[self$n_steps]]$step_end + t
       n_particles <- ncol(self$state)
-      self$model$run(step, self$state, replicate = n_particles,
-                     use_names = FALSE, return_minimal = TRUE)
+      res <- self$model$run(step, self$state, replicate = n_particles,
+                            use_names = FALSE, return_minimal = TRUE)
+      res <- aperm(res, c(1, 3, 2))
+      if (append) {
+        res <- dde_abind(self$history, res)
+      }
+      res
     }
   ))
 

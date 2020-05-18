@@ -101,3 +101,28 @@ test_that("Data validation consecutive time windows", {
     particle_filter_validate_data(d),
     "Expected time windows to be adjacent")
 })
+
+
+test_that("predict", {
+  dat <- example_sir()
+  p <- particle_filter$new(dat$data, dat$compare, TRUE)
+  res <- p$run(dat$y0, dat$model(), 42)
+  t <- 0:10
+
+  set.seed(1)
+  res1 <- p$predict(t)
+  set.seed(1)
+  res2 <- p$predict(t, TRUE)
+
+  expect_equal(dim(res1), c(3, 42, 10))
+  expect_equal(dim(res2), c(3, 42, 111))
+
+  ## history is prepended
+  expect_equal(res2[, , 1:101], p$history)
+
+  ## state is last in that
+  expect_equal(res2[, , 101], p$state)
+
+  ## appended predictions match the raw preductions
+  expect_equal(res2[, , 102:111], res1)
+})
