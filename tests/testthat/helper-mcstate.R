@@ -5,21 +5,23 @@ models <- list(
 example_sir <- function() {
   model <- models$sir
   sir <- model()
-  y0 <- sir$initial()
+  y0 <- sir$initial(0)
 
   compare <- function(state, output, observed, exp_noise = 1e6) {
-    incid_modelled <- output[1, ]
-    incid_observed <- observed$incid
-    lambda <- incid_modelled +
-      rexp(n = length(incid_modelled), rate = exp_noise)
-    dpois(x = incid_observed, lambda = lambda, log = TRUE)
+    incidence_modelled <- output[1, ]
+    incidence_observed <- observed$incidence
+    lambda <- incidence_modelled +
+      rexp(n = length(incidence_modelled), rate = exp_noise)
+    dpois(x = incidence_observed, lambda = lambda, log = TRUE)
   }
 
   set.seed(1986)
-  y <- sir$run(1:100, y0)
-  data <- data.frame(step_start = y[, "step"],
-                     step_end = y[, "step"] + 1L,
-                     incid = y[, "incid"])
+  y <- sir$run(0:400, y0)
 
-  list(model = model, compare = compare, y0 = y0, data = data)
+  i <- y[, "day"] %% 1 == 0
+  data_raw <- as.data.frame(y[i, ])[c("day", "incidence")]
+  data <- particle_filter_data(data_raw, "day", 4)
+
+  list(model = model, compare = compare, y0 = y0,
+       y = y, data_raw = data_raw, data = data)
 }

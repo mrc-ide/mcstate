@@ -8,7 +8,7 @@ test_that("run particle filter on sir model", {
   expect_is(res, "numeric")
 
   expect_is(p$state, "matrix")
-  expect_equal(dim(p$state), c(3, 42))
+  expect_equal(dim(p$state), c(4, 42))
   expect_null(p$history)
 })
 
@@ -115,8 +115,8 @@ test_that("predict", {
   set.seed(1)
   res2 <- p$predict(t, TRUE)
 
-  expect_equal(dim(res1), c(3, 42, 10))
-  expect_equal(dim(res2), c(3, 42, 111))
+  expect_equal(dim(res1), c(4, 42, 10))
+  expect_equal(dim(res2), c(4, 42, 111))
 
   ## history is prepended
   expect_equal(res2[, , 1:101], p$history)
