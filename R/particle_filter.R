@@ -23,12 +23,7 @@ particle_filter <- R6::R6Class(
     ## but it's not clear that it belongs here, rather than in some
     ## function above this, as state is just provided here as a vector
     run = function(state, model, n_particles) {
-      if (is.matrix(state)) {
-        browser()
-      } else {
-        state <- matrix(state, length(state), n_particles)
-      }
-      log_likelihood <- 0
+      state <- particle_initial_state(state, n_particles)
       save_history <- self$save_history
       if (save_history) {
         history <- array(NA_real_, c(dim(state), self$n_steps + 1))
@@ -36,6 +31,8 @@ particle_filter <- R6::R6Class(
       } else {
         history <- NULL
       }
+
+      log_likelihood <- 0
       for (t in seq_len(self$n_steps)) {
         res <- model$run(self$steps[t, ], state, replicate = n_particles,
                          use_names = FALSE, return_minimal = TRUE)
@@ -124,4 +121,16 @@ scale_log_weights <- function(log_weights) {
     average <- log(mean(weights)) + max_log_weights
   }
   list(weights = weights, average = average)
+}
+
+
+particle_initial_state <- function(state, n_particles) {
+  if (is.matrix(state)) {
+    if (ncol(state) != n_particles) {
+      stop(sprintf("Expected '%d' columns for initial state", n_particles))
+    }
+  } else {
+    state <- matrix(state, length(state), n_particles)
+  }
+  state
 }
