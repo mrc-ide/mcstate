@@ -1,35 +1,83 @@
+##' @title Particle filter
+##'
+##' @description Create a \code{particle_filter} object for running
+##'   and interacting with a particle filter.  A higher-level
+##'   interface will be implemented later.
+##'
+##' @export
 particle_filter <- R6::R6Class(
   "particle_filter",
-  public = list(
+  private = list(
     data = NULL,
     steps = NULL,
     n_steps = NULL,
-    compare = NULL,
-    save_history = NULL,
+    compare = NULL
+  ),
 
-    state = NULL,
-    history = NULL,
+  public = list(
+    ##' @field model The odin model being simulated (cannot be
+    ##' re-bound, but can be modified using \code{$set_user()} etc.
     model = NULL,
 
-    initialize = function(data, model, compare, save_history = TRUE) {
+    ##' @field state The final state of the last run of the particle filter
+    state = NULL,
+
+    ##' @field history The history of the last run of the particle filter
+    ##' (if enabled with \code{save_history = TRUE}, otherwise NULL
+    history = NULL,
+
+    ##' Create the particle filter
+    ##'
+    ##' @param data The data set to be used for the particle filter.
+    ##' Must be a \code{\link{data.frame}} with at least columns
+    ##' \code{step_start} and \code{step_end}.  Additional columns are
+    ##' used for comparison with the simulation.
+    ##'
+    ##' @param model A stochastic model to use.  Must be an
+    ##' \code{odin_model} object (i.e., a model that has been created
+    ##' from an \code{odin_generator} object)
+    ##'
+    ##' @param compare A comparison function.  Must take arguments
+    ##' \code{state}, \code{output} and \code{data} as arguments.
+    ##' \code{state} is the simulated model state (a matrix with as
+    ##' many rows as there are state variables and as many columns as
+    ##' there are particles.  \code{output} is the output variables, if
+    ##' the model produces them (\code{NULL} otherwise) and \code{data}
+    ##' is a \code{list} of observed data corresponding to the current
+    ##' time's row in the \code{data} object provided here in the
+    ##' constructor.
+    initialize = function(data, model, compare) {
       assert_is(model, "odin_model")
       self$model <- model
-      self$data <- particle_filter_validate_data(data)
-      self$steps <- cbind(vnapply(self$data, "[[", "step_start"),
-                          vnapply(self$data, "[[", "step_end"))
-      self$n_steps <- length(self$data)
-      self$compare <- compare
-      self$save_history <- save_history
+      private$data <- particle_filter_validate_data(data)
+      private$steps <- cbind(vnapply(private$data, "[[", "step_start"),
+                             vnapply(private$data, "[[", "step_end"))
+      private$n_steps <- length(private$data)
+      private$compare <- compare
+      lockBinding("model", self)
     },
 
-    ## We probably need some special treatment for the initial case
-    ## but it's not clear that it belongs here, rather than in some
-    ## function above this, as state is just provided here as a vector
-    run = function(state, n_particles) {
+    ##' We probably need some special treatment for the initial case
+    ##' but it's not clear that it belongs here, rather than in some
+    ##' function above this, as state is just provided here as a vector
+    ##'
+    ##' Run the particle filter
+    ##'
+    ##' @param state The initial state. Can either be a vector (same
+    ##' state for all particles) or a matrix with \code{n_particles}
+    ##' columns
+    ##'
+    ##' @param n_particles The number of particles to simulate
+    ##'
+    ##' @param save_history Logical, indicating if the history of all
+    ##' particles should be saved
+    ##'
+    ##' @return A single numeric value representing the log-likelihood
+    ##' (\code{-Inf} if the model is impossible)
+    run = function(state, n_particles, save_history = FALSE) {
       state <- particle_initial_state(state, n_particles)
-      save_history <- self$save_history
       if (save_history) {
-        history <- array(NA_real_, c(dim(state), self$n_steps + 1))
+        history <- array(NA_real_, c(dim(state), private$n_steps + 1))
         history[, , 1] <- state
       } else {
         history <- NULL
@@ -38,8 +86,8 @@ particle_filter <- R6::R6Class(
       model <- self$model
 
       log_likelihood <- 0
-      for (t in seq_len(self$n_steps)) {
-        res <- model$run(self$steps[t, ], state, replicate = n_particles,
+      for (t in seq_len(private$n_steps)) {
+        res <- model$run(private$steps[t, ], state, replicate = n_particles,
                          use_names = FALSE, return_minimal = TRUE)
         state <- drop_dim(res, 2)
         output <- drop_dim(attr(res, "output", exact = TRUE), 2)
@@ -47,7 +95,7 @@ particle_filter <- R6::R6Class(
           history[, , t + 1L] <- state
         }
 
-        log_weights <- self$compare(state, output, self$data[[t]])
+        log_weights <- private$compare(state, output, private$data[[t]])
 
         if (!is.null(log_weights)) {
           weights <- scale_log_weights(log_weights)
@@ -71,6 +119,18 @@ particle_filter <- R6::R6Class(
       log_likelihood
     },
 
+    ##' Create predicted trajectories, based on the final point of a
+    ##' run with the particle filter
+    ##'
+    ##' @param t The steps to predict from, \emph{offset from the final
+    ##' point}. As a result the first timepoint of \code{t} must be 0.
+    ##' The predictions will not however, include that point.
+    ##'
+    ##' @param append Logical, indicating if the predictions should be
+    ##' appended onto the previous history of the simulation.
+    ##'
+    ##' @return A 3d array with dimensions representing (1) the state
+    ##' vector, (2) the particle, (3) time
     predict = function(t, append = FALSE) {
       if (is.null(self$state)) {
         stop("Particle filter has not been run")
@@ -81,7 +141,7 @@ particle_filter <- R6::R6Class(
       if (t[[1]] != 0) {
         stop("Expected first 't' element to be zero")
       }
-      step <- self$data[[self$n_steps]]$step_end + t
+      step <- private$data[[private$n_steps]]$step_end + t
       n_particles <- ncol(self$state)
       res <- self$model$run(step, self$state, replicate = n_particles,
                             use_names = FALSE, return_minimal = TRUE)
