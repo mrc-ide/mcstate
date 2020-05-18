@@ -5,6 +5,41 @@
 ##'   interface will be implemented later.
 ##'
 ##' @export
+##' @examples
+##' # A basic SIR model included in the package:
+##' path <- system.file("example/sir/odin_sir.R", package = "mcstate")
+##' gen <- odin::odin_(path)
+##' sir <- gen()
+##'
+##' # Initial conditions for both the model and particle filter
+##' y0 <- sir$initial()
+##'
+##' # Some data that we will fit to:
+##' y <- sir$run(1:100, y0)
+##' data <- data.frame(step_start = y[, "step"],
+##'                    step_end = y[, "step"] + 1L,
+##'                    incid = y[, "incid"])
+##'
+##' # A comparison function
+##' compare <- function(state, output, observed, exp_noise = 1e6) {
+##'   incid_modelled <- output[1, ]
+##'   incid_observed <- observed$incid
+##'   lambda <- incid_modelled +
+##'     rexp(n = length(incid_modelled), rate = exp_noise)
+##'   dpois(x = incid_observed, lambda = lambda, log = TRUE)
+##' }
+##'
+##' # Construct the particle_filter object:
+##' p <- mcstate::particle_filter$new(data, sir, compare)
+##' p$run(y0, 100, TRUE)
+##'
+##' # Our simulated trajectories, with the "real" data superimposed
+##' matplot(0:100, t(p$history[1, , ]), type = "l",
+##'         xlab = "Time", ylab = "State",
+##'         col = "#ff000022", lty = 1, ylim = range(p$history))
+##' matlines(0:100, t(p$history[2, , ]), col = "#ffff0022", lty = 1)
+##' matlines(0:100, t(p$history[3, , ]), col = "#0000ff22", lty = 1)
+##' matpoints(y[, 1], y[, 2:4], pch = 19, col = c("red", "yellow", "blue"))
 particle_filter <- R6::R6Class(
   "particle_filter",
   private = list(
