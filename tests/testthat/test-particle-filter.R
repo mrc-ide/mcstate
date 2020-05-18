@@ -1,4 +1,4 @@
-context("filter")
+context("particle_filter")
 
 test_that("run particle filter on sir model", {
   dat <- example_sir()
