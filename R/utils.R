@@ -17,3 +17,8 @@ drop_dim <- function(x, n) {
   dim(x) <- dim(x)[-n]
   x
 }
+
+
+squote <- function(x) {
+  sprintf("'%s'", x)
+}

@@ -68,3 +68,36 @@ test_that("stop simulation when likelihood is impossible", {
   expect_false(any(is.na(p$history[, , !i])))
   expect_true(all(is.na(p$history[, , i])))
 })
+
+
+test_that("Data validation finds correct columns", {
+  expect_error(
+    particle_filter_validate_data(data.frame(a = 1:10)),
+    "Expected columns missing from data: 'step_start', 'step_end'")
+  expect_error(
+    particle_filter_validate_data(data.frame(step_start = 1:10)),
+    "Expected columns missing from data: 'step_end'")
+  expect_error(
+    particle_filter_validate_data(data.frame(step_end = 1:10)),
+    "Expected columns missing from data: 'step_start'")
+})
+
+
+test_that("Data validation requires two times or more", {
+  d <- data.frame(step_start = 0, step_end = 10)
+  expect_error(
+    particle_filter_validate_data(d),
+    "Expected at least two time windows")
+  expect_error(
+    particle_filter_validate_data(d[integer(0), ]),
+    "Expected at least two time windows")
+})
+
+
+test_that("Data validation consecutive time windows", {
+  d <- data.frame(step_start = c(0, 5, 10),
+                  step_end = c(6, 11, 16))
+  expect_error(
+    particle_filter_validate_data(d),
+    "Expected time windows to be adjacent")
+})
