@@ -47,3 +47,24 @@ test_that("validate particle initial state validates matrix", {
                "Expected '3' columns for initial state")
   expect_identical(particle_initial_state(m, 4), m)
 })
+
+
+test_that("stop simulation when likelihood is impossible", {
+  dat <- example_sir()
+
+  compare <- function(state, output, observed) {
+    ret <- dat$compare(state, output, observed)
+    if (observed$incid > 15) {
+      ret[] <- -Inf
+    }
+    ret
+  }
+
+  p <- particle_filter$new(dat$data, compare, TRUE)
+  res <- p$run(dat$y0, dat$model(), 42)
+  expect_equal(res, -Inf)
+
+  i <- (which(dat$data$incid > 15)[[1]] + 2):101
+  expect_false(any(is.na(p$history[, , !i])))
+  expect_true(all(is.na(p$history[, , i])))
+})
