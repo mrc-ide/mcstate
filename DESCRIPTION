@@ -17,6 +17,8 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Language: en-GB
+URL: https://github.com/mrc-ide/mcstate
+BugReports: https://github.com/mrc-ide/mcstate/issues
 Imports:
     dde (>= 1.0.2),
     future,
