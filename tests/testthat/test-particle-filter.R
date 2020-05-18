@@ -3,8 +3,8 @@ context("particle_filter")
 test_that("run particle filter on sir model", {
   dat <- example_sir()
 
-  p <- particle_filter$new(dat$data, dat$compare, FALSE)
-  res <- p$run(dat$y0, dat$model(), 42)
+  p <- particle_filter$new(dat$data, dat$model(), dat$compare, FALSE)
+  res <- p$run(dat$y0, 42)
   expect_is(res, "numeric")
 
   expect_is(p$state, "matrix")
@@ -15,9 +15,10 @@ test_that("run particle filter on sir model", {
 
 test_that("particle filter likelihood is worse with worse parameters", {
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$compare, FALSE)
-  ll1 <- p$run(dat$y0, dat$model(), 100)
-  ll2 <- p$run(dat$y0, dat$model(gamma = 1, beta = 1), 100)
+  p <- particle_filter$new(dat$data, dat$model(), dat$compare, FALSE)
+  ll1 <- p$run(dat$y0, 100)
+  p$model$set_user(gamma = 1, beta = 1)
+  ll2 <- p$run(dat$y0, 100)
   expect_true(ll1 > ll2)
 })
 
@@ -28,8 +29,8 @@ test_that("can be started with varying initial states", {
   y0 <- rbind(1010 - n, n, 0, deparse.level = 0)
 
   ## If we never return a likelihood, the we never shuffle trajectories...
-  p <- particle_filter$new(dat$data, function(...) NULL, TRUE)
-  ll <- p$run(y0, dat$model(), 20)
+  p <- particle_filter$new(dat$data, dat$model(), function(...) NULL, TRUE)
+  ll <- p$run(y0, 20)
   ## ...and therefore we recover our initial states
   expect_equal(p$history[, , 1], y0)
 })
@@ -60,8 +61,8 @@ test_that("stop simulation when likelihood is impossible", {
     ret
   }
 
-  p <- particle_filter$new(dat$data, compare, TRUE)
-  res <- p$run(dat$y0, dat$model(), 42)
+  p <- particle_filter$new(dat$data, dat$model(), compare, TRUE)
+  res <- p$run(dat$y0, 42)
   expect_equal(res, -Inf)
 
   i <- (which(dat$data$incid > 15)[[1]] + 2):101
@@ -105,8 +106,8 @@ test_that("Data validation consecutive time windows", {
 
 test_that("predict", {
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$compare, TRUE)
-  res <- p$run(dat$y0, dat$model(), 42)
+  p <- particle_filter$new(dat$data, dat$model(), dat$compare, TRUE)
+  res <- p$run(dat$y0, 42)
   t <- 0:10
 
   set.seed(1)

@@ -11,7 +11,9 @@ particle_filter <- R6::R6Class(
     history = NULL,
     model = NULL,
 
-    initialize = function(data, compare, save_history = TRUE) {
+    initialize = function(data, model, compare, save_history = TRUE) {
+      assert_is(model, "odin_model")
+      self$model <- model
       self$data <- particle_filter_validate_data(data)
       self$steps <- cbind(vnapply(self$data, "[[", "step_start"),
                           vnapply(self$data, "[[", "step_end"))
@@ -23,7 +25,7 @@ particle_filter <- R6::R6Class(
     ## We probably need some special treatment for the initial case
     ## but it's not clear that it belongs here, rather than in some
     ## function above this, as state is just provided here as a vector
-    run = function(state, model, n_particles) {
+    run = function(state, n_particles) {
       state <- particle_initial_state(state, n_particles)
       save_history <- self$save_history
       if (save_history) {
@@ -32,6 +34,8 @@ particle_filter <- R6::R6Class(
       } else {
         history <- NULL
       }
+
+      model <- self$model
 
       log_likelihood <- 0
       for (t in seq_len(self$n_steps)) {
@@ -63,7 +67,6 @@ particle_filter <- R6::R6Class(
 
       self$history <- history
       self$state <- state
-      self$model <- model # TODO
 
       log_likelihood
     },
