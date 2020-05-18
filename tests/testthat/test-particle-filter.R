@@ -127,3 +127,26 @@ test_that("predict", {
   ## appended predictions match the raw preductions
   expect_equal(res2[, , 102:111], res1)
 })
+
+
+test_that("can't predict until model has been run", {
+  dat <- example_sir()
+  p <- particle_filter$new(dat$data, dat$model(), dat$compare, FALSE)
+  expect_error(p$predict(0:10), "Particle filter has not been run")
+})
+
+
+test_that("can't append predictions without history", {
+  dat <- example_sir()
+  p <- particle_filter$new(dat$data, dat$model(), dat$compare, FALSE)
+  res <- p$run(dat$y0, 42)
+  expect_error(p$predict(0:10, TRUE), "Can't append without history")
+})
+
+
+test_that("prediction time must start at zero", {
+  dat <- example_sir()
+  p <- particle_filter$new(dat$data, dat$model(), dat$compare, FALSE)
+  res <- p$run(dat$y0, 42)
+  expect_error(p$predict(1:10), "Expected first 't' element to be zero")
+})
