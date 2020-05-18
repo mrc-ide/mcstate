@@ -26,7 +26,7 @@ n_IR <- rbinom(I, p_IR * dt)
 output(incid) <- n_SI
 output(day) <- step * dt
 
-steps_per_day <- user(4, min = 1, integer = TRUE)
+steps_per_day <- user(4)
 S0 <- user(1000)
 I0 <- user(10)
 beta <- user(0.2)
