@@ -8,8 +8,8 @@ mcstate_file <- function(path) {
 }
 
 
-vnapply <- function(X, FUN, ...) {
-  vapply(X, FUN, numeric(1), ...)
+vnapply <- function(x, fun, ...) {
+  vapply(x, fun, numeric(1), ...)
 }
 
 
