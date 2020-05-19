@@ -16,10 +16,9 @@ example_sir <- function() {
   }
 
   set.seed(1986)
-  y <- sir$run(0:400, y0)
+  y <- sir$run(seq(0, 400, by = 4), y0)
 
-  i <- y[, "day"] %% 1 == 0
-  data_raw <- as.data.frame(y[i, ])[c("day", "incidence")]
+  data_raw <- as.data.frame(y)[c("day", "incidence")]
   data <- particle_filter_data(data_raw, "day", 4)
 
   list(model = model, compare = compare, y0 = y0,

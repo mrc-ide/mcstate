@@ -15,7 +15,7 @@
 ##' y0 <- sir$initial(0)
 ##'
 ##' # Some data that we will fit to:
-##' y <- sir$run(seq(0, 400, by = 4))
+##' y <- sir$run(seq(0, 400, by = 4), y0)
 ##' data_raw <- as.data.frame(y)[c("day", "incidence")]
 ##'
 ##' # Convert this into our required format:
