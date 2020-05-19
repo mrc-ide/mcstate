@@ -22,7 +22,7 @@ BugReports: https://github.com/mrc-ide/mcstate/issues
 Imports:
     dde (>= 1.0.2),
     future,
-    odin
+    odin (>= 1.0.3)
 Suggests:
     testthat
 RoxygenNote: 7.0.2
