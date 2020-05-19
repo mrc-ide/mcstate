@@ -26,14 +26,15 @@ test_that("particle filter likelihood is worse with worse parameters", {
 
 
 test_that("can be started with varying initial states", {
-  skip("Reliable crash here")
   dat <- example_sir()
-  n <- sample(10:20, 20, replace = TRUE)
-  y0 <- rbind(1010 - n, n, 0, deparse.level = 0)
+
+  n_particles <- 20
+  n <- sample(10:20, n_particles, replace = TRUE)
+  y0 <- rbind(1010 - n, n, 0, 0, 0, deparse.level = 0)
 
   ## If we never return a likelihood, the we never shuffle trajectories...
   p <- particle_filter$new(dat$data, dat$model(), function(...) NULL)
-  ll <- p$run(y0, 20, TRUE)
+  ll <- p$run(y0, n_particles, TRUE)
   ## ...and therefore we recover our initial states
   expect_equal(p$history[, , 1], y0)
 })
