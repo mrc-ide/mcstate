@@ -249,27 +249,3 @@ particle_initial_state <- function(state, n_particles) {
   }
   state
 }
-
-
-## TODO: Need an offset here
-particle_filter_data <- function(data, time, rate) {
-  assert_is(data, "data.frame")
-  if (!(time %in% names(data))) {
-    stop(sprintf("Did not find column '%s', representing time, in data",
-                 time))
-  }
-  ## assert_integer_like(data[[time]])
-  ## assert_strictly_increasing(data[[time]])
-  ## assert_integer_like(rate)
-  ## data$step_start <- data[[time]] * rate
-  time_start <- data[[time]][-nrow(data)]
-  time_end <- data[[time]][-1]
-
-  ret <- data.frame(time_start = time_start,
-                    time_end = time_end,
-                    step_start = time_start * rate,
-                    step_end = time_end * rate,
-                    data[-1, ][names(data) != time])
-  names(ret)[1:2] <- paste0(time, c("_start", "_end"))
-  ret
-}
