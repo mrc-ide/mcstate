@@ -17,9 +17,7 @@ test_that("particle filter likelihood is worse with worse parameters", {
   dat <- example_sir()
   p <- particle_filter$new(dat$data, dat$model(), dat$compare)
   ll1 <- p$run(dat$y0, 100, FALSE)
-  p <- particle_filter$new(dat$data, dat$model(beta = 1), dat$compare)
-  ## TODO: Why is this failing now?
-  ## p$model$set_user(gamma = 0.1, beta = 0.1)
+  p$model$set_user(gamma = 1, beta = 1)
   ll2 <- p$run(dat$y0, 100)
   expect_true(ll1 > ll2)
 })
