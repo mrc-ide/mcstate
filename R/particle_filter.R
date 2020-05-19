@@ -31,7 +31,7 @@
 ##' }
 ##'
 ##' # Construct the particle_filter object:
-##' p <- mcstate::particle_filter$new(data, sir, compare)
+##' p <- mcstate::particle_filter$new(data, gen, compare)
 ##' p$run(y0, 100, TRUE)
 ##'
 ##' # Our simulated trajectories, with the "real" data superimposed
@@ -49,12 +49,13 @@ particle_filter <- R6::R6Class(
     data = NULL,
     steps = NULL,
     n_steps = NULL,
-    compare = NULL
+    compare = NULL,
+    last_model = NULL
   ),
 
   public = list(
-    ##' @field model The odin model being simulated (cannot be
-    ##' re-bound, but can be modified using \code{$set_user()} etc.
+    ##' @field model The odin model generator being simulated (cannot be
+    ##' re-bound)
     model = NULL,
 
     ##' @field state The final state of the last run of the particle filter
@@ -72,8 +73,8 @@ particle_filter <- R6::R6Class(
     ##' used for comparison with the simulation.
     ##'
     ##' @param model A stochastic model to use.  Must be an
-    ##' \code{odin_model} object (i.e., a model that has been created
-    ##' from an \code{odin_generator} object)
+    ##' \code{odin_generator} object (i.e., something that can be used to
+    ##' create an \code{odin_model}).
     ##'
     ##' @param compare A comparison function.  Must take arguments
     ##' \code{state}, \code{output} and \code{data} as arguments.
@@ -85,7 +86,7 @@ particle_filter <- R6::R6Class(
     ##' time's row in the \code{data} object provided here in the
     ##' constructor.
     initialize = function(data, model, compare) {
-      assert_is(model, "odin_model")
+      assert_is(model, "odin_generator")
       self$model <- model
       private$data <- particle_filter_validate_data(data)
       private$steps <- cbind(vnapply(private$data, "[[", "step_start"),
@@ -110,9 +111,11 @@ particle_filter <- R6::R6Class(
     ##' @param save_history Logical, indicating if the history of all
     ##' particles should be saved
     ##'
+    ##' @param user Optional user parameters to use when creating the model
+    ##'
     ##' @return A single numeric value representing the log-likelihood
     ##' (\code{-Inf} if the model is impossible)
-    run = function(state, n_particles, save_history = FALSE) {
+    run = function(state, n_particles, save_history = FALSE, user = NULL) {
       state <- particle_initial_state(state, n_particles)
       if (save_history) {
         history <- array(NA_real_, c(dim(state), private$n_steps + 1))
@@ -121,7 +124,11 @@ particle_filter <- R6::R6Class(
         history <- NULL
       }
 
-      model <- self$model
+      if (is.null(user)) {
+        model <- self$model()
+      } else {
+        model <- self$model(user = user)
+      }
 
       log_likelihood <- 0
       for (t in seq_len(private$n_steps)) {
@@ -153,6 +160,7 @@ particle_filter <- R6::R6Class(
 
       self$history <- history
       self$state <- state
+      private$last_model <- model
 
       log_likelihood
     },
@@ -181,8 +189,8 @@ particle_filter <- R6::R6Class(
       }
       step <- private$data[[private$n_steps]]$step_end + t
       n_particles <- ncol(self$state)
-      res <- self$model$run(step, self$state, replicate = n_particles,
-                            use_names = FALSE, return_minimal = TRUE)
+      res <- private$last_model$run(step, self$state, replicate = n_particles,
+                                    use_names = FALSE, return_minimal = TRUE)
       res <- aperm(res, c(1, 3, 2))
       if (append) {
         res <- dde_abind(self$history, res)

@@ -3,7 +3,7 @@ context("particle_filter")
 test_that("run particle filter on sir model", {
   dat <- example_sir()
 
-  p <- particle_filter$new(dat$data, dat$model(), dat$compare)
+  p <- particle_filter$new(dat$data, dat$model, dat$compare)
   res <- p$run(dat$y0, 42, FALSE)
   expect_is(res, "numeric")
 
@@ -15,10 +15,9 @@ test_that("run particle filter on sir model", {
 
 test_that("particle filter likelihood is worse with worse parameters", {
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model(), dat$compare)
-  ll1 <- p$run(dat$y0, 100, FALSE)
-  p$model$set_user(gamma = 1, beta = 1)
-  ll2 <- p$run(dat$y0, 100)
+  p <- particle_filter$new(dat$data, dat$model, dat$compare)
+  ll1 <- p$run(dat$y0, 100)
+  ll2 <- p$run(dat$y0, 100, user = list(gamma = 1, beta = 1))
   expect_true(ll1 > ll2)
 })
 
@@ -31,7 +30,7 @@ test_that("can be started with varying initial states", {
   y0 <- rbind(1010 - n, n, 0, 0, 0, deparse.level = 0)
 
   ## If we never return a likelihood, the we never shuffle trajectories...
-  p <- particle_filter$new(dat$data, dat$model(), function(...) NULL)
+  p <- particle_filter$new(dat$data, dat$model, function(...) NULL)
   ll <- p$run(y0, n_particles, TRUE)
   ## ...and therefore we recover our initial states
   expect_equal(p$history[, , 1], y0)
@@ -63,7 +62,7 @@ test_that("stop simulation when likelihood is impossible", {
     ret
   }
 
-  p <- particle_filter$new(dat$data, dat$model(), compare)
+  p <- particle_filter$new(dat$data, dat$model, compare)
   res <- p$run(dat$y0, 42, TRUE)
   expect_equal(res, -Inf)
 
@@ -108,7 +107,7 @@ test_that("Data validation consecutive time windows", {
 
 test_that("predict", {
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model(), dat$compare)
+  p <- particle_filter$new(dat$data, dat$model, dat$compare)
   res <- p$run(dat$y0, 42, TRUE)
   t <- 0:10
 
@@ -133,14 +132,14 @@ test_that("predict", {
 
 test_that("can't predict until model has been run", {
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model(), dat$compare)
+  p <- particle_filter$new(dat$data, dat$model, dat$compare)
   expect_error(p$predict(0:10), "Particle filter has not been run")
 })
 
 
 test_that("can't append predictions without history", {
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model(), dat$compare)
+  p <- particle_filter$new(dat$data, dat$model, dat$compare)
   res <- p$run(dat$y0, 42, FALSE)
   expect_error(p$predict(0:10, TRUE), "Can't append without history")
 })
@@ -148,7 +147,7 @@ test_that("can't append predictions without history", {
 
 test_that("prediction time must start at zero", {
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model(), dat$compare)
+  p <- particle_filter$new(dat$data, dat$model, dat$compare)
   res <- p$run(dat$y0, 42, FALSE)
   expect_error(p$predict(1:10), "Expected first 't' element to be zero")
 })

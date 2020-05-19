@@ -9,7 +9,7 @@ initial(R) <- 0
 
 # Somewhat tedious block here to compute the number infected in this
 # block, the total number infected and the total infected over the
-# course of a clock-time step (steps_per_day)
+# course of a clock-time step (steps_per_day).
 initial(infected) <- 0
 update(infected) <- n_SI
 update(total_infected) <- total_infected + n_SI
