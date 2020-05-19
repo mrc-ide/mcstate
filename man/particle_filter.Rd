@@ -18,15 +18,16 @@ sir <- gen()
 y0 <- sir$initial(0)
 
 # Some data that we will fit to:
-y <- sir$run(1:100, y0)
-data <- data.frame(step_start = y[, "step"],
-                   step_end = y[, "step"] + 1L,
-                   incid = y[, "incid"])
+y <- sir$run(seq(0, 400, by = 4))
+data_raw <- as.data.frame(y)[c("day", "incidence")]
+
+# Convert this into our required format:
+data <- mcstate::particle_filter_data(data_raw, "day", 4)
 
 # A comparison function
 compare <- function(state, output, observed, exp_noise = 1e6) {
   incid_modelled <- output[1, ]
-  incid_observed <- observed$incid
+  incid_observed <- observed$incidence
   lambda <- incid_modelled +
     rexp(n = length(incid_modelled), rate = exp_noise)
   dpois(x = incid_observed, lambda = lambda, log = TRUE)
@@ -37,12 +38,12 @@ p <- mcstate::particle_filter$new(data, sir, compare)
 p$run(y0, 100, TRUE)
 
 # Our simulated trajectories, with the "real" data superimposed
-matplot(0:100, t(p$history[1, , ]), type = "l",
+matplot(data_raw$day, t(p$history[1, , ]), type = "l",
         xlab = "Time", ylab = "State",
         col = "#ff000022", lty = 1, ylim = range(p$history))
-matlines(0:100, t(p$history[2, , ]), col = "#ffff0022", lty = 1)
-matlines(0:100, t(p$history[3, , ]), col = "#0000ff22", lty = 1)
-matpoints(y[, 1], y[, 2:4], pch = 19, col = c("red", "yellow", "blue"))
+matlines(data_raw$day, t(p$history[2, , ]), col = "#ffff0022", lty = 1)
+matlines(data_raw$day, t(p$history[3, , ]), col = "#0000ff22", lty = 1)
+matpoints(y[, "day"], y[, 2:4], pch = 19, col = c("red", "yellow", "blue"))
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
