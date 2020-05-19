@@ -7,7 +7,7 @@ addons:
       - libnode-dev
 r_github_packages:
   - mrc-ide/dde
-  - mrc-ide/odin
+  - mrc-ide/odin@mrc-1610
 r_packages:
   - covr
 after_success:
