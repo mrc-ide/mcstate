@@ -12,7 +12,7 @@
 ##' sir <- gen()
 ##'
 ##' # Initial conditions for both the model and particle filter
-##' y0 <- sir$initial()
+##' y0 <- sir$initial(0)
 ##'
 ##' # Some data that we will fit to:
 ##' y <- sir$run(1:100, y0)
