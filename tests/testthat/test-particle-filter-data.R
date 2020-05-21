@@ -11,7 +11,8 @@ test_that("particle filter data validates time", {
     "Did not find column 'time', representing time, in data")
   expect_error(
     particle_filter_data(d + 0.5, "t", 10),
-    "'t' must be an integer")
+    "'data[[time]]' must be an integer",
+    fixed = TRUE)
   expect_error(
     particle_filter_data(d - 1, "t", 10),
     "The first time must be at least 1 (but was given 0)",

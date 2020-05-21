@@ -55,8 +55,7 @@ particle_filter_data <- function(data, time, rate, initial_time = NULL) {
                  time))
   }
 
-  t <- data[[time]]
-  assert_integer(t)
+  t <- assert_integer(data[[time]])
   if (!all(diff(t) == 1)) {
     ## It's possible that we can make this work ok for irregular time
     ## units, but we make this assumption below when working out the
@@ -68,12 +67,12 @@ particle_filter_data <- function(data, time, rate, initial_time = NULL) {
       "The first time must be at least 1 (but was given %d)", t[[1L]]))
   }
 
-  assert_integer(rate)
+  rate <- assert_integer(rate)
 
   time_end <- t
   time_start <- t - 1L
   if (!is.null(initial_time)) {
-    assert_integer(initial_time)
+    initial_time <- assert_integer(initial_time)
     if (initial_time < 0) {
       stop("'initial_time' must be non-negative")
     }

@@ -14,6 +14,7 @@ assert_integer <- function(x, name = deparse(substitute(x)),
     if (!usable_as_integer) {
       stop(sprintf("'%s' must be an %s", name, what), call. = FALSE)
     }
+    x <- as.integer(round(x))
   }
   invisible(x)
 }

@@ -8,9 +8,9 @@ test_that("assert_is", {
 
 test_that("assert_integer", {
   expect_error(assert_integer(pi), "'pi' must be an integer")
-  expect_silent(assert_integer(1L))
-  expect_silent(assert_integer(1))
-  expect_silent(assert_integer(1 + 1e-15))
+  expect_identical(assert_integer(1L), 1L)
+  expect_identical(assert_integer(1.0), 1L)
+  expect_identical(assert_integer(1 + 1e-15), 1L)
 })
 
 
