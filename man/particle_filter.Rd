@@ -15,40 +15,41 @@ gen <- odin::odin_(path)
 sir <- gen()
 
 # Initial conditions for both the model and particle filter
-y0 <- sir$initial()
+y0 <- sir$initial(0)
 
 # Some data that we will fit to:
-y <- sir$run(1:100, y0)
-data <- data.frame(step_start = y[, "step"],
-                   step_end = y[, "step"] + 1L,
-                   incid = y[, "incid"])
+y <- sir$run(seq(0, 400, by = 4), y0)
+data_raw <- as.data.frame(y)[c("day", "incidence")]
+
+# Convert this into our required format:
+data <- mcstate::particle_filter_data(data_raw[-1, ], "day", 4)
 
 # A comparison function
 compare <- function(state, output, observed, exp_noise = 1e6) {
   incid_modelled <- output[1, ]
-  incid_observed <- observed$incid
+  incid_observed <- observed$incidence
   lambda <- incid_modelled +
     rexp(n = length(incid_modelled), rate = exp_noise)
   dpois(x = incid_observed, lambda = lambda, log = TRUE)
 }
 
 # Construct the particle_filter object:
-p <- mcstate::particle_filter$new(data, sir, compare)
+p <- mcstate::particle_filter$new(data, gen, compare)
 p$run(y0, 100, TRUE)
 
 # Our simulated trajectories, with the "real" data superimposed
-matplot(0:100, t(p$history[1, , ]), type = "l",
+matplot(data_raw$day, t(p$history[1, , ]), type = "l",
         xlab = "Time", ylab = "State",
         col = "#ff000022", lty = 1, ylim = range(p$history))
-matlines(0:100, t(p$history[2, , ]), col = "#ffff0022", lty = 1)
-matlines(0:100, t(p$history[3, , ]), col = "#0000ff22", lty = 1)
-matpoints(y[, 1], y[, 2:4], pch = 19, col = c("red", "yellow", "blue"))
+matlines(data_raw$day, t(p$history[2, , ]), col = "#ffff0022", lty = 1)
+matlines(data_raw$day, t(p$history[3, , ]), col = "#0000ff22", lty = 1)
+matpoints(y[, "day"], y[, 2:4], pch = 19, col = c("red", "yellow", "blue"))
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{model}}{The odin model being simulated (cannot be
-re-bound, but can be modified using \code{$set_user()} etc.}
+\item{\code{model}}{The odin model generator being simulated (cannot be
+re-bound)}
 
 \item{\code{state}}{The final state of the last run of the particle filter}
 
@@ -82,8 +83,8 @@ Must be a \code{\link{data.frame}} with at least columns
 used for comparison with the simulation.}
 
 \item{\code{model}}{A stochastic model to use.  Must be an
-\code{odin_model} object (i.e., a model that has been created
-from an \code{odin_generator} object)}
+\code{odin_generator} object (i.e., something that can be used to
+create an \code{odin_model}).}
 
 \item{\code{compare}}{A comparison function.  Must take arguments
 \code{state}, \code{output} and \code{data} as arguments.
@@ -107,7 +108,7 @@ Run the particle filter}
 \if{html}{\out{<a id="method-run"></a>}}
 \subsection{Method \code{run()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_filter$run(state, n_particles, save_history = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter$run(state, n_particles, save_history = FALSE, user = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -121,6 +122,8 @@ columns}
 
 \item{\code{save_history}}{Logical, indicating if the history of all
 particles should be saved}
+
+\item{\code{user}}{Optional user parameters to use when creating the model}
 }
 \if{html}{\out{</div>}}
 }

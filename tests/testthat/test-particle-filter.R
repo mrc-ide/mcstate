@@ -3,34 +3,35 @@ context("particle_filter")
 test_that("run particle filter on sir model", {
   dat <- example_sir()
 
-  p <- particle_filter$new(dat$data, dat$model(), dat$compare)
+  p <- particle_filter$new(dat$data, dat$model, dat$compare)
   res <- p$run(dat$y0, 42, FALSE)
   expect_is(res, "numeric")
 
   expect_is(p$state, "matrix")
-  expect_equal(dim(p$state), c(3, 42))
+  expect_equal(dim(p$state), c(5, 42))
   expect_null(p$history)
 })
 
 
 test_that("particle filter likelihood is worse with worse parameters", {
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model(), dat$compare)
-  ll1 <- p$run(dat$y0, 100, FALSE)
-  p$model$set_user(gamma = 1, beta = 1)
-  ll2 <- p$run(dat$y0, 100)
+  p <- particle_filter$new(dat$data, dat$model, dat$compare)
+  ll1 <- p$run(dat$y0, 100)
+  ll2 <- p$run(dat$y0, 100, user = list(gamma = 1, beta = 1))
   expect_true(ll1 > ll2)
 })
 
 
 test_that("can be started with varying initial states", {
   dat <- example_sir()
-  n <- sample(10:20, 20, replace = TRUE)
-  y0 <- rbind(1010 - n, n, 0, deparse.level = 0)
+
+  n_particles <- 20
+  n <- sample(10:20, n_particles, replace = TRUE)
+  y0 <- rbind(1010 - n, n, 0, 0, 0, deparse.level = 0)
 
   ## If we never return a likelihood, the we never shuffle trajectories...
-  p <- particle_filter$new(dat$data, dat$model(), function(...) NULL)
-  ll <- p$run(y0, 20, TRUE)
+  p <- particle_filter$new(dat$data, dat$model, function(...) NULL)
+  ll <- p$run(y0, n_particles, TRUE)
   ## ...and therefore we recover our initial states
   expect_equal(p$history[, , 1], y0)
 })
@@ -55,17 +56,17 @@ test_that("stop simulation when likelihood is impossible", {
 
   compare <- function(state, output, observed) {
     ret <- dat$compare(state, output, observed)
-    if (observed$incid > 15) {
+    if (observed$incidence > 15) {
       ret[] <- -Inf
     }
     ret
   }
 
-  p <- particle_filter$new(dat$data, dat$model(), compare)
+  p <- particle_filter$new(dat$data, dat$model, compare)
   res <- p$run(dat$y0, 42, TRUE)
   expect_equal(res, -Inf)
 
-  i <- (which(dat$data$incid > 15)[[1]] + 2):101
+  i <- (which(dat$data$incidence > 15)[[1]] + 2):101
   expect_false(any(is.na(p$history[, , !i])))
   expect_true(all(is.na(p$history[, , i])))
 })
@@ -106,7 +107,7 @@ test_that("Data validation consecutive time windows", {
 
 test_that("predict", {
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model(), dat$compare)
+  p <- particle_filter$new(dat$data, dat$model, dat$compare)
   res <- p$run(dat$y0, 42, TRUE)
   t <- 0:10
 
@@ -115,8 +116,8 @@ test_that("predict", {
   set.seed(1)
   res2 <- p$predict(t, TRUE)
 
-  expect_equal(dim(res1), c(3, 42, 10))
-  expect_equal(dim(res2), c(3, 42, 111))
+  expect_equal(dim(res1), c(5, 42, 10))
+  expect_equal(dim(res2), c(5, 42, 111))
 
   ## history is prepended
   expect_equal(res2[, , 1:101], p$history)
@@ -131,14 +132,14 @@ test_that("predict", {
 
 test_that("can't predict until model has been run", {
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model(), dat$compare)
+  p <- particle_filter$new(dat$data, dat$model, dat$compare)
   expect_error(p$predict(0:10), "Particle filter has not been run")
 })
 
 
 test_that("can't append predictions without history", {
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model(), dat$compare)
+  p <- particle_filter$new(dat$data, dat$model, dat$compare)
   res <- p$run(dat$y0, 42, FALSE)
   expect_error(p$predict(0:10, TRUE), "Can't append without history")
 })
@@ -146,7 +147,7 @@ test_that("can't append predictions without history", {
 
 test_that("prediction time must start at zero", {
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model(), dat$compare)
+  p <- particle_filter$new(dat$data, dat$model, dat$compare)
   res <- p$run(dat$y0, 42, FALSE)
   expect_error(p$predict(1:10), "Expected first 't' element to be zero")
 })
