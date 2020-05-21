@@ -4,7 +4,7 @@
 \alias{particle_filter_data}
 \title{Prepare data for use with particle filter}
 \usage{
-particle_filter_data(data, time, rate)
+particle_filter_data(data, time, rate, initial_time = NULL)
 }
 \arguments{
 \item{data}{A \code{\link{data.frame}} of data}
@@ -15,6 +15,13 @@ integer-like}
 
 \item{rate}{The number of model "steps" that occur between each
 time point (in \code{time}).  This must also be integer-like}
+
+\item{initial_time}{Optionally, an initial time to start the model
+from.  Provide this if you need to burn the model in, or if
+there is a long period with no data at the beginning of the
+simulation.  If provided, it must be a non-negative integer and
+must be at most equal to the first value of the \code{time}
+column, minus 1 (i.e., \code{data[[time]] - 1}).}
 }
 \value{
 A data.frame with new columns \code{step_start} and
@@ -31,9 +38,22 @@ occur.  It takes as input your data to compare against a model,
 including some measure of "time".  We need to convert this time
 into model steps.
 }
+\details{
+We require that the time variable increments in unit steps; this
+may be relaxed in future to even steps, or possibly irregular
+steps, but for now this assumption is required.  We assume that
+the data in the first column is recorded at the end of a period of
+1 time unit.  So if you have in the first column \code{time = 10,
+data = 100} we assume that the model steps from time 9 to to time
+10 and at that period the data has value 100.
+}
 \examples{
 d <- data.frame(day = 5:20, y = runif(16))
 mcstate::particle_filter_data(d, "day", 4)
+
+# If providing an initial day, then the first epoch of simulation
+# will be longer (see the first row)
+mcstate::particle_filter_data(d, "day", 4, 0)
 }
 \author{
 Rich Fitzjohn

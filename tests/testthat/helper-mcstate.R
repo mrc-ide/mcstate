@@ -19,7 +19,7 @@ example_sir <- function() {
   y <- sir$run(seq(0, 400, by = 4), y0)
 
   data_raw <- as.data.frame(y)[c("day", "incidence")]
-  data <- particle_filter_data(data_raw, "day", 4)
+  data <- particle_filter_data(data_raw[-1, ], "day", 4)
 
   list(model = model, compare = compare, y0 = y0,
        y = y, data_raw = data_raw, data = data)
