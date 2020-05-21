@@ -19,7 +19,7 @@
 ##' data_raw <- as.data.frame(y)[c("day", "incidence")]
 ##'
 ##' # Convert this into our required format:
-##' data <- mcstate::particle_filter_data(data_raw, "day", 4)
+##' data <- mcstate::particle_filter_data(data_raw[-1, ], "day", 4)
 ##'
 ##' # A comparison function
 ##' compare <- function(state, output, observed, exp_noise = 1e6) {
