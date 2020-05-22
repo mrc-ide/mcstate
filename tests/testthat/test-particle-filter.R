@@ -151,3 +151,26 @@ test_that("prediction time must start at zero", {
   res <- p$run(dat$y0, 42, FALSE)
   expect_error(p$predict(1:10), "Expected first 't' element to be zero")
 })
+
+
+test_that("Validate steps", {
+  steps <- cbind(0:10 * 10, 1:11 * 10)
+  expect_identical(particle_steps(steps, NULL), steps)
+  expect_identical(particle_steps(steps, 0), steps)
+  res <- particle_steps(steps, 5)
+  expect_identical(res[-1], steps[-1])
+  expect_identical(res[[1]], 5)
+
+  expect_error(
+    particle_steps(steps, -5),
+    "'step_start' must be >= 0 (the first value of data$step_start)",
+    fixed = TRUE)
+  expect_error(
+    particle_steps(steps, 10),
+    "'step_start' must be < 10 (the first value of data$step_end)",
+    fixed = TRUE)
+  expect_error(
+    particle_steps(steps, 20),
+    "'step_start' must be < 10 (the first value of data$step_end)",
+    fixed = TRUE)
+})
