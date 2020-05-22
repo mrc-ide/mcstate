@@ -7,11 +7,14 @@ example_sir <- function() {
   sir <- model()
   y0 <- sir$initial(0)
 
-  compare <- function(state, output, observed, exp_noise = 1e6) {
+  compare <- function(state, output, observed, pars = NULL) {
+    if (is.null(pars)) {
+      pars <- list(exp_noise = 1e6)
+    }
     incidence_modelled <- output[1, ]
     incidence_observed <- observed$incidence
     lambda <- incidence_modelled +
-      rexp(n = length(incidence_modelled), rate = exp_noise)
+      rexp(n = length(incidence_modelled), rate = pars$exp_noise)
     dpois(x = incidence_observed, lambda = lambda, log = TRUE)
   }
 

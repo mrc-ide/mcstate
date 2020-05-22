@@ -17,7 +17,7 @@ test_that("particle filter likelihood is worse with worse parameters", {
   dat <- example_sir()
   p <- particle_filter$new(dat$data, dat$model, dat$compare)
   ll1 <- p$run(dat$y0, 100)
-  ll2 <- p$run(dat$y0, 100, user = list(gamma = 1, beta = 1))
+  ll2 <- p$run(dat$y0, 100, pars_model = list(gamma = 1, beta = 1))
   expect_true(ll1 > ll2)
 })
 
@@ -54,8 +54,8 @@ test_that("validate particle initial state validates matrix", {
 test_that("stop simulation when likelihood is impossible", {
   dat <- example_sir()
 
-  compare <- function(state, output, observed) {
-    ret <- dat$compare(state, output, observed)
+  compare <- function(state, output, observed, pars) {
+    ret <- dat$compare(state, output, observed, pars)
     if (observed$incidence > 15) {
       ret[] <- -Inf
     }

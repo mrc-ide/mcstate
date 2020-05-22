@@ -25,11 +25,11 @@ data_raw <- as.data.frame(y)[c("day", "incidence")]
 data <- mcstate::particle_filter_data(data_raw[-1, ], "day", 4)
 
 # A comparison function
-compare <- function(state, output, observed, exp_noise = 1e6) {
+compare <- function(state, output, observed, pars = NULL) {
   incid_modelled <- output[1, ]
   incid_observed <- observed$incidence
   lambda <- incid_modelled +
-    rexp(n = length(incid_modelled), rate = exp_noise)
+    rexp(n = length(incid_modelled), rate = 1e6)
   dpois(x = incid_observed, lambda = lambda, log = TRUE)
 }
 
@@ -87,14 +87,17 @@ used for comparison with the simulation.}
 create an \code{odin_model}).}
 
 \item{\code{compare}}{A comparison function.  Must take arguments
-\code{state}, \code{output} and \code{data} as arguments.
+\code{state}, \code{output}, \code{data} and \code{pars} as arguments
+(though the arguments may have different names).
 \code{state} is the simulated model state (a matrix with as
 many rows as there are state variables and as many columns as
 there are particles.  \code{output} is the output variables, if
 the model produces them (\code{NULL} otherwise) and \code{data}
 is a \code{list} of observed data corresponding to the current
 time's row in the \code{data} object provided here in the
-constructor.
+constructor.  \code{pars} is any additional parameters passed
+through to the comparison function (via the \code{pars_compare}
+argument to \code{$run}).
 We probably need some special treatment for the initial case
 but it's not clear that it belongs here, rather than in some
 function above this, as state is just provided here as a vector
@@ -108,7 +111,14 @@ Run the particle filter}
 \if{html}{\out{<a id="method-run"></a>}}
 \subsection{Method \code{run()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_filter$run(state, n_particles, save_history = FALSE, user = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter$run(
+  state,
+  n_particles,
+  save_history = FALSE,
+  pars_model = NULL,
+  pars_compare = NULL,
+  step_start = NULL
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -123,7 +133,17 @@ columns}
 \item{\code{save_history}}{Logical, indicating if the history of all
 particles should be saved}
 
-\item{\code{user}}{Optional user parameters to use when creating the model}
+\item{\code{pars_model}}{Optional parameters to use when creating the
+model (\code{NULL} if the model should be default-constructed).}
+
+\item{\code{pars_compare}}{Optional parameters to use when applying
+the \code{compare} function.  These parameters will be passed as
+the 4th argument to \code{compare}.}
+
+\item{\code{step_start}}{Optional first step to start at.  If provided,
+this must be within the range of the first epoch implied in your
+\code{data} provided to the constructor (i.e., not less than the
+first element of \code{step_start} and less than \code{step_end})}
 }
 \if{html}{\out{</div>}}
 }

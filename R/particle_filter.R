@@ -22,11 +22,11 @@
 ##' data <- mcstate::particle_filter_data(data_raw[-1, ], "day", 4)
 ##'
 ##' # A comparison function
-##' compare <- function(state, output, observed, exp_noise = 1e6) {
+##' compare <- function(state, output, observed, pars = NULL) {
 ##'   incid_modelled <- output[1, ]
 ##'   incid_observed <- observed$incidence
 ##'   lambda <- incid_modelled +
-##'     rexp(n = length(incid_modelled), rate = exp_noise)
+##'     rexp(n = length(incid_modelled), rate = 1e6)
 ##'   dpois(x = incid_observed, lambda = lambda, log = TRUE)
 ##' }
 ##'
@@ -77,14 +77,17 @@ particle_filter <- R6::R6Class(
     ##' create an \code{odin_model}).
     ##'
     ##' @param compare A comparison function.  Must take arguments
-    ##' \code{state}, \code{output} and \code{data} as arguments.
+    ##' \code{state}, \code{output}, \code{data} and \code{pars} as arguments
+    ##' (though the arguments may have different names).
     ##' \code{state} is the simulated model state (a matrix with as
     ##' many rows as there are state variables and as many columns as
     ##' there are particles.  \code{output} is the output variables, if
     ##' the model produces them (\code{NULL} otherwise) and \code{data}
     ##' is a \code{list} of observed data corresponding to the current
     ##' time's row in the \code{data} object provided here in the
-    ##' constructor.
+    ##' constructor.  \code{pars} is any additional parameters passed
+    ##' through to the comparison function (via the \code{pars_compare}
+    ##' argument to \code{$run}).
     initialize = function(data, model, compare) {
       assert_is(model, "odin_generator")
       self$model <- model
@@ -111,11 +114,23 @@ particle_filter <- R6::R6Class(
     ##' @param save_history Logical, indicating if the history of all
     ##' particles should be saved
     ##'
-    ##' @param user Optional user parameters to use when creating the model
+    ##' @param pars_model Optional parameters to use when creating the
+    ##' model (\code{NULL} if the model should be default-constructed).
+    ##'
+    ##' @param pars_compare Optional parameters to use when applying
+    ##' the \code{compare} function.  These parameters will be passed as
+    ##' the 4th argument to \code{compare}.
+    ##'
+    ##' @param step_start Optional first step to start at.  If provided,
+    ##' this must be within the range of the first epoch implied in your
+    ##' \code{data} provided to the constructor (i.e., not less than the
+    ##' first element of \code{step_start} and less than \code{step_end})
     ##'
     ##' @return A single numeric value representing the log-likelihood
     ##' (\code{-Inf} if the model is impossible)
-    run = function(state, n_particles, save_history = FALSE, user = NULL) {
+    run = function(state, n_particles, save_history = FALSE,
+                   pars_model = NULL, pars_compare = NULL,
+                   step_start = NULL) {
       state <- particle_initial_state(state, n_particles)
       if (save_history) {
         history <- array(NA_real_, c(dim(state), private$n_steps + 1))
@@ -124,15 +139,17 @@ particle_filter <- R6::R6Class(
         history <- NULL
       }
 
-      if (is.null(user)) {
+      if (is.null(pars_model)) {
         model <- self$model()
       } else {
-        model <- self$model(user = user)
+        model <- self$model(user = pars_model)
       }
+      compare <- private$compare
+      steps <- particle_steps(private$steps, step_start)
 
       log_likelihood <- 0
       for (t in seq_len(private$n_steps)) {
-        res <- model$run(private$steps[t, ], state, replicate = n_particles,
+        res <- model$run(steps[t, ], state, replicate = n_particles,
                          use_names = FALSE, return_minimal = TRUE)
         state <- drop_dim(res, 2)
         output <- drop_dim(attr(res, "output", exact = TRUE), 2)
@@ -140,7 +157,7 @@ particle_filter <- R6::R6Class(
           history[, , t + 1L] <- state
         }
 
-        log_weights <- private$compare(state, output, private$data[[t]])
+        log_weights <- compare(state, output, private$data[[t]], pars_compare)
 
         if (!is.null(log_weights)) {
           weights <- scale_log_weights(log_weights)
