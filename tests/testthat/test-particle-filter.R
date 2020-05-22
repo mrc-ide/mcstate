@@ -174,3 +174,12 @@ test_that("Validate steps", {
     "'step_start' must be < 10 (the first value of data$step_end)",
     fixed = TRUE)
 })
+
+
+test_that("Control the comparison function", {
+  dat <- example_sir()
+  p <- particle_filter$new(dat$data, dat$model, dat$compare)
+  ll1 <- p$run(dat$y0, 42, FALSE, pars_compare = list(exp_noise = 1))
+  ll2 <- p$run(dat$y0, 42, FALSE, pars_compare = list(exp_noise = 0.01))
+  expect_true(ll2 < ll1)
+})
