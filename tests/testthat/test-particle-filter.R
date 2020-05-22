@@ -183,3 +183,28 @@ test_that("Control the comparison function", {
   ll2 <- p$run(dat$y0, 42, FALSE, pars_compare = list(exp_noise = 0.01))
   expect_true(ll2 < ll1)
 })
+
+
+test_that("Control the starting point of the simulation", {
+  dat <- example_sir()
+  data <- dat$data
+  offset <- 400
+  data[c("step_start", "step_end")] <-
+    data[c("step_start", "step_end")] + offset
+  data$step_start[[1]] <- 0
+
+  ## The usual version:
+  p1 <- particle_filter$new(dat$data, dat$model, dat$compare)
+  set.seed(1)
+  ll1 <- p1$run(dat$y0, 42)
+
+  ## Tuning the start date
+  p2 <- particle_filter$new(data, dat$model, dat$compare)
+  set.seed(1)
+  ll2 <- p2$run(dat$y0, 42, step_start = offset)
+  expect_identical(ll1, ll2)
+
+  ## Running from the beginning is much worse:
+  ll3 <- p2$run(dat$y0, 42, step_start = 0)
+  expect_true(ll3 < ll1)
+})
