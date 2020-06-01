@@ -182,6 +182,40 @@ particle_filter <- R6::R6Class(
       log_likelihood
     },
 
+    ##' Run the particle filter, having spread parameters out
+    ##'
+    ##' The interface here might change!
+    ##'
+    ##' @param state The initial state. Can either be a vector (same
+    ##' state for all particles) or a matrix with \code{n_particles}
+    ##' columns
+    ##'
+    ##' @param n_particles The number of particles to simulate
+    ##'
+    ##' @param pars A list of parameters
+    ##'
+    ##' @param index A parameter index
+    ##'
+    ##' @param save_history Logical, indicating if the history of all
+    ##' particles should be saved
+    run2 = function(state, n_particles, pars, index, save_history = FALSE) {
+      step_start <- pars_model <- pars_compare <- NULL
+      if (length(index$step_start) > 0) {
+        step_start <- pars[[index$step_start]]
+      }
+
+      if (length(index$pars_model) > 0) {
+        pars_model <- pars[index$pars_model]
+      }
+
+      if (length(index$pars_compare) > 0) {
+        pars_compare <- pars[index$pars_compare]
+      }
+
+      self$run(state, n_particles, save_history,
+               pars_model, pars_compare, step_start)
+    },
+
     ##' Create predicted trajectories, based on the final point of a
     ##' run with the particle filter
     ##'
