@@ -1,8 +1,53 @@
-grid_search <- function(state, range, filter, n_particles) {
+##' Run a grid search of the particle filter over two parameters
+##'
+##' @title Grid search over two parameters
+##' state, range, filter, n_particles, tolerance=0.0001
+##'
+##' @param state Initial state
+##'
+##' @param range \code{data.frame} describing the parameters to search.
+##'  Must have columns name, min, max, n and target
+##'
+##' @param filter A \code{particle_filter} object to run
+##'
+##' @param n_particles Number of particles. Positive Integer. Default = 100
+##'
+##' @param tolerance Check around edges of the probability matrix
+##' 
+##' @return List of beta and start date grid values, and
+##'   normalised probabilities at each point
+##'
+##' @export
+grid_search <- function(state, range, filter, n_particles, tolerance=1E-2) {
   vars <- grid_search_validate_range(range)
 
-  res <- vnapply(seq_len(nrow(vars$expanded)), function(i)
+  # Run the search, which returns a log-likelihood
+  flat_log_ll <- vnapply(seq_len(nrow(vars$expanded)), function(i)
     filter$run2(state, n_particles, vars$expanded[i, ], vars$index))
+  mat_log_ll <- matrix(
+    flat_log_ll,
+    nrow = length(vars$variables[[1]]),
+    ncol = length(vars$variables[[2]]),
+    byrow = FALSE
+  )
+  
+  # Exponentiate elements and normalise to 1 to get probabilities
+  prob_matrix <- exp(mat_log_ll)
+  renorm_mat_LL <- prob_matrix / sum(prob_matrix)
+  
+  if (zero_boundary(renorm_mat_LL, tolerance = tolerance)) {
+    warning("Edges of the probability matrix not zero, check search range")
+  }
+  
+  results <- list(
+    x = vars$variables[1],
+    y = vars$variables[2],
+    mat_log_ll = mat_log_ll,
+    renorm_mat_LL = renorm_mat_LL
+  )
+  
+  class(results) <- "grid_scan"
+  results
 }
 
 
@@ -17,7 +62,7 @@ grid_search_validate_range <- function(range) {
   if (length(err) > 0L) {
     stop(sprintf("Invalid target %s: must be one of %s",
                  paste(squote(err), collapse = ", "),
-                 paste(squote(target), collapse = ", ")))
+                 paste(squote(range$target), collapse = ", ")))
   }
 
   variables <- Map(seq, range$min, range$max, length.out = range$n)
@@ -34,4 +79,65 @@ grid_search_validate_range <- function(range) {
        variables = variables,
        expanded = expanded,
        index = index)
+}
+
+##' @export
+plot.grid_scan <- function(x, ..., what = "likelihood", title = NULL) {
+  if (what == "likelihood") {
+    graphics::image(
+      x = x$x[[1]], y = x$y[[1]], z = x$mat_log_ll,
+      xlab = names(x$x), ylab = names(x$y), main = title
+    )
+  } else if (what == "probability") {
+    graphics::image(
+      x = x$x[[1]], y = x$y[[1]], z = x$renorm_mat_LL,
+      xlab = names(x$x), ylab = names(x$y), main = title
+    )
+  }
+}
+
+# from https://stackoverflow.com/a/14502298
+##' Extract elements from an array when its dimensions are not known
+##' in advance
+##'
+##'
+##' @param x array
+##' @param dimension which dimension to pull
+##' @param value along the dimension \code{dimension}, which value to
+##' extract.
+##' @param drop logical. If TRUE the result is coerced to the lowest
+##' possible dimension. Recommend setting this to FALSE
+##' @return the appropriate edge of the aray
+##' @details As an axample, if the dimensions of x are 3, 4, 5 then
+##' \code{index_array(x, dimension = 1, value = 2)} will return
+##' x[2, , ]
+index_array <- function(x, dimension, value, drop = FALSE) {
+  # Create list representing arguments supplied to [
+  # bquote() creates an object corresponding to a missing argument
+  indices <- rep(list(bquote()), length(dim(x)))
+  indices[[dimension]] <- value
+  
+  # Generate the call to [
+  call <- as.call(c(
+    list(as.name("["), quote(x)),
+    indices,
+    list(drop = drop)
+  ))
+  # Print it, just to make it easier to see what's going on
+  
+  # Finally, evaluate it
+  eval(call)
+}
+
+zero_boundary <- function(array, tolerance) {
+  correct_range <- 1
+  ndims <- length(dim(array))
+  for (dimension in seq_len(ndims)) {
+    correct_range <- correct_range &&
+      (
+        all(index_array(array, dimension, 1) < tolerance &
+          all(index_array(array, dimension, dim(array)[dimension]) < tolerance))
+      )
+  }
+  correct_range
 }
