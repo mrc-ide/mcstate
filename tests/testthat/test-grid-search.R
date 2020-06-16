@@ -16,10 +16,7 @@ test_that("Simple grid search with SIR model", {
   
   res <- grid_search(state, range, p, n_particles)
   
-  expect_is(res, "grid_scan")
-  #expect_true("inputs" %in% names(scan_results))
-  #expect_setequal(names(scan_results$inputs),
-  #                c("model", "model_params", "pars_obs", "data"))
+  expect_is(res, "mcstate_scan")
   
   beta_grid <- seq(range$min[1], range$max[1], length.out = range$n[1])
   gamma_grid <- seq(range$min[2], range$max[2], length.out = range$n[2])

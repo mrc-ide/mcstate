@@ -1,7 +1,6 @@
 ##' Run a grid search of the particle filter over two parameters
 ##'
 ##' @title Grid search over two parameters
-##' state, range, filter, n_particles, tolerance=0.0001
 ##'
 ##' @param state Initial state
 ##'
@@ -40,13 +39,14 @@ grid_search <- function(state, range, filter, n_particles, tolerance=1E-2) {
   }
   
   results <- list(
+    vars = vars,
     x = vars$variables[1],
     y = vars$variables[2],
     mat_log_ll = mat_log_ll,
     renorm_mat_LL = renorm_mat_LL
   )
   
-  class(results) <- "grid_scan"
+  class(results) <- "mcstate_scan"
   results
 }
 
@@ -82,16 +82,16 @@ grid_search_validate_range <- function(range) {
 }
 
 ##' @export
-plot.grid_scan <- function(x, ..., what = "likelihood", title = NULL) {
+plot.mcstate_scan <- function(x, ..., what = "likelihood", title = NULL) {
   if (what == "likelihood") {
     graphics::image(
-      x = x$x[[1]], y = x$y[[1]], z = x$mat_log_ll,
-      xlab = names(x$x), ylab = names(x$y), main = title
+      x = x$vars$variables[[1]], y = x$vars$variables[[1]], z = x$mat_log_ll,
+      xlab = names(x$vars$variables), ylab = names(x$vars$variables), main = title
     )
   } else if (what == "probability") {
     graphics::image(
-      x = x$x[[1]], y = x$y[[1]], z = x$renorm_mat_LL,
-      xlab = names(x$x), ylab = names(x$y), main = title
+      x = x$vars$variables[[1]], y = x$vars$variables[[1]], z = x$renorm_mat_LL,
+      xlab = names(x$vars$variables), ylab = names(x$vars$variables), main = title
     )
   }
 }
