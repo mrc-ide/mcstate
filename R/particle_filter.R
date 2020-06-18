@@ -89,7 +89,10 @@ particle_filter <- R6::R6Class(
     ##' through to the comparison function (via the \code{pars_compare}
     ##' argument to \code{$run}).
     initialize = function(data, model, compare) {
-      assert_is(attr(model, which="name", exact=TRUE), "dust_generator")
+      if (attr(model, which="name", exact=TRUE) != "dust_generator") {
+        stop("'model' must be a dust_generator")
+      }
+
       self$model <- model
       private$data <- particle_filter_validate_data(data)
       private$steps <- cbind(vnapply(private$data, "[[", "step_start"),
@@ -130,18 +133,19 @@ particle_filter <- R6::R6Class(
     ##' (\code{-Inf} if the model is impossible)
     run = function(model_data, n_particles, save_history = FALSE,
                    pars_compare = NULL, step_start = NULL,
-                   run_params) {
+                   run_params = NULL) {
 
       compare <- private$compare
       steps <- particle_steps(private$steps, step_start)
       run_params <- validate_dust_params(run_params)
 
       model <- self$model$new(data = model_data, step = steps[1, 1], n_particles = n_particles,
-                              n_threads = run_params["n_threads"],
-                              n_generators = run_params["n_generators"],
-                              seed = run_params["seed"])
+                              n_threads = run_params[["n_threads"]],
+                              n_generators = run_params[["n_generators"]],
+                              seed = run_params[["seed"]])
 
-      state <- model$state
+      browser()
+      state <- model$state()
       if (save_history) {
         history <- array(NA_real_, c(dim(state), private$n_steps + 1))
         history[, , 1] <- state
@@ -151,7 +155,7 @@ particle_filter <- R6::R6Class(
 
       log_likelihood <- 0
       for (t in seq_len(private$n_steps)) {
-        model$run(steps[t, ])
+        model$run(steps[t, 2])
         state <- model$state()
         log_weights <- compare(state, private$data[[t]], pars_compare)
         if (save_history) {
@@ -332,21 +336,28 @@ particle_steps <- function(steps, step_start) {
 }
 
 validate_dust_params <- function(run_params) {
-  if (run_params['n_threads'] == NULL ||
-      !assert_integer(run_params['n_threads']) ||
-      run_params['n_threads'] < 1) {
-    run_params['n_threads'] <- 1
-  }
+  if (is.null(run_params)) {
+    run_params <- list(n_threads = 1, n_generators = 1, seed = 1)
+  } else {
+    if (!('n_threads' %in% names(run_params)) || is.null(run_params['n_threads']) ||
+        run_params['n_threads'] < 1) {
+      run_params['n_threads'] <- 1
+    } else if (!is.integer(run_params['n_threads'])) {
+      run_params['n_threads'] <- as.integer(round(run_params['n_threads']))
+    }
 
-  if (run_params['seed'] == NULL ||
-      !assert_integer(run_params['seed'])) {
-    run_params['seed'] <- 1
-  }
+    if (!('seed' %in% names(run_params)) || is.null(run_params['seed'])) {
+      run_params['seed'] <- 1
+    } else if (!is.integer(run_params['seed'])) {
+      run_params['seed'] <- as.integer(round(run_params['seed']))
+    }
 
-  if (run_params['n_generators'] == NULL ||
-      !assert_integer(run_params['n_generators']) ||
-      run_params['n_generators'] < run_params['n_threads']) {
-    run_params['n_generators'] <- run_params['n_threads']
+    if (!('n_generators' %in% names(run_params)) || is.null(run_params['n_generators']) ||
+        run_params['n_generators'] < run_params['n_threads']) {
+      run_params['n_generators'] <- run_params['n_threads']
+    } else if (!is.integer(run_params['n_generators'])) {
+      run_params['n_generators'] <- as.integer(run_params['n_generators'])
+    }
   }
   run_params
 }

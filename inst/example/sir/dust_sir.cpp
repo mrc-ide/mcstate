@@ -47,18 +47,25 @@ private:
 };
 
 #include <Rcpp.h>
+
+inline double get_or_set_default(Rcpp::List& data, const std::string& name, double default_value) {
+    double value = default_value;
+    if (data.containsElementNamed(name.c_str())) {
+        value = data[name];
+    }
+    return value;
+}
+
 template <>
 sir::init_t dust_data<sir>(Rcpp::List data) {
-  double initial_R = 0.0;
-  double beta = 0.2;
-  double gamma = 0.1;
-  double I0 = 10.0;
-  double S0 = 1000.0;
-  double steps_per_day = 4;
-  // Some boilerplate needed here in order to set user parameters
-  // given a default that exists, though we'll never be using it like
-  // that?
-  double dt = 1 / (double) steps_per_day;
+  double initial_R = get_or_set_default(data, "initial_R", 0.0);
+  double beta = get_or_set_default(data, "beta", 0.2);
+  double gamma = get_or_set_default(data, "gamma", 0.1);
+  double I0 = get_or_set_default(data, "initial_I", 10.0);
+  double S0 = get_or_set_default(data, "initial_S", 1000.0);
+  double steps_per_day = get_or_set_default(data, "steps_per_day", 4.0);
+
+  double dt = 1 / steps_per_day;
   double initial_I = I0;
   double initial_S = S0;
   double p_IR = 1 - std::exp(-(gamma));

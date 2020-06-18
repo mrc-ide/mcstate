@@ -30,7 +30,7 @@ example_sir <- function() {
     incidence[i] <- state_start[1,1] - state_end[1,1]
   }
 
-  data_raw <- as.data.frame(day = day, incidence = incidence)
+  data_raw <- data.frame(day = day, incidence = incidence)
   data <- particle_filter_data(data_raw[-1, ], "day", 4)
 
   list(model = model, compare = compare, y0 = y0,

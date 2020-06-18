@@ -2,13 +2,12 @@ context("particle_filter")
 
 test_that("run particle filter on sir model", {
   dat <- example_sir()
-
   p <- particle_filter$new(dat$data, dat$model, dat$compare)
-  res <- p$run(dat$y0, 42, FALSE)
+  res <- p$run(NULL, 42, FALSE, save_history = TRUE)
   expect_is(res, "numeric")
 
   expect_is(p$state, "matrix")
-  expect_equal(dim(p$state), c(5, 42))
+  expect_equal(dim(p$state), c(3, 42))
   expect_null(p$history)
 })
 
@@ -16,8 +15,8 @@ test_that("run particle filter on sir model", {
 test_that("particle filter likelihood is worse with worse parameters", {
   dat <- example_sir()
   p <- particle_filter$new(dat$data, dat$model, dat$compare)
-  ll1 <- p$run(dat$y0, 100)
-  ll2 <- p$run(dat$y0, 100, pars_model = list(gamma = 1, beta = 1))
+  ll1 <- p$run(NULL, 100)
+  ll2 <- p$run(model_data = list(gamma = 1, beta = 1), 100)
   expect_true(ll1 > ll2)
 })
 
