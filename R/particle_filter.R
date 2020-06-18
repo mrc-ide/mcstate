@@ -60,7 +60,7 @@ particle_filter <- R6::R6Class(
 
     ##' @field state The final state of the last run of the particle filter
     state = NULL,
-
+    
     ##' @field history The history of the last run of the particle filter
     ##' (if enabled with \code{save_history = TRUE}, otherwise NULL
     history = NULL,
@@ -144,7 +144,6 @@ particle_filter <- R6::R6Class(
                               n_generators = run_params[["n_generators"]],
                               seed = run_params[["seed"]])
 
-      browser()
       state <- model$state()
       if (save_history) {
         history <- array(NA_real_, c(dim(state), private$n_steps + 1))
@@ -154,10 +153,11 @@ particle_filter <- R6::R6Class(
       }
 
       log_likelihood <- 0
+      prev_state <- model$state()
       for (t in seq_len(private$n_steps)) {
         model$run(steps[t, 2])
         state <- model$state()
-        log_weights <- compare(state, private$data[[t]], pars_compare)
+        log_weights <- compare(state, prev_state, private$data[[t]], pars_compare)
         if (save_history) {
           history[, , t + 1L] <- state
         }
@@ -172,6 +172,7 @@ particle_filter <- R6::R6Class(
 
           kappa <- particle_resample(weights$weights)
           model$reorder(kappa)
+          prev_state <- state[, kappa]
           if (save_history) {
             history <- history[, kappa, ]
           }
@@ -244,10 +245,10 @@ particle_filter <- R6::R6Class(
       }
       step <- private$data[[private$n_steps]]$step_end + t
 
-      res <- array(NA, dim = c(dim(self$state), length(step)))
-      for (t in step) {
-        private$last_model$run(step)
-        res[,t] <- private$last_model$state()
+      res <- array(NA_real_, dim = c(dim(self$state), length(step) - 1))
+      for (t in step[-1]) {
+        private$last_model$run(t)
+        res[, , t - step[1]] <- private$last_model$state()
       }
       if (append) {
         res <- dde_abind(self$history, res)
@@ -305,18 +306,6 @@ scale_log_weights <- function(log_weights) {
 }
 
 
-particle_initial_state <- function(state, n_particles) {
-  if (is.matrix(state)) {
-    if (ncol(state) != n_particles) {
-      stop(sprintf("Expected '%d' columns for initial state", n_particles))
-    }
-  } else {
-    state <- matrix(state, length(state), n_particles)
-  }
-  state
-}
-
-
 particle_steps <- function(steps, step_start) {
   if (!is.null(step_start)) {
     assert_integer(step_start)
@@ -334,6 +323,7 @@ particle_steps <- function(steps, step_start) {
   }
   steps
 }
+
 
 validate_dust_params <- function(run_params) {
   if (is.null(run_params)) {

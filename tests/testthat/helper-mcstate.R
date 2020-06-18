@@ -8,11 +8,11 @@ example_sir <- function() {
                    n_particles = 1)
   y0 <- sir$state()
 
-  compare <- function(output, observed, pars = NULL) {
+  compare <- function(state, prev_state, observed, pars = NULL) {
     if (is.null(pars)) {
       pars <- list(exp_noise = 1e6)
     }
-    incidence_modelled <- output[1, ]
+    incidence_modelled <- prev_state[1,] - state[1,]
     incidence_observed <- observed$incidence
     lambda <- incidence_modelled +
       rexp(n = length(incidence_modelled), rate = pars$exp_noise)
