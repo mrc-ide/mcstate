@@ -54,7 +54,7 @@ particle_filter <- R6::R6Class(
   ),
 
   public = list(
-    ##' @field model The odin model generator being simulated (cannot be
+    ##' @field model The dust model generator being simulated (cannot be
     ##' re-bound)
     model = NULL,
 
@@ -89,7 +89,7 @@ particle_filter <- R6::R6Class(
     ##' through to the comparison function (via the \code{pars_compare}
     ##' argument to \code{$run}).
     initialize = function(data, model, compare) {
-      assert_is(model, "odin_generator")
+      assert_is(attr(model, which="name", exact=TRUE), "dust_generator")
       self$model <- model
       private$data <- particle_filter_validate_data(data)
       private$steps <- cbind(vnapply(private$data, "[[", "step_start"),
@@ -128,10 +128,20 @@ particle_filter <- R6::R6Class(
     ##'
     ##' @return A single numeric value representing the log-likelihood
     ##' (\code{-Inf} if the model is impossible)
-    run = function(state, n_particles, save_history = FALSE,
-                   pars_model = NULL, pars_compare = NULL,
-                   step_start = NULL) {
-      state <- particle_initial_state(state, n_particles)
+    run = function(model_data, n_particles, save_history = FALSE,
+                   pars_compare = NULL, step_start = NULL,
+                   run_params) {
+
+      compare <- private$compare
+      steps <- particle_steps(private$steps, step_start)
+      run_params <- validate_dust_params(run_params)
+
+      model <- self$model$new(data = model_data, step = steps[1, 1], n_particles = n_particles,
+                              n_threads = run_params["n_threads"],
+                              n_generators = run_params["n_generators"],
+                              seed = run_params["seed"])
+
+      state <- model$state
       if (save_history) {
         history <- array(NA_real_, c(dim(state), private$n_steps + 1))
         history[, , 1] <- state
@@ -139,25 +149,14 @@ particle_filter <- R6::R6Class(
         history <- NULL
       }
 
-      if (is.null(pars_model)) {
-        model <- self$model()
-      } else {
-        model <- self$model(user = pars_model)
-      }
-      compare <- private$compare
-      steps <- particle_steps(private$steps, step_start)
-
       log_likelihood <- 0
       for (t in seq_len(private$n_steps)) {
-        res <- model$run(steps[t, ], state, replicate = n_particles,
-                         use_names = FALSE, return_minimal = TRUE)
-        state <- drop_dim(res, 2)
-        output <- drop_dim(attr(res, "output", exact = TRUE), 2)
+        model$run(steps[t, ])
+        state <- model$state()
+        log_weights <- compare(state, private$data[[t]], pars_compare)
         if (save_history) {
           history[, , t + 1L] <- state
         }
-
-        log_weights <- compare(state, output, private$data[[t]], pars_compare)
 
         if (!is.null(log_weights)) {
           weights <- scale_log_weights(log_weights)
@@ -168,7 +167,7 @@ particle_filter <- R6::R6Class(
           }
 
           kappa <- particle_resample(weights$weights)
-          state <- state[, kappa, drop = FALSE]
+          model$reorder(kappa)
           if (save_history) {
             history <- history[, kappa, ]
           }
@@ -198,22 +197,23 @@ particle_filter <- R6::R6Class(
     ##'
     ##' @param save_history Logical, indicating if the history of all
     ##' particles should be saved
-    run2 = function(state, n_particles, pars, index, save_history = FALSE) {
+    run2 = function(n_particles, save_history = FALSE,
+                   index, pars, run_params) {
       step_start <- pars_model <- pars_compare <- NULL
       if (length(index$step_start) > 0) {
         step_start <- pars[[index$step_start]]
       }
 
       if (length(index$pars_model) > 0) {
-        pars_model <- pars[index$pars_model]
+        model_data <- pars[index$model_data]
       }
 
       if (length(index$pars_compare) > 0) {
         pars_compare <- pars[index$pars_compare]
       }
 
-      self$run(state, n_particles, save_history,
-               pars_model, pars_compare, step_start)
+      self$run(model_data, n_particles, save_history = FALSE,
+               pars_compare, step_start = NULL, run_params)
     },
 
     ##' Create predicted trajectories, based on the final point of a
@@ -239,10 +239,12 @@ particle_filter <- R6::R6Class(
         stop("Expected first 't' element to be zero")
       }
       step <- private$data[[private$n_steps]]$step_end + t
-      n_particles <- ncol(self$state)
-      res <- private$last_model$run(step, self$state, replicate = n_particles,
-                                    use_names = FALSE, return_minimal = TRUE)
-      res <- aperm(res, c(1, 3, 2))
+
+      res <- array(NA, dim = c(dim(self$state), length(step)))
+      for (t in step) {
+        private$last_model$run(step)
+        res[,t] <- private$last_model$state()
+      }
       if (append) {
         res <- dde_abind(self$history, res)
       }
@@ -327,4 +329,24 @@ particle_steps <- function(steps, step_start) {
     steps[1, 1] <- step_start
   }
   steps
+}
+
+validate_dust_params <- function(run_params) {
+  if (run_params['n_threads'] == NULL ||
+      !assert_integer(run_params['n_threads']) ||
+      run_params['n_threads'] < 1) {
+    run_params['n_threads'] <- 1
+  }
+
+  if (run_params['seed'] == NULL ||
+      !assert_integer(run_params['seed'])) {
+    run_params['seed'] <- 1
+  }
+
+  if (run_params['n_generators'] == NULL ||
+      !assert_integer(run_params['n_generators']) ||
+      run_params['n_generators'] < run_params['n_threads']) {
+    run_params['n_generators'] <- run_params['n_threads']
+  }
+  run_params
 }

@@ -1,4 +1,4 @@
-#include <dust/rng.hpp>
+// NB: includes such as dust/rng.hpp are automatic
 
 class sir {
 public:

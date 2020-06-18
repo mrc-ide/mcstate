@@ -1,13 +1,14 @@
 models <- list(
-  sir = dust::dust_(mcstate_file("example/sir/odin_sir.R"), verbose = FALSE))
+  sir = dust::dust(mcstate_file("example/sir/dust_sir.cpp"), type = "sir", quiet = TRUE))
 
 
 example_sir <- function() {
   model <- models$sir
-  sir <- model()
-  y0 <- sir$initial(0)
+  sir <- model$new(data = NULL, step = 0,
+                   n_particles = 1)
+  y0 <- sir$state()
 
-  compare <- function(state, output, observed, pars = NULL) {
+  compare <- function(output, observed, pars = NULL) {
     if (is.null(pars)) {
       pars <- list(exp_noise = 1e6)
     }
@@ -18,12 +19,20 @@ example_sir <- function() {
     dpois(x = incidence_observed, lambda = lambda, log = TRUE)
   }
 
-  set.seed(1986)
-  y <- sir$run(seq(0, 400, by = 4), y0)
+  inv_dt <- 4
+  day <- seq(1, 100)
+  incidence <- rep(NA, length(day))
+  for (i in day) {
+    state_start <- sir$state()
+    sir$run(i * inv_dt)
+    state_end <- sir$state()
+    # Reduction in S
+    incidence[i] <- state_start[1,1] - state_end[1,1]
+  }
 
-  data_raw <- as.data.frame(y)[c("day", "incidence")]
+  data_raw <- as.data.frame(day = day, incidence = incidence)
   data <- particle_filter_data(data_raw[-1, ], "day", 4)
 
   list(model = model, compare = compare, y0 = y0,
-       y = y, data_raw = data_raw, data = data)
+       data_raw = data_raw, data = data)
 }
