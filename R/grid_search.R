@@ -12,7 +12,7 @@
 ##' @param n_particles Number of particles. Positive Integer. Default = 100
 ##'
 ##' @param tolerance Check around edges of the probability matrix
-##' 
+##'
 ##' @return List of beta and start date grid values, and
 ##'   normalised probabilities at each point
 ##'
@@ -29,15 +29,15 @@ grid_search <- function(state, range, filter, n_particles, tolerance=1E-2) {
     ncol = length(vars$variables[[2]]),
     byrow = FALSE
   )
-  
+
   # Exponentiate elements and normalise to 1 to get probabilities
   prob_matrix <- exp(mat_log_ll)
   renorm_mat_LL <- prob_matrix / sum(prob_matrix)
-  
+
   if (zero_boundary(renorm_mat_LL, tolerance = tolerance)) {
     warning("Edges of the probability matrix not zero, check search range")
   }
-  
+
   results <- list(
     vars = vars,
     x = vars$variables[1],
@@ -45,7 +45,7 @@ grid_search <- function(state, range, filter, n_particles, tolerance=1E-2) {
     mat_log_ll = mat_log_ll,
     renorm_mat_LL = renorm_mat_LL
   )
-  
+
   class(results) <- "mcstate_scan"
   results
 }
@@ -116,7 +116,7 @@ index_array <- function(x, dimension, value, drop = FALSE) {
   # bquote() creates an object corresponding to a missing argument
   indices <- rep(list(bquote()), length(dim(x)))
   indices[[dimension]] <- value
-  
+
   # Generate the call to [
   call <- as.call(c(
     list(as.name("["), quote(x)),
@@ -124,7 +124,7 @@ index_array <- function(x, dimension, value, drop = FALSE) {
     list(drop = drop)
   ))
   # Print it, just to make it easier to see what's going on
-  
+
   # Finally, evaluate it
   eval(call)
 }

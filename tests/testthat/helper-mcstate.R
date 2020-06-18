@@ -1,5 +1,5 @@
 models <- list(
-  sir = odin::odin_(mcstate_file("example/sir/odin_sir.R"), verbose = FALSE))
+  sir = dust::dust_(mcstate_file("example/sir/odin_sir.R"), verbose = FALSE))
 
 
 example_sir <- function() {
