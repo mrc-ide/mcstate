@@ -22,7 +22,8 @@ BugReports: https://github.com/mrc-ide/mcstate/issues
 Imports:
     future,
     dust,
-    odin
+    odin,
+    purrr
 Suggests:
     testthat
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.0
