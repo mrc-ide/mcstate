@@ -16,12 +16,12 @@
 ##' day <- seq(1, 100)
 ##' incidence <- rep(NA, length(day))
 ##' history <- array(NA_real_, c(3, 1, 101))
-##' history[, , 1] <- sir$state()
+##' history[, 1, 1] <- sir$state()
 ##' for (i in day) {
 ##'    state_start <- sir$state()
 ##'    sir$run(i / dt)
 ##'    state_end <- sir$state()
-##'    history[, , i] <- state_end
+##'    history[, 1, i] <- state_end
 ##'    # Reduction in S
 ##'    incidence[i] <- state_start[1,1] - state_end[1,1]
 ##'  }
@@ -50,8 +50,8 @@
 ##' matplot(data_raw$day, t(p$history[1, , -1]), type = "l",
 ##'          xlab = "Time", ylab = "State",
 ##'          col = "#ff000022", lty = 1, ylim = range(p$history))
-##' matlines(data_raw$day, t(history[2, , -1]), col = "#ffff0022", lty = 1)
-##' matlines(data_raw$day, t(history[3, , -1]), col = "#0000ff22", lty = 1)
+##' matlines(data_raw$day, t(p$history[2, , -1]), col = "#ffff0022", lty = 1)
+##' matlines(data_raw$day, t(p$history[3, , -1]), col = "#0000ff22", lty = 1)
 ##' matpoints(data_raw$day, t(history[, , -1]), pch = 19, col = c("red", "yellow", "blue"))
 particle_filter <- R6::R6Class(
   "particle_filter",
