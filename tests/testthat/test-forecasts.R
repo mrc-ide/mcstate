@@ -41,9 +41,9 @@ test_that("Sampling and forecasting from a grid search", {
     summary(lm(forecast_res$trajectories[[i]][3, j, ] ~ dat$history[3, 1, ]))$adj.r.squared})
   expect_gt(mean(R_r2), 0.99)
 
-  plot(dat$history[2, 1, ], type="l", xlab="day", ylab="I", lwd=2)
+  plot(dat$history[2, 1, ], type = "l", xlab = "day", ylab = "I", lwd = 2)
   for (j in 1:n_particles) {
-    lines(forecast_res$trajectories[[1]][2, j, ], type="l", lty=2, col=rgb(139, 0, 0, maxColorValue = 255, alpha = 30))
+    lines(forecast_res$trajectories[[1]][2, j, ], type = "l", lty = 2, col = rgb(139, 0, 0, maxColorValue = 255, alpha = 30))
   }
 
   # check that forecasting is possible

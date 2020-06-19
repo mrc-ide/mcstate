@@ -30,9 +30,9 @@ grid_search <- function(range, filter, n_particles, tolerance=1E-2) {
 
   # Exponentiate elements and normalise to 1 to get probabilities
   prob_matrix <- exp(mat_log_ll)
-  renorm_mat_LL <- prob_matrix / sum(prob_matrix)
+  renorm_mat_ll <- prob_matrix / sum(prob_matrix)
 
-  if (zero_boundary(renorm_mat_LL, tolerance = tolerance)) {
+  if (zero_boundary(renorm_mat_ll, tolerance = tolerance)) {
     warning("Edges of the probability matrix not zero, check search range")
   }
 
@@ -41,7 +41,7 @@ grid_search <- function(range, filter, n_particles, tolerance=1E-2) {
     x = vars$variables[1],
     y = vars$variables[2],
     mat_log_ll = mat_log_ll,
-    renorm_mat_LL = renorm_mat_LL
+    renorm_mat_ll = renorm_mat_ll
   )
 
   class(results) <- "mcstate_scan"
@@ -88,7 +88,7 @@ plot.mcstate_scan <- function(x, ..., what = "likelihood", title = NULL) {
     )
   } else if (what == "probability") {
     graphics::image(
-      x = x$vars$variables[[1]], y = x$vars$variables[[2]], z = x$renorm_mat_LL,
+      x = x$vars$variables[[1]], y = x$vars$variables[[2]], z = x$renorm_mat_ll,
       xlab = names(x$vars$variables)[1], ylab = names(x$vars$variables)[2], main = title
     )
   }

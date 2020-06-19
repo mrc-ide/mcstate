@@ -21,12 +21,12 @@ test_that("Simple grid search with SIR model", {
   gamma_grid <- seq(range$min[2], range$max[2], length.out = range$n[2])
   expect_equal(res$x$beta, beta_grid)
   expect_equal(res$y$gamma, gamma_grid)
-  expect_equal(dim(res$renorm_mat_LL), dim(res$mat_log_ll))
-  expect_equal(dim(res$renorm_mat_LL), c(length(beta_grid), length(gamma_grid)))
-  expect_true(all(res$renorm_mat_LL <= 1 & res$renorm_mat_LL >= 0))
+  expect_equal(dim(res$renorm_mat_ll), dim(res$mat_log_ll))
+  expect_equal(dim(res$renorm_mat_ll), c(length(beta_grid), length(gamma_grid)))
+  expect_true(all(res$renorm_mat_ll <= 1 & res$renorm_mat_ll >= 0))
 
   plot(res)
-  plot(res, what='probability')
+  plot(res, what = "probability")
 })
 
 test_that("SIR model parameters are can be inferred correctly", {
@@ -45,6 +45,6 @@ test_that("SIR model parameters are can be inferred correctly", {
   res <- grid_search(range, p, n_particles)
 
   # Correct parameter estimate is the highest
-  expect_true(res$renorm_mat_LL[2,2] == max(res$renorm_mat_LL))
+  expect_true(res$renorm_mat_ll[2, 2] == max(res$renorm_mat_ll))
 
 })

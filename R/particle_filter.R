@@ -101,7 +101,7 @@ particle_filter <- R6::R6Class(
     ##' through to the comparison function (via the \code{pars_compare}
     ##' argument to \code{$run}).
     initialize = function(data, model, compare) {
-      if (attr(model, which="name", exact=TRUE) != "dust_generator") {
+      if (attr(model, which = "name", exact = TRUE) != "dust_generator") {
         stop("'model' must be a dust_generator")
       }
 
@@ -342,7 +342,7 @@ validate_dust_params <- function(run_params) {
     if (!("n_threads" %in% names(run_params)) || is.null(run_params["n_threads"]) ||
         run_params["n_threads"] < 1) {
       run_params["n_threads"] <- 1
-    } else if (!is.integer(run_params['n_threads'])) {
+    } else if (!is.integer(run_params["n_threads"])) {
       run_params["n_threads"] <- as.integer(round(run_params["n_threads"]))
     }
 

@@ -102,7 +102,7 @@ test_that("predict", {
   expect_equal(res2[, , steps + length(t) - 1], p2$state)
 
   ## appended predictions match the raw predictions
-  expect_equal(res2[, , (steps+1):(steps + length(t) - 1)], res1)
+  expect_equal(res2[, , (steps + 1):(steps + length(t) - 1)], res1)
 })
 
 

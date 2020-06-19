@@ -12,7 +12,7 @@ example_sir <- function() {
     if (is.null(pars)) {
       pars <- list(exp_noise = 1e6)
     }
-    incidence_modelled <- prev_state[1,] - state[1,]
+    incidence_modelled <- prev_state[1, ] - state[1, ]
     incidence_observed <- observed$incidence
     lambda <- incidence_modelled +
       rexp(n = length(incidence_modelled), rate = pars$exp_noise)
@@ -24,14 +24,14 @@ example_sir <- function() {
   incidence <- rep(NA, length(day))
   history <- array(NA_real_, c(3, 1, 101))
   history[, , 1] <- sir$state()
-  
+
   for (i in day) {
     state_start <- sir$state()
     sir$run(i * inv_dt)
     state_end <- sir$state()
     history[, , i] <- state_end
     # Reduction in S
-    incidence[i] <- state_start[1,1] - state_end[1,1]
+    incidence[i] <- state_start[1, 1] - state_end[1, 1]
   }
 
   data_raw <- data.frame(day = day, incidence = incidence)

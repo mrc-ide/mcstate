@@ -42,7 +42,7 @@ sample_grid_scan <- function(scan_results,
   sample_idx <- sample(nrow(scan_results$vars$expanded),
                        size = n_sample_pairs,
                        replace = TRUE,
-                       prob = scan_results$renorm_mat_LL)
+                       prob = scan_results$renorm_mat_ll)
   pairs <- scan_results$vars$expanded[sample_idx, ]
 
   traces <- purrr::map(.x = purrr::transpose(pairs), .f = run_and_forecast,
