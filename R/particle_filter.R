@@ -203,13 +203,13 @@ particle_filter <- R6::R6Class(
     ##' @param save_history Logical, indicating if the history of all
     ##' particles should be saved
     run2 = function(n_particles, save_history = FALSE,
-                   index, pars, run_params) {
+                   index, pars, run_params = NULL) {
       step_start <- pars_model <- pars_compare <- NULL
       if (length(index$step_start) > 0) {
         step_start <- pars[[index$step_start]]
       }
 
-      if (length(index$pars_model) > 0) {
+      if (length(index$model_data) > 0) {
         model_data <- pars[index$model_data]
       }
 

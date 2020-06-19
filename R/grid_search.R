@@ -17,12 +17,12 @@
 ##'   normalised probabilities at each point
 ##'
 ##' @export
-grid_search <- function(state, range, filter, n_particles, tolerance=1E-2) {
+grid_search <- function(range, filter, n_particles, tolerance=1E-2) {
   vars <- grid_search_validate_range(range)
 
   # Run the search, which returns a log-likelihood
   flat_log_ll <- vnapply(seq_len(nrow(vars$expanded)), function(i)
-    filter$run2(state, n_particles, vars$expanded[i, ], vars$index))
+    filter$run2(n_particles, save_history = FALSE, index = vars$index, pars = vars$expanded[i, ]))
   mat_log_ll <- matrix(
     flat_log_ll,
     nrow = length(vars$variables[[1]]),
@@ -57,7 +57,7 @@ grid_search_validate_range <- function(range) {
   if (length(msg) > 0L) {
     stop("Missing columns from 'range': ", paste(squote(msg), collapse = ", "))
   }
-  targets <- c("step_start", "pars_model", "pars_compare")
+  targets <- c("step_start", "model_data", "pars_compare")
   err <- setdiff(range$target, targets)
   if (length(err) > 0L) {
     stop(sprintf("Invalid target %s: must be one of %s",
@@ -85,13 +85,13 @@ grid_search_validate_range <- function(range) {
 plot.mcstate_scan <- function(x, ..., what = "likelihood", title = NULL) {
   if (what == "likelihood") {
     graphics::image(
-      x = x$vars$variables[[1]], y = x$vars$variables[[1]], z = x$mat_log_ll,
-      xlab = names(x$vars$variables), ylab = names(x$vars$variables), main = title
+      x = x$vars$variables[[1]], y = x$vars$variables[[2]], z = x$mat_log_ll,
+      xlab = names(x$vars$variables)[1], ylab = names(x$vars$variables)[2], main = title
     )
   } else if (what == "probability") {
     graphics::image(
-      x = x$vars$variables[[1]], y = x$vars$variables[[1]], z = x$renorm_mat_LL,
-      xlab = names(x$vars$variables), ylab = names(x$vars$variables), main = title
+      x = x$vars$variables[[1]], y = x$vars$variables[[2]], z = x$renorm_mat_LL,
+      xlab = names(x$vars$variables)[1], ylab = names(x$vars$variables)[2], main = title
     )
   }
 }

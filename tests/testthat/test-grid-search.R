@@ -3,18 +3,17 @@ context("grid_search")
 test_that("Simple grid search with SIR model", {
 
   range <- data.frame(name = c("beta", "gamma"),
-                      min = c(0.13, 0.05),
-                      max = c(0.25, 0.15),
-                      n = c(6, 9),
-                      target = "pars_model",
+                      min = c(0.15, 0.05),
+                      max = c(0.3, 0.15),
+                      n = c(9, 9),
+                      target = "model_data",
                       stringsAsFactors = FALSE)
 
   dat <- example_sir()
   p <- particle_filter$new(dat$data, dat$model, dat$compare)
-  state <- dat$y0
   n_particles <- 100
 
-  res <- grid_search(state, range, p, n_particles)
+  res <- grid_search(range, p, n_particles)
 
   expect_is(res, "mcstate_scan")
 
@@ -35,16 +34,15 @@ test_that("SIR model parameters are can be inferred correctly", {
                       min = c(0.1, 0),
                       max = c(0.3, 0.2),
                       n = c(3, 3),
-                      target = "pars_model",
+                      target = "model_data",
                       stringsAsFactors = FALSE)
 
-  # NB: in the example model, beta = 0.2 (transmission), g = 0.1 (recovery)
+  # NB: in the example model, default beta = 0.2 (transmission), g = 0.1 (recovery)
   dat <- example_sir()
   p <- particle_filter$new(dat$data, dat$model, dat$compare)
-  state <- dat$y0
   n_particles <- 100
 
-  res <- grid_search(state, range, p, n_particles)
+  res <- grid_search(range, p, n_particles)
 
   # Correct parameter estimate is the highest
   expect_true(res$renorm_mat_LL[2,2] == max(res$renorm_mat_LL))
