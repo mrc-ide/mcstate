@@ -1,15 +1,14 @@
 ##' Take a grid search produced by \code{\link{grid_search}} and
 ##' sample \code{n_sample_pairs} from the parameter grid uses based
 ##' on their probability. For each parameter pair chosen, run particle
-##' filter with \code{num_particles} and sample 1 trajectory
+##' filter with \code{num_particles}.
 ##'
 ##' @title Sample Grid Scan
 ##'
 ##' @param scan_results Output of \code{\link{grid_search}}.
 ##'
-##' @param state Initial state
-##'
-##' @param filter A \code{particle_filter} object to run
+##' @param filter A \code{particle_filter} object to run (the same
+##' (as the one used to produce \code{scan_results})
 ##'
 ##' @param n_sample_pairs Number of parameter pairs to be sampled. This will
 ##'   determine how many trajectories are returned. Integer. Default = 10. This
@@ -47,11 +46,11 @@ sample_grid_scan <- function(scan_results,
   pairs <- scan_results$vars$expanded[sample_idx,]
 
   traces <- purrr::map(.x = purrr::transpose(pairs), .f = run_and_forecast,
-                       filter, state, scan_results$vars$index, n_particles, forecast_steps)
+                       filter, scan_results$vars$index, n_particles, forecast_steps)
 
   # If the start point was sampled, trajectories will have different
   # lengths and need to be filled with NAs
-  if (length(results$vars$index$step_start) > 1) {
+  if (length(scan_results$vars$index$step_start) > 1) {
     traces <- traces_to_trajectories(traces)
   }
 
@@ -64,14 +63,13 @@ sample_grid_scan <- function(scan_results,
 
 }
 
-run_and_forecast <- function(model_params, filter, state, index, n_particles, forecast_steps) {
-  filter$run2(state, n_particles, pairs[i, ], index, save_history=TRUE)
+run_and_forecast <- function(model_params, filter, index, n_particles, forecast_steps) {
+  filter$run2(n_particles, save_history=TRUE, index, model_params)
   if (forecast_steps > 0) {
     forward_steps <- seq.int(0, forecast_steps)
     trajectories <- filter$predict(forward_steps, append=TRUE)
   } else {
-    forward_steps <- seq.int(0, 1) # calling with t = 0 doesn't work
-    trajectories <- filter$predict(forward_steps, append=TRUE)[,,-1]
+    trajectories <- filter$history
   }
   trajectories
 }

@@ -22,10 +22,14 @@ example_sir <- function() {
   inv_dt <- 4
   day <- seq(1, 100)
   incidence <- rep(NA, length(day))
+  history <- array(NA_real_, c(3, 1, 101))
+  history[, , 1] <- sir$state()
+  
   for (i in day) {
     state_start <- sir$state()
     sir$run(i * inv_dt)
     state_end <- sir$state()
+    history[, , i] <- state_end
     # Reduction in S
     incidence[i] <- state_start[1,1] - state_end[1,1]
   }
@@ -34,5 +38,5 @@ example_sir <- function() {
   data <- particle_filter_data(data_raw, "day", 4)
 
   list(model = model, compare = compare, y0 = y0,
-       data_raw = data_raw, data = data)
+       data_raw = data_raw, data = data, history = history)
 }

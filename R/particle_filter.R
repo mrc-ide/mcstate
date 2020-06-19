@@ -7,32 +7,44 @@
 ##' @export
 ##' @examples
 ##' # A basic SIR model included in the package:
-##' path <- system.file("example/sir/odin_sir.R", package = "mcstate")
-##' gen <- odin::odin_(path)
-##' sir <- gen()
+##' path <- system.file("example/sir/dust_sir.cpp", package = "mcstate")
+##' gen <- dust::dust(path)
+##' sir <- gen$new(data = NULL, step = 0, n_particles = 100)
 ##'
 ##' # Initial conditions for both the model and particle filter
-##' y0 <- sir$initial(0)
+##' y0 <- sir$state()
 ##'
 ##' # Some data that we will fit to:
-##' y <- sir$run(seq(0, 400, by = 4), y0)
-##' data_raw <- as.data.frame(y)[c("day", "incidence")]
+##' dt <- 1/4
+##' day <- seq(1, 100)
+##' incidence <- rep(NA, length(day))
+##' for (i in day) {
+##'    state_start <- sir$state()
+##'    sir$run(i / dt)
+##'    state_end <- sir$state()
+##'    # Reduction in S
+##'    incidence[i] <- state_start[1,1] - state_end[1,1]
+##'  }
 ##'
 ##' # Convert this into our required format:
-##' data <- mcstate::particle_filter_data(data_raw[-1, ], "day", 4)
+##' data_raw <- data.frame(day = day, incidence = incidence)
+##' data <- particle_filter_data(data_raw, "day", 4)
 ##'
 ##' # A comparison function
-##' compare <- function(state, output, observed, pars = NULL) {
-##'   incid_modelled <- output[1, ]
-##'   incid_observed <- observed$incidence
-##'   lambda <- incid_modelled +
-##'     rexp(n = length(incid_modelled), rate = 1e6)
-##'   dpois(x = incid_observed, lambda = lambda, log = TRUE)
+##' compare <- function(state, prev_state, observed, pars = NULL) {
+##'   if (is.null(pars)) {
+##'     pars <- list(exp_noise = 1e6)
+##'   }
+##'   incidence_modelled <- prev_state[1,] - state[1,]
+##'   incidence_observed <- observed$incidence
+##'   lambda <- incidence_modelled +
+##'     rexp(n = length(incidence_modelled), rate = pars$exp_noise)
+##'   dpois(x = incidence_observed, lambda = lambda, log = TRUE)
 ##' }
 ##'
 ##' # Construct the particle_filter object:
-##' p <- mcstate::particle_filter$new(data, gen, compare)
-##' p$run(y0, 100, TRUE)
+##' p <- particle_filter$new(data, gen, compare)
+##' p$run(NULL, 100, TRUE)
 ##'
 ##' # Our simulated trajectories, with the "real" data superimposed
 ##' matplot(data_raw$day, t(p$history[1, , ]), type = "l",
@@ -60,7 +72,7 @@ particle_filter <- R6::R6Class(
 
     ##' @field state The final state of the last run of the particle filter
     state = NULL,
-    
+
     ##' @field history The history of the last run of the particle filter
     ##' (if enabled with \code{save_history = TRUE}, otherwise NULL
     history = NULL,
@@ -108,17 +120,13 @@ particle_filter <- R6::R6Class(
     ##'
     ##' Run the particle filter
     ##'
-    ##' @param state The initial state. Can either be a vector (same
-    ##' state for all particles) or a matrix with \code{n_particles}
-    ##' columns
+    ##' @param model_data The data object passed into dust, which may contain
+    ##' parameters and/or initial conditions
     ##'
     ##' @param n_particles The number of particles to simulate
     ##'
     ##' @param save_history Logical, indicating if the history of all
     ##' particles should be saved
-    ##'
-    ##' @param pars_model Optional parameters to use when creating the
-    ##' model (\code{NULL} if the model should be default-constructed).
     ##'
     ##' @param pars_compare Optional parameters to use when applying
     ##' the \code{compare} function.  These parameters will be passed as
@@ -128,6 +136,9 @@ particle_filter <- R6::R6Class(
     ##' this must be within the range of the first epoch implied in your
     ##' \code{data} provided to the constructor (i.e., not less than the
     ##' first element of \code{step_start} and less than \code{step_end})
+    ##'
+    ##' @param run_params List containing seed, n_threads and n_generators
+    ##' for use with dust
     ##'
     ##' @return A single numeric value representing the log-likelihood
     ##' (\code{-Inf} if the model is impossible)
@@ -186,22 +197,20 @@ particle_filter <- R6::R6Class(
       log_likelihood
     },
 
-    ##' Run the particle filter, having spread parameters out
-    ##'
-    ##' The interface here might change!
-    ##'
-    ##' @param state The initial state. Can either be a vector (same
-    ##' state for all particles) or a matrix with \code{n_particles}
-    ##' columns
+    ##' Run the particle filter, modifying parameters
     ##'
     ##' @param n_particles The number of particles to simulate
     ##'
-    ##' @param pars A list of parameters
+    ##' @param save_history Logical, indicating if the history of all
+    ##' particles should be saved
     ##'
     ##' @param index A parameter index
     ##'
-    ##' @param save_history Logical, indicating if the history of all
-    ##' particles should be saved
+    ##' @param pars A list of parameters
+    ##'
+    ##' @param run_params List containing seed, n_threads and n_generators
+    ##' for use with dust
+    ##'
     run2 = function(n_particles, save_history = FALSE,
                    index, pars, run_params = NULL) {
       step_start <- pars_model <- pars_compare <- NULL
@@ -217,7 +226,7 @@ particle_filter <- R6::R6Class(
         pars_compare <- pars[index$pars_compare]
       }
 
-      self$run(model_data, n_particles, save_history = FALSE,
+      self$run(model_data, n_particles, save_history,
                pars_compare, step_start = NULL, run_params)
     },
 

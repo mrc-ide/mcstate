@@ -2,8 +2,6 @@
 ##'
 ##' @title Grid search over two parameters
 ##'
-##' @param state Initial state
-##'
 ##' @param range \code{data.frame} describing the parameters to search.
 ##'  Must have columns name, min, max, n and target
 ##'
@@ -62,7 +60,7 @@ grid_search_validate_range <- function(range) {
   if (length(err) > 0L) {
     stop(sprintf("Invalid target %s: must be one of %s",
                  paste(squote(err), collapse = ", "),
-                 paste(squote(range$target), collapse = ", ")))
+                 paste(squote(targets), collapse = ", ")))
   }
 
   variables <- Map(seq, range$min, range$max, length.out = range$n)
