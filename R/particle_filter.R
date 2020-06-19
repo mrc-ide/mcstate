@@ -253,6 +253,7 @@ particle_filter <- R6::R6Class(
       if (append) {
         res <- dde_abind(self$history, res)
       }
+      self$state <- private$last_model$state()
       res
     }
   ))

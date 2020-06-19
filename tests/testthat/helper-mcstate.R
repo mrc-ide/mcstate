@@ -31,7 +31,7 @@ example_sir <- function() {
   }
 
   data_raw <- data.frame(day = day, incidence = incidence)
-  data <- particle_filter_data(data_raw[-1, ], "day", 4)
+  data <- particle_filter_data(data_raw, "day", 4)
 
   list(model = model, compare = compare, y0 = y0,
        data_raw = data_raw, data = data)

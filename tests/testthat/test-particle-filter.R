@@ -14,31 +14,17 @@ test_that("run particle filter on sir model", {
 
 test_that("particle filter likelihood is worse with worse parameters", {
   dat <- example_sir()
+  steps <- nrow(dat$data) + 1
   p <- particle_filter$new(dat$data, dat$model, dat$compare)
-  ll1 <- p$run(NULL, 100)
-  ll2 <- p$run(model_data = list(gamma = 1, beta = 1), 100)
+  ll1 <- p$run(NULL, steps)
+  ll2 <- p$run(model_data = list(gamma = 1, beta = 1), steps)
   expect_true(ll1 > ll2)
-})
-
-
-test_that("can be started with varying initial states", {
-  skip("Dust particles always have the same initial state")
-  dat <- example_sir()
-
-  n_particles <- 20
-  n <- sample(10:20, n_particles, replace = TRUE)
-  y0 <- rbind(1010 - n, n, 0, 0, 0, deparse.level = 0)
-
-  ## If we never return a likelihood, the we never shuffle trajectories...
-  p <- particle_filter$new(dat$data, dat$model, function(...) NULL)
-  ll <- p$run(y0, n_particles, TRUE)
-  ## ...and therefore we recover our initial states
-  expect_equal(p$history[, , 1], y0)
 })
 
 
 test_that("stop simulation when likelihood is impossible", {
   dat <- example_sir()
+  steps <- nrow(dat$data) + 1
 
   compare <- function(state, output, observed, pars) {
     ret <- dat$compare(state, output, observed, pars)
@@ -52,7 +38,7 @@ test_that("stop simulation when likelihood is impossible", {
   res <- p$run(NULL, 42, TRUE)
   expect_equal(res, -Inf)
 
-  i <- (which(dat$data$incidence > 15)[[1]] + 2):100 # TODO, should this be 100 or 101
+  i <- (which(dat$data$incidence > 15)[[1]] + 2):steps
   expect_false(any(is.na(p$history[, , !i])))
   expect_true(all(is.na(p$history[, , i])))
 })
@@ -93,24 +79,30 @@ test_that("Data validation consecutive time windows", {
 
 test_that("predict", {
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare)
-  res <- p$run(NULL, 42, TRUE)
+  steps <- nrow(dat$data) + 1
+  
+  set.seed(1)
+  p1 <- particle_filter$new(dat$data, dat$model, dat$compare)
+  run1 <- p1$run(NULL, 42, TRUE)
+  set.seed(1)
+  p2 <- particle_filter$new(dat$data, dat$model, dat$compare)
+  run2 <- p2$run(NULL, 42, TRUE)
+  
   t <- 0:10
+  res1 <- p1$predict(t)
+  res2 <- p2$predict(t, TRUE)
 
-  res1 <- p$predict(t)
-  res2 <- p$predict(t, TRUE)
+  expect_equal(dim(res1), c(3, 42, length(t) - 1))
+  expect_equal(dim(res2), c(3, 42, steps + length(t) - 1))
 
-  expect_equal(dim(res1), c(3, 42, 10))
-  expect_equal(dim(res2), c(3, 42, 110)) # TODO should this be 110 or 111
-# looks like there's an off-by-one error somewhere here
   ## history is prepended
-  expect_equal(res2[, , 1:101], p$history)
+  expect_equal(res2[, , 1:steps], p2$history)
 
   ## state is last in that
-  expect_equal(res2[, , 101], p$state)
+  expect_equal(res2[, , steps + length(t) - 1], p2$state)
 
-  ## appended predictions match the raw preductions
-  expect_equal(res2[, , 102:111], res1)
+  ## appended predictions match the raw predictions
+  expect_equal(res2[, , (steps+1):(steps + length(t) - 1)], res1)
 })
 
 
@@ -184,10 +176,12 @@ test_that("Control the starting point of the simulation", {
 
   ## Tuning the start date
   p2 <- particle_filter$new(data, dat$model, dat$compare)
+  set.seed(1)
   ll2 <- p2$run(NULL, 42, step_start = offset)
   expect_identical(ll1, ll2)
 
   ## Running from the beginning is much worse:
+  set.seed(1)
   ll3 <- p2$run(dat$y0, 42, step_start = 0)
   expect_true(ll3 < ll1)
 })
