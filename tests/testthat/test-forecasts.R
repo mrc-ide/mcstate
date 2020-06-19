@@ -46,7 +46,6 @@ test_that("Sampling and forecasting from a grid search", {
     lines(forecast_res$trajectories[[1]][2,j,], type='l', lty=2, col=rgb(139, 0, 0, maxColorValue = 255, alpha = 30))
   }
   
-  
   # check that forecasting is possible
   forecast_steps <- 5
   forecast_res <- sample_grid_scan(grid_res, p, n_sample_pairs, n_particles, forecast_steps)

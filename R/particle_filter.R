@@ -9,19 +9,19 @@
 ##' # A basic SIR model included in the package:
 ##' path <- system.file("example/sir/dust_sir.cpp", package = "mcstate")
 ##' gen <- dust::dust(path)
-##' sir <- gen$new(data = NULL, step = 0, n_particles = 100)
 ##'
-##' # Initial conditions for both the model and particle filter
-##' y0 <- sir$state()
-##'
-##' # Some data that we will fit to:
+##' # Some data that we will fit to, using 1 particle:
+##' sir <- gen$new(data = NULL, step = 0, n_particles = 1)
 ##' dt <- 1/4
 ##' day <- seq(1, 100)
 ##' incidence <- rep(NA, length(day))
+##' history <- array(NA_real_, c(3, 1, 101))
+##' history[, , 1] <- sir$state()
 ##' for (i in day) {
 ##'    state_start <- sir$state()
 ##'    sir$run(i / dt)
 ##'    state_end <- sir$state()
+##'    history[, , i] <- state_end
 ##'    # Reduction in S
 ##'    incidence[i] <- state_start[1,1] - state_end[1,1]
 ##'  }
@@ -47,12 +47,12 @@
 ##' p$run(NULL, 100, TRUE)
 ##'
 ##' # Our simulated trajectories, with the "real" data superimposed
-##' matplot(data_raw$day, t(p$history[1, , ]), type = "l",
-##'         xlab = "Time", ylab = "State",
-##'         col = "#ff000022", lty = 1, ylim = range(p$history))
-##' matlines(data_raw$day, t(p$history[2, , ]), col = "#ffff0022", lty = 1)
-##' matlines(data_raw$day, t(p$history[3, , ]), col = "#0000ff22", lty = 1)
-##' matpoints(y[, "day"], y[, 2:4], pch = 19, col = c("red", "yellow", "blue"))
+##' matplot(data_raw$day, t(p$history[1, , -1]), type = "l",
+##'          xlab = "Time", ylab = "State",
+##'          col = "#ff000022", lty = 1, ylim = range(p$history))
+##' matlines(data_raw$day, t(history[2, , -1]), col = "#ffff0022", lty = 1)
+##' matlines(data_raw$day, t(history[3, , -1]), col = "#0000ff22", lty = 1)
+##' matpoints(data_raw$day, t(history[, , -1]), pch = 19, col = c("red", "yellow", "blue"))
 particle_filter <- R6::R6Class(
   "particle_filter",
   cloneable = FALSE,
