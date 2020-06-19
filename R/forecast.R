@@ -40,10 +40,10 @@ sample_grid_scan <- function(scan_results,
 
   # sample proportional to probability
   sample_idx <- sample(nrow(scan_results$vars$expanded),
-                       size=n_sample_pairs,
-                       replace=TRUE,
+                       size = n_sample_pairs,
+                       replace = TRUE,
                        prob = scan_results$renorm_mat_LL)
-  pairs <- scan_results$vars$expanded[sample_idx,]
+  pairs <- scan_results$vars$expanded[sample_idx, ]
 
   traces <- purrr::map(.x = purrr::transpose(pairs), .f = run_and_forecast,
                        filter, scan_results$vars$index, n_particles, forecast_steps)
@@ -64,10 +64,10 @@ sample_grid_scan <- function(scan_results,
 }
 
 run_and_forecast <- function(model_params, filter, index, n_particles, forecast_steps) {
-  filter$run2(n_particles, save_history=TRUE, index, model_params)
+  filter$run2(n_particles, save_history = TRUE, index, model_params)
   if (forecast_steps > 0) {
     forward_steps <- seq.int(0, forecast_steps)
-    trajectories <- filter$predict(forward_steps, append=TRUE)
+    trajectories <- filter$predict(forward_steps, append = TRUE)
   } else {
     trajectories <- filter$history
   }
@@ -92,7 +92,7 @@ traces_to_trajectories <- function(traces) {
   # fill the tail of the array slice
   # This is so that the end of the trajectories array is populated,
   # and the start is padded with NA if it's shorter than the max.
-  for (i in seq_len(length(traces))){
+  for (i in seq_len(length(traces))) {
     trajectories[tail(seq_max, nrow(traces[[i]])), , i] <- traces[[i]]
   }
 

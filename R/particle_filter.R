@@ -339,24 +339,24 @@ validate_dust_params <- function(run_params) {
   if (is.null(run_params)) {
     run_params <- list(n_threads = 1, n_generators = 1, seed = 1)
   } else {
-    if (!('n_threads' %in% names(run_params)) || is.null(run_params['n_threads']) ||
-        run_params['n_threads'] < 1) {
-      run_params['n_threads'] <- 1
+    if (!("n_threads" %in% names(run_params)) || is.null(run_params["n_threads"]) ||
+        run_params["n_threads"] < 1) {
+      run_params["n_threads"] <- 1
     } else if (!is.integer(run_params['n_threads'])) {
-      run_params['n_threads'] <- as.integer(round(run_params['n_threads']))
+      run_params["n_threads"] <- as.integer(round(run_params["n_threads"]))
     }
 
-    if (!('seed' %in% names(run_params)) || is.null(run_params['seed'])) {
-      run_params['seed'] <- 1
-    } else if (!is.integer(run_params['seed'])) {
-      run_params['seed'] <- as.integer(round(run_params['seed']))
+    if (!("seed" %in% names(run_params)) || is.null(run_params["seed"])) {
+      run_params["seed"] <- 1
+    } else if (!is.integer(run_params["seed"])) {
+      run_params["seed"] <- as.integer(round(run_params["seed"]))
     }
 
-    if (!('n_generators' %in% names(run_params)) || is.null(run_params['n_generators']) ||
-        run_params['n_generators'] < run_params['n_threads']) {
-      run_params['n_generators'] <- run_params['n_threads']
-    } else if (!is.integer(run_params['n_generators'])) {
-      run_params['n_generators'] <- as.integer(run_params['n_generators'])
+    if (!("n_generators" %in% names(run_params)) || is.null(run_params["n_generators"]) ||
+        run_params["n_generators"] < run_params["n_threads"]) {
+      run_params["n_generators"] <- run_params["n_threads"]
+    } else if (!is.integer(run_params["n_generators"])) {
+      run_params["n_generators"] <- as.integer(run_params["n_generators"])
     }
   }
   run_params

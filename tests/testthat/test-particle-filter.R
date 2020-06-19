@@ -80,14 +80,14 @@ test_that("Data validation consecutive time windows", {
 test_that("predict", {
   dat <- example_sir()
   steps <- nrow(dat$data) + 1
-  
+
   set.seed(1)
   p1 <- particle_filter$new(dat$data, dat$model, dat$compare)
   run1 <- p1$run(NULL, 42, TRUE)
   set.seed(1)
   p2 <- particle_filter$new(dat$data, dat$model, dat$compare)
   run2 <- p2$run(NULL, 42, TRUE)
-  
+
   t <- 0:10
   res1 <- p1$predict(t)
   res2 <- p2$predict(t, TRUE)
