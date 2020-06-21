@@ -197,4 +197,15 @@ test_that("control filter", {
   expect_equal(
     validate_dust_params(list(n_threads = 2, n_generators = 4, seed = 8)),
     list(n_threads = 2L, n_generators = 4L, seed = 8L))
+  expect_equal(
+    validate_dust_params(list(n_threads = 2, n_generators = 4, seed = 8.5)),
+    list(n_threads = 2L, n_generators = 4L, seed = 8L))
+})
+
+
+test_that("run particle filter on sir model", {
+  dat <- example_sir()
+  expect_error(
+    particle_filter$new(dat$data, NULL, dat$compare),
+    "'model' must be a dust_generator")
 })
