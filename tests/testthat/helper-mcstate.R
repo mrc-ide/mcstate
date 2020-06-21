@@ -1,5 +1,6 @@
 models <- list(
-  sir = dust::dust(mcstate_file("example/sir/dust_sir.cpp"), type = "sir", quiet = TRUE))
+  sir = dust::dust(mcstate_file("example/sir/dust_sir.cpp"), type = "sir",
+                   quiet = TRUE))
 
 
 example_sir <- function() {

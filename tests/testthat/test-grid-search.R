@@ -37,7 +37,9 @@ test_that("SIR model parameters are can be inferred correctly", {
                       target = "model_data",
                       stringsAsFactors = FALSE)
 
-  # NB: in the example model, default beta = 0.2 (transmission), g = 0.1 (recovery)
+  # NB: in the example model, default
+  # * beta = 0.2 (transmission)
+  # * g = 0.1 (recovery)
   dat <- example_sir()
   p <- particle_filter$new(dat$data, dat$model, dat$compare)
   n_particles <- 100
