@@ -20,7 +20,8 @@ grid_search <- function(range, filter, n_particles, tolerance=1E-2) {
 
   # Run the search, which returns a log-likelihood
   flat_log_ll <- vnapply(seq_len(nrow(vars$expanded)), function(i)
-    filter$run2(n_particles, save_history = FALSE, index = vars$index, pars = vars$expanded[i, ]))
+    filter$run2(n_particles, save_history = FALSE, index = vars$index,
+                pars = vars$expanded[i, ]))
   mat_log_ll <- matrix(
     flat_log_ll,
     nrow = length(vars$variables[[1]]),
@@ -84,13 +85,13 @@ plot.mcstate_scan <- function(x, ..., what = "likelihood", title = NULL) {
   if (what == "likelihood") {
     graphics::image(
       x = x$vars$variables[[1]], y = x$vars$variables[[2]], z = x$mat_log_ll,
-      xlab = names(x$vars$variables)[1], ylab = names(x$vars$variables)[2], main = title
-    )
+      xlab = names(x$vars$variables)[1], ylab = names(x$vars$variables)[2],
+      main = title)
   } else if (what == "probability") {
     graphics::image(
       x = x$vars$variables[[1]], y = x$vars$variables[[2]], z = x$renorm_mat_ll,
-      xlab = names(x$vars$variables)[1], ylab = names(x$vars$variables)[2], main = title
-    )
+      xlab = names(x$vars$variables)[1], ylab = names(x$vars$variables)[2],
+      main = title)
   }
 }
 

@@ -46,7 +46,8 @@ sample_grid_scan <- function(scan_results,
   pairs <- scan_results$vars$expanded[sample_idx, ]
 
   traces <- purrr::map(.x = purrr::transpose(pairs), .f = run_and_forecast,
-                       filter, scan_results$vars$index, n_particles, forecast_steps)
+                       filter, scan_results$vars$index, n_particles,
+                       forecast_steps)
 
   # If the start point was sampled, trajectories will have different
   # lengths and need to be filled with NAs
@@ -63,7 +64,8 @@ sample_grid_scan <- function(scan_results,
 
 }
 
-run_and_forecast <- function(model_params, filter, index, n_particles, forecast_steps) {
+run_and_forecast <- function(model_params, filter, index, n_particles,
+                             forecast_steps) {
   filter$run2(n_particles, save_history = TRUE, index, model_params)
   if (forecast_steps > 0) {
     forward_steps <- seq.int(0, forecast_steps)

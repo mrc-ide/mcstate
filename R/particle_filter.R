@@ -52,7 +52,8 @@
 ##'          col = "#ff000022", lty = 1, ylim = range(p$history))
 ##' matlines(data_raw$day, t(p$history[2, , -1]), col = "#ffff0022", lty = 1)
 ##' matlines(data_raw$day, t(p$history[3, , -1]), col = "#0000ff22", lty = 1)
-##' matpoints(data_raw$day, t(history[, , -1]), pch = 19, col = c("red", "yellow", "blue"))
+##' matpoints(data_raw$day, t(history[, , -1]), pch = 19,
+##'           col = c("red", "yellow", "blue"))
 particle_filter <- R6::R6Class(
   "particle_filter",
   cloneable = FALSE,
@@ -150,7 +151,8 @@ particle_filter <- R6::R6Class(
       steps <- particle_steps(private$steps, step_start)
       run_params <- validate_dust_params(run_params)
 
-      model <- self$model$new(data = model_data, step = steps[1, 1], n_particles = n_particles,
+      model <- self$model$new(data = model_data, step = steps[1, 1],
+                              n_particles = n_particles,
                               n_threads = run_params[["n_threads"]],
                               n_generators = run_params[["n_generators"]],
                               seed = run_params[["seed"]])
@@ -168,7 +170,8 @@ particle_filter <- R6::R6Class(
       for (t in seq_len(private$n_steps)) {
         model$run(steps[t, 2])
         state <- model$state()
-        log_weights <- compare(state, prev_state, private$data[[t]], pars_compare)
+        log_weights <- compare(state, prev_state, private$data[[t]],
+                               pars_compare)
         if (save_history) {
           history[, , t + 1L] <- state
         }
@@ -337,27 +340,23 @@ particle_steps <- function(steps, step_start) {
 
 validate_dust_params <- function(run_params) {
   if (is.null(run_params)) {
-    run_params <- list(n_threads = 1, n_generators = 1, seed = 1)
+    run_params <- list(n_threads = 1L, n_generators = 1L, seed = 1L)
   } else {
-    if (!("n_threads" %in% names(run_params)) || is.null(run_params["n_threads"]) ||
-        run_params["n_threads"] < 1) {
-      run_params["n_threads"] <- 1
-    } else if (!is.integer(run_params["n_threads"])) {
-      run_params["n_threads"] <- as.integer(round(run_params["n_threads"]))
-    }
-
-    if (!("seed" %in% names(run_params)) || is.null(run_params["seed"])) {
-      run_params["seed"] <- 1
-    } else if (!is.integer(run_params["seed"])) {
-      run_params["seed"] <- as.integer(round(run_params["seed"]))
-    }
-
-    if (!("n_generators" %in% names(run_params)) || is.null(run_params["n_generators"]) ||
-        run_params["n_generators"] < run_params["n_threads"]) {
-      run_params["n_generators"] <- run_params["n_threads"]
-    } else if (!is.integer(run_params["n_generators"])) {
-      run_params["n_generators"] <- as.integer(run_params["n_generators"])
-    }
+    run_params[["n_threads"]] <-
+      validate_dust_params_size(run_params[["n_threads"]])
+    run_params[["n_generators"]] <-
+      validate_dust_params_size(run_params[["n_generators"]])
+    run_params[["seed"]] <-
+      validate_dust_params_size(run_params[["seed"]])
   }
   run_params
+}
+
+
+validate_dust_params_size <- function(x) {
+  if (is.null(x) || x < 1) {
+    1L
+  } else {
+    as.integer(x)
+  }
 }
