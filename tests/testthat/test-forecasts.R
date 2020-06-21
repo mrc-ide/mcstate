@@ -34,20 +34,20 @@ test_that("Sampling and forecasting from a grid search", {
   # check that the input data is recovered
   # averages over all parameter samples and all particles
   grid <- expand.grid(x = seq_len(n_sample_pairs), y = seq_len(n_particles))
-  s_r2 <- purrr::map2_dbl(.x = grid$x, .y = grid$y, .f = function(i, j) {
-    fit <- lm(forecast_res$trajectories[[i]][1, j, ] ~ dat$history[1, 1, ])
+
+  f <- function(i, j, k) {
+    fit <- lm(forecast_res$trajectories[[i]][k, j, ] ~ dat$history[k, 1, ])
     summary(fit)$adj.r.squared
-  })
+  }
+
+  s_r2 <- mapply(f, grid$x, grid$y, 1)
   expect_gt(mean(s_r2), 0.99)
-  i_r2 <- purrr::map2_dbl(.x = grid$x, .y = grid$y, .f = function(i, j) {
-    fit <- lm(forecast_res$trajectories[[i]][2, j, ] ~ dat$history[2, 1, ])
-    summary(fit)$adj.r.squared
-  })
-  expect_gt(mean(i_r2), 0.95) # I is much more noisy - and a better test case
-  r_r2 <- purrr::map2_dbl(.x = grid$x, .y = grid$y, .f = function(i, j) {
-    fit <- lm(forecast_res$trajectories[[i]][3, j, ] ~ dat$history[3, 1, ])
-    summary(fit)$adj.r.squared
-  })
+
+  # I is much more noisy - and a better test case
+  i_r2 <- mapply(f, grid$x, grid$y, 2)
+  expect_gt(mean(i_r2), 0.95)
+
+  r_r2 <- mapply(f, grid$x, grid$y, 3)
   expect_gt(mean(r_r2), 0.99)
 
   plot(dat$history[2, 1, ], type = "l", xlab = "day", ylab = "I", lwd = 2)
