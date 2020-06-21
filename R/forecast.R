@@ -25,7 +25,6 @@
 ##'   model inputs.
 ##'
 ##' @export
-##' @import purrr
 ##' @importFrom utils tail
 sample_grid_scan <- function(scan_results,
                              filter,
@@ -45,9 +44,9 @@ sample_grid_scan <- function(scan_results,
                        prob = scan_results$renorm_mat_ll)
   pairs <- scan_results$vars$expanded[sample_idx, ]
 
-  traces <- purrr::map(.x = purrr::transpose(pairs), .f = run_and_forecast,
-                       filter, scan_results$vars$index, n_particles,
-                       forecast_steps)
+  traces <- lapply(split_df_rows(pairs), run_and_forecast,
+                   filter, scan_results$vars$index, n_particles,
+                   forecast_steps)
 
   # If the start point was sampled, trajectories will have different
   # lengths and need to be filled with NAs

@@ -33,3 +33,8 @@ dde_abind <- function(a, b) {
   ret[, , seq_len(nb) + na] <- b
   ret
 }
+
+
+split_df_rows <- function(x) {
+  unname(split(x, seq_len(nrow(x))))
+}
