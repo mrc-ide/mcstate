@@ -41,3 +41,8 @@ example_sir <- function() {
   list(model = model, compare = compare, y0 = y0,
        data_raw = data_raw, data = data, history = history)
 }
+
+
+data_frame <- function(...) {
+  data.frame(..., stringsAsFactors = FALSE)
+}

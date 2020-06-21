@@ -56,6 +56,15 @@ grid_search_validate_range <- function(range) {
   if (length(msg) > 0L) {
     stop("Missing columns from 'range': ", paste(squote(msg), collapse = ", "))
   }
+
+  if (nrow(range) != 2L) {
+    stop("Expected exactly two rows in 'range'")
+  }
+
+  if (anyDuplicated(range$name)) {
+    stop("Duplicate 'name' entries not allowed in 'range'")
+  }
+
   targets <- c("step_start", "model_data", "pars_compare")
   err <- setdiff(range$target, targets)
   if (length(err) > 0L) {
