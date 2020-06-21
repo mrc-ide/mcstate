@@ -102,7 +102,9 @@ particle_filter <- R6::R6Class(
     ##' through to the comparison function (via the \code{pars_compare}
     ##' argument to \code{$run}).
     initialize = function(data, model, compare) {
-      assert_is(model, "dust_generator")
+      if (attr(model, which = "name", exact = TRUE) != "dust_generator") {
+        stop("'model' must be a dust_generator")
+      }
 
       self$model <- model
       private$data <- particle_filter_validate_data(data)
