@@ -10,51 +10,67 @@ Create a \code{particle_filter} object for running
 }
 \examples{
 # A basic SIR model included in the package:
-path <- system.file("example/sir/odin_sir.R", package = "mcstate")
-gen <- odin::odin_(path)
-sir <- gen()
+path <- system.file("example/sir/dust_sir.cpp", package = "mcstate")
+gen <- dust::dust(path)
 
-# Initial conditions for both the model and particle filter
-y0 <- sir$initial(0)
-
-# Some data that we will fit to:
-y <- sir$run(seq(0, 400, by = 4), y0)
-data_raw <- as.data.frame(y)[c("day", "incidence")]
+# Some data that we will fit to, using 1 particle:
+sir <- gen$new(data = NULL, step = 0, n_particles = 1)
+dt <- 1/4
+day <- seq(1, 100)
+incidence <- rep(NA, length(day))
+history <- array(NA_real_, c(3, 1, 101))
+history[, 1, 1] <- sir$state()
+for (i in day) {
+   state_start <- sir$state()
+   sir$run(i / dt)
+   state_end <- sir$state()
+   history[, 1, i] <- state_end
+   # Reduction in S
+   incidence[i] <- state_start[1,1] - state_end[1,1]
+ }
 
 # Convert this into our required format:
-data <- mcstate::particle_filter_data(data_raw[-1, ], "day", 4)
+data_raw <- data.frame(day = day, incidence = incidence)
+data <- particle_filter_data(data_raw, "day", 4)
 
 # A comparison function
-compare <- function(state, output, observed, exp_noise = 1e6) {
-  incid_modelled <- output[1, ]
-  incid_observed <- observed$incidence
-  lambda <- incid_modelled +
-    rexp(n = length(incid_modelled), rate = exp_noise)
-  dpois(x = incid_observed, lambda = lambda, log = TRUE)
+compare <- function(state, prev_state, observed, pars = NULL) {
+  if (is.null(pars)) {
+    pars <- list(exp_noise = 1e6)
+  }
+  incidence_modelled <- prev_state[1,] - state[1,]
+  incidence_observed <- observed$incidence
+  lambda <- incidence_modelled +
+    rexp(n = length(incidence_modelled), rate = pars$exp_noise)
+  dpois(x = incidence_observed, lambda = lambda, log = TRUE)
 }
 
 # Construct the particle_filter object:
-p <- mcstate::particle_filter$new(data, gen, compare)
-p$run(y0, 100, TRUE)
+p <- particle_filter$new(data, gen, compare)
+p$run(NULL, 100, TRUE)
 
 # Our simulated trajectories, with the "real" data superimposed
-matplot(data_raw$day, t(p$history[1, , ]), type = "l",
-        xlab = "Time", ylab = "State",
-        col = "#ff000022", lty = 1, ylim = range(p$history))
-matlines(data_raw$day, t(p$history[2, , ]), col = "#ffff0022", lty = 1)
-matlines(data_raw$day, t(p$history[3, , ]), col = "#0000ff22", lty = 1)
-matpoints(y[, "day"], y[, 2:4], pch = 19, col = c("red", "yellow", "blue"))
+matplot(data_raw$day, t(p$history[1, , -1]), type = "l",
+         xlab = "Time", ylab = "State",
+         col = "#ff000022", lty = 1, ylim = range(p$history))
+matlines(data_raw$day, t(p$history[2, , -1]), col = "#ffff0022", lty = 1)
+matlines(data_raw$day, t(p$history[3, , -1]), col = "#0000ff22", lty = 1)
+matpoints(data_raw$day, t(history[, , -1]), pch = 19,
+          col = c("red", "yellow", "blue"))
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{model}}{The odin model generator being simulated (cannot be
+\item{\code{model}}{The dust model generator being simulated (cannot be
 re-bound)}
 
 \item{\code{state}}{The final state of the last run of the particle filter}
 
 \item{\code{history}}{The history of the last run of the particle filter
-(if enabled with \code{save_history = TRUE}, otherwise NULL
+(if enabled with \code{save_history = TRUE}, otherwise NULL}
+
+\item{\code{unique_particles}}{The number of unique particles sampled
+at each step that has been run
 Create the particle filter}
 }
 \if{html}{\out{</div>}}
@@ -64,11 +80,13 @@ Create the particle filter}
 \itemize{
 \item \href{#method-new}{\code{particle_filter$new()}}
 \item \href{#method-run}{\code{particle_filter$run()}}
+\item \href{#method-run2}{\code{particle_filter$run2()}}
 \item \href{#method-predict}{\code{particle_filter$predict()}}
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{particle_filter$new(data, model, compare)}\if{html}{\out{</div>}}
@@ -87,14 +105,17 @@ used for comparison with the simulation.}
 create an \code{odin_model}).}
 
 \item{\code{compare}}{A comparison function.  Must take arguments
-\code{state}, \code{output} and \code{data} as arguments.
+\code{state}, \code{output}, \code{data} and \code{pars} as arguments
+(though the arguments may have different names).
 \code{state} is the simulated model state (a matrix with as
 many rows as there are state variables and as many columns as
 there are particles.  \code{output} is the output variables, if
 the model produces them (\code{NULL} otherwise) and \code{data}
 is a \code{list} of observed data corresponding to the current
 time's row in the \code{data} object provided here in the
-constructor.
+constructor.  \code{pars} is any additional parameters passed
+through to the comparison function (via the \code{pars_compare}
+argument to \code{$run}).
 We probably need some special treatment for the initial case
 but it's not clear that it belongs here, rather than in some
 function above this, as state is just provided here as a vector
@@ -106,36 +127,88 @@ Run the particle filter}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-run"></a>}}
+\if{latex}{\out{\hypertarget{method-run}{}}}
 \subsection{Method \code{run()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_filter$run(state, n_particles, save_history = FALSE, user = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter$run(
+  model_data,
+  n_particles,
+  save_history = FALSE,
+  pars_compare = NULL,
+  step_start = NULL,
+  run_params = NULL
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{state}}{The initial state. Can either be a vector (same
-state for all particles) or a matrix with \code{n_particles}
-columns}
+\item{\code{model_data}}{The data object passed into dust, which may contain
+parameters and/or initial conditions}
 
 \item{\code{n_particles}}{The number of particles to simulate}
 
 \item{\code{save_history}}{Logical, indicating if the history of all
 particles should be saved}
 
-\item{\code{user}}{Optional user parameters to use when creating the model}
+\item{\code{pars_compare}}{Optional parameters to use when applying
+the \code{compare} function.  These parameters will be passed as
+the 4th argument to \code{compare}.}
+
+\item{\code{step_start}}{Optional first step to start at.  If provided,
+this must be within the range of the first epoch implied in your
+\code{data} provided to the constructor (i.e., not less than the
+first element of \code{step_start} and less than \code{step_end})}
+
+\item{\code{run_params}}{List containing seed, n_threads and n_generators
+for use with dust}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
 A single numeric value representing the log-likelihood
 (\code{-Inf} if the model is impossible)
+Run the particle filter, modifying parameters
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-run2"></a>}}
+\if{latex}{\out{\hypertarget{method-run2}{}}}
+\subsection{Method \code{run2()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter$run2(
+  n_particles,
+  save_history = FALSE,
+  index,
+  pars,
+  run_params = NULL
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{n_particles}}{The number of particles to simulate}
+
+\item{\code{save_history}}{Logical, indicating if the history of all
+particles should be saved}
+
+\item{\code{index}}{A parameter index}
+
+\item{\code{pars}}{A list of parameters}
+
+\item{\code{run_params}}{List containing seed, n_threads and n_generators
+for use with dust
+
 Create predicted trajectories, based on the final point of a
-run with the particle filter
+run with the particle filter}
+}
+\if{html}{\out{</div>}}
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-predict"></a>}}
+\if{latex}{\out{\hypertarget{method-predict}{}}}
 \subsection{Method \code{predict()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{particle_filter$predict(t, append = FALSE)}\if{html}{\out{</div>}}

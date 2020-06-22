@@ -13,12 +13,6 @@ vnapply <- function(x, fun, ...) {
 }
 
 
-drop_dim <- function(x, n) {
-  dim(x) <- dim(x)[-n]
-  x
-}
-
-
 squote <- function(x) {
   sprintf("'%s'", x)
 }
@@ -32,4 +26,9 @@ dde_abind <- function(a, b) {
   ret[, , seq_len(na)] <- a
   ret[, , seq_len(nb) + na] <- b
   ret
+}
+
+
+split_df_rows <- function(x) {
+  unname(split(x, seq_len(nrow(x))))
 }

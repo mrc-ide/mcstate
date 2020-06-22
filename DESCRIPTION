@@ -1,6 +1,6 @@
 Package: mcstate
 Title: Monte Carlo Methods for State Space Models
-Version: 0.0.1
+Version: 0.0.2
 Authors@R: c(person("Rich", "FitzJohn", role = c("aut", "cre"),
                     email = "rich.fitzjohn@gmail.com"),
              person("Marc", "Baguelin", role = "aut"),
@@ -12,7 +12,7 @@ Authors@R: c(person("Rich", "FitzJohn", role = c("aut", "cre"),
 Description: Implements Monte Carlo methods for state-space models
     such as 'SIR' models in epidemiology. Particle MCMC (pmcmc) and
     SMC2 methods are planned. This package is particularly designed to
-    work with odin models, but we will see how general is becomes.
+    work with odin/dust models, but we will see how general it becomes.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -20,9 +20,8 @@ Language: en-GB
 URL: https://github.com/mrc-ide/mcstate
 BugReports: https://github.com/mrc-ide/mcstate/issues
 Imports:
-    dde (>= 1.0.2),
-    future,
+    dust,
     odin
 Suggests:
     testthat
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.0
