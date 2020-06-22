@@ -16,6 +16,8 @@
 ##' @param filter A particle filter to sample
 ##'
 ##' @param n_particles Number of particles
+##' 
+##' @param n_mcmc Number of MCMC steps
 ##'
 ##' @param proposal_kernel named matrix of proposal covariance for parameters
 ##'

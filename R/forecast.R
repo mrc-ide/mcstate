@@ -19,6 +19,8 @@
 ##' @param n_particles Number of particles. Positive Integer. Default = 100
 ##'
 ##' @param forecast_steps Number of time steps being forecast. Default = 0
+##' 
+##' @param burn_in Amount of burn in to remove (if an \code{mcstate_pmcmc_list})
 ##'
 ##' @return \code{\link{list}}. First element (trajectories) is a 3
 ##'   dimensional array of trajectories (time, state, tranjectories). Second
@@ -32,7 +34,8 @@ forecast <- function(x, ...,
                      filter,
                      n_sample_pars = 10,
                      n_particles = 100,
-                     forecast_steps = 0) {
+                     forecast_steps = 0,
+                     burn_in = 0) {
   assert_integer(n_sample_pars)
   assert_integer(n_particles)
   assert_integer(forecast_steps)

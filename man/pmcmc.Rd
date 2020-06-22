@@ -32,6 +32,8 @@ Each value must be a function which takes named parameter vector as
 
 \item{n_particles}{Number of particles}
 
+\item{n_mcmc}{Number of MCMC steps}
+
 \item{proposal_kernel}{named matrix of proposal covariance for parameters}
 
 \item{run_params}{List of parameters for \code{particle_filter$run}}
