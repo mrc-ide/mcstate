@@ -60,12 +60,6 @@ forecast.mcstate_scan <- function(x, ...,
                    filter, x$vars$index, n_particles,
                    forecast_steps)
 
-  # If the start point was sampled, trajectories will have different
-  # lengths and need to be filled with NAs
-  if (length(x$vars$index$step_start) > 1) {
-    traces <- traces_to_trajectories(traces)
-  }
-
   # combine and return
   res <- list("trajectories" = traces,
               "parameters" = pairs)
@@ -84,30 +78,5 @@ run_and_forecast <- function(model_params, filter, index, n_particles,
   } else {
     trajectories <- filter$history
   }
-  trajectories
-}
-
-##' collapse into an array of trajectories
-##' the trajectories are different lengths in terms of dates
-##' so we will fill the arrays with NAs where needed
-##' @importFrom utils tail
-##' @noRd
-traces_to_trajectories <- function(traces) {
-
-  num_rows <- unlist(lapply(traces, nrow))
-  max_rows <- max(num_rows)
-  seq_max <- seq_len(max_rows)
-  max_date_names <- rownames(traces[[which.max(unlist(lapply(traces, nrow)))]])
-  trajectories <- array(NA,
-                        dim = c(max_rows, ncol(traces[[1]]), length(traces)),
-                        dimnames = list(max_date_names, NULL, NULL))
-
-  # fill the tail of the array slice
-  # This is so that the end of the trajectories array is populated,
-  # and the start is padded with NA if it's shorter than the max.
-  for (i in seq_len(length(traces))) {
-    trajectories[tail(seq_max, nrow(traces[[i]])), , i] <- traces[[i]]
-  }
-
   trajectories
 }

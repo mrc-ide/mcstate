@@ -23,7 +23,7 @@ example_sir <- function() {
   inv_dt <- 4
   day <- seq(1, 100)
   incidence <- rep(NA, length(day))
-  history <- array(NA_real_, c(3, 1, 101))
+  history <- array(NA_real_, c(3, 1, day[length(day)] + 1))
   history[, , 1] <- sir$state()
 
   for (i in day) {

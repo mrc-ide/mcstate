@@ -49,6 +49,46 @@ test_that("SIR model parameters are can be inferred correctly", {
 
 })
 
+test_that("Start date can be sampled", {
+  range <- data.frame(name = c("beta", "step_start"),
+                      min = c(0.1, 0),
+                      max = c(0.3, 100),
+                      n = c(3, 3),
+                      target = c("model_data", "step_start"),
+                      stringsAsFactors = FALSE)
+  
+  dat <- example_sir()
+  data <- dat$data
+  offset <- 100
+  data[c("step_start", "step_end")] <-
+    data[c("step_start", "step_end")] + offset
+  data$step_start[[1]] <- 0
+  
+  p <- particle_filter$new(data, dat$model, dat$compare)
+  n_particles <- 100
+  
+  set.seed(1)
+  grid_res <- grid_search(range, p, n_particles)
+  expect_true(grid_res$renorm_mat_ll[2, 3] == max(grid_res$renorm_mat_ll))
+})
+
+test_that("pars_compare can be sampled", {
+  range <- data.frame(name = c("beta", "exp_noise"),
+                      min = c(0.1, 1e3),
+                      max = c(0.3, 1e6),
+                      n = c(3, 3),
+                      target = c("model_data", "pars_compare"),
+                      stringsAsFactors = FALSE)
+  
+  dat <- example_sir()
+
+  p <- particle_filter$new(dat$data, dat$model, dat$compare)
+  n_particles <- 100
+  
+  set.seed(1)
+  grid_res <- grid_search(range, p, n_particles)
+  expect_true(grid_res$renorm_mat_ll[2, 1] == max(grid_res$renorm_mat_ll))
+})
 
 test_that("grid_search_validate_range - happy path", {
   range <- data_frame(name = c("a", "b"),

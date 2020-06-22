@@ -11,17 +11,20 @@
 ##'
 ##' @param tolerance Check around edges of the probability matrix
 ##'
+##' @param run_params Passed to \code{particle_filter$run}
+##'
 ##' @return List of beta and start date grid values, and
 ##'   normalised probabilities at each point
 ##'
 ##' @export
-grid_search <- function(range, filter, n_particles, tolerance=1E-2) {
+grid_search <- function(range, filter, n_particles, tolerance=1E-2,
+                        run_params = NULL) {
   vars <- grid_search_validate_range(range)
 
   # Run the search, which returns a log-likelihood
   flat_log_ll <- vnapply(seq_len(nrow(vars$expanded)), function(i)
     filter$run2(n_particles, save_history = FALSE, index = vars$index,
-                pars = vars$expanded[i, ]))
+                pars = vars$expanded[i, ], run_params = run_params))
   mat_log_ll <- matrix(
     flat_log_ll,
     nrow = length(vars$variables[[1]]),
