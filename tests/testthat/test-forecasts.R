@@ -67,5 +67,8 @@ test_that("Sampling and forecasting from a grid search", {
     # 5 quantities, 101 steps
     expect_equal(dim(forecast_res$trajectories[[i]]), c(3, n_particles, 106))
   }
+  
+  plot(forecast_res, what = 3, data = dat$history[2, 1, ],
+       title = "R", ylab = "R")
 
 })
