@@ -17,9 +17,9 @@ test_that("Sampling and forecasting from a grid search", {
 
   set.seed(1)
   grid_res <- grid_search(range, p, n_particles)
-  forecast_res <- forecast(grid_res, 
+  forecast_res <- forecast(grid_res,
                            filter = p,
-                           n_sample_pairs = n_sample_pairs, 
+                           n_sample_pairs = n_sample_pairs,
                            n_particles = n_particles,
                            forecast_steps = forecast_steps)
 
@@ -61,9 +61,9 @@ test_that("Sampling and forecasting from a grid search", {
 
   # check that forecasting is possible
   forecast_steps <- 5
-  forecast_res <- forecast(grid_res, 
+  forecast_res <- forecast(grid_res,
                            filter = p,
-                           n_sample_pairs = n_sample_pairs, 
+                           n_sample_pairs = n_sample_pairs,
                            n_particles = n_particles,
                            forecast_steps = forecast_steps)
   for (i in seq_len(n_sample_pairs)) {

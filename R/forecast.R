@@ -26,8 +26,8 @@
 ##'
 ##' @export
 ##' @importFrom utils tail
-forecast <- function (x, ..., 
-                      filter, 
+forecast <- function (x, ...,
+                      filter,
                       n_sample_pairs = 10,
                       n_particles = 100,
                       forecast_steps = 0) {

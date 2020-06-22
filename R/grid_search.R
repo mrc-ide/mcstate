@@ -106,7 +106,7 @@ plot.mcstate_scan <- function(x, ..., what = "likelihood", title = NULL) {
 
 # 2D only - checks edges of an array are less than a tolerance
 zero_boundary <- function(array, tolerance) {
-  zero_edges <- 
+  zero_edges <-
     all(abs(array[1, ]) < tolerance) &&
     all(abs(array[, 1]) < tolerance) &&
     all(abs(array[nrow(array), ]) < tolerance) &&
