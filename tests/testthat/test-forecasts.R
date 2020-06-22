@@ -53,11 +53,8 @@ test_that("Sampling and forecasting from a grid search", {
   r_r2 <- mapply(f, grid$x, grid$y, 3)
   expect_gt(mean(r_r2), 0.99)
 
-  plot(dat$history[2, 1, ], type = "l", xlab = "day", ylab = "I", lwd = 2)
-  for (j in seq_len(n_particles)) {
-    lines(forecast_res$trajectories[[1]][2, j, ], type = "l", lty = 2,
-          col = rgb(139, 0, 0, maxColorValue = 255, alpha = 30))
-  }
+  plot(forecast_res, what = 2, data = dat$history[2, 1, ],
+       title = "I", ylab = "I")
 
   # check that forecasting is possible
   forecast_steps <- 5

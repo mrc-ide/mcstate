@@ -80,3 +80,42 @@ run_and_forecast <- function(model_params, filter, index, n_particles,
   }
   trajectories
 }
+
+##' @export
+plot.mcstate_forecast <- function(x, ..., what = "1", data = NULL,
+                                  ylab = NULL, title = NULL, col = 'grey80') {
+  partition_index = as.integer(what)
+  if (partition_index < 1 || partition_index > dim(x$trajectories[[1]])[1]) {
+    stop("'what' must be a valid index for a partition")
+  }
+
+  if (is.null(title)) {
+    title <- paste0("Partition ", partition_index)
+  }
+  if (is.null(ylab)) {
+    ylab <- paste0("Partition ", partition_index)
+  }
+
+  particles <- array(0, dim(x$trajectories[[1]])[-1])
+  for (i in seq_len(length(x$trajectories))) {
+    particles <- particles + x$trajectories[[i]][partition_index, , ]
+  }
+  particles <- particles / length(x$trajectories)
+
+  plot_particles(particles, ylab = ylab, title = title, col = col)
+  if (!is.null(data)) {
+    points(data, pch = 19)
+  }
+}
+
+##' @importFrom graphics plot points matlines
+##' @importFrom stats quantile
+plot_particles <- function(particles, ylab, title, col = "#44111144") {
+  plot(particles[, 1], type = "n", ylab = ylab, xlab = "Step",
+       ylim = range(particles, na.rm = TRUE), main = title)
+  ## Individual traces
+  matlines(t(particles), col=col, lty = 1)
+  ## Quantiles
+  quantiles <- t(apply(particles, 2, quantile, c(0.025, 0.5, 0.975)))
+  matlines(quantiles, col = "black", lty = "dashed")
+}
