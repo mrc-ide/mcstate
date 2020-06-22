@@ -72,4 +72,3 @@ test_that("Sampling and forecasting from a grid search", {
   }
 
 })
-
