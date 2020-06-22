@@ -67,7 +67,10 @@ re-bound)}
 \item{\code{state}}{The final state of the last run of the particle filter}
 
 \item{\code{history}}{The history of the last run of the particle filter
-(if enabled with \code{save_history = TRUE}, otherwise NULL
+(if enabled with \code{save_history = TRUE}, otherwise NULL}
+
+\item{\code{unique_particles}}{The number of unique particles sampled
+at each step that has been run
 Create the particle filter}
 }
 \if{html}{\out{</div>}}

@@ -78,6 +78,10 @@ particle_filter <- R6::R6Class(
     ##' (if enabled with \code{save_history = TRUE}, otherwise NULL
     history = NULL,
 
+    ##' @field unique_particles The number of unique particles sampled
+    ##' at each step that has been run
+    unique_particles = NULL,
+
     ##' Create the particle filter
     ##'
     ##' @param data The data set to be used for the particle filter.
@@ -158,6 +162,7 @@ particle_filter <- R6::R6Class(
                               seed = run_params[["seed"]])
 
       state <- model$state()
+      unique_particles <- rep(n_particles, private$n_steps + 1)
       if (save_history) {
         history <- array(NA_real_, c(dim(state), private$n_steps + 1))
         history[, , 1] <- state
@@ -185,6 +190,7 @@ particle_filter <- R6::R6Class(
           }
 
           kappa <- particle_resample(weights$weights)
+          unique_particles[t + 1L] <- length(unique(kappa))
           model$reorder(kappa)
           prev_state <- state[, kappa]
           if (save_history) {
@@ -194,6 +200,7 @@ particle_filter <- R6::R6Class(
       }
 
       self$history <- history
+      self$unique_particles <- unique_particles
       self$state <- state
       private$last_model <- model
 

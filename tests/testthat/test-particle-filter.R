@@ -3,11 +3,14 @@ context("particle_filter")
 test_that("run particle filter on sir model", {
   dat <- example_sir()
   p <- particle_filter$new(dat$data, dat$model, dat$compare)
-  res <- p$run(NULL, 42)
+  n_particles <- 42
+  res <- p$run(NULL, n_particles)
   expect_is(res, "numeric")
 
   expect_is(p$state, "matrix")
-  expect_equal(dim(p$state), c(3, 42))
+  expect_equal(dim(p$state), c(3, n_particles))
+  expect_equal(length(p$unique_particles), nrow(dat$data) + 1)
+  expect_true(all(p$unique_particles <= n_particles & p$unique_particles >= 1))
   expect_null(p$history)
 })
 
@@ -116,7 +119,7 @@ test_that("can't predict until model has been run", {
 test_that("can't append predictions without history", {
   dat <- example_sir()
   p <- particle_filter$new(dat$data, dat$model, dat$compare)
-  res <- p$run(dat$y0, 42, FALSE)
+  res <- p$run(NULL, 42, FALSE)
   expect_error(p$predict(0:10, TRUE), "Can't append without history")
 })
 
