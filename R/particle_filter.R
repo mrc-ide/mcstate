@@ -258,9 +258,11 @@ particle_filter <- R6::R6Class(
       step <- private$data[[private$n_steps]]$step_end + t
 
       res <- array(NA_real_, dim = c(dim(self$state), length(step) - 1))
+      forecast_step <- 0
       for (t in step[-1]) {
         private$last_model$run(t)
-        res[, , t - step[1]] <- private$last_model$state()
+        forecast_step <- forecast_step + 1
+        res[, , forecast_step] <- private$last_model$state()
       }
       if (append) {
         res <- dde_abind(self$history, res)
