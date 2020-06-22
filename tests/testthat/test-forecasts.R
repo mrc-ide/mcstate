@@ -17,8 +17,11 @@ test_that("Sampling and forecasting from a grid search", {
 
   set.seed(1)
   grid_res <- grid_search(range, p, n_particles)
-  forecast_res <- sample_grid_scan(grid_res, p, n_sample_pairs, n_particles,
-                                   forecast_steps)
+  forecast_res <- forecast(grid_res, 
+                           filter = p,
+                           n_sample_pairs = n_sample_pairs, 
+                           n_particles = n_particles,
+                           forecast_steps = forecast_steps)
 
   # check structure is as expected
   expect_is(forecast_res, "mcstate_forecast")
@@ -58,8 +61,11 @@ test_that("Sampling and forecasting from a grid search", {
 
   # check that forecasting is possible
   forecast_steps <- 5
-  forecast_res <- sample_grid_scan(grid_res, p, n_sample_pairs, n_particles,
-                                   forecast_steps)
+  forecast_res <- forecast(grid_res, 
+                           filter = p,
+                           n_sample_pairs = n_sample_pairs, 
+                           n_particles = n_particles,
+                           forecast_steps = forecast_steps)
   for (i in seq_len(n_sample_pairs)) {
     # 5 quantities, 101 steps
     expect_equal(dim(forecast_res$trajectories[[i]]), c(3, n_particles, 106))

@@ -55,7 +55,8 @@ matplot(data_raw$day, t(p$history[1, , -1]), type = "l",
          col = "#ff000022", lty = 1, ylim = range(p$history))
 matlines(data_raw$day, t(p$history[2, , -1]), col = "#ffff0022", lty = 1)
 matlines(data_raw$day, t(p$history[3, , -1]), col = "#0000ff22", lty = 1)
-matpoints(data_raw$day, t(history[, , -1]), pch = 19, col = c("red", "yellow", "blue"))
+matpoints(data_raw$day, t(history[, , -1]), pch = 19,
+          col = c("red", "yellow", "blue"))
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}

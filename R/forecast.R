@@ -26,31 +26,39 @@
 ##'
 ##' @export
 ##' @importFrom utils tail
-sample_grid_scan <- function(scan_results,
+forecast <- function (x, ..., 
+                      filter, 
+                      n_sample_pairs = 10,
+                      n_particles = 100,
+                      forecast_steps = 0) {
+  UseMethod("forecast", x)
+}
+
+# Forecast for grid search
+forecast.mcstate_scan <- function(x, ...,
                              filter,
                              n_sample_pairs = 10,
                              n_particles = 100,
                              forecast_steps = 0) {
 
   # checks on args
-  assert_is(scan_results, "mcstate_scan")
   assert_integer(n_sample_pairs)
   assert_integer(n_particles)
 
   # sample proportional to probability
-  sample_idx <- sample(nrow(scan_results$vars$expanded),
+  sample_idx <- sample(nrow(x$vars$expanded),
                        size = n_sample_pairs,
                        replace = TRUE,
-                       prob = scan_results$renorm_mat_ll)
-  pairs <- scan_results$vars$expanded[sample_idx, ]
+                       prob = x$renorm_mat_ll)
+  pairs <- x$vars$expanded[sample_idx, ]
 
   traces <- lapply(split_df_rows(pairs), run_and_forecast,
-                   filter, scan_results$vars$index, n_particles,
+                   filter, x$vars$index, n_particles,
                    forecast_steps)
 
   # If the start point was sampled, trajectories will have different
   # lengths and need to be filled with NAs
-  if (length(scan_results$vars$index$step_start) > 1) {
+  if (length(x$vars$index$step_start) > 1) {
     traces <- traces_to_trajectories(traces)
   }
 
