@@ -9,7 +9,8 @@ create_master_chain(x, burn_in)
 \arguments{
 \item{x}{a pmcmc_list object}
 
-\item{burn_in}{an integer denoting the number of samples to discard from each chain}
+\item{burn_in}{an integer denoting the number of samples to discard
+from each chain}
 }
 \description{
 create a master chain from a pmcmc_list object

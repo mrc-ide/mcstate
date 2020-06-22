@@ -17,81 +17,43 @@ pmcmc(
 )
 }
 \arguments{
-\item{n_particles}{Number of particles}
+\item{mcmc_range}{\code{data.frame} detailing parameters to sample.
+Must contain columns 'name' (parameter names), 'init' (initial values),
+'min' (minimum values), 'max' (maximum values),
+'discrete (boolean indicating whether a discrete quantity)' and
+'target'}
 
-\item{n_mcmc}{number of mcmc mcmc iterations to perform}
+\item{lprior_funcs}{functions to calculate log prior for each parameter.
+A named list for each parameter listed in \code{pars_to_sample}.
+Each value must be a function which takes named parameter vector as
+  input, returns a single numeric which is log of the prior probability.}
+
+\item{filter}{A particle filter to sample}
+
+\item{n_particles}{Number of particles}
 
 \item{proposal_kernel}{named matrix of proposal covariance for parameters}
 
-\item{output_proposals}{Logical indicating whether proposed parameter jumps should be output along with results}
+\item{run_params}{List of parameters for \code{particle_filter$run}}
+
+\item{output_proposals}{Logical indicating whether proposed parameter
+jumps should be output along with results}
 
 \item{n_chains}{Number of chains to run}
-
-\item{data}{Data to fit to.  This must be constructed with
-\code{particle_filter_data}}
-
-\item{model_params}{Model parameters, from a call to
-\code{generate_parameters()}.}
-
-\item{sircovid_model}{An odin model generator and comparison function.}
-
-\item{pars_obs}{list of parameters to use in comparison
-with \code{compare_icu}. Must be a list containing, e.g.
-list(phi_general = 0.95,
-k_general = 2,
-phi_ICU = 0.95,
-k_ICU = 2,
-phi_death = 926 / 1019,
-k_death = 2,
-exp_noise = 1e6)}
-
-\item{pars_to_sample}{\code{data.frame} detailing parameters to sample. Must contain columns
-'names' (parameter names), 'init' (initial values), 'min' (minimum values), 'max' (maximum values),
-'discrete (boolean indicating whether a discrete quantity)'}
-
-\item{pars_lprior}{functions to calculate log prior for each parameter. A named list for each parameter
-listed in \code{pars_to_sample}. Each value must be a function which takes named parameter vector as
-input, returns a single numeric which is log of the prior probability.}
-
-\item{steps_per_day}{Number of steps per day}
 }
 \value{
 an mcmc object containing
 - List of inputs
 - Matrix of accepted parameter samples, rows = iterations
-  as well as log prior, (particle filter estimate of) log likelihood and log posterior
+  as well as log prior, (particle filter estimate of) log likelihood
+  and log posterior
 }
 \description{
-The user inputs initial parameter values for beta_start and sample_date
-The log prior likelihood of these parameters is calculated based on the user-defined
-prior distributions.
-The log likelihood of the data given the initial parameters is estimated using a particle filter,
-which has two functions:
-     - Firstly, to generate a set of 'n_particles' samples of the model state space,
-       at time points corresponding to the data, one of which is
-       selected randomly to serve as the proposed state sequence sample at the final
-       data time point.
-     - Secondly, to produce an unbiased estimate of the likelihood of the data given the proposed parameters.
-The log posterior of the initial parameters given the data is then estimated by adding the log prior and
-log likelihood estimate.
-
-The pMCMC sampler then proceeds as follows, for n_mcmc iterations:
-At each loop iteration the pMCMC sampler perfsorms three steps:
-  1. Propose new candidate samples for beta_start, beta_end and start_date based on
-    the current samples, using the proposal distribution
-    (currently multivariate Gaussian with user-input covariance matrix (proposal_kernel), and reflecting boundaries defined by pars_min, pars_max)
-  2. Calculate the log prior of the proposed parameters,
-     Use the particle filter to estimate log likelihood of the data given the proposed parameters, as described above,
-     as well as proposing a model state space.
-     Add the log prior and log likelihood estimate to estimate the log posterior of the proposed parameters given the data.
-  3. Metropolis-Hastings step: The joint canditate sample (consisting of the proposed parameters
-     and state space) is then accepted with probability min(1, a), where the acceptance ratio is
-     simply the ratio of the posterior likelihood of the proposed parameters to the posterior likelihood
-     of the current parameters. Note that by choosing symmetric proposal distributions by including
-     reflecting boundaries, we avoid the the need to include the proposal likelihood in the MH ratio.
-
-  If the proposed parameters and states are accepted then we update the current parameters and states
-  to match the proposal, otherwise the previous parameters/states are retained for the next iteration.
+This is a basic Metropolis-Hastings MCMC sampler.
+The \code{filter} is run with a set of parameters to evaluate the
+likeihood. A new set of parameters is proposed, and these likelihoods are
+compared, jumping with probability equal to their ratio. This is repeated
+for \code{n_mcmc} proposals, \code{n_chains} independent times.
 }
 \details{
 Run a pmcmc sampler
