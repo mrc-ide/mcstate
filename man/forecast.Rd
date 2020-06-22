@@ -2,6 +2,7 @@
 % Please edit documentation in R/forecast.R
 \name{forecast}
 \alias{forecast}
+\alias{forecast.mcstate_scan}
 \title{Sample Grid Scan}
 \usage{
 forecast(
@@ -12,8 +13,21 @@ forecast(
   n_particles = 100,
   forecast_steps = 0
 )
+
+\method{forecast}{mcstate_scan}(
+  x,
+  ...,
+  filter,
+  n_sample_pairs = 10,
+  n_particles = 100,
+  forecast_steps = 0
+)
 }
 \arguments{
+\item{x}{Output of \code{\link{grid_search}}.}
+
+\item{...}{Other arguments}
+
 \item{filter}{A \code{particle_filter} object to run (the same
 (as the one used to produce \code{scan_results})}
 
@@ -24,8 +38,6 @@ will determine how many trajectories are returned.}
 \item{n_particles}{Number of particles. Positive Integer. Default = 100}
 
 \item{forecast_steps}{Number of time steps being forecast. Default = 0}
-
-\item{scan_results}{Output of \code{\link{grid_search}}.}
 }
 \value{
 \code{\link{list}}. First element (trajectories) is a 3

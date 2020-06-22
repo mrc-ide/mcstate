@@ -5,7 +5,9 @@
 ##'
 ##' @title Sample Grid Scan
 ##'
-##' @param scan_results Output of \code{\link{grid_search}}.
+##' @param x Output of \code{\link{grid_search}}.
+##'
+##' @param ... Other arguments
 ##'
 ##' @param filter A \code{particle_filter} object to run (the same
 ##' (as the one used to produce \code{scan_results})
@@ -26,20 +28,22 @@
 ##'
 ##' @export
 ##' @importFrom utils tail
-forecast <- function (x, ...,
-                      filter,
-                      n_sample_pairs = 10,
-                      n_particles = 100,
-                      forecast_steps = 0) {
+forecast <- function(x, ...,
+                     filter,
+                     n_sample_pairs = 10,
+                     n_particles = 100,
+                     forecast_steps = 0) {
   UseMethod("forecast", x)
 }
 
-# Forecast for grid search
+##' Forecast for grid search
+##' @rdname forecast
+##' @method forecast mcstate_scan
 forecast.mcstate_scan <- function(x, ...,
-                             filter,
-                             n_sample_pairs = 10,
-                             n_particles = 100,
-                             forecast_steps = 0) {
+                                  filter,
+                                  n_sample_pairs = 10,
+                                  n_particles = 100,
+                                  forecast_steps = 0) {
 
   # checks on args
   assert_integer(n_sample_pairs)

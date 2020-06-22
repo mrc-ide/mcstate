@@ -230,7 +230,7 @@ particle_filter <- R6::R6Class(
       }
 
       self$run(model_data, n_particles, save_history,
-               pars_compare, step_start = NULL, run_params = run_params)
+               pars_compare, step_start = step_start, run_params = run_params)
     },
 
     ##' Create predicted trajectories, based on the final point of a
