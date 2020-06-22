@@ -105,7 +105,8 @@ pmcmc <- function(mcmc_range,
 
 
     res <- list(rhat = rhat,
-                chains = chains)
+                chains = chains,
+                vars = vars)
 
     class(res) <- 'mcstate_pmcmc_list'
   } else {

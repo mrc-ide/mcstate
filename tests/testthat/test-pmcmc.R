@@ -22,6 +22,7 @@ test_that("MCMC can run", {
   n_chains <- 1
   X <- pmcmc(range, lprior, p, n_particles, n_mcmc, proposal_kernel,
              n_chains = n_chains)
+
   expect_equal(class(X), "mcstate_pmcmc")
   expect_equal(dim(X$results), c(n_mcmc + 1L, 5))
   expect_setequal(colnames(X$results), c(range$name, 'log_prior', 'log_likelihood', 'log_posterior'))

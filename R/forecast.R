@@ -1,5 +1,5 @@
 ##' Take a grid search produced by \code{\link{grid_search}} and
-##' sample \code{n_sample_pairs} from the parameter grid uses based
+##' sample \code{n_sample_pars} from the parameter grid uses based
 ##' on their probability. For each parameter pair chosen, run particle
 ##' filter with \code{num_particles}.
 ##'
@@ -12,7 +12,7 @@
 ##' @param filter A \code{particle_filter} object to run (the same
 ##' (as the one used to produce \code{scan_results})
 ##'
-##' @param n_sample_pairs Number of parameter pairs to be sampled. This will
+##' @param n_sample_pars Number of parameter pairs to be sampled. This will
 ##'   determine how many trajectories are returned. Integer. Default = 10. This
 ##'   will determine how many trajectories are returned.
 ##'
@@ -30,9 +30,12 @@
 ##' @importFrom utils tail
 forecast <- function(x, ...,
                      filter,
-                     n_sample_pairs = 10,
+                     n_sample_pars = 10,
                      n_particles = 100,
                      forecast_steps = 0) {
+  assert_integer(n_sample_pars)
+  assert_integer(n_particles)
+  assert_integer(forecast_steps)
   UseMethod("forecast", x)
 }
 
@@ -41,17 +44,13 @@ forecast <- function(x, ...,
 ##' @method forecast mcstate_scan
 forecast.mcstate_scan <- function(x, ...,
                                   filter,
-                                  n_sample_pairs = 10,
+                                  n_sample_pars = 10,
                                   n_particles = 100,
                                   forecast_steps = 0) {
 
-  # checks on args
-  assert_integer(n_sample_pairs)
-  assert_integer(n_particles)
-
   # sample proportional to probability
   sample_idx <- sample(nrow(x$vars$expanded),
-                       size = n_sample_pairs,
+                       size = n_sample_pars,
                        replace = TRUE,
                        prob = x$renorm_mat_ll)
   pairs <- x$vars$expanded[sample_idx, ]
@@ -69,99 +68,31 @@ forecast.mcstate_scan <- function(x, ...,
 
 }
 
-##' Take a parameter search produced by \code{\link{pmcmc}} and
-##' sample \code{n_sample} from the parameter space
-##' on their probability. For each parameter pair chosen, run particle
-##' filter with \code{num_particles} and sample 1 trajectory
-##'
-##' @title Sample pmcmc
-##'
-##' @param mcmc_results Output of \code{\link{pmcmc}}.
-##'
-##' @param burn_in Number of burn-in samples to discard
-##'
-##' @param n_sample Number of parameter pairs to be sampled. This will
-##'   determine how many trajectories are returned. Integer. Default = 10. This
-##'   will determine how many trajectories are returned.
-##'
-##' @param n_particles Number of particles. Positive Integer. Default = 100
-##'
-##' @param forecast_days Number of days being forecast. Default = 0
-##'
-##' @return \code{\link{list}}. First element (trajectories) is a 3
-##'   dimensional array of trajectories (time, state, tranjectories). Second
-##'   element (param_grid) is the parameters chosen when  sampling from the
-##'   \code{scan_results} grid and the third dimension (inputs) is a list of
-##'   model inputs.
-##'
-##' @export
-##' @importFrom furrr future_map
-##' @importFrom purrr transpose
-forecast.mcstate_pmcmc <- function(mcmc_results,
-                         burn_in = 1,
-                         n_sample = 10,
-                         n_particles = 100,
-                         forecast_days = 0) {
+##' Forecast for MCMC
+##' @rdname forecast
+##' @method forecast mcstate_pmcmc_list
+forecast.mcstate_pmcmc_list <- function(x, ...,
+                                        filter,
+                                        n_sample_pars = 10,
+                                        n_particles = 100,
+                                        forecast_steps = 0,
+                                        burn_in = 1) {
 
-  # checks on args
-  assert_pos_int(n_sample)
-  assert_pos_int(n_particles)
-  assert_pos_int(forecast_days)
-
-  # discard burn-in
-  pars_to_sample <- names(mcmc_results$inputs$pars$pars_init)
-  chains <- create_master_chain(mcmc_results, burn_in)
+  # discard burn-in and sample
+  par_names <- colnames(x$chains[[1]]$results)
+  par_names <- par_names[!(par_names %in% c("log_prior", "log_likelihood", "log_posterior"))]
+  chains <- create_master_chain(x, burn_in)
   param_grid <- chains[sample.int(n = nrow(chains),
-                                  size  = n_sample,
-                                  replace = FALSE), pars_to_sample]
+                                  size = n_sample_pars,
+                                  replace = FALSE), par_names]
 
-  if ("beta_changepoints" %in% names(mcmc_results$inputs)){
-    beta_changepoints <- mcmc_results$inputs$beta_changepoints
-  } else {
-    beta_changepoints <- NULL
-  }
+  traces <- lapply(split_df_rows(param_grid), run_and_forecast,
+                   filter, x$vars$index, n_particles,
+                   forecast_steps)
 
-  forecasts <- function(sampled_pars) {
-    pars <- as.list(sampled_pars)
-    pars$start_date <- sircovid_date(pars$start_date)
-    trace <- calc_loglikelihood(pars,
-                                mcmc_results$inputs$data,
-                                mcmc_results$inputs$sircovid_model,
-                                mcmc_results$inputs$model_params,
-                                mcmc_results$inputs$steps_per_day,
-                                mcmc_results$inputs$pars_obs,
-                                n_particles,
-                                forecast_days,
-                                return = "full",
-                                beta_changepoints)
-    trace
-  }
-
-  # Run forecasts in parallel
-  traces <- furrr::future_map(.x = purrr::transpose(param_grid), .f = forecasts)
-  trajectories <- traces_to_trajectories(traces)
-
-  if (is.null(beta_changepoints)){
-    # combine and return
-    res <- list("trajectories" = trajectories,
-                "param_grid" = param_grid,
-                inputs = list(
-                  model_params = mcmc_results$inputs$model_params,
-                  pars_obs = mcmc_results$inputs$pars_obs,
-                  data = mcmc_results$inputs$data,
-                  model = mcmc_results$inputs$sircovid_model,
-                  forecast_days = forecast_days))
-  } else {
-    res <- list("trajectories" = trajectories,
-                "param_grid" = param_grid,
-                inputs = list(
-                  model_params = mcmc_results$inputs$model_params,
-                  pars_obs = mcmc_results$inputs$pars_obs,
-                  data = mcmc_results$inputs$data,
-                  model = mcmc_results$inputs$sircovid_model,
-                  forecast_days = forecast_days,
-                  beta_changepoints = beta_changepoints))
-  }
+  # combine and return
+  res <- list("trajectories" = traces,
+              "parameters" = param_grid)
 
   class(res) <- "mcstate_forecast"
   return(res)
