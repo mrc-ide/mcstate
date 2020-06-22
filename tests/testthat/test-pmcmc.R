@@ -22,19 +22,35 @@ test_that("MCMC can run", {
   n_chains <- 1
   X <- pmcmc(range, lprior, p, n_particles, n_mcmc, proposal_kernel, 
              n_chains = n_chains)
+  expect_equal(class(X), "mcstate_pmcmc")
+  expect_equal(dim(X$results), c(n_mcmc + 1L, 5))
+  expect_setequal(colnames(X$results), c(range$name, 'log_prior', 'log_likelihood', 'log_posterior'))
+  expect_length(X$acceptance_rate, 5)
+  expect_length(X$ess, 5)
+  expect_true(all(X$acceptance_rate >= 0 & X$acceptance_rate <= 1))
+  expect_true(all(X$ess >= 0))
+
+  #plot(X)
+  #summary(X)
   
   # Multiple chains
   n_chains <- 3
   burn_in <- 10
   Y <- pmcmc(range, lprior, p, n_particles, n_mcmc, proposal_kernel, 
              n_chains = n_chains)
-  Y_master <- create_master_chain(Y, burn_in = burn_in)
+  expect_equal(class(Y), "mcstate_pmcmc_list")
+  expect_equal(nrow(Y$rhat$psrf), nrow(range))
+  expect_length(Y$chains, 3)
   
-  browser()
+  Y_master <- create_master_chain(Y, burn_in = burn_in)
+  expect_equal(class(Y_master), "mcstate_pmcmc_chain")
+  expect_length(Y_master, 5)
+  expect_length(Y_master$beta, (n_mcmc + 1L - burn_in) * n_chains)
 
 })
 
 test_that("MCMC can infer the correct parameters", {
+  skip("Test not yet complete")
   range <- data.frame(name = c("beta", "gamma"),
                       init = c(0.2, 0.1),
                       min = c(0, 0),

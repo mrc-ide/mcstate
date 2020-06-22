@@ -128,7 +128,6 @@ pmcmc <- function(mcmc_range,
 
     # calculating rhat
     # convert parallel chains to a coda-friendly format
-    browser()
     chains_coda <- lapply(chains, function(x) {
         traces <- x$results
       coda::as.mcmc(traces[, vars$range$name])
@@ -366,7 +365,7 @@ reflect_proposal <- function(x, floor, cap) {
 ##'
 create_master_chain <- function(x, burn_in) {
 
-  if(class(x) != 'pmcmc_list') {
+  if(class(x) != 'mcstate_pmcmc_list') {
     stop('x must be a pmcmc_list object')
   }
   if(!is.numeric(burn_in)) {
@@ -375,7 +374,7 @@ create_master_chain <- function(x, burn_in) {
   if(burn_in < 0) {
     stop('burn_in must not be negative')
   }
-  if(burn_in >= x$inputs$n_mcmc) {
+  if(burn_in >= nrow(x$chains[[1]]$results)) {
     stop('burn_in is greater than chain length')
   }
 
@@ -384,7 +383,9 @@ create_master_chain <- function(x, burn_in) {
     FUN = function(z) z$results[-seq_len(burn_in), ]
   )
 
-  do.call(what = rbind, args = chains)
+  master <- do.call(what = rbind, args = chains)
+  class(master) <- "mcstate_pmcmc_chain"
+  master
 }
 
 
