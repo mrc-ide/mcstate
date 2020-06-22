@@ -91,50 +91,47 @@ pmcmc <- function(mcmc_range,
                   output_proposals = FALSE,
                   n_chains = 1) {
   vars <- mcmc_validate_range(mcmc_range)
-  par_names <- as.character(vars$range$names)
+  par_names <- as.character(vars$range$name)
 
-  if(length(output_proposals) != 1 || !is.logical(output_proposals)) {
+  if (length(output_proposals) != 1 || !is.logical(output_proposals)) {
     stop("output_proposals must be either TRUE or FALSE")
   }
 
-  if(!all(names(lprior_funcs) %in% par_names)) {
+  if (!all(names(lprior_funcs) %in% par_names)) {
     stop("All sampled parameters must have a defined prior")
   }
 
-  if(!(setequal(rownames(proposal_kernel),
+  if (!(setequal(rownames(proposal_kernel),
                 colnames(proposal_kernel)) &&
          setequal(rownames(proposal_kernel),
-                   proposal_kernel) &&
+                  par_names) &&
       nrow(proposal_kernel) == length(par_names) &&
       ncol(proposal_kernel) == length(par_names))) {
     stop("proposal_kernel must be a matrix or vector with names corresponding
           to the parameters being sampled")
   }
 
-  #for testing
-  chains <- run_mcmc_chain(vars, lprior_funcs, filter, n_mcmc,
-                           n_particles, proposal_kernel, run_params,
-                           output_proposals = FALSE)
-  #chains <- furrr::future_pmap(
-  #    .l =  list(n_mcmc = rep(n_mcmc, n_chains)),
-  #    .f = run_mcmc_chain,
-  #    vars,
-  #    lprior_funcs,
-  #    filter,
-  #    n_particles,
-  #    proposal_kernel,
-  #    run_params = NULL,
-  #    output_proposals = FALSE,
-  #    .progress = TRUE)
+  chains <- furrr::future_pmap(
+      .l =  list(n_mcmc = rep(n_mcmc, n_chains)),
+      .f = run_mcmc_chain,
+      vars,
+      lprior_funcs,
+      filter,
+      n_particles,
+      proposal_kernel,
+      run_params = run_params,
+      output_proposals = output_proposals,
+      .progress = TRUE)
 
   if (n_chains > 1) {
     names(chains) <- paste0('chain', seq_len(n_chains))
 
     # calculating rhat
     # convert parallel chains to a coda-friendly format
+    browser()
     chains_coda <- lapply(chains, function(x) {
         traces <- x$results
-      coda::as.mcmc(traces[, vars$range$names])
+      coda::as.mcmc(traces[, vars$range$name])
     })
 
     rhat <- tryCatch(expr = {
@@ -146,15 +143,15 @@ pmcmc <- function(mcmc_range,
 
 
     res <- list(rhat = rhat,
-                chains = lapply(chains, '[', -1))
+                chains = chains)
 
     class(res) <- 'mcstate_pmcmc_list'
   } else {
     res <- chains[[1]]
+    class(res) <- 'mcstate_pmcmc'
   }
 
   res
-
 }
 
 mcmc_validate_range <- function(range) {
@@ -218,16 +215,16 @@ run_mcmc_chain <- function(n_mcmc,
   # Set initial state
   #
   curr_pars <- vars$range$init
-  names(curr_pars) <- vars$range$names
+  names(curr_pars) <- vars$range$name
 
   ## calculate initial prior
-  curr_lprior <- calc_lprior(pars_init, lprior_funcs)
+  curr_lprior <- calc_lprior(curr_pars, lprior_funcs)
 
   # run particle filter on initial parameters
   curr_ll <- filter$run2(n_particles,
                          save_history = FALSE,
                          index = vars$index,
-                         pars = pars_init,
+                         pars = curr_pars,
                          run_params = run_params)
   curr_lpost <- curr_lprior + curr_ll
 
@@ -289,7 +286,7 @@ run_mcmc_chain <- function(n_mcmc,
     accept_prob <- exp(prop_lpost - curr_lpost)
 
     # MH step
-    if(runif(1) < accept_prob) {
+    if (runif(1) < accept_prob) {
       # update parameters and calculated likelihoods
       curr_pars <- prop_pars
       curr_lprior <- prop_lprior
@@ -303,7 +300,7 @@ run_mcmc_chain <- function(n_mcmc,
                      curr_ll,
                      curr_lpost)
 
-    if(output_proposals) {
+    if (output_proposals) {
       proposals[iter, ] <- c(prop_pars,
                              prop_lprior,
                              prop_ll,
@@ -323,10 +320,10 @@ run_mcmc_chain <- function(n_mcmc,
               'acceptance_rate' = 1-rejection_rate,
               "ess" = ess)
 
- if(output_proposals) {
-   proposals <- as.data.frame(proposals)
-   out$proposals <- proposals
- }
+  if (output_proposals) {
+    proposals <- as.data.frame(proposals)
+    out$proposals <- proposals
+  }
 
  class(out) <- 'mcstate_pmcmc'
  out
