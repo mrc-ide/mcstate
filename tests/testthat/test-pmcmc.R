@@ -1,4 +1,4 @@
-context("pMCMC")
+context("pmcmc")
 
 test_that("MCMC can run", {
   range <- data.frame(name = c("beta", "gamma"),
@@ -46,6 +46,9 @@ test_that("MCMC can run", {
   expect_equal(nrow(multi_chain$rhat$psrf), nrow(range))
   expect_length(multi_chain$chains, 3)
 
+  summary(multi_chain)
+  plot(multi_chain)
+  
   multi_chain_master <- create_master_chain(multi_chain, burn_in = burn_in)
   expect_equal(ncol(multi_chain_master), 5)
   expect_equal(nrow(multi_chain_master), (n_mcmc + 1L - burn_in) * n_chains)
@@ -64,7 +67,7 @@ test_that("MCMC doesn't move away from correct parameters", {
                       stringsAsFactors = FALSE)
   lprior <- list("beta" = function(pars) log(1e-10),
                  "gamma" = function(pars) log(1e-10))
-  proposal_kernel <- diag(nrow(range)) * 0.005^2
+  proposal_kernel <- diag(nrow(range)) * 0.01^2
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- range$name
 
   dat <- example_sir()
@@ -77,8 +80,8 @@ test_that("MCMC doesn't move away from correct parameters", {
   mcmc_results <- pmcmc(range, lprior, p, n_particles, n_mcmc, proposal_kernel,
                         n_chains = n_chains)
 
-  expect_lt(abs(mean(mcmc_results$results$beta) - 0.2), 0.01)
-  expect_lt(abs(mean(mcmc_results$results$gamma) - 0.1), 0.01)
+  expect_lt(abs(mean(mcmc_results$results$beta) - 0.2), 0.02, )
+  expect_lt(abs(mean(mcmc_results$results$gamma) - 0.1), 0.02)
 })
 
 test_that("MCMC runs on different targets", {
@@ -112,6 +115,7 @@ test_that("MCMC runs on different targets", {
 
   # A single chain
   n_chains <- 1
+  browser()
   mcmc_results <- pmcmc(range, lprior, p, n_particles, n_mcmc, proposal_kernel,
                         n_chains = n_chains)
 
@@ -183,12 +187,12 @@ test_that("MCMC jumps behave as expected", {
   expect_equal(object = mcmc_results$results$gamma,
                 expected = rep(range$init[2], n_mcmc + 1))
   expect_true(!all(diff(mcmc_results$results$log_likelihood) == 0))
-  expect_equal(dim(mcmc_results$proposals), c(n_mcmc + 1L, 5))
+  expect_equal(dim(mcmc_results$proposals), c(n_mcmc + 1L, 6))
 
   ## check non-zero covariance ihas an impact on proposals
   set.seed(1)
-  proposal_kernel = matrix(0.01^2, 0,
-                          0     , 0.01^2),
+  proposal_kernel = matrix(c(0.01^2, 0,
+                           0     , 0.01^2),
                         nrow = 2, byrow = TRUE,
                         dimnames = list(
                           range$name,
@@ -197,7 +201,7 @@ test_that("MCMC jumps behave as expected", {
                             proposal_kernel, n_chains = n_chains,
                             output_proposals = TRUE)
   set.seed(1)
-  proposal_kernel = matrix(0.01^2, 0.01^2,
+  proposal_kernel = matrix(c(0.01^2, 0.01^2,
                           0.01^2, 0.01^2),
                         nrow = 2, byrow = TRUE,
                         dimnames = list(
@@ -232,7 +236,7 @@ test_that("MCMC range input errors", {
                       init = c(0.2, 0.1),
                       min = c("0", 0),
                       max = c(1, 1),
-                      discrete = c(2, FALSE),
+                      discrete = c(FALSE, FALSE),
                       target = "model_data",
                       stringsAsFactors = FALSE)
   expect_error(mcmc_validate_range(range),
@@ -241,7 +245,7 @@ test_that("MCMC range input errors", {
                       init = c(0.2, 0.1),
                       min = c(0, 0),
                       max = c("1", 1),
-                      discrete = c(2, FALSE),
+                      discrete = c(FALSE, FALSE),
                       target = "model_data",
                       stringsAsFactors = FALSE)
   expect_error(mcmc_validate_range(range),
@@ -250,7 +254,7 @@ test_that("MCMC range input errors", {
                       init = c("0.2", 0.1),
                       min = c(0, 0),
                       max = c(1, 1),
-                      discrete = c(2, FALSE),
+                      discrete = c(FALSE, FALSE),
                       target = "model_data",
                       stringsAsFactors = FALSE)
   expect_error(mcmc_validate_range(range),
@@ -259,7 +263,7 @@ test_that("MCMC range input errors", {
                       init = c(0.2, 0.1),
                       min = c(0, 0),
                       max = c(1, 1),
-                      discrete = c(2, FALSE),
+                      discrete = c(FALSE, FALSE),
                       target = "step_start",
                       stringsAsFactors = FALSE)
   expect_error(mcmc_validate_range(range),
@@ -268,17 +272,17 @@ test_that("MCMC range input errors", {
                       init = c(0.2, 0.1),
                       min = c(0, 0),
                       max = c(1, 1),
-                      discrete = c(2, FALSE),
+                      discrete = c(FALSE, FALSE),
                       target = "model_pars",
                       stringsAsFactors = FALSE)
   expect_error(mcmc_validate_range(range),
-               "Invalid target 'model_pars': must be one of 'step_start',
-               'model_data', 'pars_compare'")
+               paste0("Invalid target 'model_pars': must be one of ",
+               "'step_start', 'model_data', 'pars_compare'"))
   range <- data.frame(names = c("beta", "gamma"),
                       init = c(0.2, 0.1),
                       min = c(0, 0),
                       max = c(1, 1),
-                      discrete = c(2, FALSE),
+                      discrete = c(FALSE, FALSE),
                       target = "model_data",
                       stringsAsFactors = FALSE)
   expect_error(mcmc_validate_range(range),
@@ -287,7 +291,7 @@ test_that("MCMC range input errors", {
                       init = c(0.2, 0.1),
                       min = c(0, 0),
                       max = c(1, 1),
-                      discrete = c(2, FALSE),
+                      discrete = c(FALSE, FALSE),
                       target = "model_data",
                       stringsAsFactors = FALSE)
   expect_error(mcmc_validate_range(range),
@@ -299,7 +303,7 @@ test_that("MCMC function input errors", {
                       init = c(0.2, 0.1),
                       min = c(0, 0),
                       max = c(1, 1),
-                      discrete = c(2, FALSE),
+                      discrete = c(FALSE, FALSE),
                       target = "model_data",
                       stringsAsFactors = FALSE)
   lprior <- list("beta" = function(pars) log(1e-10),
@@ -322,12 +326,12 @@ test_that("MCMC function input errors", {
   expect_error(pmcmc(range, lprior, p, n_particles, n_mcmc, proposal_kernel,
                      n_chains = n_chains),
                "All sampled parameters must have a defined prior")
-  lprior <- list("beta" = function(pars) c(log(1e-10), log(1e-10),
+  lprior <- list("beta" = function(pars) c(log(1e-10), log(1e-10)),
                  "gamma" = function(pars) c(0, 0))
   expect_error(pmcmc(range, lprior, p, n_particles, n_mcmc, proposal_kernel,
                      n_chains = n_chains),
-               "lprior_funcs must return a single numeric representing the
-               log prior")
+               paste0("lprior_funcs must return a single numeric representing ",
+               "the log prior"))
   lprior <- list("beta" = function(pars) log(0),
                  "gamma" = function(pars) 0)
   expect_error(pmcmc(range, lprior, p, n_particles, n_mcmc, proposal_kernel,
@@ -341,8 +345,8 @@ test_that("MCMC function input errors", {
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- range$name[1]
   expect_error(pmcmc(range, lprior, p, n_particles, n_mcmc, proposal_kernel,
                      n_chains = n_chains),
-               "proposal_kernel must be a matrix or vector with names
-                corresponding to the parameters being sampled")
+               paste0("proposal_kernel must be a matrix or vector with names ",
+                      "corresponding to the parameters being sampled"))
 })
 
 test_that("Master chain errors", {

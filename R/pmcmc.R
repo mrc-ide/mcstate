@@ -62,7 +62,7 @@ pmcmc <- function(mcmc_range,
     stop("output_proposals must be either TRUE or FALSE")
   }
 
-  if (!all(names(lprior_funcs) %in% par_names)) {
+  if (!all(par_names %in% names(lprior_funcs))) {
     stop("All sampled parameters must have a defined prior")
   }
 
@@ -72,8 +72,8 @@ pmcmc <- function(mcmc_range,
                   par_names) &&
       nrow(proposal_kernel) == length(par_names) &&
       ncol(proposal_kernel) == length(par_names))) {
-    stop("proposal_kernel must be a matrix or vector with names corresponding
-          to the parameters being sampled")
+    stop(paste0("proposal_kernel must be a matrix or vector with names ",
+                "corresponding to the parameters being sampled"))
   }
 
   chains <- furrr::future_pmap(
@@ -317,7 +317,7 @@ mcmc_validate_range <- function(range) {
     stop("'max' entries must be numeric")
   }
 
-  if (any(range$init < range$min | range$init > range$mmax)) {
+  if (range$init < range$min || range$init > range$max) {
     stop("initial parameters are outside of specified range")
   }
 

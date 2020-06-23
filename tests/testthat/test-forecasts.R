@@ -1,4 +1,4 @@
-context("Sampling and forecasts")
+context("forecast")
 
 test_that("Sampling and forecasting from a grid search", {
   range <- data.frame(name = c("beta", "gamma"),
