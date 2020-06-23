@@ -61,6 +61,8 @@ particle_filter <- R6::R6Class(
   private = list(
     data = NULL,
     steps = NULL,
+    particle_steps = NULL,
+    current_step = NULL,
     n_steps = NULL,
     compare = NULL,
     last_model = NULL
@@ -73,6 +75,8 @@ particle_filter <- R6::R6Class(
 
     ##' @field state The final state of the last run of the particle filter
     state = NULL,
+
+    log_likelihood = NULL,
 
     ##' @field history The history of the last run of the particle filter
     ##' (if enabled with \code{save_history = TRUE}, otherwise NULL
@@ -130,6 +134,9 @@ particle_filter <- R6::R6Class(
     ##'
     ##' @param n_particles The number of particles to simulate
     ##'
+    ##' @param n_steps The number of steps to run. \code{NULL} runs to
+    ##' the end of the data. (default = \code{NULL})
+    ##'
     ##' @param save_history Logical, indicating if the history of all
     ##' particles should be saved
     ##'
@@ -147,64 +154,46 @@ particle_filter <- R6::R6Class(
     ##'
     ##' @return A single numeric value representing the log-likelihood
     ##' (\code{-Inf} if the model is impossible)
-    run = function(model_data, n_particles, save_history = FALSE,
+    run = function(model_data, n_particles, n_steps = NULL,
+                   save_history = FALSE,
                    pars_compare = NULL, step_start = NULL,
                    run_params = NULL) {
 
       compare <- private$compare
-      steps <- particle_steps(private$steps, step_start)
+      private$particle_steps <- particle_steps(private$steps, step_start)
+      private$current_step <- 0
       run_params <- validate_dust_params(run_params)
+      if (is.null(n_steps)) {
+        n_steps <- private$n_steps
+      } else if (n_steps > private$n_steps) {
+        stop("Cannot run past end of data")
+      }
 
       model <- self$model$new(data = model_data, step = steps[1, 1],
                               n_particles = n_particles,
                               n_threads = run_params[["n_threads"]],
                               n_generators = run_params[["n_generators"]],
                               seed = run_params[["seed"]])
+      private$last_model <- model
 
       state <- model$state()
-      unique_particles <- rep(n_particles, private$n_steps + 1)
+      self$unique_particles <- rep(n_particles, private$n_steps + 1)
       if (save_history) {
         history <- array(NA_real_, c(dim(state), private$n_steps + 1))
         history[, , 1] <- state
       } else {
         history <- NULL
       }
+      self$history <- history
 
       log_likelihood <- 0
-      prev_state <- state
-      for (t in seq_len(private$n_steps)) {
-        model$run(steps[t, 2])
-        state <- model$state()
-        log_weights <- compare(state, prev_state, private$data[[t]],
-                               pars_compare)
-        if (save_history) {
-          history[, , t + 1L] <- state
-        }
-
-        if (!is.null(log_weights)) {
-          weights <- scale_log_weights(log_weights)
-          log_likelihood <- log_likelihood + weights$average
-          if (weights$average == -Inf) {
-            ## Everything is impossible, so stop here
-            break
-          }
-
-          kappa <- particle_resample(weights$weights)
-          unique_particles[t + 1L] <- length(unique(kappa))
-          model$reorder(kappa)
-          prev_state <- state[, kappa]
-          if (save_history) {
-            history <- history[, kappa, ]
-          }
-        }
+      for (t in seq_len(n_steps)) {
+        state <- self$continue(state, pars_compare)
       }
 
-      self$history <- history
-      self$unique_particles <- unique_particles
       self$state <- state
-      private$last_model <- model
 
-      log_likelihood
+      self$log_likelihood
     },
 
     ##' Run the particle filter, modifying parameters
@@ -221,8 +210,9 @@ particle_filter <- R6::R6Class(
     ##' @param run_params List containing seed, n_threads and n_generators
     ##' for use with dust
     ##'
-    run2 = function(n_particles, save_history = FALSE,
-                   index, pars, run_params = NULL) {
+    run2 = function(n_particles, n_steps = NULL,
+                    save_history = FALSE,
+                    index, pars, run_params = NULL) {
       step_start <- pars_model <- pars_compare <- NULL
       if (length(index$step_start) > 0) {
         step_start <- pars[[index$step_start]]
@@ -236,8 +226,41 @@ particle_filter <- R6::R6Class(
         pars_compare <- pars[index$pars_compare]
       }
 
-      self$run(model_data, n_particles, save_history,
+      self$run(model_data, n_particles, n_steps, save_history,
                pars_compare, step_start = step_start, run_params = run_params)
+    },
+
+    # TODO - might be best if this didn't take any arguments
+    # and data was just stored in the object
+    continue = function(prev_state, pars_compare) {
+      t = private$particle_steps[private$current_step, 2]
+      private$current_step <- private$current_step + 1
+      private$last_model$run(t)
+
+      state <- model$state()
+      log_weights <- compare(state, prev_state, private$data[[t]],
+                              pars_compare)
+      if (save_history) {
+        private$history[, , t + 1L] <- state
+      }
+
+      if (!is.null(log_weights)) {
+        weights <- scale_log_weights(log_weights)
+        self$log_likelihood <- self$log_likelihood + weights$average
+        if (weights$average == -Inf) {
+          ## Everything is impossible, so stop here
+          break
+        }
+
+        kappa <- particle_resample(weights$weights)
+        self$unique_particles[t + 1L] <- length(unique(kappa))
+        model$reorder(kappa)
+        state <- state[, kappa]
+        if (save_history) {
+          private$history <- private$history[, kappa, ]
+        }
+        state
+      }
     },
 
     ##' Create predicted trajectories, based on the final point of a
