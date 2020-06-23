@@ -76,6 +76,9 @@ pmcmc <- function(mcmc_range,
                 "corresponding to the parameters being sampled"))
   }
 
+  # For the chains to be independent on threads, dust will
+  # need to support a long_jump call
+  # (for now, could use seed = seed + thread_idx)
   chains <- furrr::future_pmap(
       .l =  list(n_mcmc = rep(n_mcmc, n_chains)),
       .f = run_mcmc_chain,
@@ -251,6 +254,7 @@ calc_lprior <- function(pars, pars_lprior) {
   for (par in names(pars)) {
       lprior <- lprior + pars_lprior[[par]](pars)
   }
+  names(lprior) <- NULL
   lprior
 }
 

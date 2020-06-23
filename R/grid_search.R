@@ -22,9 +22,13 @@ grid_search <- function(range, filter, n_particles, tolerance=1E-2,
   vars <- grid_search_validate_range(range)
 
   # Run the search, which returns a log-likelihood
-  flat_log_ll <- vnapply(seq_len(nrow(vars$expanded)), function(i)
+  flat_log_ll <- vnapply(seq_len(nrow(vars$expanded)), function(i) {
+    # For compatibility with the MCMC
+    pars <- as.numeric(vars$expanded[i, ])
+    names(pars) <- colnames(vars$expanded)
     filter$run2(n_particles, save_history = FALSE, index = vars$index,
-                pars = vars$expanded[i, ], run_params = run_params))
+                pars = pars, run_params = run_params)})
+
   mat_log_ll <- matrix(
     flat_log_ll,
     nrow = length(vars$variables[[1]]),
@@ -51,7 +55,6 @@ grid_search <- function(range, filter, n_particles, tolerance=1E-2,
   class(results) <- "mcstate_scan"
   results
 }
-
 
 grid_search_validate_range <- function(range) {
   assert_is(range, "data.frame")

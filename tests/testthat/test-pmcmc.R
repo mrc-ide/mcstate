@@ -85,6 +85,7 @@ test_that("MCMC doesn't move away from correct parameters", {
 })
 
 test_that("MCMC runs on different targets", {
+  # All three targets
   range <- data.frame(name = c("beta", "step_start", "exp_noise"),
                       init = c(0.2, 200, 1e6),
                       min = c(0, 0, 1),
@@ -92,6 +93,7 @@ test_that("MCMC runs on different targets", {
                       discrete = c(FALSE, TRUE, FALSE),
                       target = c("model_data", "step_start", "pars_compare"),
                       stringsAsFactors = FALSE)
+  # One informative prior
   lprior <- list("beta" = function(pars) dnorm(pars["beta"], 0.2, 0.01),
                  "step_start" = function(pars) log(1e-10),
                  "exp_noise" = function(pars) log(1e-10))
@@ -115,12 +117,11 @@ test_that("MCMC runs on different targets", {
 
   # A single chain
   n_chains <- 1
-  browser()
   mcmc_results <- pmcmc(range, lprior, p, n_particles, n_mcmc, proposal_kernel,
                         n_chains = n_chains)
 
   expect_equal(class(mcmc_results), "mcstate_pmcmc")
-  expect_equal(dim(mcmc_results$results), c(n_mcmc + 1L, 5))
+  expect_equal(dim(mcmc_results$results), c(n_mcmc + 1L, 6))
   expect_setequal(colnames(mcmc_results$results),
                   c(range$name,
                     "log_prior", "log_likelihood", "log_posterior"))
