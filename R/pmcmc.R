@@ -16,7 +16,7 @@
 ##' @param filter A particle filter to sample
 ##'
 ##' @param n_particles Number of particles
-##' 
+##'
 ##' @param n_mcmc Number of MCMC steps
 ##'
 ##' @param proposal_kernel named matrix of proposal covariance for parameters
@@ -89,7 +89,7 @@ pmcmc <- function(mcmc_range,
       .progress = TRUE)
 
   if (n_chains > 1) {
-    names(chains) <- paste0('chain', seq_len(n_chains))
+    names(chains) <- paste0("chain", seq_len(n_chains))
 
     # calculating rhat
     # convert parallel chains to a coda-friendly format
@@ -102,7 +102,7 @@ pmcmc <- function(mcmc_range,
       x <- coda::gelman.diag(chains_coda)
       x
     }, error = function(e) {
-      print('unable to calculate rhat')
+      print("unable to calculate rhat")
       })
 
 
@@ -110,10 +110,10 @@ pmcmc <- function(mcmc_range,
                 chains = chains,
                 vars = vars)
 
-    class(res) <- 'mcstate_pmcmc_list'
+    class(res) <- "mcstate_pmcmc_list"
   } else {
     res <- chains[[1]]
-    class(res) <- 'mcstate_pmcmc'
+    class(res) <- "mcstate_pmcmc"
   }
 
   res
@@ -147,10 +147,10 @@ run_mcmc_chain <- function(n_mcmc,
 
   # checks on log_prior and log_likelihood functions
   if (length(curr_lprior) > 1) {
-    stop('log_prior must return a single numeric representing the log prior')
+    stop("lprior_funcs must return a single numeric representing the log prior")
   }
   if (is.infinite(curr_lprior)) {
-    stop('initial parameters are not compatible with supplied prior')
+    stop("initial parameters are not compatible with supplied prior")
   }
 
   #
@@ -159,9 +159,9 @@ run_mcmc_chain <- function(n_mcmc,
 
   # initialise output arrays
   res_init <- c(curr_pars,
-                'log_prior' = curr_lprior,
-                'log_likelihood' = curr_ll,
-                'log_posterior' = curr_lpost)
+                "log_prior" = curr_lprior,
+                "log_likelihood" = curr_ll,
+                "log_posterior" = curr_lpost)
   res <- matrix(data = NA,
                 nrow = n_mcmc + 1L,
                 ncol = length(res_init),
@@ -169,13 +169,13 @@ run_mcmc_chain <- function(n_mcmc,
                                 names(res_init)))
   res[1, ] <- res_init
 
-  if(output_proposals) {
+  if (output_proposals) {
     proposals <- matrix(data = NA,
                         nrow = n_mcmc + 1L,
                         ncol = length(res_init) + 1L,
                         dimnames = list(NULL,
                                         c(names(res_init),
-                                          'accept_prob')))
+                                          "accept_prob")))
   }
 
   #
@@ -234,7 +234,7 @@ run_mcmc_chain <- function(n_mcmc,
   ess <- coda::effectiveSize(coda_res)
 
   out <- list("results" = as.data.frame(res),
-              "acceptance_rate" = 1-rejection_rate,
+              "acceptance_rate" = 1 - rejection_rate,
               "ess" = ess)
 
   if (output_proposals) {
@@ -242,7 +242,7 @@ run_mcmc_chain <- function(n_mcmc,
     out$proposals <- proposals
   }
 
- class(out) <- 'mcstate_pmcmc'
+ class(out) <- "mcstate_pmcmc"
  out
 }
 
@@ -317,8 +317,8 @@ mcmc_validate_range <- function(range) {
     stop("'max' entries must be numeric")
   }
 
-  if(any(range$init < range$min | range$init > range$mmax)) {
-    stop('initial parameters are outside of specified range')
+  if (any(range$init < range$min | range$init > range$mmax)) {
+    stop("initial parameters are outside of specified range")
   }
 
   list(range = range,
@@ -333,17 +333,17 @@ mcmc_validate_range <- function(range) {
 ##'
 create_master_chain <- function(x, burn_in) {
 
-  if(class(x) != 'mcstate_pmcmc_list') {
-    stop('x must be a pmcmc_list object')
+  if (class(x) != "mcstate_pmcmc_list") {
+    stop("x must be a pmcmc_list object")
   }
-  if(!is.numeric(burn_in)) {
-    stop('burn_in must be an integer')
+  if (!is.numeric(burn_in)) {
+    stop("burn_in must be an integer")
   }
-  if(burn_in < 0) {
-    stop('burn_in must not be negative')
+  if (burn_in < 0) {
+    stop("burn_in must not be negative")
   }
-  if(burn_in >= nrow(x$chains[[1]]$results)) {
-    stop('burn_in is greater than chain length')
+  if (burn_in >= nrow(x$chains[[1]]$results)) {
+    stop("burn_in is greater than chain length")
   }
 
   chains <- lapply(
@@ -381,9 +381,9 @@ summary.mcstate_pmcmc <- function(object, ...) {
   sds <- round(apply(traces, 2, sd), 3)
   # convert start_date back into dates
 
-  out <- list('summary' = summ,
-              'corr_mat' = corr_mat,
-              'sd' = sds)
+  out <- list("summary" = summ,
+              "corr_mat" = corr_mat,
+              "sd" = sds)
   out
 }
 
@@ -399,11 +399,11 @@ summary.mcstate_pmcmc_list <- function(object, ..., burn_in = 1) {
 
 print_summ <- function(par_name, summ) {
   x <- summ$summary
-  paste0(x['mean', par_name],
-          '\n(',
-          x['2.5%', par_name],
-          ', ',
-          x['97.5%', par_name], ')')
+  paste0(x["mean", par_name],
+          "\n(",
+          x["2.5%", par_name],
+          ", ",
+          x["97.5%", par_name], ")")
 }
 
 ##' @export
@@ -421,16 +421,16 @@ plot.mcstate_pmcmc <- function(x, ...) {
 
   par(bty = "n",
       mfcol = c(n_pars, n_pars + 1L),
-      mar = c(2.5,2.5,2,1.5),
+      mar = c(2.5, 2.5, 2, 1.5),
       mgp = c(1.5, 0.5, 0),
-      oma = c(1,1,1,1))
+      oma = c(1, 1, 1, 1))
 
   for (i in seq_len(n_pars)) {
     for(j in seq_len(n_pars)) {
       if (i == j) {
         # plot hists on diagonal
         par_name <- par_names[i]
-        breaks = 10
+        breaks <- 10
         hist(traces[[i]],
              main = print_summ(par_name, summ),
              xlab = par_name,
@@ -459,7 +459,7 @@ plot.mcstate_pmcmc <- function(x, ...) {
 
   # print traces in final column
   mapply(FUN = plot, traces,
-         type = 'l',
+         type = "l",
          ylab = par_names,
          xlab = "Iteration")
 }
@@ -490,7 +490,7 @@ plot.mcstate_pmcmc_list <- function(x, burn_in = 1, ...) {
   })
   names(traces) <- par_names
 
-  breaks <- lapply(par_names, function(par_name){
+  breaks <- lapply(par_names, function(par_name) {
     seq(from = min(master_chain[, par_name]),
         to =  max(master_chain[, par_name]),
         length.out = 20)
@@ -506,7 +506,7 @@ plot.mcstate_pmcmc_list <- function(x, burn_in = 1, ...) {
   names(hists) <- par_names
 
   hist_ylim <- lapply(hists, function(h) {
-    chain_max <- sapply(h, function(chain) max(chain$density) )
+    chain_max <- sapply(h, function(chain) max(chain$density))
     upper_lim <- max(chain_max)
     if (is.na(upper_lim)) {
       upper_lim <- 0
@@ -557,8 +557,8 @@ plot.mcstate_pmcmc_list <- function(x, burn_in = 1, ...) {
         # print rho on upper triangle
         plot.new()
         text(x = 0.5,
-             y=0.5, cex = 1.5,
-             labels = paste('r =',
+             y = 0.5, cex = 1.5,
+             labels = paste("r =",
                             summ$corr_mat[i, j]))
       }
     }
@@ -575,15 +575,15 @@ plot.mcstate_pmcmc_list <- function(x, burn_in = 1, ...) {
             type = "l",
             col = cols_trace,
             lty = 1,
-            xlab = 'Iteration',
+            xlab = "Iteration",
             ylab = par_name, )
 
-    if(leg) {
-      legend('top',
+    if (leg) {
+      legend("top",
              ncol = n_chains,
-             legend = paste('Chain', seq_len(n_chains)),
+             legend = paste("Chain", seq_len(n_chains)),
              fill = cols_trace,
-             bty = 'n')
+             bty = "n")
     }
   },
   par_name = par_names,
@@ -594,7 +594,7 @@ plot_hists <- function(h, col, breaks) {
   with(h, lines(x =  breaks,
                 y = c(density,
                       density[length(density)]),
-                type = 's',
+                type = "s",
                 col = col))
 }
 

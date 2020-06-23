@@ -19,7 +19,7 @@
 ##' @param n_particles Number of particles. Positive Integer. Default = 100
 ##'
 ##' @param forecast_steps Number of time steps being forecast. Default = 0
-##' 
+##'
 ##' @param burn_in Amount of burn in to remove (if an \code{mcstate_pmcmc_list})
 ##'
 ##' @return \code{\link{list}}. First element (trajectories) is a 3
@@ -83,7 +83,9 @@ forecast.mcstate_pmcmc_list <- function(x, ...,
 
   # discard burn-in and sample
   par_names <- colnames(x$chains[[1]]$results)
-  par_names <- par_names[!(par_names %in% c("log_prior", "log_likelihood", "log_posterior"))]
+  par_names <- par_names[!(par_names %in% c("log_prior",
+                                            "log_likelihood",
+                                            "log_posterior"))]
   chains <- create_master_chain(x, burn_in)
   param_grid <- chains[sample.int(n = nrow(chains),
                                   size = n_sample_pars,
@@ -116,8 +118,8 @@ run_and_forecast <- function(model_params, filter, index, n_particles,
 
 ##' @export
 plot.mcstate_forecast <- function(x, ..., what = "1", data = NULL,
-                                  ylab = NULL, title = NULL, col = 'grey80') {
-  partition_index = as.integer(what)
+                                  ylab = NULL, title = NULL, col = "grey80") {
+  partition_index <- as.integer(what)
   if (partition_index < 1 || partition_index > dim(x$trajectories[[1]])[1]) {
     stop("'what' must be a valid index for a partition")
   }
@@ -147,7 +149,7 @@ plot_particles <- function(particles, ylab, title, col = "#44111144") {
   plot(particles[, 1], type = "n", ylab = ylab, xlab = "Step",
        ylim = range(particles, na.rm = TRUE), main = title)
   ## Individual traces
-  matlines(t(particles), col=col, lty = 1)
+  matlines(t(particles), col = col, lty = 1)
   ## Quantiles
   quantiles <- t(apply(particles, 2, quantile, c(0.025, 0.5, 0.975)))
   matlines(quantiles, col = "black", lty = "dashed")

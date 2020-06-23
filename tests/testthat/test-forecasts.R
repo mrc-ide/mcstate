@@ -81,8 +81,8 @@ test_that("Sampling and forecasting from an MCMC", {
                       discrete = c(FALSE, FALSE),
                       target = "model_data",
                       stringsAsFactors = FALSE)
-  lprior <- list('beta' = function(pars) log(1e-10),
-                 'gamma' = function(pars) log(1e-10))
+  lprior <- list("beta" = function(pars) log(1e-10),
+                 "gamma" = function(pars) log(1e-10))
   proposal_kernel <- diag(nrow(range)) * 0.01^2
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- range$name
 
