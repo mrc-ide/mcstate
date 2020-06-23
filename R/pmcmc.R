@@ -321,7 +321,7 @@ mcmc_validate_range <- function(range) {
     stop("'max' entries must be numeric")
   }
 
-  if (range$init < range$min || range$init > range$max) {
+  if (any(range$init < range$min | range$init > range$max)) {
     stop("initial parameters are outside of specified range")
   }
 
@@ -371,7 +371,7 @@ summary.mcstate_pmcmc <- function(object, ...) {
   traces <- object$results
 
   # calculate correlation matrix
-  corr_mat <- round(cor(traces),2)
+  corr_mat <- round(cor(traces), 2)
 
   # compile summary
   summ <- rbind(mean = colMeans(traces),
@@ -430,7 +430,7 @@ plot.mcstate_pmcmc <- function(x, ...) {
       oma = c(1, 1, 1, 1))
 
   for (i in seq_len(n_pars)) {
-    for(j in seq_len(n_pars)) {
+    for (j in seq_len(n_pars)) {
       if (i == j) {
         # plot hists on diagonal
         par_name <- par_names[i]
@@ -520,12 +520,12 @@ plot.mcstate_pmcmc_list <- function(x, burn_in = 1, ...) {
 
   par(bty = "n",
       mfcol = c(n_pars, n_pars + 1L),
-      mar = c(2.5,2.5,1.5,0),
+      mar = c(2.5, 2.5, 1.5, 0),
       mgp = c(1.5, 0.5, 0),
-      oma = c(1,1,1,1))
+      oma = c(1, 1, 1, 1))
 
   for (i in seq_len(n_pars)) {
-    for(j in seq_len(n_pars)) {
+    for (j in seq_len(n_pars)) {
       if (i == j) {
         # plot hists on diagonal
         par_name <- par_names[i]

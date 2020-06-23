@@ -48,7 +48,7 @@ test_that("MCMC can run", {
 
   summary(multi_chain)
   plot(multi_chain)
-  
+
   multi_chain_master <- create_master_chain(multi_chain, burn_in = burn_in)
   expect_equal(ncol(multi_chain_master), 5)
   expect_equal(nrow(multi_chain_master), (n_mcmc + 1L - burn_in) * n_chains)
@@ -97,7 +97,7 @@ test_that("MCMC runs on different targets", {
   lprior <- list("beta" = function(pars) dnorm(pars["beta"], 0.2, 0.01),
                  "step_start" = function(pars) log(1e-10),
                  "exp_noise" = function(pars) log(1e-10))
-  proposal_kernel = matrix(c(0.001^2, 0, 0,
+  proposal_kernel <- matrix(c(0.001^2, 0, 0,
                              0, 0.001^2, 0,
                              0,       0, 10^2),
                              nrow = 3, byrow = TRUE,
@@ -159,7 +159,8 @@ test_that("Proposals are correctly reflected", {
 })
 
 test_that("MCMC jumps behave as expected", {
-  ## check that proposing jumps of size zero results in the initial parameter being retained
+  ## check that proposing jumps of size zero results in the
+  ## initial parameter being retained
   range <- data.frame(name = c("beta", "gamma"),
                       init = c(0.2, 0.1),
                       min = c(0, 0),
@@ -169,7 +170,7 @@ test_that("MCMC jumps behave as expected", {
                       stringsAsFactors = FALSE)
   lprior <- list("beta" = function(pars) log(1e-10),
                  "gamma" = function(pars) log(1e-10))
-  proposal_kernel = matrix(rep(0, 4),
+  proposal_kernel <- matrix(rep(0, 4),
                         nrow = 2, byrow = TRUE,
                         dimnames = list(
                           range$name,
@@ -192,8 +193,8 @@ test_that("MCMC jumps behave as expected", {
 
   ## check non-zero covariance ihas an impact on proposals
   set.seed(1)
-  proposal_kernel = matrix(c(0.01^2, 0,
-                           0     , 0.01^2),
+  proposal_kernel <- matrix(c(0.01^2, 0,
+                              0, 0.01^2),
                         nrow = 2, byrow = TRUE,
                         dimnames = list(
                           range$name,
@@ -202,7 +203,7 @@ test_that("MCMC jumps behave as expected", {
                             proposal_kernel, n_chains = n_chains,
                             output_proposals = TRUE)
   set.seed(1)
-  proposal_kernel = matrix(c(0.01^2, 0.01^2,
+  proposal_kernel <- matrix(c(0.01^2, 0.01^2,
                           0.01^2, 0.01^2),
                         nrow = 2, byrow = TRUE,
                         dimnames = list(
