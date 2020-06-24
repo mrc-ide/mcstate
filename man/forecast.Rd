@@ -43,9 +43,11 @@ forecast(
 \item{filter}{A \code{particle_filter} object to run (the same
 (as the one used to produce \code{scan_results})}
 
-\item{n_sample_pars}{Number of parameter pairs to be sampled. This will
-determine how many trajectories are returned. Integer. Default = 10. This
-will determine how many trajectories are returned.}
+\item{n_sample_pars}{Number of parameters to be sampled. For a
+\code{mcstate_scan} these will be pairs of parameters sampled in
+proportion to their posterior probability. For a \code{mcstate_pmcmc_list}
+this will be full parameter sets sampled evenly from the chains.
+Integer. This will determine how many trajectories are returned.}
 
 \item{n_particles}{Number of particles. Positive Integer. Default = 100}
 
