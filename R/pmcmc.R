@@ -101,13 +101,10 @@ pmcmc <- function(mcmc_range,
       coda::as.mcmc(traces[, vars$range$name])
     })
 
-    rhat <- tryCatch(expr = {
-      x <- coda::gelman.diag(chains_coda)
-      x
-    }, error = function(e) {
-      print("unable to calculate rhat")
-      })
-
+    rhat <- gelman_diag(chains_coda)
+    if (is.na(rhat)) {
+      message("Could not calculate rhat")
+    }
 
     res <- list(rhat = rhat,
                 chains = chains,
@@ -327,6 +324,13 @@ mcmc_validate_range <- function(range) {
 
   list(range = range,
        index = index)
+}
+
+# Calculates the gelman diagnostic for multiple chains, if possible
+gelman_diag <- function(chains) {
+  tryCatch(
+    coda::gelman.diag(chains_coda),
+    error = function(e) NA_real_)
 }
 
 ##' @title create a master chain from a pmcmc_list object
