@@ -57,37 +57,17 @@ grid_search <- function(range, filter, n_particles, tolerance=1E-2,
 }
 
 grid_search_validate_range <- function(range) {
-  assert_is(range, "data.frame")
-  msg <- setdiff(c("name", "min", "max", "n", "target"), names(range))
-  if (length(msg) > 0L) {
-    stop("Missing columns from 'range': ", paste(squote(msg), collapse = ", "))
-  }
+  # Defined in pmcmc.R
+  index <- validate_range(range,
+    c("name", "min", "max", "n", "target"))
 
   if (nrow(range) != 2L) {
     stop("Expected exactly two rows in 'range'")
   }
 
-  if (anyDuplicated(range$name)) {
-    stop("Duplicate 'name' entries not allowed in 'range'")
-  }
-
-  targets <- c("step_start", "model_data", "pars_compare")
-  err <- setdiff(range$target, targets)
-  if (length(err) > 0L) {
-    stop(sprintf("Invalid target %s: must be one of %s",
-                 paste(squote(err), collapse = ", "),
-                 paste(squote(targets), collapse = ", ")))
-  }
-
   variables <- Map(seq, range$min, range$max, length.out = range$n)
   names(variables) <- range$name
   expanded <- do.call("expand.grid", variables)
-
-  index <- lapply(targets, function(t) which(range$target == t))
-  names(index) <- targets
-  if (length(index$step_start) > 1L) {
-    stop("At most one target may be 'step_start'")
-  }
 
   list(range = range,
        variables = variables,

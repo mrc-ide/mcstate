@@ -2,16 +2,16 @@
 % Please edit documentation in R/pmcmc.R
 \name{create_master_chain}
 \alias{create_master_chain}
-\title{create a master chain from a pmcmc_list object}
+\title{Combine multiple chains into a single (master) chain}
 \usage{
 create_master_chain(x, burn_in)
 }
 \arguments{
-\item{x}{a pmcmc_list object}
+\item{x}{An mcstate_pmcmc_list containing chains to combine}
 
 \item{burn_in}{an integer denoting the number of samples to discard
 from each chain}
 }
 \description{
-create a master chain from a pmcmc_list object
+Combine multiple chains into a single (master) chain
 }

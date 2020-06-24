@@ -42,7 +42,6 @@
 ##'
 ##' @export
 ##' @import coda
-##' @import furrr
 ##' @importFrom stats rnorm
 ##' @importFrom mvtnorm rmvnorm
 ##' @importFrom graphics matplot
@@ -76,20 +75,19 @@ pmcmc <- function(mcmc_range,
                 "corresponding to the parameters being sampled"))
   }
 
+  # This could be parallelise with furrr::future_pmap
+  # with `.l =  list(n_mcmc = rep(n_mcmc, n_chains))`
   # For the chains to be independent on threads, dust will
   # need to support a long_jump call
   # (for now, could use seed = seed + thread_idx)
-  chains <- furrr::future_pmap(
-      .l =  list(n_mcmc = rep(n_mcmc, n_chains)),
-      .f = run_mcmc_chain,
-      vars,
-      lprior_funcs,
-      filter,
-      n_particles,
-      proposal_kernel,
-      run_params = run_params,
-      output_proposals = output_proposals,
-      .progress = TRUE)
+  chains <-  vnapply(seq_len(n_chains), run_mcmc_chain,
+                     vars,
+                     lprior_funcs,
+                     filter,
+                     n_particles,
+                     proposal_kernel,
+                     run_params = run_params,
+                     output_proposals = output_proposals)
 
   if (n_chains > 1) {
     names(chains) <- paste0("chain", seq_len(n_chains))
@@ -277,13 +275,11 @@ reflect_proposal <- function(x, floor, cap) {
   abs((x + interval - floor) %% (2 * interval) - interval) + floor
 }
 
-# Check input data.frame
-mcmc_validate_range <- function(range) {
+validate_range <- function(range, expected_names) {
   assert_is(range, "data.frame")
-  msg <- setdiff(c("name", "init", "min", "max", "discrete", "target"),
-                   names(range))
+  msg <- setdiff(expected, names(range))
   if (length(msg) > 0L) {
-    stop("Missing columns from 'mcmc_range': ",
+    stop("Missing columns from range: ",
            paste(squote(msg), collapse = ", "))
   }
 
@@ -304,7 +300,15 @@ mcmc_validate_range <- function(range) {
   if (length(index$step_start) > 1L) {
     stop("At most one target may be 'step_start'")
   }
+  index
+}
 
+# Check input data.frame
+mcmc_validate_range <- function(range) {
+  index <- validate_range(range,
+    c("name", "init", "min", "max", "discrete", "target"))
+
+  # MCMC specific checks
   if (!is.logical(range$discrete)) {
     stop("'discrete' entries must be TRUE or FALSE")
   }
@@ -333,12 +337,16 @@ gelman_diag <- function(chains) {
     error = function(e) NA_real_)
 }
 
-##' @title create a master chain from a pmcmc_list object
-##' @param x a pmcmc_list object
+##' Combine multiple chains into a single (master) chain
+##'
+##' @title Combine multiple chains into a single (master) chain
+##'
+##' @param x An mcstate_pmcmc_list containing chains to combine
+##'
 ##' @param burn_in an integer denoting the number of samples to discard
 ##' from each chain
-##' @export
 ##'
+##' @export
 create_master_chain <- function(x, burn_in) {
 
   if (class(x) != "mcstate_pmcmc_list") {
