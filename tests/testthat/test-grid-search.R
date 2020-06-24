@@ -122,11 +122,11 @@ test_that("grid_search_validate_range requires columns", {
   expect_error(
     grid_search_validate_range(
       data_frame(name = c("a", "b"), min = 1, max = 2, n = 2)),
-    "Missing columns from 'range': 'target'")
+    "Missing columns from range: 'target'")
   expect_error(
     grid_search_validate_range(
       data_frame(name = c("a", "b"), n = 2)),
-    "Missing columns from 'range': 'min', 'max', 'target'")
+    "Missing columns from range: 'min', 'max', 'target'")
 })
 
 
@@ -172,5 +172,5 @@ test_that("grid_search_validate_range requires unique names", {
                       min = 1, max = 2, n = 10, target = "model_data")
   expect_error(
     grid_search_validate_range(range),
-    "Duplicate 'name' entries not allowed in 'range'")
+    "Duplicate 'name' entries not allowed in range")
 })

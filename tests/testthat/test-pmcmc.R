@@ -42,6 +42,7 @@ test_that("MCMC can run", {
   burn_in <- 10
   multi_chain <- pmcmc(range, lprior, p, n_particles, n_mcmc, proposal_kernel,
                         n_chains = n_chains)
+
   expect_equal(class(multi_chain), "mcstate_pmcmc_list")
   expect_equal(nrow(multi_chain$rhat$psrf), nrow(range))
   expect_length(multi_chain$chains, 3)
@@ -288,7 +289,7 @@ test_that("MCMC range input errors", {
                       target = "model_data",
                       stringsAsFactors = FALSE)
   expect_error(mcmc_validate_range(range),
-               "Missing columns from 'mcmc_range': 'name'")
+               "Missing columns from range: 'name'")
   range <- data.frame(name = c("beta", "beta"),
                       init = c(0.2, 0.1),
                       min = c(0, 0),
@@ -297,7 +298,7 @@ test_that("MCMC range input errors", {
                       target = "model_data",
                       stringsAsFactors = FALSE)
   expect_error(mcmc_validate_range(range),
-               "Duplicate 'name' entries not allowed in 'mcmc_range'")
+               "Duplicate 'name' entries not allowed in range")
 })
 
 test_that("MCMC function input errors", {

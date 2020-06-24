@@ -80,7 +80,7 @@ pmcmc <- function(mcmc_range,
   # For the chains to be independent on threads, dust will
   # need to support a long_jump call
   # (for now, could use seed = seed + thread_idx)
-  chains <-  vnapply(seq_len(n_chains), run_mcmc_chain,
+  chains <- lapply(rep(n_mcmc, n_chains), run_mcmc_chain,
                      vars,
                      lprior_funcs,
                      filter,
@@ -100,7 +100,7 @@ pmcmc <- function(mcmc_range,
     })
 
     rhat <- gelman_diag(chains_coda)
-    if (is.na(rhat)) {
+    if (class(rhat) != "gelman.diag") {
       message("Could not calculate rhat")
     }
 
@@ -275,16 +275,17 @@ reflect_proposal <- function(x, floor, cap) {
   abs((x + interval - floor) %% (2 * interval) - interval) + floor
 }
 
+# General range validation used by pmcmc and grid search
 validate_range <- function(range, expected_names) {
   assert_is(range, "data.frame")
-  msg <- setdiff(expected, names(range))
+  msg <- setdiff(expected_names, names(range))
   if (length(msg) > 0L) {
     stop("Missing columns from range: ",
            paste(squote(msg), collapse = ", "))
   }
 
   if (anyDuplicated(range$name)) {
-    stop("Duplicate 'name' entries not allowed in 'mcmc_range'")
+    stop("Duplicate 'name' entries not allowed in range")
   }
 
   targets <- c("step_start", "model_data", "pars_compare")
@@ -333,7 +334,7 @@ mcmc_validate_range <- function(range) {
 # Calculates the gelman diagnostic for multiple chains, if possible
 gelman_diag <- function(chains) {
   tryCatch(
-    coda::gelman.diag(chains_coda),
+    coda::gelman.diag(chains),
     error = function(e) NA_real_)
 }
 
