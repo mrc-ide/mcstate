@@ -100,7 +100,7 @@ forecast.mcstate_pmcmc_list <- function(x, ...,
               "parameters" = param_grid)
 
   class(res) <- "mcstate_forecast"
-  return(res)
+  res
 
 }
 
