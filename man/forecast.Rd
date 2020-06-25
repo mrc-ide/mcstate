@@ -3,24 +3,36 @@
 \name{forecast}
 \alias{forecast}
 \alias{forecast.mcstate_scan}
+\alias{forecast.mcstate_pmcmc_list}
 \title{Sample Grid Scan}
 \usage{
 forecast(
   x,
   ...,
   filter,
-  n_sample_pairs = 10,
+  n_sample_pars = 10,
   n_particles = 100,
-  forecast_steps = 0
+  forecast_steps = 0,
+  burn_in = 0
 )
 
 \method{forecast}{mcstate_scan}(
   x,
   ...,
   filter,
-  n_sample_pairs = 10,
+  n_sample_pars = 10,
   n_particles = 100,
   forecast_steps = 0
+)
+
+\method{forecast}{mcstate_pmcmc_list}(
+  x,
+  ...,
+  filter,
+  n_sample_pars = 10,
+  n_particles = 100,
+  forecast_steps = 0,
+  burn_in = 1
 )
 }
 \arguments{
@@ -31,13 +43,17 @@ forecast(
 \item{filter}{A \code{particle_filter} object to run (the same
 (as the one used to produce \code{scan_results})}
 
-\item{n_sample_pairs}{Number of parameter pairs to be sampled. This will
-determine how many trajectories are returned. Integer. Default = 10. This
-will determine how many trajectories are returned.}
+\item{n_sample_pars}{Number of parameters to be sampled. For a
+\code{mcstate_scan} these will be pairs of parameters sampled in
+proportion to their posterior probability. For a \code{mcstate_pmcmc_list}
+this will be full parameter sets sampled evenly from the chains.
+Integer. This will determine how many trajectories are returned.}
 
 \item{n_particles}{Number of particles. Positive Integer. Default = 100}
 
 \item{forecast_steps}{Number of time steps being forecast. Default = 0}
+
+\item{burn_in}{Amount of burn in to remove (if an \code{mcstate_pmcmc_list})}
 }
 \value{
 \code{\link{list}}. First element (trajectories) is a 3
@@ -48,7 +64,7 @@ will determine how many trajectories are returned.}
 }
 \description{
 Take a grid search produced by \code{\link{grid_search}} and
-sample \code{n_sample_pairs} from the parameter grid uses based
+sample \code{n_sample_pars} from the parameter grid uses based
 on their probability. For each parameter pair chosen, run particle
 filter with \code{num_particles}.
 }

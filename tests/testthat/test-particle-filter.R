@@ -158,8 +158,13 @@ test_that("Validate steps", {
 test_that("Control the comparison function", {
   dat <- example_sir()
   p <- particle_filter$new(dat$data, dat$model, dat$compare)
-  ll1 <- p$run(dat$y0, 42, FALSE, pars_compare = list(exp_noise = 1))
-  ll2 <- p$run(dat$y0, 42, FALSE, pars_compare = list(exp_noise = 0.01))
+
+  pars_compare <- 1
+  names(pars_compare) <- "exp_noise"
+  ll1 <- p$run(dat$y0, 42, FALSE, pars_compare = pars_compare)
+
+  pars_compare["exp_noise"] <- 0.01
+  ll2 <- p$run(dat$y0, 42, FALSE, pars_compare = pars_compare)
   expect_true(ll2 < ll1)
 })
 

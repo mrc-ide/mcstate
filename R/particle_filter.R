@@ -171,7 +171,7 @@ particle_filter <- R6::R6Class(
       }
 
       log_likelihood <- 0
-      prev_state <- model$state()
+      prev_state <- state
       for (t in seq_len(private$n_steps)) {
         model$run(steps[t, 2])
         state <- model$state()

@@ -8,3 +8,4 @@
 ^\.lintr$
 ^TODO\.md$
 ^scripts$
+^tests/testthat/Rplots\.pdf$
