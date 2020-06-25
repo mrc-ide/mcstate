@@ -153,3 +153,14 @@ test_that("Sampling and forecasting from an MCMC", {
        title = "R", ylab = "R")
 
 })
+
+
+test_that("Can't plot outside of range", {
+  x <- list(trajectories = list(matrix(NA, 10)))
+  expect_error(
+    plot.mcstate_forecast(x, what = 0),
+    "'what' must be a valid index for a partition")
+  expect_error(
+    plot.mcstate_forecast(x, what = 11),
+    "'what' must be a valid index for a partition")
+})

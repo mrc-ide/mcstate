@@ -119,7 +119,7 @@ run_and_forecast <- function(model_params, filter, index, n_particles,
 }
 
 ##' @export
-plot.mcstate_forecast <- function(x, ..., what = "1", data = NULL,
+plot.mcstate_forecast <- function(x, ..., what = 1, data = NULL,
                                   ylab = NULL, title = NULL, col = "grey80") {
   partition_index <- as.integer(what)
   if (partition_index < 1 || partition_index > nrow(x$trajectories[[1]])) {
