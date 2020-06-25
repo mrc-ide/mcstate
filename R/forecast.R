@@ -126,12 +126,8 @@ plot.mcstate_forecast <- function(x, ..., what = "1", data = NULL,
     stop("'what' must be a valid index for a partition")
   }
 
-  if (is.null(title)) {
-    title <- paste0("Partition ", partition_index)
-  }
-  if (is.null(ylab)) {
-    ylab <- paste0("Partition ", partition_index)
-  }
+  title <- title %||% paste("Partition", partition_index)
+  ylab <- ylab %||% paste("Partition", partition_index)
 
   particles <- array(0, dim(x$trajectories[[1]])[-1])
   for (i in seq_len(length(x$trajectories))) {
