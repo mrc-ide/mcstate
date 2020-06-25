@@ -614,9 +614,3 @@ plot_hists <- function(h, col, breaks) {
                 type = "s",
                 col = col))
 }
-
-plot_traces <- function(trace, col) {
-  lines(x = seq_along(trace),
-        y = trace,
-        col = col)
-}
