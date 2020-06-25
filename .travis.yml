@@ -6,8 +6,7 @@ addons:
     packages:
       - libnode-dev
 r_github_packages:
-  - mrc-ide/dde
-  - mrc-ide/dust
+  - mrc-ide/dust@i27-float
 r_packages:
   - covr
 after_success:

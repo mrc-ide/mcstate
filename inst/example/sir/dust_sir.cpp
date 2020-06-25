@@ -2,6 +2,8 @@
 
 class sir {
 public:
+  typedef int int_t;
+  typedef double real_t;
   struct init_t {
     double beta;
     double dt;
