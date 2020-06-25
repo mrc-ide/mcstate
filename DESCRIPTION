@@ -21,7 +21,6 @@ URL: https://github.com/mrc-ide/mcstate
 BugReports: https://github.com/mrc-ide/mcstate/issues
 Imports:
     dust (>= 0.0.2),
-    odin,
     coda,
     mvtnorm,
     viridis
