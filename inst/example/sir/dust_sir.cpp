@@ -2,6 +2,8 @@
 
 class sir {
 public:
+  typedef int int_t;
+  typedef double real_t;
   struct init_t {
     double beta;
     double dt;
@@ -28,7 +30,8 @@ public:
     return ret;
   }
 
-  void update(size_t step, const std::vector<double> state, dust::RNG& rng,
+  void update(size_t step, const std::vector<double> state,
+              dust::RNG<double, int>& rng,
               std::vector<double>& state_next) {
     double S = state[0];
     double I = state[1];

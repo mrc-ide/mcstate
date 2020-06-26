@@ -20,8 +20,7 @@ Language: en-GB
 URL: https://github.com/mrc-ide/mcstate
 BugReports: https://github.com/mrc-ide/mcstate/issues
 Imports:
-    dust,
-    odin,
+    dust (>= 0.0.2),
     coda,
     mvtnorm,
     viridis

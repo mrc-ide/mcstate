@@ -89,9 +89,8 @@ particle_filter <- R6::R6Class(
     ##' \code{step_start} and \code{step_end}.  Additional columns are
     ##' used for comparison with the simulation.
     ##'
-    ##' @param model A stochastic model to use.  Must be an
-    ##' \code{odin_generator} object (i.e., something that can be used to
-    ##' create an \code{odin_model}).
+    ##' @param model A stochastic model to use.  Must be a
+    ##' \code{dust_generator} object.
     ##'
     ##' @param compare A comparison function.  Must take arguments
     ##' \code{state}, \code{output}, \code{data} and \code{pars} as arguments

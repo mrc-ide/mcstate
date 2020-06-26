@@ -100,9 +100,8 @@ Must be a \code{\link{data.frame}} with at least columns
 \code{step_start} and \code{step_end}.  Additional columns are
 used for comparison with the simulation.}
 
-\item{\code{model}}{A stochastic model to use.  Must be an
-\code{odin_generator} object (i.e., something that can be used to
-create an \code{odin_model}).}
+\item{\code{model}}{A stochastic model to use.  Must be a
+\code{dust_generator} object.}
 
 \item{\code{compare}}{A comparison function.  Must take arguments
 \code{state}, \code{output}, \code{data} and \code{pars} as arguments
