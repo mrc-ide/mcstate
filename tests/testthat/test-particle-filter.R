@@ -102,10 +102,12 @@ test_that("predict", {
   steps <- nrow(dat$data) + 1
 
   set.seed(1)
-  p1 <- particle_filter$new(dat$data, dat$model, dat$compare)
+  p1 <- particle_filter$new(dat$data, dat$model, dat$compare,
+                            index = dat$index)
   run1 <- p1$run(NULL, 42, TRUE)
   set.seed(1)
-  p2 <- particle_filter$new(dat$data, dat$model, dat$compare)
+  p2 <- particle_filter$new(dat$data, dat$model, dat$compare,
+                            index = dat$index)
   run2 <- p2$run(NULL, 42, TRUE)
 
   t <- 0:10
@@ -117,9 +119,6 @@ test_that("predict", {
 
   ## history is prepended
   expect_equal(res2[, , 1:steps], p2$history)
-
-  ## state is last in that
-  expect_equal(res2[, , steps + length(t) - 1], p2$state)
 
   ## appended predictions match the raw predictions
   expect_equal(res2[, , (steps + 1):(steps + length(t) - 1)], res1)
@@ -149,6 +148,16 @@ test_that("prediction time must start at zero", {
 })
 
 
+test_that("can't run predictions twice", {
+  dat <- example_sir()
+  p <- particle_filter$new(dat$data, dat$model, dat$compare,
+                           index = dat$index)
+  res <- p$run(dat$y0, 42, FALSE)
+  res <- p$predict(0:10)
+  expect_error(p$predict(0:10), "Can't yet run predict multiple times")
+})
+
+
 test_that("Validate steps", {
   steps <- cbind(0:10 * 10, 1:11 * 10)
   expect_identical(particle_steps(steps, NULL), steps)
@@ -174,13 +183,12 @@ test_that("Validate steps", {
 
 test_that("Control the comparison function", {
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare)
+  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
 
-  pars_compare <- 1
-  names(pars_compare) <- "exp_noise"
+  pars_compare <- list(exp_noise = 1)
   ll1 <- p$run(dat$y0, 42, FALSE, pars_compare = pars_compare)
 
-  pars_compare["exp_noise"] <- 0.01
+  pars_compare <- list(exp_noise = 0.01)
   ll2 <- p$run(dat$y0, 42, FALSE, pars_compare = pars_compare)
   expect_true(ll2 < ll1)
 })
@@ -195,12 +203,12 @@ test_that("Control the starting point of the simulation", {
   data$step_start[[1]] <- 0
 
   ## The usual version:
-  p1 <- particle_filter$new(dat$data, dat$model, dat$compare)
+  p1 <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
   set.seed(1)
   ll1 <- p1$run(NULL, 42)
 
   ## Tuning the start date
-  p2 <- particle_filter$new(data, dat$model, dat$compare)
+  p2 <- particle_filter$new(data, dat$model, dat$compare, index = dat$index)
   set.seed(1)
   ll2 <- p2$run(NULL, 42, step_start = offset)
   expect_identical(ll1, ll2)
@@ -231,7 +239,7 @@ test_that("control filter", {
 test_that("run particle filter on sir model", {
   dat <- example_sir()
   expect_error(
-    particle_filter$new(dat$data, NULL, dat$compare),
+    particle_filter$new(dat$data, NULL, dat$compare, index = dat$index),
     "'model' must be a dust_generator")
 })
 

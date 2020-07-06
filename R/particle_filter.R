@@ -308,19 +308,40 @@ particle_filter <- R6::R6Class(
       if (t[[1]] != 0) {
         stop("Expected first 't' element to be zero")
       }
-      step <- private$data[[private$n_steps]]$step_end + t
+      model <- private$last_model
+
+      step_end <- private$data[[private$n_steps]]$step_end
+      if (model$step() != step_end) {
+        ## TODO: We need to be able to predict multiple times and that
+        ## does not work as we lose the state here. This needs support
+        ## in dust?
+        ##
+        ## If not we can reset the state and model time and state (that
+        ## needs a little dust support too)
+        stop("Can't yet run predict multiple times!")
+      }
+      step <- step_end + t
+
+      ## TODO: Getting this out is ugly; should be saved with the
+      ## model, or *in* the model.
+      if (is.null(private$index)) {
+        index_state <- NULL
+      } else {
+        index_state <- private$index(model$info())$state
+      }
 
       res <- array(NA_real_, dim = c(dim(self$state), length(step) - 1))
-      forecast_step <- 0
-      for (t in step[-1]) {
-        private$last_model$run(t)
-        forecast_step <- forecast_step + 1
-        res[, , forecast_step] <- private$last_model$state()
+      forecast_step <- 0L
+      for (t in step[-1L]) {
+        model$run(t)
+        forecast_step <- forecast_step + 1L
+        res[, , forecast_step] <-
+          model$state()[index_state, , drop = FALSE]
       }
       if (append) {
         res <- dde_abind(self$history, res)
       }
-      self$state <- private$last_model$state()
+
       res
     }
   ))
