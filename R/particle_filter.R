@@ -247,7 +247,7 @@ particle_filter <- R6::R6Class(
 
       self$history <- history
       self$unique_particles <- unique_particles
-      self$state <- model$state()
+      self$state <- model$state(index_state)
       private$last_model <- model
 
       log_likelihood
