@@ -356,8 +356,9 @@ particle_resample <- function(weights) {
 
 
 scale_log_weights <- function(log_weights) {
+  log_weights[is.nan(log_weights)] <- -Inf
   max_log_weights <- max(log_weights)
-  if (max_log_weights == -Inf) {
+  if (!is.finite(max_log_weights)) {
     ## if all log_weights at a time-step are -Inf, this should
     ## terminate the particle filter and output the marginal
     ## likelihood estimate as -Inf

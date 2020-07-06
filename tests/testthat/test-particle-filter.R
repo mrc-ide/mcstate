@@ -54,7 +54,7 @@ test_that("stop simulation when likelihood is impossible", {
     ret
   }
 
-  p <- particle_filter$new(dat$data, dat$model, compare)
+  p <- particle_filter$new(dat$data, dat$model, compare, index = dat$index)
   res <- p$run(NULL, 42, TRUE)
   expect_equal(res, -Inf)
 
@@ -233,4 +233,20 @@ test_that("run particle filter on sir model", {
   expect_error(
     particle_filter$new(dat$data, NULL, dat$compare),
     "'model' must be a dust_generator")
+})
+
+
+test_that("scale log weights", {
+  expect_equal(scale_log_weights(c(-Inf, -Inf)),
+               list(weights = c(NaN, NaN), average = -Inf))
+  expect_equal(scale_log_weights(c(-Inf, 1)),
+               list(weights = c(0, 1), average = log(exp(1) / 2)))
+  expect_equal(scale_log_weights(c(-Inf, 1, 1)),
+               list(weights = c(0, 1, 1), average = log(exp(1) * 2 / 3)))
+  expect_equal(scale_log_weights(c(NaN, NaN)),
+               list(weights = c(NaN, NaN), average = -Inf))
+  expect_equal(scale_log_weights(c(NaN, NaN)),
+               list(weights = c(NaN, NaN), average = -Inf))
+  expect_equal(scale_log_weights(c(NaN, 1)),
+               list(weights = c(0, 1), average = log(exp(1) / 2)))
 })
