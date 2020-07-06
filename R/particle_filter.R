@@ -61,6 +61,7 @@ particle_filter <- R6::R6Class(
   private = list(
     data = NULL,
     steps = NULL,
+    index = NULL,
     n_steps = NULL,
     compare = NULL,
     last_model = NULL
@@ -104,9 +105,24 @@ particle_filter <- R6::R6Class(
     ##' constructor.  \code{pars} is any additional parameters passed
     ##' through to the comparison function (via the \code{pars_compare}
     ##' argument to \code{$run}).
-    initialize = function(data, model, compare) {
+    ##'
+    ##' @param index An index function. This is used to compute the
+    ##' "interesting" indexes of your model. It must be a function of
+    ##' one argument, which will be the result of calling the
+    ##' \code{$info()} method on your model. It should return a list iw
+    ##' with elements \code{run} (indices to return at the end of each
+    ##' run, passed through to your compare function) and \code{state}
+    ##' (indices to return if saving state). These indices can overlap
+    ##' but do not have to. This argument is optional but using it will
+    ##' likely speed up your simulation if you have more than a few
+    ##' states as it will reduce the amount of memory copied back and
+    ##' forth.
+    initialize = function(data, model, compare, index = NULL) {
       if (!is_dust_generator(model)) {
         stop("'model' must be a dust_generator")
+      }
+      if (!is.null(index) && !is.function(index)) {
+        stop("'index' must be function if not NULL")
       }
 
       self$model <- model
@@ -115,6 +131,7 @@ particle_filter <- R6::R6Class(
                              vnapply(private$data, "[[", "step_end"))
       private$n_steps <- length(private$data)
       private$compare <- compare
+      private$index <- index
       lockBinding("model", self)
     },
 
@@ -154,15 +171,37 @@ particle_filter <- R6::R6Class(
       steps <- particle_steps(private$steps, step_start)
       run_params <- validate_dust_params(run_params)
 
-      model <- self$model$new(data = model_data, step = steps[1, 1],
-                              n_particles = n_particles,
-                              n_threads = run_params[["n_threads"]],
-                              n_generators = run_params[["n_generators"]],
-                              seed = run_params[["seed"]])
+      if (is.null(private$last_model)) {
+        model <- self$model$new(data = model_data, step = steps[1, 1],
+                                n_particles = n_particles,
+                                n_threads = run_params[["n_threads"]],
+                                n_generators = run_params[["n_generators"]],
+                                seed = run_params[["seed"]])
+      } else {
+        model <- private$last_model
+        model$reset(model_data, steps[1, 1])
+      }
 
-      state <- model$state()
+      ## Very much a WIP
+      ##
+      ## TODO: I think that this index state thing belongs in the
+      ## object but it's not really clear how to present that
+      ## interface nicely.
+      if (is.null(private$index)) {
+        index_state <- NULL
+      } else {
+        index <- private$index(model$info())
+        if (!is.null(index$run)) {
+          model$set_index(index$run)
+        }
+        index_state <- index$state
+      }
+      ## Baseline
+      prev_res <- model$run(steps[1, 1])
+
       unique_particles <- rep(n_particles, private$n_steps + 1)
       if (save_history) {
+        state <- model$state(index_state)
         history <- array(NA_real_, c(dim(state), private$n_steps + 1))
         history[, , 1] <- state
       } else {
@@ -170,17 +209,17 @@ particle_filter <- R6::R6Class(
       }
 
       log_likelihood <- 0
-      prev_state <- state
       for (t in seq_len(private$n_steps)) {
-        model$run(steps[t, 2])
-        state <- model$state()
-        log_weights <- compare(state, prev_state, private$data[[t]],
-                               pars_compare)
+        res <- model$run(steps[t, 2])
         if (save_history) {
-          history[, , t + 1L] <- state
+          history[, , t + 1L] <- model$state(index_state)
         }
 
-        if (!is.null(log_weights)) {
+        log_weights <- compare(res, prev_res, private$data[[t]],
+                               pars_compare)
+        if (is.null(log_weights)) {
+          prev_res <- res
+        } else {
           weights <- scale_log_weights(log_weights)
           log_likelihood <- log_likelihood + weights$average
           if (weights$average == -Inf) {
@@ -191,16 +230,24 @@ particle_filter <- R6::R6Class(
           kappa <- particle_resample(weights$weights)
           unique_particles[t + 1L] <- length(unique(kappa))
           model$reorder(kappa)
-          prev_state <- state[, kappa]
+          ## Because we will use the values from "run" a second time
+          ## in the compare function, we need to reorder theem as
+          ## well.
+          prev_res <- res[, kappa, drop = FALSE]
           if (save_history) {
-            history <- history[, kappa, ]
+            ## TODO: Can we do this more efficiently by saving kappa
+            ## over time and applying this all at once, as the effect
+            ## of this shuffle will become fairly bad. I think we can
+            ## just keep inserting the state here. We also might fetch
+            ## the state only after applying the reorder.
+            history <- history[, kappa, , drop = FALSE]
           }
         }
       }
 
       self$history <- history
       self$unique_particles <- unique_particles
-      self$state <- state
+      self$state <- model$state()
       private$last_model <- model
 
       log_likelihood

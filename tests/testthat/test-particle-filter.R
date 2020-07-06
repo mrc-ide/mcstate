@@ -2,7 +2,8 @@ context("particle_filter")
 
 test_that("run particle filter on sir model", {
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare)
+  p <- particle_filter$new(dat$data, dat$model, dat$compare,
+                           index = dat$index)
   n_particles <- 42
   res <- p$run(NULL, n_particles)
   expect_is(res, "numeric")
@@ -12,6 +13,21 @@ test_that("run particle filter on sir model", {
   expect_equal(length(p$unique_particles), nrow(dat$data) + 1)
   expect_true(all(p$unique_particles <= n_particles & p$unique_particles >= 1))
   expect_null(p$history)
+})
+
+
+test_that("continuing a particle filter continues the RNG", {
+  dat <- example_sir()
+  p <- particle_filter$new(dat$data, dat$model, dat$compare,
+                           index = dat$index)
+  n_particles <- 42
+  set.seed(1) # affects sample() used for filtering
+  res <- p$run(NULL, n_particles)
+  expect_is(res, "numeric")
+
+  set.seed(1)
+  res2 <- p$run(NULL, n_particles)
+  expect_true(res2 != res)
 })
 
 
