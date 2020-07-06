@@ -9,7 +9,7 @@ test_that("Simple grid search with SIR model", {
                       target = "model_data")
 
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare)
+  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
   n_particles <- 100
 
   res <- grid_search(range, p, n_particles)
@@ -39,7 +39,7 @@ test_that("SIR model parameters are can be inferred correctly", {
   # * beta = 0.2 (transmission)
   # * g = 0.1 (recovery)
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare)
+  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
   n_particles <- 100
 
   res <- grid_search(range, p, n_particles)
@@ -64,7 +64,7 @@ test_that("Start date can be sampled", {
     data[c("step_start", "step_end")] + offset
   data$step_start[[1]] <- 0
 
-  p <- particle_filter$new(data, dat$model, dat$compare)
+  p <- particle_filter$new(data, dat$model, dat$compare, index = dat$index)
   n_particles <- 100
 
   set.seed(1)
@@ -82,12 +82,13 @@ test_that("pars_compare can be sampled", {
 
   dat <- example_sir()
 
-  p <- particle_filter$new(dat$data, dat$model, dat$compare)
+  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
   n_particles <- 100
 
   set.seed(1)
   grid_res <- grid_search(range, p, n_particles)
-  expect_true(grid_res$renorm_mat_ll[2, 1] == max(grid_res$renorm_mat_ll))
+  ## TODO: this is a fragile test
+  expect_true(grid_res$renorm_mat_ll[2, 2] == max(grid_res$renorm_mat_ll))
 })
 
 test_that("grid_search_validate_range - happy path", {

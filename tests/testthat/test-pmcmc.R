@@ -14,7 +14,7 @@ test_that("MCMC can run", {
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- range$name
 
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare)
+  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
   n_particles <- 10
   n_mcmc <- 100
 
@@ -72,7 +72,7 @@ test_that("MCMC doesn't move away from correct parameters", {
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- range$name
 
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare)
+  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
   n_particles <- 20
   n_mcmc <- 500
   n_chains <- 1
@@ -112,7 +112,7 @@ test_that("MCMC runs on different targets", {
   data[c("step_start", "step_end")] <-
     data[c("step_start", "step_end")] + offset
   data$step_start[[1]] <- 0
-  p <- particle_filter$new(data, dat$model, dat$compare)
+  p <- particle_filter$new(data, dat$model, dat$compare, index = dat$index)
   n_particles <- 10
   n_mcmc <- 10
 
@@ -178,7 +178,7 @@ test_that("MCMC jumps behave as expected", {
                           range$name))
 
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare)
+  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
   n_particles <- 20
   n_mcmc <- 500
   n_chains <- 1
@@ -315,7 +315,7 @@ test_that("MCMC function input errors", {
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- range$name
 
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare)
+  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
   n_particles <- 10
   n_mcmc <- 100
 
@@ -370,7 +370,7 @@ test_that("Master chain errors", {
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- range$name
 
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare)
+  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
   n_particles <- 10
   n_mcmc <- 10
   n_chains <- 3
