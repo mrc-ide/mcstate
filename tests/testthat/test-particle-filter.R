@@ -317,3 +317,14 @@ test_that("index must be sensible", {
                         index = c(1, 3, 5)),
     "'index' must be function if not NULL")
 })
+
+
+test_that("we do not reorder particles when compare is NULL", {
+  dat <- example_sir()
+  p <- particle_filter$new(dat$data, dat$model, function(...) NULL,
+                           index = dat$index)
+  n_particles <- 42
+  res <- p$run(NULL, n_particles)
+  expect_equal(res, 0)
+  expect_equal(p$unique_particles, rep(n_particles, 101))
+})
