@@ -31,6 +31,29 @@ test_that("continuing a particle filter continues the RNG", {
 })
 
 
+test_that("run particle filter without index", {
+  dat <- example_sir()
+  p1 <- particle_filter$new(dat$data, dat$model, dat$compare,
+                           index = dat$index)
+  n_particles <- 42
+
+  compare2 <- function(state, prev_state, ...) {
+    dat$compare(state[4, , drop = FALSE], prev_state[4, , drop = FALSE], ...)
+  }
+
+  p2 <- particle_filter$new(dat$data, dat$model, compare2)
+
+  set.seed(1)
+  ll1 <- p1$run(NULL, n_particles)
+  set.seed(1)
+  ll2 <- p2$run(NULL, n_particles)
+  expect_identical(ll1, ll2)
+
+  expect_equal(dim(p1$state), c(3, n_particles))
+  expect_equal(dim(p2$state), c(4, n_particles))
+})
+
+
 test_that("particle filter likelihood is worse with worse parameters", {
   dat <- example_sir()
   n_particles <- 100
