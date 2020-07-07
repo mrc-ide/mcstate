@@ -281,3 +281,12 @@ test_that("scale log weights", {
   expect_equal(scale_log_weights(c(NaN, 1)),
                list(weights = c(0, 1), average = log(exp(1) / 2)))
 })
+
+
+test_that("index must be sensible", {
+  dat <- example_sir()
+  expect_error(
+    particle_filter$new(dat$data, dat$model, dat$compare,
+                        index = c(1, 3, 5)),
+    "'index' must be function if not NULL")
+})
