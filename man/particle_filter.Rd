@@ -18,7 +18,7 @@ sir <- gen$new(data = NULL, step = 0, n_particles = 1)
 dt <- 1/4
 day <- seq(1, 100)
 incidence <- rep(NA, length(day))
-history <- array(NA_real_, c(3, 1, 101))
+history <- array(NA_real_, c(4, 1, 101))
 history[, 1, 1] <- sir$state()
 for (i in day) {
    state_start <- sir$state()
@@ -89,7 +89,7 @@ Create the particle filter}
 \if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_filter$new(data, model, compare)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter$new(data, model, compare, index = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -114,7 +114,19 @@ is a \code{list} of observed data corresponding to the current
 time's row in the \code{data} object provided here in the
 constructor.  \code{pars} is any additional parameters passed
 through to the comparison function (via the \code{pars_compare}
-argument to \code{$run}).
+argument to \code{$run}).}
+
+\item{\code{index}}{An index function. This is used to compute the
+"interesting" indexes of your model. It must be a function of
+one argument, which will be the result of calling the
+\code{$info()} method on your model. It should return a list iw
+with elements \code{run} (indices to return at the end of each
+run, passed through to your compare function) and \code{state}
+(indices to return if saving state). These indices can overlap
+but do not have to. This argument is optional but using it will
+likely speed up your simulation if you have more than a few
+states as it will reduce the amount of memory copied back and
+forth.
 We probably need some special treatment for the initial case
 but it's not clear that it belongs here, rather than in some
 function above this, as state is just provided here as a vector

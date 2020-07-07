@@ -15,7 +15,7 @@
 ##' dt <- 1/4
 ##' day <- seq(1, 100)
 ##' incidence <- rep(NA, length(day))
-##' history <- array(NA_real_, c(3, 1, 101))
+##' history <- array(NA_real_, c(4, 1, 101))
 ##' history[, 1, 1] <- sir$state()
 ##' for (i in day) {
 ##'    state_start <- sir$state()
