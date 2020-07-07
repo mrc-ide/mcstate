@@ -64,7 +64,9 @@ particle_filter <- R6::R6Class(
     index = NULL,
     n_steps = NULL,
     compare = NULL,
-    last_model = NULL
+    ## Updated when the model is run
+    last_model = NULL,
+    index_state = NULL
   ),
 
   public = list(
@@ -249,6 +251,7 @@ particle_filter <- R6::R6Class(
       self$unique_particles <- unique_particles
       self$state <- model$state(index_state)
       private$last_model <- model
+      private$index_state <- index_state
 
       log_likelihood
     },
@@ -312,7 +315,7 @@ particle_filter <- R6::R6Class(
 
       step_end <- private$data[[private$n_steps]]$step_end
       if (model$step() != step_end) {
-        ## TODO: We need to be able to predict multiple times and that
+        ## TODO(#24): We need to be able to predict multiple times and that
         ## does not work as we lose the state here. This needs support
         ## in dust?
         ##
@@ -322,21 +325,13 @@ particle_filter <- R6::R6Class(
       }
       step <- step_end + t
 
-      ## TODO: Getting this out is ugly; should be saved with the
-      ## model, or *in* the model.
-      if (is.null(private$index)) {
-        index_state <- NULL
-      } else {
-        index_state <- private$index(model$info())$state
-      }
-
+      index_state <- private$index_state
       res <- array(NA_real_, dim = c(dim(self$state), length(step) - 1))
       forecast_step <- 0L
       for (t in step[-1L]) {
         model$run(t)
         forecast_step <- forecast_step + 1L
-        res[, , forecast_step] <-
-          model$state()[index_state, , drop = FALSE]
+        res[, , forecast_step] <- model$state(index_state)
       }
       if (append) {
         res <- dde_abind(self$history, res)

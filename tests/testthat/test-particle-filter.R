@@ -148,6 +148,33 @@ test_that("predict", {
 })
 
 
+test_that("predict particle filter without index", {
+  dat <- example_sir()
+  p1 <- particle_filter$new(dat$data, dat$model, dat$compare,
+                           index = dat$index)
+  n_particles <- 42
+
+  compare2 <- function(state, prev_state, ...) {
+    dat$compare(state[4, , drop = FALSE], prev_state[4, , drop = FALSE], ...)
+  }
+
+  p2 <- particle_filter$new(dat$data, dat$model, compare2)
+
+  set.seed(1)
+  ll1 <- p1$run(NULL, n_particles, save_history = TRUE)
+  set.seed(1)
+  ll2 <- p2$run(NULL, n_particles, save_history = TRUE)
+  expect_identical(ll1, ll2)
+
+  t <- 0:10
+  y1 <- p1$predict(t)
+  y2 <- p2$predict(t)
+
+  expect_equal(y1, y2[1:3, , ])
+  expect_equal(y2[4, , ], 1000 - y1[1, , ])
+})
+
+
 test_that("can't predict until model has been run", {
   dat <- example_sir()
   p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
