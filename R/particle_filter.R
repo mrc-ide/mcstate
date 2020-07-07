@@ -184,11 +184,6 @@ particle_filter <- R6::R6Class(
         model$reset(model_data, steps[1, 1])
       }
 
-      ## Very much a WIP
-      ##
-      ## TODO: I think that this index state thing belongs in the
-      ## object but it's not really clear how to present that
-      ## interface nicely.
       if (is.null(private$index)) {
         index_state <- NULL
       } else {
