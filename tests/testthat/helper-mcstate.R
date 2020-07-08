@@ -9,6 +9,9 @@ example_sir <- function() {
   y0 <- sir$state()
 
   compare <- function(state, prev_state, observed, pars = NULL) {
+    if (is.null(observed$incidence)) {
+      return(NULL)
+    }
     exp_noise <- pars[["exp_noise"]] %||% 1e6
     ## This is on the *filtered* state (i.e., returned by run())
     incidence_modelled <-

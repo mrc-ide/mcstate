@@ -77,7 +77,8 @@ sir::init_t dust_data<sir>(Rcpp::List data) {
 template <>
 Rcpp::RObject dust_info<sir>(const sir::init_t& data) {
   // Information about state order
-  Rcpp::CharacterVector vars = Rcpp::CharacterVector::create("S", "I", "R");
+  Rcpp::CharacterVector vars =
+    Rcpp::CharacterVector::create("S", "I", "R", "inc");
   // Information about parameter values
   Rcpp::List pars = Rcpp::List::create(Rcpp::Named("beta") = data.beta,
                                        Rcpp::Named("gamma") = data.gamma);

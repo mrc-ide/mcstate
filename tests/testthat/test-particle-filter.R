@@ -328,3 +328,54 @@ test_that("we do not reorder particles when compare is NULL", {
   expect_equal(res, 0)
   expect_equal(p$unique_particles, rep(n_particles, 101))
 })
+
+
+test_that("initialise with simple state", {
+  dat <- example_sir()
+  initial <- function(info, n_particles, pars) {
+    c(1000, pars$I0, 0, 0)
+  }
+  p <- particle_filter$new(dat$data, dat$model, dat$compare,
+                           index = dat$index, initial = initial)
+  n_particles <- 100
+
+  ll1 <- p$run(NULL, n_particles, pars_initial = list(I0 = 200),
+               save_history = TRUE)
+  expect_equal(p$history[, , 1],
+               matrix(c(1000, 200, 0), 3, n_particles))
+  ll2 <- p$run(NULL, n_particles, pars_initial = list(I0 = 1),
+               save_history = TRUE)
+  expect_equal(p$history[, , 1],
+               matrix(c(1000, 1, 0), 3, n_particles))
+  ll3 <- p$run(NULL, n_particles, pars_initial = list(I0 = 10),
+               save_history = TRUE)
+  expect_equal(p$history[, , 1],
+               matrix(c(1000, 10, 0), 3, n_particles))
+
+  expect_true(ll1 < ll3)
+  expect_true(ll2 < ll3)
+})
+
+
+test_that("initialise with complex state", {
+  dat <- example_sir()
+  initial <- function(info, n_particles, pars) {
+    y <- matrix(0, 4, n_particles)
+    set.seed(1) # so that we can check below
+    I0 <- rpois(n_particles, pars$I0)
+    y[1, ] <- 1100 - I0
+    y[2, ] <- I0
+    y
+  }
+
+  dat$data$incidence[[1]] <- NA
+  p <- particle_filter$new(dat$data, dat$model, dat$compare,
+                           index = dat$index, initial = initial)
+  n_particles <- 100
+  pars <- list(I0 = 10)
+
+  set.seed(1)
+  ll <- p$run(NULL, n_particles, pars_initial = pars, save_history = TRUE)
+  expect_equal(p$history[, , 1],
+               initial(NULL, n_particles, pars)[1:3, ])
+})

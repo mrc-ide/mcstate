@@ -62,6 +62,7 @@ particle_filter <- R6::R6Class(
     data = NULL,
     steps = NULL,
     index = NULL,
+    initial = NULL,
     n_steps = NULL,
     compare = NULL,
     ## Updated when the model is run
@@ -119,12 +120,17 @@ particle_filter <- R6::R6Class(
     ##' likely speed up your simulation if you have more than a few
     ##' states as it will reduce the amount of memory copied back and
     ##' forth.
-    initialize = function(data, model, compare, index = NULL) {
+    ##'
+    ##' @param initial A function to generate initial conditions. If given...
+    initialize = function(data, model, compare, index = NULL, initial = NULL) {
       if (!is_dust_generator(model)) {
         stop("'model' must be a dust_generator")
       }
       if (!is.null(index) && !is.function(index)) {
         stop("'index' must be function if not NULL")
+      }
+      if (!is.null(initial) && !is.function(initial)) {
+        stop("'initial' must be function if not NULL")
       }
 
       self$model <- model
@@ -134,6 +140,7 @@ particle_filter <- R6::R6Class(
       private$n_steps <- length(private$data)
       private$compare <- compare
       private$index <- index
+      private$initial <- initial
       lockBinding("model", self)
     },
 
@@ -167,8 +174,7 @@ particle_filter <- R6::R6Class(
     ##' (\code{-Inf} if the model is impossible)
     run = function(model_data, n_particles, save_history = FALSE,
                    pars_compare = NULL, step_start = NULL,
-                   run_params = NULL) {
-
+                   run_params = NULL, pars_initial = NULL) {
       compare <- private$compare
       steps <- particle_steps(private$steps, step_start)
       run_params <- validate_dust_params(run_params)
@@ -184,6 +190,18 @@ particle_filter <- R6::R6Class(
         model$reset(model_data, steps[1, 1])
       }
 
+      if (!is.null(private$initial)) {
+        initial <- private$initial(model$info(), n_particles, pars_initial)
+        if (is.list(initial)) {
+          stop("not yet handled")
+          model$set_state(initial$state, initial$step)
+        } else {
+          model$set_state(initial)
+        }
+      } else if (!is.null(pars_initial)) {
+        stop("Unconsumed 'pars_initial', what's going on there?")
+      }
+
       if (is.null(private$index)) {
         index_state <- NULL
       } else {
@@ -193,7 +211,14 @@ particle_filter <- R6::R6Class(
         }
         index_state <- index$state
       }
+
       ## Baseline
+      ##
+      ## TODO: this is incorrect if we change the initial step
+      ## above. But what do we do in sircovid? We must add an
+      ## additional step in. It does suggest that we should save the
+      ## time here and we might also want to be accumulating this as
+      ## history? This remains the worst part of the interface...
       prev_res <- model$run(steps[1, 1])
 
       unique_particles <- rep(n_particles, private$n_steps + 1)
@@ -266,8 +291,9 @@ particle_filter <- R6::R6Class(
     ##' for use with dust
     ##'
     run2 = function(n_particles, save_history = FALSE,
-                   index, pars, run_params = NULL) {
-      step_start <- pars_model <- pars_compare <- NULL
+                    index, pars, run_params = NULL) {
+      ## TODO: step_start comes out soon
+      step_start <- pars_model <- pars_compare <- pars_initial <- NULL
       if (length(index$step_start) > 0) {
         step_start <- pars[[index$step_start]]
       }
@@ -280,8 +306,14 @@ particle_filter <- R6::R6Class(
         pars_compare <- pars[index$pars_compare]
       }
 
+      if (length(index$pars_initial) > 0) {
+        pars_initial <- pars[index$pars_initial]
+      }
+
+      ## TODO: run_params comes out and moves into the constructor
       self$run(model_data, n_particles, save_history,
-               pars_compare, step_start = step_start, run_params = run_params)
+               pars_compare, step_start = step_start,
+               run_params = run_params, pars_initial = pars_initial)
     },
 
     ##' Create predicted trajectories, based on the final point of a
