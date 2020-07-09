@@ -162,32 +162,27 @@ particle_filter <- R6::R6Class(
     ##' the \code{compare} function.  These parameters will be passed as
     ##' the 4th argument to \code{compare}.
     ##'
-    ##' @param step_start Optional first step to start at.  If provided,
-    ##' this must be within the range of the first epoch implied in your
-    ##' \code{data} provided to the constructor (i.e., not less than the
-    ##' first element of \code{step_start} and less than \code{step_end})
-    ##'
     ##' @param run_params List containing seed, n_threads and n_generators
     ##' for use with dust
     ##'
     ##' @return A single numeric value representing the log-likelihood
     ##' (\code{-Inf} if the model is impossible)
     run = function(model_data, n_particles, save_history = FALSE,
-                   pars_compare = NULL, step_start = NULL,
+                   pars_compare = NULL,
                    run_params = NULL, pars_initial = NULL) {
       compare <- private$compare
-      steps <- particle_steps(private$steps, step_start)
+      steps <- private$steps
       run_params <- validate_dust_params(run_params)
 
       if (is.null(private$last_model)) {
-        model <- self$model$new(data = model_data, step = steps[1, 1],
+        model <- self$model$new(data = model_data, step = steps[[1L]],
                                 n_particles = n_particles,
                                 n_threads = run_params[["n_threads"]],
                                 n_generators = run_params[["n_generators"]],
                                 seed = run_params[["seed"]])
       } else {
         model <- private$last_model
-        model$reset(model_data, steps[1, 1])
+        model$reset(model_data, steps[[1L]])
       }
 
       ## TODO: How do we deal with (or do we deal with) the case where
