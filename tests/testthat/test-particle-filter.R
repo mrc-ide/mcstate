@@ -379,3 +379,50 @@ test_that("initialise with complex state", {
   expect_equal(p$history[, , 1],
                initial(NULL, n_particles, pars)[1:3, ])
 })
+
+
+test_that("Control the starting point of the simulation", {
+  dat <- example_sir()
+  data <- dat$data
+  ## Drop extra columns that are confusing in this context
+  data <- data[setdiff(names(data), c("day_start", "day_end"))]
+  ## Offset the data by a considerable margin:
+  offset <- 400
+  data[c("step_start", "step_end")] <-
+    data[c("step_start", "step_end")] + offset
+  ## A burnin step:
+  intro <- data[1, ]
+  intro$incidence <- NA
+  intro$step_start <- 0
+  intro$step_end <- data$step_start[[1]]
+  ## Our combination data:
+  data <- rbind(intro, data)
+
+  ## Now we can start work with an "interesting" starting point.
+
+  ## The usual version, with normal data:
+  p1 <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
+  set.seed(1)
+  ll1 <- p1$run(NULL, 42)
+
+  ## Then tune the start date to get the same effect:
+  initial <- function(info, n_particles, pars) {
+    list(state = c(1000, pars$I0, 0, 0),
+         step = pars$step)
+  }
+
+  ## Tuning the start date
+  p2 <- particle_filter$new(data, dat$model, dat$compare,
+                            index = dat$index, initial = initial)
+  set.seed(1)
+  ll2 <- p2$run(NULL, 42, pars_initial = list(I0 = 10, step = offset),
+                save_history = TRUE)
+
+  expect_identical(ll1, ll2)
+
+  ## Running from the beginning is much worse:
+  set.seed(1)
+  ll3 <- p2$run(NULL, 42, pars_initial = list(I0 = 10, step = 0),
+                save_history = TRUE)
+  expect_true(ll3 < ll1)
+})

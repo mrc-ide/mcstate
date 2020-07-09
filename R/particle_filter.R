@@ -190,10 +190,16 @@ particle_filter <- R6::R6Class(
         model$reset(model_data, steps[1, 1])
       }
 
+      ## TODO: How do we deal with (or do we deal with) the case where
+      ## the user wants to change the start time but not the start
+      ## conditions, as we have done with the initial date drama
+      ## earlier - we'll be eliminating the step_start part above
+      ## soon.  Looks like we'll need a set_step option, or to train
+      ## set_state to cope with a NULL state; they both impact dust.
       if (!is.null(private$initial)) {
         initial <- private$initial(model$info(), n_particles, pars_initial)
         if (is.list(initial)) {
-          stop("not yet handled")
+          steps <- particle_steps(private$steps, initial$step)
           model$set_state(initial$state, initial$step)
         } else {
           model$set_state(initial)
@@ -420,15 +426,15 @@ scale_log_weights <- function(log_weights) {
 
 particle_steps <- function(steps, step_start) {
   if (!is.null(step_start)) {
-    assert_integer(step_start)
+    assert_scalar_integer(step_start)
     if (step_start < steps[1, 1, drop = TRUE]) {
       stop(sprintf(
         "'step_start' must be >= %d (the first value of data$step_start)",
         steps[1, 1, drop = TRUE]))
     }
-    if (step_start >= steps[1, 2, drop = TRUE]) {
+    if (step_start > steps[1, 2, drop = TRUE]) {
       stop(sprintf(
-        "'step_start' must be < %d (the first value of data$step_end)",
+        "'step_start' must be <= %d (the first value of data$step_end)",
         steps[1, 2, drop = TRUE]))
     }
     steps[1, 1] <- step_start

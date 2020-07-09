@@ -9,7 +9,7 @@ example_sir <- function() {
   y0 <- sir$state()
 
   compare <- function(state, prev_state, observed, pars = NULL) {
-    if (is.null(observed$incidence)) {
+    if (is.na(observed$incidence)) {
       return(NULL)
     }
     exp_noise <- pars[["exp_noise"]] %||% 1e6
