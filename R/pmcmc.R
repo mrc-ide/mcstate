@@ -288,7 +288,7 @@ validate_range <- function(range, expected_names) {
     stop("Duplicate 'name' entries not allowed in range")
   }
 
-  targets <- c("step_start", "model_data", "pars_compare")
+  targets <- c("model_data", "pars_compare", "pars_initial")
   err <- setdiff(range$target, targets)
   if (length(err) > 0L) {
     stop(sprintf("Invalid target %s: must be one of %s",
@@ -298,9 +298,7 @@ validate_range <- function(range, expected_names) {
 
   index <- lapply(targets, function(t) which(range$target == t))
   names(index) <- targets
-  if (length(index$step_start) > 1L) {
-    stop("At most one target may be 'step_start'")
-  }
+
   index
 }
 

@@ -293,12 +293,7 @@ particle_filter <- R6::R6Class(
     ##'
     run2 = function(n_particles, save_history = FALSE,
                     index, pars, run_params = NULL) {
-      ## TODO: step_start comes out soon
-      step_start <- pars_model <- pars_compare <- pars_initial <- NULL
-      if (length(index$step_start) > 0) {
-        step_start <- pars[[index$step_start]]
-      }
-
+      pars_model <- pars_compare <- pars_initial <- NULL
       if (length(index$model_data) > 0) {
         model_data <- pars[index$model_data]
       }
@@ -313,8 +308,8 @@ particle_filter <- R6::R6Class(
 
       ## TODO: run_params comes out and moves into the constructor
       self$run(model_data, n_particles, save_history,
-               pars_compare, step_start = step_start,
-               run_params = run_params, pars_initial = pars_initial)
+               pars_compare, run_params = run_params,
+               pars_initial = pars_initial)
     },
 
     ##' Create predicted trajectories, based on the final point of a

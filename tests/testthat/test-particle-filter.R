@@ -376,7 +376,8 @@ test_that("initialise with complex state", {
     y
   }
 
-  dat$data$incidence[[1]] <- NA
+  ## Set the incidence to NA so that no shuffling occurs
+  dat$data$incidence <- NA
   p <- particle_filter$new(dat$data, dat$model, dat$compare,
                            index = dat$index, initial = initial)
   n_particles <- 100
