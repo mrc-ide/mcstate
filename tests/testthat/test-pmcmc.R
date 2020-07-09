@@ -86,14 +86,13 @@ test_that("MCMC doesn't move away from correct parameters", {
 })
 
 test_that("MCMC runs on different targets", {
-  skip("FIXME")
   # All three targets
   range <- data.frame(name = c("beta", "step_start", "exp_noise"),
                       init = c(0.2, 200, 1e6),
                       min = c(0, 0, 1),
                       max = c(1, 400, 1e10),
                       discrete = c(FALSE, TRUE, FALSE),
-                      target = c("model_data", "step_start", "pars_compare"),
+                      target = c("model_data", "pars_initial", "pars_compare"),
                       stringsAsFactors = FALSE)
   # One informative prior
   lprior <- list("beta" = function(pars) dnorm(pars["beta"], 0.2, 0.01),
@@ -106,6 +105,9 @@ test_that("MCMC runs on different targets", {
                         dimnames = list(
                           range$name,
                           range$name))
+  initial <- function(info, n_particles, pars) {
+    list(step = pars[["step_start"]])
+  }
 
   dat <- example_sir()
   data <- dat$data
@@ -113,7 +115,8 @@ test_that("MCMC runs on different targets", {
   data[c("step_start", "step_end")] <-
     data[c("step_start", "step_end")] + offset
   data$step_start[[1]] <- 0
-  p <- particle_filter$new(data, dat$model, dat$compare, index = dat$index)
+  p <- particle_filter$new(data, dat$model, dat$compare, index = dat$index,
+                           initial = initial)
   n_particles <- 10
   n_mcmc <- 10
 

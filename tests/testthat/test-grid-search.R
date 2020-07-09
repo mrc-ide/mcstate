@@ -50,12 +50,11 @@ test_that("SIR model parameters are can be inferred correctly", {
 })
 
 test_that("Start date can be sampled", {
-  skip("FIXME")
   range <- data.frame(name = c("beta", "step_start"),
                       min = c(0.1, 0),
                       max = c(0.3, 100),
                       n = c(3, 3),
-                      target = c("model_data", "step_start"),
+                      target = c("model_data", "pars_initial"),
                       stringsAsFactors = FALSE)
 
   dat <- example_sir()
@@ -65,7 +64,12 @@ test_that("Start date can be sampled", {
     data[c("step_start", "step_end")] + offset
   data$step_start[[1]] <- 0
 
-  p <- particle_filter$new(data, dat$model, dat$compare, index = dat$index)
+  initial <- function(info, n_particles, pars) {
+    list(step = pars[["step_start"]])
+  }
+
+  p <- particle_filter$new(data, dat$model, dat$compare, index = dat$index,
+                           initial = initial)
   n_particles <- 100
 
   set.seed(1)
