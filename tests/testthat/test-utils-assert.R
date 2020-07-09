@@ -21,3 +21,12 @@ test_that("assert_strictly_increasing", {
   expect_error(assert_strictly_increasing(c(0, -1, -2)),
                "must be strictly increasing")
 })
+
+
+test_that("assert_scalar", {
+  x <- NULL
+  expect_error(assert_scalar(x), "'x' must be a scalar")
+  expect_error(assert_scalar(1:5), "must be a scalar")
+  expect_silent(assert_scalar(1))
+  expect_silent(assert_scalar_integer(1))
+})
