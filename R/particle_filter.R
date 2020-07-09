@@ -223,12 +223,13 @@ particle_filter <- R6::R6Class(
 
       ## Baseline
       ##
-      ## TODO: this is incorrect if we change the initial step
-      ## above. But what do we do in sircovid? We must add an
-      ## additional step in. It does suggest that we should save the
-      ## time here and we might also want to be accumulating this as
-      ## history? This remains the worst part of the interface...
-      prev_res <- model$run(steps[1, 1])
+      ## TODO(#22): This needs dealing with in the vignette (documenting
+      ## that we need a dummy step here most likely if the user
+      ## changes the initial location *and* if they need the history -
+      ##
+      ## TODO(dust#47): It would be nicer to have a better way of
+      ## controlling this, especially to deal with irregular data.
+      prev_res <- model$run(steps[[1]])
 
       unique_particles <- rep(n_particles, private$n_steps + 1)
       if (save_history) {
@@ -266,11 +267,7 @@ particle_filter <- R6::R6Class(
           ## well.
           prev_res <- res[, kappa, drop = FALSE]
           if (save_history) {
-            ## TODO: Can we do this more efficiently by saving kappa
-            ## over time and applying this all at once, as the effect
-            ## of this shuffle will become fairly bad. I think we can
-            ## just keep inserting the state here. We also might fetch
-            ## the state only after applying the reorder.
+            ## TODO(#28): possible churn here
             history <- history[, kappa, , drop = FALSE]
           }
         }
@@ -314,7 +311,7 @@ particle_filter <- R6::R6Class(
         pars_initial <- pars[index$pars_initial]
       }
 
-      ## TODO: run_params comes out and moves into the constructor
+      ## TODO(#27): run_params comes out and moves into the constructor
       self$run(pars_model, n_particles, save_history,
                pars_compare, run_params = run_params,
                pars_initial = pars_initial)
