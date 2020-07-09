@@ -6,7 +6,7 @@ test_that("MCMC can run", {
                       min = c(0, 0),
                       max = c(1, 1),
                       discrete = c(FALSE, FALSE),
-                      target = "model_data",
+                      target = "pars_model",
                       stringsAsFactors = FALSE)
   lprior <- list("beta" = function(pars) log(1e-10),
                  "gamma" = function(pars) log(1e-10))
@@ -64,7 +64,7 @@ test_that("MCMC doesn't move away from correct parameters", {
                       min = c(0, 0),
                       max = c(1, 1),
                       discrete = c(FALSE, FALSE),
-                      target = "model_data",
+                      target = "pars_model",
                       stringsAsFactors = FALSE)
   lprior <- list("beta" = function(pars) log(1e-10),
                  "gamma" = function(pars) log(1e-10))
@@ -92,7 +92,7 @@ test_that("MCMC runs on different targets", {
                       min = c(0, 0, 1),
                       max = c(1, 400, 1e10),
                       discrete = c(FALSE, TRUE, FALSE),
-                      target = c("model_data", "pars_initial", "pars_compare"),
+                      target = c("pars_model", "pars_initial", "pars_compare"),
                       stringsAsFactors = FALSE)
   # One informative prior
   lprior <- list("beta" = function(pars) dnorm(pars["beta"], 0.2, 0.01),
@@ -171,7 +171,7 @@ test_that("MCMC jumps behave as expected", {
                       min = c(0, 0),
                       max = c(1, 1),
                       discrete = c(FALSE, FALSE),
-                      target = "model_data",
+                      target = "pars_model",
                       stringsAsFactors = FALSE)
   lprior <- list("beta" = function(pars) log(1e-10),
                  "gamma" = function(pars) log(1e-10))
@@ -226,7 +226,7 @@ test_that("MCMC range input errors", {
                       min = c(0, 0),
                       max = c(1, 1),
                       discrete = c(FALSE, FALSE),
-                      target = "model_data",
+                      target = "pars_model",
                       stringsAsFactors = FALSE)
   expect_error(mcmc_validate_range(range),
                "initial parameters are outside of specified range")
@@ -235,7 +235,7 @@ test_that("MCMC range input errors", {
                       min = c(0, 0),
                       max = c(1, 1),
                       discrete = c(2, FALSE),
-                      target = "model_data",
+                      target = "pars_model",
                       stringsAsFactors = FALSE)
   expect_error(mcmc_validate_range(range),
                "'discrete' entries must be TRUE or FALSE")
@@ -244,7 +244,7 @@ test_that("MCMC range input errors", {
                       min = c("0", 0),
                       max = c(1, 1),
                       discrete = c(FALSE, FALSE),
-                      target = "model_data",
+                      target = "pars_model",
                       stringsAsFactors = FALSE)
   expect_error(mcmc_validate_range(range),
                "'min' entries must be numeric")
@@ -253,7 +253,7 @@ test_that("MCMC range input errors", {
                       min = c(0, 0),
                       max = c("1", 1),
                       discrete = c(FALSE, FALSE),
-                      target = "model_data",
+                      target = "pars_model",
                       stringsAsFactors = FALSE)
   expect_error(mcmc_validate_range(range),
                "'max' entries must be numeric")
@@ -262,7 +262,7 @@ test_that("MCMC range input errors", {
                       min = c(0, 0),
                       max = c(1, 1),
                       discrete = c(FALSE, FALSE),
-                      target = "model_data",
+                      target = "pars_model",
                       stringsAsFactors = FALSE)
   expect_error(mcmc_validate_range(range),
                "'init' entries must be numeric")
@@ -275,13 +275,13 @@ test_that("MCMC range input errors", {
                       stringsAsFactors = FALSE)
   expect_error(mcmc_validate_range(range),
                paste0("Invalid target 'model_pars': must be one of ",
-               "'model_data', 'pars_compare', 'pars_initial'"))
+               "'pars_model', 'pars_compare', 'pars_initial'"))
   range <- data.frame(names = c("beta", "gamma"),
                       init = c(0.2, 0.1),
                       min = c(0, 0),
                       max = c(1, 1),
                       discrete = c(FALSE, FALSE),
-                      target = "model_data",
+                      target = "pars_model",
                       stringsAsFactors = FALSE)
   expect_error(mcmc_validate_range(range),
                "Missing columns from range: 'name'")
@@ -290,7 +290,7 @@ test_that("MCMC range input errors", {
                       min = c(0, 0),
                       max = c(1, 1),
                       discrete = c(FALSE, FALSE),
-                      target = "model_data",
+                      target = "pars_model",
                       stringsAsFactors = FALSE)
   expect_error(mcmc_validate_range(range),
                "Duplicate 'name' entries not allowed in range")
@@ -302,7 +302,7 @@ test_that("MCMC function input errors", {
                       min = c(0, 0),
                       max = c(1, 1),
                       discrete = c(FALSE, FALSE),
-                      target = "model_data",
+                      target = "pars_model",
                       stringsAsFactors = FALSE)
   lprior <- list("beta" = function(pars) log(1e-10),
                  "gamma" = function(pars) log(1e-10))
@@ -357,7 +357,7 @@ test_that("Master chain errors", {
                       min = c(0, 0),
                       max = c(1, 1),
                       discrete = c(FALSE, FALSE),
-                      target = "model_data",
+                      target = "pars_model",
                       stringsAsFactors = FALSE)
   lprior <- list("beta" = function(pars) log(1e-10),
                  "gamma" = function(pars) log(1e-10))

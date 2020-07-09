@@ -159,8 +159,10 @@ particle_filter <- R6::R6Class(
 
     ##' Run the particle filter
     ##'
-    ##' @param model_data The data object passed into dust, which may contain
-    ##' parameters and/or initial conditions
+    ##' @param pars_model The \code{data} object passed into dust,
+    ##' which may contain parameters for your model (these might affect
+    ##' running and/or initial conditions, depending on your model and
+    ##' if you are using \code{initial} / \code{pars_initial} below).
     ##'
     ##' @param n_particles The number of particles to simulate
     ##'
@@ -179,7 +181,7 @@ particle_filter <- R6::R6Class(
     ##'
     ##' @return A single numeric value representing the log-likelihood
     ##' (\code{-Inf} if the model is impossible)
-    run = function(model_data, n_particles, save_history = FALSE,
+    run = function(pars_model, n_particles, save_history = FALSE,
                    pars_compare = NULL, run_params = NULL,
                    pars_initial = NULL) {
       compare <- private$compare
@@ -187,14 +189,14 @@ particle_filter <- R6::R6Class(
       run_params <- validate_dust_params(run_params)
 
       if (is.null(private$last_model)) {
-        model <- self$model$new(data = model_data, step = steps[[1L]],
+        model <- self$model$new(data = pars_model, step = steps[[1L]],
                                 n_particles = n_particles,
                                 n_threads = run_params[["n_threads"]],
                                 n_generators = run_params[["n_generators"]],
                                 seed = run_params[["seed"]])
       } else {
         model <- private$last_model
-        model$reset(model_data, steps[[1L]])
+        model$reset(pars_model, steps[[1L]])
       }
 
       if (!is.null(private$initial)) {
@@ -300,8 +302,8 @@ particle_filter <- R6::R6Class(
     run2 = function(n_particles, save_history = FALSE,
                     index, pars, run_params = NULL) {
       pars_model <- pars_compare <- pars_initial <- NULL
-      if (length(index$model_data) > 0) {
-        model_data <- pars[index$model_data]
+      if (length(index$pars_model) > 0) {
+        pars_model <- pars[index$pars_model]
       }
 
       if (length(index$pars_compare) > 0) {
@@ -313,7 +315,7 @@ particle_filter <- R6::R6Class(
       }
 
       ## TODO: run_params comes out and moves into the constructor
-      self$run(model_data, n_particles, save_history,
+      self$run(pars_model, n_particles, save_history,
                pars_compare, run_params = run_params,
                pars_initial = pars_initial)
     },

@@ -5,7 +5,7 @@ test_that("Sampling and forecasting from a grid search", {
                       min = c(0.13, 0.05),
                       max = c(0.25, 0.15),
                       n = c(6, 9),
-                      target = "model_data",
+                      target = "pars_model",
                       stringsAsFactors = FALSE)
 
   dat <- example_sir()
@@ -79,7 +79,7 @@ test_that("Sampling and forecasting from an MCMC", {
                       min = c(0, 0),
                       max = c(1, 1),
                       discrete = c(FALSE, FALSE),
-                      target = "model_data",
+                      target = "pars_model",
                       stringsAsFactors = FALSE)
   lprior <- list("beta" = function(pars) log(1e-10),
                  "gamma" = function(pars) log(1e-10))

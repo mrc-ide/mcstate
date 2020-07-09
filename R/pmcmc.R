@@ -288,7 +288,7 @@ validate_range <- function(range, expected_names) {
     stop("Duplicate 'name' entries not allowed in range")
   }
 
-  targets <- c("model_data", "pars_compare", "pars_initial")
+  targets <- c("pars_model", "pars_compare", "pars_initial")
   err <- setdiff(range$target, targets)
   if (length(err) > 0L) {
     stop(sprintf("Invalid target %s: must be one of %s",

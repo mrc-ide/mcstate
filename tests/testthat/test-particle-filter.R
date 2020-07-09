@@ -60,7 +60,7 @@ test_that("particle filter likelihood is worse with worse parameters", {
   p <- particle_filter$new(dat$data, dat$model, dat$compare,
                            index = dat$index)
   ll1 <- p$run(NULL, n_particles)
-  ll2 <- p$run(model_data = list(gamma = 1, beta = 1), n_particles)
+  ll2 <- p$run(pars_model = list(gamma = 1, beta = 1), n_particles)
   expect_true(ll1 > ll2)
 })
 

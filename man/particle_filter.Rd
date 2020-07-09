@@ -153,7 +153,7 @@ Run the particle filter}
 \subsection{Method \code{run()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{particle_filter$run(
-  model_data,
+  pars_model,
   n_particles,
   save_history = FALSE,
   pars_compare = NULL,
@@ -165,8 +165,10 @@ Run the particle filter}
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{model_data}}{The data object passed into dust, which may contain
-parameters and/or initial conditions}
+\item{\code{pars_model}}{The \code{data} object passed into dust,
+which may contain parameters for your model (these might affect
+running and/or initial conditions, depending on your model and
+if you are using \code{initial} / \code{pars_initial} below).}
 
 \item{\code{n_particles}}{The number of particles to simulate}
 

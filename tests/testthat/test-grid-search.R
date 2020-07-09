@@ -6,7 +6,7 @@ test_that("Simple grid search with SIR model", {
                       min = c(0.15, 0.05),
                       max = c(0.3, 0.15),
                       n = c(9, 9),
-                      target = "model_data")
+                      target = "pars_model")
 
   dat <- example_sir()
   p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
@@ -33,7 +33,7 @@ test_that("SIR model parameters are can be inferred correctly", {
                       min = c(0.1, 0),
                       max = c(0.3, 0.2),
                       n = c(3, 3),
-                      target = "model_data")
+                      target = "pars_model")
 
   # NB: in the example model, default
   # * beta = 0.2 (transmission)
@@ -54,7 +54,7 @@ test_that("Start date can be sampled", {
                       min = c(0.1, 0),
                       max = c(0.3, 100),
                       n = c(3, 3),
-                      target = c("model_data", "pars_initial"),
+                      target = c("pars_model", "pars_initial"),
                       stringsAsFactors = FALSE)
 
   dat <- example_sir()
@@ -82,7 +82,7 @@ test_that("pars_compare can be sampled", {
                       min = c(0.1, 1e3),
                       max = c(0.3, 1e6),
                       n = c(3, 3),
-                      target = c("model_data", "pars_compare"),
+                      target = c("pars_model", "pars_compare"),
                       stringsAsFactors = FALSE)
 
   dat <- example_sir()
@@ -101,7 +101,7 @@ test_that("grid_search_validate_range - happy path", {
                       min = c(1, 0),
                       max = c(2, 10),
                       n = c(4, 5),
-                      target = "model_data")
+                      target = "pars_model")
   res <- grid_search_validate_range(range)
 
   expect_setequal(
@@ -118,7 +118,7 @@ test_that("grid_search_validate_range - happy path", {
     expand.grid(a = res$variables$a, b = res$variables$b))
   expect_equal(
     res$index,
-    list(model_data = 1:2,
+    list(pars_model = 1:2,
          pars_compare = integer(0),
          pars_initial = integer(0)))
 })
@@ -141,20 +141,20 @@ test_that("grid_search_validate_range validates target", {
     grid_search_validate_range(
       data_frame(name = c("a", "b"), min = 1, max = 2, n = 2,
                  target = "somewhere")),
-    paste("Invalid target 'somewhere': must be one of 'model_data',",
+    paste("Invalid target 'somewhere': must be one of 'pars_model',",
           "'pars_compare', 'pars_initial'"))
   expect_error(
     grid_search_validate_range(
       data_frame(name = c("a", "b"), min = 1, max = 2, n = 2,
                  target = c("x", "y"))),
-    paste("Invalid target 'x', 'y': must be one of 'model_data',",
+    paste("Invalid target 'x', 'y': must be one of 'pars_model',",
           "'pars_compare', 'pars_initial'"))
 })
 
 
 test_that("grid_search_validate_range requires two variables", {
   range <- data_frame(name = c("a", "b", "c"),
-                      min = 1, max = 2, n = 10, target = "model_data")
+                      min = 1, max = 2, n = 10, target = "pars_model")
   expect_error(
     grid_search_validate_range(range[1, ]),
     "Expected exactly two rows in 'range'")
@@ -166,7 +166,7 @@ test_that("grid_search_validate_range requires two variables", {
 
 test_that("grid_search_validate_range requires unique names", {
   range <- data_frame(name = c("a", "a"),
-                      min = 1, max = 2, n = 10, target = "model_data")
+                      min = 1, max = 2, n = 10, target = "pars_model")
   expect_error(
     grid_search_validate_range(range),
     "Duplicate 'name' entries not allowed in range")
