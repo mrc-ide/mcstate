@@ -327,6 +327,25 @@ test_that("index must be sensible", {
 })
 
 
+test_that("initial must be sensible", {
+  dat <- example_sir()
+  expect_error(
+    particle_filter$new(dat$data, dat$model, dat$compare,
+                        initial = c(1, 3, 5)),
+    "'initial' must be function if not NULL")
+})
+
+
+test_that("check for unconsumed pars_initial", {
+  dat <- example_sir()
+  p <- particle_filter$new(dat$data, dat$model, dat$compare,
+                           index = dat$index)
+  expect_error(
+    p$run(NULL, 100, pars_initial = list(1, 2)),
+    "'pars_initial' was provided but you do not have")
+})
+
+
 test_that("we do not reorder particles when compare is NULL", {
   dat <- example_sir()
   p <- particle_filter$new(dat$data, dat$model, function(...) NULL,

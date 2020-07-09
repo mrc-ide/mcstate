@@ -208,7 +208,8 @@ particle_filter <- R6::R6Class(
           model$set_state(initial)
         }
       } else if (!is.null(pars_initial)) {
-        stop("Unconsumed 'pars_initial', what's going on there?")
+        stop(paste("'pars_initial' was provided but you do not have",
+                   "an 'initial' function to pass it to"))
       }
 
       if (is.null(private$index)) {
