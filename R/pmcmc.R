@@ -382,7 +382,7 @@ summary.mcstate_pmcmc <- function(object, ...) {
   traces <- object$results
 
   # calculate correlation matrix
-  corr_mat <- round(cor(traces), 2)
+  corr_mat <- round(suppressWarnings(cor(traces)), 2)
 
   # compile summary
   summ <- rbind(mean = colMeans(traces),
