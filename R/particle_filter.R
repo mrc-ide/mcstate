@@ -121,7 +121,20 @@ particle_filter <- R6::R6Class(
     ##' states as it will reduce the amount of memory copied back and
     ##' forth.
     ##'
-    ##' @param initial A function to generate initial conditions. If given...
+    ##' @param initial A function to generate initial conditions. If
+    ##' given, then this function must accept 3 arguments: \code{info}
+    ##' (the result of calling \code{$info()} as for \code{index},
+    ##' \code{n_particles} (the number of particles that the particle
+    ##' filter is using) and \code{pars} (parameters passed in in the
+    ##' \code{$run} method via the \code{pars_initial} argument).  It
+    ##' must return a list, which can have the elements \code{state}
+    ##' (initial model state, passed to the particle filter - either a
+    ##' vector or a matrix, and overriding the initial conditions
+    ##' provided by your model) and \code{step} (the initial step,
+    ##' overriding the first step of your data - this must occur within
+    ##' your first epoch in your \code{data} provided to the
+    ##' constructor, i.e., not less than the first element of
+    ##' \code{step_start} and not more than \code{step_end})
     initialize = function(data, model, compare, index = NULL, initial = NULL) {
       if (!is_dust_generator(model)) {
         stop("'model' must be a dust_generator")
@@ -144,10 +157,6 @@ particle_filter <- R6::R6Class(
       lockBinding("model", self)
     },
 
-    ##' We probably need some special treatment for the initial case
-    ##' but it's not clear that it belongs here, rather than in some
-    ##' function above this, as state is just provided here as a vector
-    ##'
     ##' Run the particle filter
     ##'
     ##' @param model_data The data object passed into dust, which may contain
@@ -165,11 +174,14 @@ particle_filter <- R6::R6Class(
     ##' @param run_params List containing seed, n_threads and n_generators
     ##' for use with dust
     ##'
+    ##' @param pars_initial Parameters passed through to the \code{initial}
+    ##' function (if provided).
+    ##'
     ##' @return A single numeric value representing the log-likelihood
     ##' (\code{-Inf} if the model is impossible)
     run = function(model_data, n_particles, save_history = FALSE,
-                   pars_compare = NULL,
-                   run_params = NULL, pars_initial = NULL) {
+                   pars_compare = NULL, run_params = NULL,
+                   pars_initial = NULL) {
       compare <- private$compare
       steps <- private$steps
       run_params <- validate_dust_params(run_params)
@@ -185,12 +197,6 @@ particle_filter <- R6::R6Class(
         model$reset(model_data, steps[[1L]])
       }
 
-      ## TODO: How do we deal with (or do we deal with) the case where
-      ## the user wants to change the start time but not the start
-      ## conditions, as we have done with the initial date drama
-      ## earlier - we'll be eliminating the step_start part above
-      ## soon.  Looks like we'll need a set_step option, or to train
-      ## set_state to cope with a NULL state; they both impact dust.
       if (!is.null(private$initial)) {
         initial <- private$initial(model$info(), n_particles, pars_initial)
         if (is.list(initial)) {

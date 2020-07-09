@@ -89,7 +89,7 @@ Create the particle filter}
 \if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_filter$new(data, model, compare, index = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter$new(data, model, compare, index = NULL, initial = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -126,11 +126,22 @@ run, passed through to your compare function) and \code{state}
 but do not have to. This argument is optional but using it will
 likely speed up your simulation if you have more than a few
 states as it will reduce the amount of memory copied back and
-forth.
-We probably need some special treatment for the initial case
-but it's not clear that it belongs here, rather than in some
-function above this, as state is just provided here as a vector
+forth.}
 
+\item{\code{initial}}{A function to generate initial conditions. If
+given, then this function must accept 3 arguments: \code{info}
+(the result of calling \code{$info()} as for \code{index},
+\code{n_particles} (the number of particles that the particle
+filter is using) and \code{pars} (parameters passed in in the
+\code{$run} method via the \code{pars_initial} argument).  It
+must return a list, which can have the elements \code{state}
+(initial model state, passed to the particle filter - either a
+vector or a matrix, and overriding the initial conditions
+provided by your model) and \code{step} (the initial step,
+overriding the first step of your data - this must occur within
+your first epoch in your \code{data} provided to the
+constructor, i.e., not less than the first element of
+\code{step_start} and not more than \code{step_end})
 Run the particle filter}
 }
 \if{html}{\out{</div>}}
@@ -146,8 +157,8 @@ Run the particle filter}
   n_particles,
   save_history = FALSE,
   pars_compare = NULL,
-  step_start = NULL,
-  run_params = NULL
+  run_params = NULL,
+  pars_initial = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -166,13 +177,11 @@ particles should be saved}
 the \code{compare} function.  These parameters will be passed as
 the 4th argument to \code{compare}.}
 
-\item{\code{step_start}}{Optional first step to start at.  If provided,
-this must be within the range of the first epoch implied in your
-\code{data} provided to the constructor (i.e., not less than the
-first element of \code{step_start} and less than \code{step_end})}
-
 \item{\code{run_params}}{List containing seed, n_threads and n_generators
 for use with dust}
+
+\item{\code{pars_initial}}{Parameters passed through to the \code{initial}
+function (if provided).}
 }
 \if{html}{\out{</div>}}
 }
