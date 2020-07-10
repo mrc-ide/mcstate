@@ -389,9 +389,9 @@ test_that("initialise with complex state", {
   initial <- function(info, n_particles, pars) {
     y <- matrix(0, 4, n_particles)
     set.seed(1) # so that we can check below
-    I0 <- rpois(n_particles, pars$I0)
-    y[1, ] <- 1100 - I0
-    y[2, ] <- I0
+    i0 <- rpois(n_particles, pars$I0)
+    y[1, ] <- 1100 - i0
+    y[2, ] <- i0
     y
   }
 
@@ -476,9 +476,9 @@ test_that("Variable initial starting point of the simulation", {
   ## Then tune the start date to get the same effect:
   initial <- function(info, n_particles, pars) {
     set.seed(1)
-    I0 <- rpois(n_particles, pars$I0)
+    i0 <- rpois(n_particles, pars$I0)
     step <- pars$step_offset - rpois(n_particles, pars$step_mean)
-    list(state = rbind(1000, I0, 0, 0, deparse.level = 0),
+    list(state = rbind(1000, i0, 0, 0, deparse.level = 0),
          step = step)
   }
   compare <- function(...) {
