@@ -454,3 +454,47 @@ test_that("Control the starting point of the simulation", {
                 save_history = TRUE)
   expect_true(ll3 < ll1)
 })
+
+
+test_that("Variable initial starting point of the simulation", {
+  dat <- example_sir()
+  data <- dat$data
+  ## Drop extra columns that are confusing in this context
+  data <- data[setdiff(names(data), c("day_start", "day_end"))]
+  ## Offset the data by a considerable margin:
+  offset <- 400
+  data[c("step_start", "step_end")] <-
+    data[c("step_start", "step_end")] + offset
+  ## A burnin step:
+  intro <- data[1, ]
+  intro$incidence <- NA
+  intro$step_start <- 0
+  intro$step_end <- data$step_start[[1]]
+  ## Our combination data:
+  data <- rbind(intro, data)
+
+  ## Then tune the start date to get the same effect:
+  initial <- function(info, n_particles, pars) {
+    set.seed(1)
+    I0 <- rpois(n_particles, pars$I0)
+    step <- pars$step_offset - rpois(n_particles, pars$step_mean)
+    list(state = rbind(1000, I0, 0, 0, deparse.level = 0),
+         step = step)
+  }
+  compare <- function(...) {
+    NULL
+  }
+
+  p <- particle_filter$new(data, dat$model, compare,
+                           index = dat$index, initial = initial)
+  pars <- list(I0 = 10, step_mean = 20, step_offset = 400)
+  set.seed(1)
+  ll <- p$run(NULL, 10, pars_initial = pars, save_history = TRUE)
+  expect_equal(ll, 0)
+
+  mod <- p$model$new(NULL, step = 0, n_particles = 10)
+  tmp <- initial(NULL, 10, pars)
+  mod$set_state(tmp$state, tmp$step)
+  expect_equal(p$history[, , 1], mod$state()[1:3, ])
+  expect_equal(mod$step(), max(tmp$step))
+})

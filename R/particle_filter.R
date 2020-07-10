@@ -422,18 +422,18 @@ scale_log_weights <- function(log_weights) {
 
 particle_steps <- function(steps, step_start) {
   if (!is.null(step_start)) {
-    assert_scalar_integer(step_start)
-    if (step_start < steps[1, 1, drop = TRUE]) {
+    assert_integer(step_start)
+    if (min(step_start) < steps[1, 1, drop = TRUE]) {
       stop(sprintf(
         "'step_start' must be >= %d (the first value of data$step_start)",
         steps[1, 1, drop = TRUE]))
     }
-    if (step_start > steps[1, 2, drop = TRUE]) {
+    if (max(step_start) > steps[1, 2, drop = TRUE]) {
       stop(sprintf(
         "'step_start' must be <= %d (the first value of data$step_end)",
         steps[1, 2, drop = TRUE]))
     }
-    steps[1, 1] <- step_start
+    steps[1, 1] <- max(step_start)
   }
   steps
 }
