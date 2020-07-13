@@ -21,9 +21,9 @@
 ##'    state_start <- sir$state()
 ##'    sir$run(i / dt)
 ##'    state_end <- sir$state()
-##'    history[, 1, i] <- state_end
+##'    history[, 1, i + 1] <- state_end
 ##'    # Reduction in S
-##'    incidence[i] <- state_start[1,1] - state_end[1,1]
+##'    incidence[i] <- state_start[1, 1] - state_end[1, 1]
 ##' }
 ##'
 ##' # Convert this into our required format:
