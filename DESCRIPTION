@@ -20,10 +20,14 @@ Language: en-GB
 URL: https://github.com/mrc-ide/mcstate
 BugReports: https://github.com/mrc-ide/mcstate/issues
 Imports:
-    dust (>= 0.1.5),
+    dust (>= 0.2.0),
     coda,
     mvtnorm,
     viridis
 Suggests:
-    testthat
+    brio,
+    decor,
+    testthat,
+    tibble,
+    vctrs
 RoxygenNote: 7.1.0

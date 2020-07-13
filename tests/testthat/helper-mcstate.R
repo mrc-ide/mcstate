@@ -5,7 +5,7 @@ models <- list(
 
 example_sir <- function() {
   model <- models$sir
-  sir <- model$new(data = NULL, step = 0, n_particles = 1)
+  sir <- model$new(data = list(), step = 0, n_particles = 1)
   y0 <- sir$state()
 
   compare <- function(state, prev_state, observed, pars = NULL) {
