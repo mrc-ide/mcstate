@@ -11,7 +11,7 @@
 ##' gen <- dust::dust(path)
 ##'
 ##' # Some data that we will fit to, using 1 particle:
-##' sir <- gen$new(data = NULL, step = 0, n_particles = 1)
+##' sir <- gen$new(data = list(), step = 0, n_particles = 1)
 ##' dt <- 1/4
 ##' day <- seq(1, 100)
 ##' incidence <- rep(NA, length(day))
