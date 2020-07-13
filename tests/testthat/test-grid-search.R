@@ -92,8 +92,8 @@ test_that("pars_compare can be sampled", {
 
   set.seed(1)
   grid_res <- grid_search(range, p, n_particles)
-  ## NOTE: this is a fragile test - I've had to update the index once
-  expect_true(grid_res$renorm_mat_ll[2, 2] == max(grid_res$renorm_mat_ll))
+  ## NOTE: this is a fragile test - I've had to update the index twice
+  expect_true(grid_res$renorm_mat_ll[2, 1] == max(grid_res$renorm_mat_ll))
 })
 
 test_that("grid_search_validate_range - happy path", {
