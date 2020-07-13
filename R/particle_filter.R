@@ -112,7 +112,7 @@ particle_filter <- R6::R6Class(
     ##' @param index An index function. This is used to compute the
     ##' "interesting" indexes of your model. It must be a function of
     ##' one argument, which will be the result of calling the
-    ##' \code{$info()} method on your model. It should return a list iw
+    ##' \code{$info()} method on your model. It should return a list
     ##' with elements \code{run} (indices to return at the end of each
     ##' run, passed through to your compare function) and \code{state}
     ##' (indices to return if saving state). These indices can overlap
@@ -123,7 +123,7 @@ particle_filter <- R6::R6Class(
     ##'
     ##' @param initial A function to generate initial conditions. If
     ##' given, then this function must accept 3 arguments: \code{info}
-    ##' (the result of calling \code{$info()} as for \code{index},
+    ##' (the result of calling \code{$info()} as for \code{index}),
     ##' \code{n_particles} (the number of particles that the particle
     ##' filter is using) and \code{pars} (parameters passed in in the
     ##' \code{$run} method via the \code{pars_initial} argument).  It
