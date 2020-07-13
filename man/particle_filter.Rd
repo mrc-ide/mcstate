@@ -47,7 +47,7 @@ compare <- function(state, prev_state, observed, pars = NULL) {
 
 # Construct the particle_filter object:
 p <- particle_filter$new(data, gen, compare)
-p$run(NULL, 100, TRUE)
+p$run(list(), 100, TRUE)
 
 # Our simulated trajectories, with the "real" data superimposed
 matplot(data_raw$day, t(p$history[1, , -1]), type = "l",
