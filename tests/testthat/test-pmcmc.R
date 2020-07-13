@@ -81,7 +81,7 @@ test_that("MCMC doesn't move away from correct parameters", {
   mcmc_results <- pmcmc(range, lprior, p, n_particles, n_mcmc, proposal_kernel,
                         n_chains = n_chains)
 
-  expect_lt(abs(mean(mcmc_results$results$beta) - 0.2), 0.02, )
+  expect_lt(abs(mean(mcmc_results$results$beta) - 0.2), 0.03)
   expect_lt(abs(mean(mcmc_results$results$gamma) - 0.1), 0.02)
 })
 
