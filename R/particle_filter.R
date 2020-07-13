@@ -134,7 +134,10 @@ particle_filter <- R6::R6Class(
     ##' overriding the first step of your data - this must occur within
     ##' your first epoch in your \code{data} provided to the
     ##' constructor, i.e., not less than the first element of
-    ##' \code{step_start} and not more than \code{step_end})
+    ##' \code{step_start} and not more than \code{step_end}). Your function
+    ##' can also return a vector or matrix of \code{state} and not alter
+    ##' the starting step, which is equivalent to returning
+    ##' \code{list(state = state, step = NULL)}.
     initialize = function(data, model, compare, index = NULL, initial = NULL) {
       if (!is_dust_generator(model)) {
         stop("'model' must be a dust_generator")
