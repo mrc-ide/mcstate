@@ -173,8 +173,7 @@ particle_filter <- R6::R6Class(
     ##' the \code{compare} function.  These parameters will be passed as
     ##' the 4th argument to \code{compare}.
     ##'
-    ##' @param run_params List containing seed, n_threads and n_generators
-    ##' for use with dust
+    ##' @param run_params List containing seed and n_threads for use with dust
     ##'
     ##' @param pars_initial Parameters passed through to the \code{initial}
     ##' function (if provided).
@@ -192,7 +191,6 @@ particle_filter <- R6::R6Class(
         model <- self$model$new(data = pars_model, step = steps[[1L]],
                                 n_particles = n_particles,
                                 n_threads = run_params[["n_threads"]],
-                                n_generators = run_params[["n_generators"]],
                                 seed = run_params[["seed"]])
       } else {
         model <- private$last_model
@@ -294,7 +292,7 @@ particle_filter <- R6::R6Class(
     ##'
     ##' @param pars A list of parameters
     ##'
-    ##' @param run_params List containing seed, n_threads and n_generators
+    ##' @param run_params List containing seed and n_threads
     ##' for use with dust
     ##'
     run2 = function(n_particles, save_history = FALSE,
@@ -441,12 +439,10 @@ particle_steps <- function(steps, step_start) {
 
 validate_dust_params <- function(run_params) {
   if (is.null(run_params)) {
-    run_params <- list(n_threads = 1L, n_generators = 1L, seed = 1L)
+    run_params <- list(n_threads = 1L, seed = 1L)
   } else {
     run_params[["n_threads"]] <-
       validate_dust_params_size(run_params[["n_threads"]])
-    run_params[["n_generators"]] <-
-      validate_dust_params_size(run_params[["n_generators"]])
     run_params[["seed"]] <-
       validate_dust_params_size(run_params[["seed"]])
   }

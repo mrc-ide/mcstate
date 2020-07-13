@@ -281,16 +281,16 @@ test_that("Control the starting point of the simulation", {
 test_that("control filter", {
   expect_equal(
     validate_dust_params(NULL),
-    list(n_threads = 1L, n_generators = 1L, seed = 1L))
+    list(n_threads = 1L, seed = 1L))
   expect_equal(
-    validate_dust_params(list(n_threads = 0, n_generators = 0, seed = 0)),
-    list(n_threads = 1L, n_generators = 1L, seed = 1L))
+    validate_dust_params(list(n_threads = 0, seed = 0)),
+    list(n_threads = 1L, seed = 1L))
   expect_equal(
-    validate_dust_params(list(n_threads = 2, n_generators = 4, seed = 8)),
-    list(n_threads = 2L, n_generators = 4L, seed = 8L))
+    validate_dust_params(list(n_threads = 2, seed = 8)),
+    list(n_threads = 2L, seed = 8L))
   expect_equal(
-    validate_dust_params(list(n_threads = 2, n_generators = 4, seed = 8.5)),
-    list(n_threads = 2L, n_generators = 4L, seed = 8L))
+    validate_dust_params(list(n_threads = 2, seed = 8.5)),
+    list(n_threads = 2L, seed = 8L))
 })
 
 

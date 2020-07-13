@@ -179,8 +179,7 @@ particles should be saved}
 the \code{compare} function.  These parameters will be passed as
 the 4th argument to \code{compare}.}
 
-\item{\code{run_params}}{List containing seed, n_threads and n_generators
-for use with dust}
+\item{\code{run_params}}{List containing seed and n_threads for use with dust}
 
 \item{\code{pars_initial}}{Parameters passed through to the \code{initial}
 function (if provided).}
@@ -219,7 +218,7 @@ particles should be saved}
 
 \item{\code{pars}}{A list of parameters}
 
-\item{\code{run_params}}{List containing seed, n_threads and n_generators
+\item{\code{run_params}}{List containing seed and n_threads
 for use with dust
 
 Create predicted trajectories, based on the final point of a
