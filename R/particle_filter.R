@@ -24,7 +24,7 @@
 ##'    history[, 1, i] <- state_end
 ##'    # Reduction in S
 ##'    incidence[i] <- state_start[1,1] - state_end[1,1]
-##'  }
+##' }
 ##'
 ##' # Convert this into our required format:
 ##' data_raw <- data.frame(day = day, incidence = incidence)
@@ -52,7 +52,7 @@
 ##'          col = "#ff000022", lty = 1, ylim = range(p$history))
 ##' matlines(data_raw$day, t(p$history[2, , -1]), col = "#ffff0022", lty = 1)
 ##' matlines(data_raw$day, t(p$history[3, , -1]), col = "#0000ff22", lty = 1)
-##' matpoints(data_raw$day, t(history[, , -1]), pch = 19,
+##' matpoints(data_raw$day, t(history[1:3, , -1]), pch = 19,
 ##'           col = c("red", "yellow", "blue"))
 particle_filter <- R6::R6Class(
   "particle_filter",
