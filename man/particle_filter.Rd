@@ -18,16 +18,16 @@ sir <- gen$new(data = NULL, step = 0, n_particles = 1)
 dt <- 1/4
 day <- seq(1, 100)
 incidence <- rep(NA, length(day))
-history <- array(NA_real_, c(3, 1, 101))
+history <- array(NA_real_, c(4, 1, 101))
 history[, 1, 1] <- sir$state()
 for (i in day) {
    state_start <- sir$state()
    sir$run(i / dt)
    state_end <- sir$state()
-   history[, 1, i] <- state_end
+   history[, 1, i + 1] <- state_end
    # Reduction in S
-   incidence[i] <- state_start[1,1] - state_end[1,1]
- }
+   incidence[i] <- state_start[1, 1] - state_end[1, 1]
+}
 
 # Convert this into our required format:
 data_raw <- data.frame(day = day, incidence = incidence)
@@ -55,7 +55,7 @@ matplot(data_raw$day, t(p$history[1, , -1]), type = "l",
          col = "#ff000022", lty = 1, ylim = range(p$history))
 matlines(data_raw$day, t(p$history[2, , -1]), col = "#ffff0022", lty = 1)
 matlines(data_raw$day, t(p$history[3, , -1]), col = "#0000ff22", lty = 1)
-matpoints(data_raw$day, t(history[, , -1]), pch = 19,
+matpoints(data_raw$day, t(history[1:3, , -1]), pch = 19,
           col = c("red", "yellow", "blue"))
 }
 \section{Public fields}{
@@ -89,7 +89,7 @@ Create the particle filter}
 \if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_filter$new(data, model, compare)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter$new(data, model, compare, index = NULL, initial = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -114,11 +114,37 @@ is a \code{list} of observed data corresponding to the current
 time's row in the \code{data} object provided here in the
 constructor.  \code{pars} is any additional parameters passed
 through to the comparison function (via the \code{pars_compare}
-argument to \code{$run}).
-We probably need some special treatment for the initial case
-but it's not clear that it belongs here, rather than in some
-function above this, as state is just provided here as a vector
+argument to \code{$run}).}
 
+\item{\code{index}}{An index function. This is used to compute the
+"interesting" indexes of your model. It must be a function of
+one argument, which will be the result of calling the
+\code{$info()} method on your model. It should return a list
+with elements \code{run} (indices to return at the end of each
+run, passed through to your compare function) and \code{state}
+(indices to return if saving state). These indices can overlap
+but do not have to. This argument is optional but using it will
+likely speed up your simulation if you have more than a few
+states as it will reduce the amount of memory copied back and
+forth.}
+
+\item{\code{initial}}{A function to generate initial conditions. If
+given, then this function must accept 3 arguments: \code{info}
+(the result of calling \code{$info()} as for \code{index}),
+\code{n_particles} (the number of particles that the particle
+filter is using) and \code{pars} (parameters passed in in the
+\code{$run} method via the \code{pars_initial} argument).  It
+must return a list, which can have the elements \code{state}
+(initial model state, passed to the particle filter - either a
+vector or a matrix, and overriding the initial conditions
+provided by your model) and \code{step} (the initial step,
+overriding the first step of your data - this must occur within
+your first epoch in your \code{data} provided to the
+constructor, i.e., not less than the first element of
+\code{step_start} and not more than \code{step_end}). Your function
+can also return a vector or matrix of \code{state} and not alter
+the starting step, which is equivalent to returning
+\code{list(state = state, step = NULL)}.
 Run the particle filter}
 }
 \if{html}{\out{</div>}}
@@ -130,20 +156,22 @@ Run the particle filter}
 \subsection{Method \code{run()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{particle_filter$run(
-  model_data,
+  pars_model,
   n_particles,
   save_history = FALSE,
   pars_compare = NULL,
-  step_start = NULL,
-  run_params = NULL
+  run_params = NULL,
+  pars_initial = NULL
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{model_data}}{The data object passed into dust, which may contain
-parameters and/or initial conditions}
+\item{\code{pars_model}}{The \code{data} object passed into dust,
+which may contain parameters for your model (these might affect
+running and/or initial conditions, depending on your model and
+if you are using \code{initial} / \code{pars_initial} below).}
 
 \item{\code{n_particles}}{The number of particles to simulate}
 
@@ -154,13 +182,10 @@ particles should be saved}
 the \code{compare} function.  These parameters will be passed as
 the 4th argument to \code{compare}.}
 
-\item{\code{step_start}}{Optional first step to start at.  If provided,
-this must be within the range of the first epoch implied in your
-\code{data} provided to the constructor (i.e., not less than the
-first element of \code{step_start} and less than \code{step_end})}
+\item{\code{run_params}}{List containing seed and n_threads for use with dust}
 
-\item{\code{run_params}}{List containing seed, n_threads and n_generators
-for use with dust}
+\item{\code{pars_initial}}{Parameters passed through to the \code{initial}
+function (if provided).}
 }
 \if{html}{\out{</div>}}
 }
@@ -196,7 +221,7 @@ particles should be saved}
 
 \item{\code{pars}}{A list of parameters}
 
-\item{\code{run_params}}{List containing seed, n_threads and n_generators
+\item{\code{run_params}}{List containing seed and n_threads
 for use with dust
 
 Create predicted trajectories, based on the final point of a

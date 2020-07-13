@@ -5,11 +5,11 @@ test_that("Sampling and forecasting from a grid search", {
                       min = c(0.13, 0.05),
                       max = c(0.25, 0.15),
                       n = c(6, 9),
-                      target = "model_data",
+                      target = "pars_model",
                       stringsAsFactors = FALSE)
 
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare)
+  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
   state <- dat$y0
   n_particles <- 100
   n_sample_pars <- 10
@@ -79,7 +79,7 @@ test_that("Sampling and forecasting from an MCMC", {
                       min = c(0, 0),
                       max = c(1, 1),
                       discrete = c(FALSE, FALSE),
-                      target = "model_data",
+                      target = "pars_model",
                       stringsAsFactors = FALSE)
   lprior <- list("beta" = function(pars) log(1e-10),
                  "gamma" = function(pars) log(1e-10))
@@ -87,7 +87,7 @@ test_that("Sampling and forecasting from an MCMC", {
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- range$name
 
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare)
+  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
   n_particles <- 20
   n_mcmc <- 100
   n_chains <- 2

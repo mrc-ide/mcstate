@@ -5,28 +5,23 @@ public:
   typedef int int_t;
   typedef double real_t;
   struct init_t {
-    double beta;
-    double dt;
-    double gamma;
-    double I0;
-    double initial_I;
-    double initial_R;
-    double initial_S;
-    double p_IR;
     double S0;
-    double steps_per_day;
+    double I0;
+    double R0;
+    double beta;
+    double gamma;
+    double dt;
   };
 
   sir(const init_t& data) : data_(data) {
   }
 
   size_t size() const {
-    return 3;
+    return 4;
   }
 
   std::vector<double> initial(size_t step) {
-    std::vector<double> ret =
-      {data_.initial_S, data_.initial_I, data_.initial_R};
+    std::vector<double> ret = {data_.S0, data_.I0, data_.R0, 0};
     return ret;
   }
 
@@ -36,13 +31,19 @@ public:
     double S = state[0];
     double I = state[1];
     double R = state[2];
+    double cumulative_incidence = state[3];
+
     double N = S + I + R;
-    double n_IR = rng.rbinom(round(I), data_.p_IR * data_.dt);
+
     double p_SI = 1 - std::exp(-(data_.beta) * I / (double) N);
+    double p_IR = 1 - std::exp(-(data_.gamma));
+    double n_IR = rng.rbinom(round(I), p_IR * data_.dt);
     double n_SI = rng.rbinom(round(S), p_SI * data_.dt);
-    state_next[2] = R + n_IR;
-    state_next[1] = I + n_SI - n_IR;
+
     state_next[0] = S - n_SI;
+    state_next[1] = I + n_SI - n_IR;
+    state_next[2] = R + n_IR;
+    state_next[3] = cumulative_incidence + n_SI;
   }
 
 private:
@@ -51,27 +52,36 @@ private:
 
 #include <Rcpp.h>
 
-inline double get_or_set_default(Rcpp::List& data, const std::string& name, double default_value) {
-    double value = default_value;
-    if (data.containsElementNamed(name.c_str())) {
-        value = data[name];
-    }
-    return value;
+inline double get_or_set_default(Rcpp::List& data, const char * name,
+                                 double default_value) {
+  double value = default_value;
+  if (data.containsElementNamed(name)) {
+    value = data[name];
+  }
+  return value;
 }
 
 template <>
 sir::init_t dust_data<sir>(Rcpp::List data) {
-  double initial_R = get_or_set_default(data, "initial_R", 0.0);
+  // Initial state values
+  double S0 = get_or_set_default(data, "S0", 1000.0);
+  double I0 = get_or_set_default(data, "I0", 10.0);
+  double R0 = get_or_set_default(data, "R0", 0.0);
   double beta = get_or_set_default(data, "beta", 0.2);
   double gamma = get_or_set_default(data, "gamma", 0.1);
-  double I0 = get_or_set_default(data, "initial_I", 10.0);
-  double S0 = get_or_set_default(data, "initial_S", 1000.0);
-  double steps_per_day = get_or_set_default(data, "steps_per_day", 4.0);
+  double dt = 0.25;
 
-  double dt = 1 / steps_per_day;
-  double initial_I = I0;
-  double initial_S = S0;
-  double p_IR = 1 - std::exp(-(gamma));
-  return sir::init_t{beta, dt, gamma, I0, initial_I, initial_R, initial_S,
-      p_IR, S0, steps_per_day};
+  return sir::init_t{S0, I0, R0, beta, gamma, dt};
+}
+
+template <>
+Rcpp::RObject dust_info<sir>(const sir::init_t& data) {
+  // Information about state order
+  Rcpp::CharacterVector vars =
+    Rcpp::CharacterVector::create("S", "I", "R", "inc");
+  // Information about parameter values
+  Rcpp::List pars = Rcpp::List::create(Rcpp::Named("beta") = data.beta,
+                                       Rcpp::Named("gamma") = data.gamma);
+  return Rcpp::List::create(Rcpp::Named("vars") = vars,
+                            Rcpp::Named("pars") = pars);
 }

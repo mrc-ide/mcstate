@@ -288,7 +288,7 @@ validate_range <- function(range, expected_names) {
     stop("Duplicate 'name' entries not allowed in range")
   }
 
-  targets <- c("step_start", "model_data", "pars_compare")
+  targets <- c("pars_model", "pars_compare", "pars_initial")
   err <- setdiff(range$target, targets)
   if (length(err) > 0L) {
     stop(sprintf("Invalid target %s: must be one of %s",
@@ -298,9 +298,7 @@ validate_range <- function(range, expected_names) {
 
   index <- lapply(targets, function(t) which(range$target == t))
   names(index) <- targets
-  if (length(index$step_start) > 1L) {
-    stop("At most one target may be 'step_start'")
-  }
+
   index
 }
 
@@ -384,7 +382,7 @@ summary.mcstate_pmcmc <- function(object, ...) {
   traces <- object$results
 
   # calculate correlation matrix
-  corr_mat <- round(cor(traces), 2)
+  corr_mat <- round(suppressWarnings(cor(traces)), 2)
 
   # compile summary
   summ <- rbind(mean = colMeans(traces),
