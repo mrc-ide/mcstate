@@ -47,7 +47,7 @@ compare <- function(state, prev_state, observed, pars = NULL) {
 
 # Construct the particle_filter object with 100 particles
 p <- particle_filter$new(data, gen, 100, compare)
-p$run(list(), save_history = TRUE)
+p$run(save_history = TRUE)
 
 # Our simulated trajectories, with the "real" data superimposed
 matplot(data_raw$day, t(p$history[1, , -1]), type = "l",
@@ -175,10 +175,10 @@ Run the particle filter}
 \subsection{Method \code{run()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{particle_filter$run(
-  pars_model,
-  save_history = FALSE,
+  pars_model = NULL,
   pars_compare = NULL,
-  pars_initial = NULL
+  pars_initial = NULL,
+  save_history = FALSE
 )}\if{html}{\out{</div>}}
 }
 
@@ -190,15 +190,15 @@ which may contain parameters for your model (these might affect
 running and/or initial conditions, depending on your model and
 if you are using \code{initial} / \code{pars_initial} below).}
 
-\item{\code{save_history}}{Logical, indicating if the history of all
-particles should be saved}
-
 \item{\code{pars_compare}}{Optional parameters to use when applying
 the \code{compare} function.  These parameters will be passed as
 the 4th argument to \code{compare}.}
 
 \item{\code{pars_initial}}{Parameters passed through to the \code{initial}
 function (if provided).}
+
+\item{\code{save_history}}{Logical, indicating if the history of all
+particles should be saved}
 }
 \if{html}{\out{</div>}}
 }

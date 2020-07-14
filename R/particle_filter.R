@@ -44,7 +44,7 @@
 ##'
 ##' # Construct the particle_filter object with 100 particles
 ##' p <- particle_filter$new(data, gen, 100, compare)
-##' p$run(list(), save_history = TRUE)
+##' p$run(save_history = TRUE)
 ##'
 ##' # Our simulated trajectories, with the "real" data superimposed
 ##' matplot(data_raw$day, t(p$history[1, , -1]), type = "l",
@@ -200,10 +200,13 @@ particle_filter <- R6::R6Class(
     ##'
     ##' @return A single numeric value representing the log-likelihood
     ##' (\code{-Inf} if the model is impossible)
-    run = function(pars_model, save_history = FALSE, pars_compare = NULL,
-                   pars_initial = NULL) {
+    run = function(pars_model = NULL, pars_compare = NULL, pars_initial = NULL,
+                   save_history = FALSE) {
       compare <- private$compare
       steps <- private$steps
+
+      ## Needed by the cpp11 interface
+      pars_model <- as.list(pars_model)
 
       if (is.null(private$last_model)) {
         model <- self$model$new(data = pars_model, step = steps[[1L]],
@@ -322,8 +325,7 @@ particle_filter <- R6::R6Class(
         pars_initial <- pars[index$pars_initial]
       }
 
-      self$run(pars_model, save_history, pars_compare,
-               pars_initial = pars_initial)
+      self$run(pars_model, pars_compare, pars_initial, save_history)
     },
 
     ##' Create predicted trajectories, based on the final point of a
