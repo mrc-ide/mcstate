@@ -7,26 +7,21 @@
 ##'
 ##' @param filter A \code{particle_filter} object to run
 ##'
-##' @param n_particles Number of particles. Positive Integer. Default = 100
-##'
 ##' @param tolerance Check around edges of the probability matrix
-##'
-##' @param run_params Passed to \code{particle_filter$run}
 ##'
 ##' @return List of beta and start date grid values, and
 ##'   normalised probabilities at each point
 ##'
 ##' @export
-grid_search <- function(range, filter, n_particles, tolerance=1E-2,
-                        run_params = NULL) {
+grid_search <- function(range, filter, tolerance = 0.01) {
   vars <- grid_search_validate_range(range)
 
   # Run the search, which returns a log-likelihood
   flat_log_ll <- vnapply(seq_len(nrow(vars$expanded)), function(i) {
     pars <- vars$expanded[i, ]
     names(pars) <- colnames(vars$expanded)
-    filter$run2(n_particles, save_history = FALSE, index = vars$index,
-                pars = pars, run_params = run_params)})
+    filter$run2(save_history = FALSE, index = vars$index, pars = pars)
+  })
 
   mat_log_ll <- matrix(
     flat_log_ll,

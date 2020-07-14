@@ -15,13 +15,9 @@
 ##'
 ##' @param filter A particle filter to sample
 ##'
-##' @param n_particles Number of particles
-##'
 ##' @param n_mcmc Number of MCMC steps
 ##'
 ##' @param proposal_kernel named matrix of proposal covariance for parameters
-##'
-##' @param run_params List of parameters for \code{particle_filter$run}
 ##'
 ##' @param output_proposals Logical indicating whether proposed parameter
 ##' jumps should be output along with results
@@ -48,10 +44,8 @@
 pmcmc <- function(mcmc_range,
                   lprior_funcs,
                   filter,
-                  n_particles,
                   n_mcmc,
                   proposal_kernel,
-                  run_params = NULL,
                   output_proposals = FALSE,
                   n_chains = 1) {
   vars <- mcmc_validate_range(mcmc_range)
@@ -84,9 +78,7 @@ pmcmc <- function(mcmc_range,
                      vars,
                      lprior_funcs,
                      filter,
-                     n_particles,
                      proposal_kernel,
-                     run_params = run_params,
                      output_proposals = output_proposals)
 
   if (n_chains > 1) {
@@ -122,9 +114,7 @@ run_mcmc_chain <- function(n_mcmc,
                            vars,
                            lprior_funcs,
                            filter,
-                           n_particles,
                            proposal_kernel,
-                           run_params = NULL,
                            output_proposals = FALSE) {
   #
   # Set initial state
@@ -136,11 +126,9 @@ run_mcmc_chain <- function(n_mcmc,
   curr_lprior <- calc_lprior(curr_pars, lprior_funcs)
 
   # run particle filter on initial parameters
-  curr_ll <- filter$run2(n_particles,
-                         save_history = FALSE,
+  curr_ll <- filter$run2(save_history = FALSE,
                          index = vars$index,
-                         pars = as.list(curr_pars),
-                         run_params = run_params)
+                         pars = as.list(curr_pars))
   curr_lpost <- curr_lprior + curr_ll
 
   # checks on log_prior and log_likelihood functions
@@ -190,11 +178,9 @@ run_mcmc_chain <- function(n_mcmc,
 
     ## calculate proposed prior / lhood / posterior
     prop_lprior <- calc_lprior(prop_pars, lprior_funcs)
-    prop_ll <- filter$run2(n_particles,
-                           save_history = FALSE,
+    prop_ll <- filter$run2(save_history = FALSE,
                            index = vars$index,
-                           pars = as.list(prop_pars),
-                           run_params = run_params)
+                           pars = as.list(prop_pars))
     prop_lpost <- prop_lprior + prop_ll
 
     # calculate probability of acceptance

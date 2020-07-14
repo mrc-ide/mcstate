@@ -9,9 +9,10 @@ test_that("Sampling and forecasting from a grid search", {
                       stringsAsFactors = FALSE)
 
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
-  state <- dat$y0
   n_particles <- 100
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
+  state <- dat$y0
   n_sample_pars <- 10
   forecast_steps <- 0
 
@@ -87,8 +88,9 @@ test_that("Sampling and forecasting from an MCMC", {
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- range$name
 
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
   n_particles <- 20
+  p <- particle_filter$new(dat$data, dat$model, dat$compare, n_particles,
+                           index = dat$index)
   n_mcmc <- 100
   n_chains <- 2
   n_sample_pars <- 10

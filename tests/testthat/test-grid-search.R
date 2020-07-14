@@ -9,8 +9,9 @@ test_that("Simple grid search with SIR model", {
                       target = "pars_model")
 
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
   n_particles <- 100
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
 
   res <- grid_search(range, p, n_particles)
 
@@ -39,8 +40,9 @@ test_that("SIR model parameters are can be inferred correctly", {
   # * beta = 0.2 (transmission)
   # * g = 0.1 (recovery)
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
   n_particles <- 100
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
 
   res <- grid_search(range, p, n_particles)
 
@@ -68,9 +70,9 @@ test_that("Start date can be sampled", {
     list(step = pars[["step_start"]])
   }
 
-  p <- particle_filter$new(data, dat$model, dat$compare, index = dat$index,
-                           initial = initial)
   n_particles <- 100
+  p <- particle_filter$new(data, dat$model, n_particles, dat$compare,
+                           index = dat$index, initial = initial)
 
   set.seed(1)
   grid_res <- grid_search(range, p, n_particles)
@@ -87,8 +89,10 @@ test_that("pars_compare can be sampled", {
 
   dat <- example_sir()
 
-  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
   n_particles <- 100
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
+
 
   set.seed(1)
   grid_res <- grid_search(range, p, n_particles)

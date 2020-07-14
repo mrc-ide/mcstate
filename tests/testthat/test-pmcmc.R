@@ -14,8 +14,9 @@ test_that("MCMC can run", {
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- range$name
 
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
   n_particles <- 10
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
   n_mcmc <- 100
 
   # A single chain
@@ -72,8 +73,9 @@ test_that("MCMC doesn't move away from correct parameters", {
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- range$name
 
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
   n_particles <- 20
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
   n_mcmc <- 500
   n_chains <- 1
 
@@ -115,9 +117,9 @@ test_that("MCMC runs on different targets", {
   data[c("step_start", "step_end")] <-
     data[c("step_start", "step_end")] + offset
   data$step_start[[1]] <- 0
-  p <- particle_filter$new(data, dat$model, dat$compare, index = dat$index,
-                           initial = initial)
   n_particles <- 10
+  p <- particle_filter$new(data, dat$model, n_particles, dat$compare,
+                           index = dat$index, initial = initial)
   n_mcmc <- 10
 
   # A single chain
@@ -182,8 +184,9 @@ test_that("MCMC jumps behave as expected", {
                           range$name))
 
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
   n_particles <- 20
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
   n_mcmc <- 500
   n_chains <- 1
   mcmc_results <- pmcmc(range, lprior, p, n_particles, n_mcmc, proposal_kernel,
@@ -310,8 +313,9 @@ test_that("MCMC function input errors", {
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- range$name
 
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
   n_particles <- 10
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
   n_mcmc <- 100
 
   n_chains <- 1
@@ -365,8 +369,9 @@ test_that("Master chain errors", {
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- range$name
 
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
   n_particles <- 10
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
   n_mcmc <- 10
   n_chains <- 3
   multi_chain <- pmcmc(range, lprior, p, n_particles, n_mcmc, proposal_kernel,
