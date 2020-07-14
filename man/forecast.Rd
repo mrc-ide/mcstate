@@ -6,34 +6,11 @@
 \alias{forecast.mcstate_pmcmc_list}
 \title{Sample Grid Scan}
 \usage{
-forecast(
-  x,
-  ...,
-  filter,
-  n_sample_pars = 10,
-  n_particles = 100,
-  forecast_steps = 0,
-  burn_in = 0
-)
+forecast(x, ..., filter, n_sample_pars = 10, forecast_steps = 0, burn_in = 0)
 
-\method{forecast}{mcstate_scan}(
-  x,
-  ...,
-  filter,
-  n_sample_pars = 10,
-  n_particles = 100,
-  forecast_steps = 0
-)
+\method{forecast}{mcstate_scan}(x, ..., filter, n_sample_pars = 10, forecast_steps = 0)
 
-\method{forecast}{mcstate_pmcmc_list}(
-  x,
-  ...,
-  filter,
-  n_sample_pars = 10,
-  n_particles = 100,
-  forecast_steps = 0,
-  burn_in = 1
-)
+\method{forecast}{mcstate_pmcmc_list}(x, ..., filter, n_sample_pars = 10, forecast_steps = 0, burn_in = 1)
 }
 \arguments{
 \item{x}{Output of \code{\link{grid_search}}.}
@@ -48,8 +25,6 @@ forecast(
 proportion to their posterior probability. For a \code{mcstate_pmcmc_list}
 this will be full parameter sets sampled evenly from the chains.
 Integer. This will determine how many trajectories are returned.}
-
-\item{n_particles}{Number of particles. Positive Integer. Default = 100}
 
 \item{forecast_steps}{Number of time steps being forecast. Default = 0}
 

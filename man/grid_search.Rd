@@ -4,7 +4,7 @@
 \alias{grid_search}
 \title{Grid search over two parameters}
 \usage{
-grid_search(range, filter, n_particles, tolerance = 0.01, run_params = NULL)
+grid_search(range, filter, tolerance = 0.01)
 }
 \arguments{
 \item{range}{\code{data.frame} describing the parameters to search.
@@ -12,11 +12,7 @@ Must have columns name, min, max, n and target}
 
 \item{filter}{A \code{particle_filter} object to run}
 
-\item{n_particles}{Number of particles. Positive Integer. Default = 100}
-
 \item{tolerance}{Check around edges of the probability matrix}
-
-\item{run_params}{Passed to \code{particle_filter$run}}
 }
 \value{
 List of beta and start date grid values, and

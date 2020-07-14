@@ -89,7 +89,16 @@ Create the particle filter}
 \if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_filter$new(data, model, compare, index = NULL, initial = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter$new(
+  data,
+  model,
+  n_particles,
+  compare,
+  index = NULL,
+  initial = NULL,
+  n_threads = 1L,
+  seed = 1L
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -102,6 +111,8 @@ used for comparison with the simulation.}
 
 \item{\code{model}}{A stochastic model to use.  Must be a
 \code{dust_generator} object.}
+
+\item{\code{n_particles}}{The number of particles to simulate}
 
 \item{\code{compare}}{A comparison function.  Must take arguments
 \code{state}, \code{output}, \code{data} and \code{pars} as arguments
@@ -144,7 +155,15 @@ constructor, i.e., not less than the first element of
 \code{step_start} and not more than \code{step_end}). Your function
 can also return a vector or matrix of \code{state} and not alter
 the starting step, which is equivalent to returning
-\code{list(state = state, step = NULL)}.
+\code{list(state = state, step = NULL)}.}
+
+\item{\code{n_threads}}{Number of threads to use when running the
+simulation. Defaults to 1, and should not be set higher than the
+number of cores available to the machine.}
+
+\item{\code{seed}}{Seed for the random number generator on initial
+creation; must be a positive integer. Note that this is unrelated
+to R's random number generator (see \code{\link{dust}}).
 Run the particle filter}
 }
 \if{html}{\out{</div>}}
@@ -157,10 +176,8 @@ Run the particle filter}
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{particle_filter$run(
   pars_model,
-  n_particles,
   save_history = FALSE,
   pars_compare = NULL,
-  run_params = NULL,
   pars_initial = NULL
 )}\if{html}{\out{</div>}}
 }
@@ -173,16 +190,12 @@ which may contain parameters for your model (these might affect
 running and/or initial conditions, depending on your model and
 if you are using \code{initial} / \code{pars_initial} below).}
 
-\item{\code{n_particles}}{The number of particles to simulate}
-
 \item{\code{save_history}}{Logical, indicating if the history of all
 particles should be saved}
 
 \item{\code{pars_compare}}{Optional parameters to use when applying
 the \code{compare} function.  These parameters will be passed as
 the 4th argument to \code{compare}.}
-
-\item{\code{run_params}}{List containing seed and n_threads for use with dust}
 
 \item{\code{pars_initial}}{Parameters passed through to the \code{initial}
 function (if provided).}
@@ -200,30 +213,18 @@ Run the particle filter, modifying parameters
 \if{latex}{\out{\hypertarget{method-run2}{}}}
 \subsection{Method \code{run2()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_filter$run2(
-  n_particles,
-  save_history = FALSE,
-  index,
-  pars,
-  run_params = NULL
-)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter$run2(save_history = FALSE, index, pars)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{n_particles}}{The number of particles to simulate}
-
 \item{\code{save_history}}{Logical, indicating if the history of all
 particles should be saved}
 
 \item{\code{index}}{A parameter index}
 
-\item{\code{pars}}{A list of parameters}
-
-\item{\code{run_params}}{List containing seed and n_threads
-for use with dust
-
+\item{\code{pars}}{A list of parameters
 Create predicted trajectories, based on the final point of a
 run with the particle filter}
 }
