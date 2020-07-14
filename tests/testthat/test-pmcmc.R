@@ -14,13 +14,14 @@ test_that("MCMC can run", {
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- range$name
 
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
   n_particles <- 10
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
   n_mcmc <- 100
 
   # A single chain
   n_chains <- 1
-  mcmc_results <- pmcmc(range, lprior, p, n_particles, n_mcmc, proposal_kernel,
+  mcmc_results <- pmcmc(range, lprior, p, n_mcmc, proposal_kernel,
                         n_chains = n_chains)
 
   expect_equal(class(mcmc_results), "mcstate_pmcmc")
@@ -40,7 +41,7 @@ test_that("MCMC can run", {
   # Multiple chains
   n_chains <- 3
   burn_in <- 10
-  multi_chain <- pmcmc(range, lprior, p, n_particles, n_mcmc, proposal_kernel,
+  multi_chain <- pmcmc(range, lprior, p, n_mcmc, proposal_kernel,
                         n_chains = n_chains)
 
   expect_equal(class(multi_chain), "mcstate_pmcmc_list")
@@ -72,13 +73,14 @@ test_that("MCMC doesn't move away from correct parameters", {
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- range$name
 
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
   n_particles <- 20
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
   n_mcmc <- 500
   n_chains <- 1
 
   set.seed(1)
-  mcmc_results <- pmcmc(range, lprior, p, n_particles, n_mcmc, proposal_kernel,
+  mcmc_results <- pmcmc(range, lprior, p, n_mcmc, proposal_kernel,
                         n_chains = n_chains)
 
   expect_lt(abs(mean(mcmc_results$results$beta) - 0.2), 0.03)
@@ -115,14 +117,14 @@ test_that("MCMC runs on different targets", {
   data[c("step_start", "step_end")] <-
     data[c("step_start", "step_end")] + offset
   data$step_start[[1]] <- 0
-  p <- particle_filter$new(data, dat$model, dat$compare, index = dat$index,
-                           initial = initial)
   n_particles <- 10
+  p <- particle_filter$new(data, dat$model, n_particles, dat$compare,
+                           index = dat$index, initial = initial)
   n_mcmc <- 10
 
   # A single chain
   n_chains <- 1
-  mcmc_results <- pmcmc(range, lprior, p, n_particles, n_mcmc, proposal_kernel,
+  mcmc_results <- pmcmc(range, lprior, p, n_mcmc, proposal_kernel,
                         n_chains = n_chains)
 
   expect_equal(class(mcmc_results), "mcstate_pmcmc")
@@ -182,11 +184,12 @@ test_that("MCMC jumps behave as expected", {
                           range$name))
 
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
   n_particles <- 20
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
   n_mcmc <- 500
   n_chains <- 1
-  mcmc_results <- pmcmc(range, lprior, p, n_particles, n_mcmc, proposal_kernel,
+  mcmc_results <- pmcmc(range, lprior, p, n_mcmc, proposal_kernel,
              n_chains = n_chains, output_proposals = TRUE)
 
   expect_equal(object = mcmc_results$results$beta,
@@ -204,7 +207,7 @@ test_that("MCMC jumps behave as expected", {
                         dimnames = list(
                           range$name,
                           range$name))
-  no_covar_results <- pmcmc(range, lprior, p, n_particles, n_mcmc,
+  no_covar_results <- pmcmc(range, lprior, p, n_mcmc,
                             proposal_kernel, n_chains = n_chains,
                             output_proposals = TRUE)
   set.seed(1)
@@ -214,7 +217,7 @@ test_that("MCMC jumps behave as expected", {
                         dimnames = list(
                           range$name,
                           range$name))
-  covar_results <- pmcmc(range, lprior, p, n_particles, n_mcmc,
+  covar_results <- pmcmc(range, lprior, p, n_mcmc,
                          proposal_kernel, n_chains = n_chains,
                          output_proposals = TRUE)
   expect_false(all(covar_results$results == no_covar_results$results))
@@ -310,29 +313,30 @@ test_that("MCMC function input errors", {
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- range$name
 
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
   n_particles <- 10
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
   n_mcmc <- 100
 
   n_chains <- 1
-  expect_error(pmcmc(range, lprior, p, n_particles, n_mcmc, proposal_kernel,
+  expect_error(pmcmc(range, lprior, p, n_mcmc, proposal_kernel,
                      n_chains = n_chains, output_proposals = "yes_please"),
                "output_proposals must be either TRUE or FALSE")
 
   # bad priors
   lprior <- list("beta" = function(pars) log(1e-10))
-  expect_error(pmcmc(range, lprior, p, n_particles, n_mcmc, proposal_kernel,
+  expect_error(pmcmc(range, lprior, p, n_mcmc, proposal_kernel,
                      n_chains = n_chains),
                "All sampled parameters must have a defined prior")
   lprior <- list("beta" = function(pars) c(log(1e-10), log(1e-10)),
                  "gamma" = function(pars) c(0, 0))
-  expect_error(pmcmc(range, lprior, p, n_particles, n_mcmc, proposal_kernel,
+  expect_error(pmcmc(range, lprior, p, n_mcmc, proposal_kernel,
                      n_chains = n_chains),
                paste0("lprior_funcs must return a single numeric representing ",
                "the log prior"))
   lprior <- list("beta" = function(pars) log(0),
                  "gamma" = function(pars) 0)
-  expect_error(pmcmc(range, lprior, p, n_particles, n_mcmc, proposal_kernel,
+  expect_error(pmcmc(range, lprior, p, n_mcmc, proposal_kernel,
                      n_chains = n_chains),
                "initial parameters are not compatible with supplied prior")
 
@@ -341,7 +345,7 @@ test_that("MCMC function input errors", {
                  "gamma" = function(pars) log(1e-10))
   proposal_kernel <- diag(1) * 0.01^2
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- range$name[1]
-  expect_error(pmcmc(range, lprior, p, n_particles, n_mcmc, proposal_kernel,
+  expect_error(pmcmc(range, lprior, p, n_mcmc, proposal_kernel,
                      n_chains = n_chains),
                paste0("proposal_kernel must be a matrix or vector with names ",
                       "corresponding to the parameters being sampled"))
@@ -365,11 +369,12 @@ test_that("Master chain errors", {
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- range$name
 
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
   n_particles <- 10
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
   n_mcmc <- 10
   n_chains <- 3
-  multi_chain <- pmcmc(range, lprior, p, n_particles, n_mcmc, proposal_kernel,
+  multi_chain <- pmcmc(range, lprior, p, n_mcmc, proposal_kernel,
                        n_chains = n_chains)
 
   expect_error(create_master_chain(multi_chain, burn_in = -1L),

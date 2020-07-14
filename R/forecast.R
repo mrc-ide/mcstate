@@ -18,8 +18,6 @@
 ##'   this will be full parameter sets sampled evenly from the chains.
 ##'   Integer. This will determine how many trajectories are returned.
 ##'
-##' @param n_particles Number of particles. Positive Integer. Default = 100
-##'
 ##' @param forecast_steps Number of time steps being forecast. Default = 0
 ##'
 ##' @param burn_in Amount of burn in to remove (if an \code{mcstate_pmcmc_list})
@@ -35,11 +33,9 @@
 forecast <- function(x, ...,
                      filter,
                      n_sample_pars = 10,
-                     n_particles = 100,
                      forecast_steps = 0,
                      burn_in = 0) {
   assert_integer(n_sample_pars)
-  assert_integer(n_particles)
   assert_integer(forecast_steps)
   UseMethod("forecast", x)
 }
@@ -50,7 +46,6 @@ forecast <- function(x, ...,
 forecast.mcstate_scan <- function(x, ...,
                                   filter,
                                   n_sample_pars = 10,
-                                  n_particles = 100,
                                   forecast_steps = 0) {
 
   # sample proportional to probability
@@ -61,8 +56,7 @@ forecast.mcstate_scan <- function(x, ...,
   pairs <- x$vars$expanded[sample_idx, ]
 
   traces <- lapply(split_df_rows(pairs), run_and_forecast,
-                   filter, x$vars$index, n_particles,
-                   forecast_steps)
+                   filter, x$vars$index, forecast_steps)
 
   # combine and return
   res <- list("trajectories" = traces,
@@ -79,7 +73,6 @@ forecast.mcstate_scan <- function(x, ...,
 forecast.mcstate_pmcmc_list <- function(x, ...,
                                         filter,
                                         n_sample_pars = 10,
-                                        n_particles = 100,
                                         forecast_steps = 0,
                                         burn_in = 1) {
 
@@ -94,8 +87,7 @@ forecast.mcstate_pmcmc_list <- function(x, ...,
                                   replace = FALSE), par_names]
 
   traces <- lapply(split_df_rows(param_grid), run_and_forecast,
-                   filter, x$vars$index, n_particles,
-                   forecast_steps)
+                   filter, x$vars$index, forecast_steps)
 
   # combine and return
   res <- list("trajectories" = traces,
@@ -106,9 +98,8 @@ forecast.mcstate_pmcmc_list <- function(x, ...,
 
 }
 
-run_and_forecast <- function(model_params, filter, index, n_particles,
-                             forecast_steps) {
-  filter$run2(n_particles, save_history = TRUE, index, model_params)
+run_and_forecast <- function(model_params, filter, index, forecast_steps) {
+  filter$run2(model_params, index, save_history = TRUE)
   if (forecast_steps > 0) {
     forward_steps <- seq.int(0, forecast_steps)
     trajectories <- filter$predict(forward_steps, append = TRUE)

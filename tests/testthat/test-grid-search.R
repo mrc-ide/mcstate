@@ -9,10 +9,11 @@ test_that("Simple grid search with SIR model", {
                       target = "pars_model")
 
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
   n_particles <- 100
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
 
-  res <- grid_search(range, p, n_particles)
+  res <- grid_search(range, p)
 
   expect_is(res, "mcstate_scan")
 
@@ -39,10 +40,11 @@ test_that("SIR model parameters are can be inferred correctly", {
   # * beta = 0.2 (transmission)
   # * g = 0.1 (recovery)
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
   n_particles <- 100
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
 
-  res <- grid_search(range, p, n_particles)
+  res <- grid_search(range, p)
 
   # Correct parameter estimate is the highest
   expect_true(res$renorm_mat_ll[2, 2] == max(res$renorm_mat_ll))
@@ -68,12 +70,12 @@ test_that("Start date can be sampled", {
     list(step = pars[["step_start"]])
   }
 
-  p <- particle_filter$new(data, dat$model, dat$compare, index = dat$index,
-                           initial = initial)
   n_particles <- 100
+  p <- particle_filter$new(data, dat$model, n_particles, dat$compare,
+                           index = dat$index, initial = initial)
 
   set.seed(1)
-  grid_res <- grid_search(range, p, n_particles)
+  grid_res <- grid_search(range, p)
   expect_true(grid_res$renorm_mat_ll[2, 3] == max(grid_res$renorm_mat_ll))
 })
 
@@ -87,11 +89,13 @@ test_that("pars_compare can be sampled", {
 
   dat <- example_sir()
 
-  p <- particle_filter$new(dat$data, dat$model, dat$compare, index = dat$index)
   n_particles <- 100
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
+
 
   set.seed(1)
-  grid_res <- grid_search(range, p, n_particles)
+  grid_res <- grid_search(range, p)
   ## NOTE: this is a fragile test - I've had to update the index twice
   expect_true(grid_res$renorm_mat_ll[2, 1] == max(grid_res$renorm_mat_ll))
 })

@@ -8,10 +8,8 @@ pmcmc(
   mcmc_range,
   lprior_funcs,
   filter,
-  n_particles,
   n_mcmc,
   proposal_kernel,
-  run_params = NULL,
   output_proposals = FALSE,
   n_chains = 1
 )
@@ -30,13 +28,9 @@ Each value must be a function which takes named parameter vector as
 
 \item{filter}{A particle filter to sample}
 
-\item{n_particles}{Number of particles}
-
 \item{n_mcmc}{Number of MCMC steps}
 
 \item{proposal_kernel}{named matrix of proposal covariance for parameters}
-
-\item{run_params}{List of parameters for \code{particle_filter$run}}
 
 \item{output_proposals}{Logical indicating whether proposed parameter
 jumps should be output along with results}

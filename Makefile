@@ -42,4 +42,4 @@ vignettes: vignettes/traduire.Rmd
 	mkdir -p inst/doc
 	cp vignettes/*.html vignettes/*.Rmd inst/doc
 
-.PHONY: all test document install vignettes
+.PHONY: all test document install vignettes pkgdown

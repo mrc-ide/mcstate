@@ -42,9 +42,9 @@
 ##'   dpois(x = incidence_observed, lambda = lambda, log = TRUE)
 ##' }
 ##'
-##' # Construct the particle_filter object:
-##' p <- particle_filter$new(data, gen, compare)
-##' p$run(list(), 100, TRUE)
+##' # Construct the particle_filter object with 100 particles
+##' p <- particle_filter$new(data, gen, 100, compare)
+##' p$run(save_history = TRUE)
 ##'
 ##' # Our simulated trajectories, with the "real" data superimposed
 ##' matplot(data_raw$day, t(p$history[1, , -1]), type = "l",
@@ -65,6 +65,10 @@ particle_filter <- R6::R6Class(
     initial = NULL,
     n_steps = NULL,
     compare = NULL,
+    ## Control for dust
+    n_particles = NULL,
+    n_threads = NULL,
+    seed = NULL,
     ## Updated when the model is run
     last_model = NULL,
     index_state = NULL
@@ -95,6 +99,8 @@ particle_filter <- R6::R6Class(
     ##'
     ##' @param model A stochastic model to use.  Must be a
     ##' \code{dust_generator} object.
+    ##'
+    ##' @param n_particles The number of particles to simulate
     ##'
     ##' @param compare A comparison function.  Must take arguments
     ##' \code{state}, \code{output}, \code{data} and \code{pars} as arguments
@@ -138,7 +144,17 @@ particle_filter <- R6::R6Class(
     ##' can also return a vector or matrix of \code{state} and not alter
     ##' the starting step, which is equivalent to returning
     ##' \code{list(state = state, step = NULL)}.
-    initialize = function(data, model, compare, index = NULL, initial = NULL) {
+    ##'
+    ##' @param n_threads Number of threads to use when running the
+    ##' simulation. Defaults to 1, and should not be set higher than the
+    ##' number of cores available to the machine.
+    ##'
+    ##' @param seed Seed for the random number generator on initial
+    ##' creation; must be a positive integer. Note that this is unrelated
+    ##' to R's random number generator (see \code{\link{dust}}).
+    initialize = function(data, model, n_particles, compare,
+                          index = NULL, initial = NULL,
+                          n_threads = 1L, seed = 1L) {
       if (!is_dust_generator(model)) {
         stop("'model' must be a dust_generator")
       }
@@ -157,6 +173,11 @@ particle_filter <- R6::R6Class(
       private$compare <- compare
       private$index <- index
       private$initial <- initial
+
+      private$n_particles <- assert_scalar_positive_integer(n_particles)
+      private$n_threads <- assert_scalar_positive_integer(n_threads)
+      private$seed <- assert_scalar_positive_integer(seed)
+
       lockBinding("model", self)
     },
 
@@ -167,8 +188,6 @@ particle_filter <- R6::R6Class(
     ##' running and/or initial conditions, depending on your model and
     ##' if you are using \code{initial} / \code{pars_initial} below).
     ##'
-    ##' @param n_particles The number of particles to simulate
-    ##'
     ##' @param save_history Logical, indicating if the history of all
     ##' particles should be saved
     ##'
@@ -176,32 +195,32 @@ particle_filter <- R6::R6Class(
     ##' the \code{compare} function.  These parameters will be passed as
     ##' the 4th argument to \code{compare}.
     ##'
-    ##' @param run_params List containing seed and n_threads for use with dust
-    ##'
     ##' @param pars_initial Parameters passed through to the \code{initial}
     ##' function (if provided).
     ##'
     ##' @return A single numeric value representing the log-likelihood
     ##' (\code{-Inf} if the model is impossible)
-    run = function(pars_model, n_particles, save_history = FALSE,
-                   pars_compare = NULL, run_params = NULL,
-                   pars_initial = NULL) {
+    run = function(pars_model = NULL, pars_compare = NULL, pars_initial = NULL,
+                   save_history = FALSE) {
       compare <- private$compare
       steps <- private$steps
-      run_params <- validate_dust_params(run_params)
+
+      ## Needed by the cpp11 interface
+      pars_model <- as.list(pars_model)
 
       if (is.null(private$last_model)) {
         model <- self$model$new(data = pars_model, step = steps[[1L]],
-                                n_particles = n_particles,
-                                n_threads = run_params[["n_threads"]],
-                                seed = run_params[["seed"]])
+                                n_particles = private$n_particles,
+                                n_threads = private$n_threads,
+                                seed = private$seed)
       } else {
         model <- private$last_model
         model$reset(pars_model, steps[[1L]])
       }
 
       if (!is.null(private$initial)) {
-        initial <- private$initial(model$info(), n_particles, pars_initial)
+        initial <- private$initial(model$info(), private$n_particles,
+                                   pars_initial)
         if (is.list(initial)) {
           steps <- particle_steps(private$steps, initial$step)
           model$set_state(initial$state, initial$step)
@@ -233,7 +252,7 @@ particle_filter <- R6::R6Class(
       ## controlling this, especially to deal with irregular data.
       prev_res <- model$run(steps[[1]])
 
-      unique_particles <- rep(n_particles, private$n_steps + 1)
+      unique_particles <- rep(private$n_particles, private$n_steps + 1)
       if (save_history) {
         state <- model$state(index_state)
         history <- array(NA_real_, c(dim(state), private$n_steps + 1))
@@ -284,22 +303,21 @@ particle_filter <- R6::R6Class(
       log_likelihood
     },
 
-    ##' Run the particle filter, modifying parameters
-    ##'
-    ##' @param n_particles The number of particles to simulate
-    ##'
-    ##' @param save_history Logical, indicating if the history of all
-    ##' particles should be saved
-    ##'
-    ##' @param index A parameter index
+    ##' Run the particle filter, allocating a vector of parameters across
+    ##' the different tuneable components (model, initial and compare).
+    ##' This is a wrapper around the \code{$run()} method, used by
+    ##' \code{\link{pmcmc}} and \code{\link{grid_search}} though it can
+    ##' be used directly (the name may change in future).
     ##'
     ##' @param pars A list of parameters
     ##'
-    ##' @param run_params List containing seed and n_threads
-    ##' for use with dust
+    ##' @param index A parameter index; this must be a list with elements
+    ##' \code{pars_model}, \code{pars_compare} and \code{pars_initial},
+    ##' indicating the argument of \code{$run()} they apply to.
     ##'
-    run2 = function(n_particles, save_history = FALSE,
-                    index, pars, run_params = NULL) {
+    ##' @param save_history Logical, indicating if the history of all
+    ##' particles should be saved.
+    run2 = function(pars, index, save_history = FALSE) {
       pars_model <- pars_compare <- pars_initial <- NULL
       if (length(index$pars_model) > 0) {
         pars_model <- pars[index$pars_model]
@@ -313,10 +331,7 @@ particle_filter <- R6::R6Class(
         pars_initial <- pars[index$pars_initial]
       }
 
-      ## TODO(#27): run_params comes out and moves into the constructor
-      self$run(pars_model, n_particles, save_history,
-               pars_compare, run_params = run_params,
-               pars_initial = pars_initial)
+      self$run(pars_model, pars_compare, pars_initial, save_history)
     },
 
     ##' Create predicted trajectories, based on the final point of a
@@ -437,28 +452,6 @@ particle_steps <- function(steps, step_start) {
     steps[1, 1] <- max(step_start)
   }
   steps
-}
-
-
-validate_dust_params <- function(run_params) {
-  if (is.null(run_params)) {
-    run_params <- list(n_threads = 1L, seed = 1L)
-  } else {
-    run_params[["n_threads"]] <-
-      validate_dust_params_size(run_params[["n_threads"]])
-    run_params[["seed"]] <-
-      validate_dust_params_size(run_params[["seed"]])
-  }
-  run_params
-}
-
-
-validate_dust_params_size <- function(x) {
-  if (is.null(x) || x < 1) {
-    1L
-  } else {
-    as.integer(x)
-  }
 }
 
 
