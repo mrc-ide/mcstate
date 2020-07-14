@@ -180,7 +180,7 @@ test_that("predict particle filter without index", {
 
 test_that("can't predict until model has been run", {
   dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, dat$compare, 100,
+  p <- particle_filter$new(dat$data, dat$model, 100, dat$compare,
                            index = dat$index)
   expect_error(p$predict(0:10), "Particle filter has not been run")
 })
