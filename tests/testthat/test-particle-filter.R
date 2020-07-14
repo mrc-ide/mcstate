@@ -26,7 +26,7 @@ test_that("continuing a particle filter continues the RNG", {
   expect_is(res, "numeric")
 
   set.seed(1)
-  res2 <- p$run(list(), n_particles)
+  res2 <- p$run(list())
   expect_true(res2 != res)
 })
 
@@ -80,7 +80,7 @@ test_that("stop simulation when likelihood is impossible", {
 
   p <- particle_filter$new(dat$data, dat$model, n_particles, compare,
                            index = dat$index)
-  res <- p$run(list(), TRUE)
+  res <- p$run(list(), save_history = TRUE)
   expect_equal(res, -Inf)
 
   i <- (which(dat$data$incidence > 15)[[1]] + 2):steps
