@@ -42,9 +42,9 @@
 ##'   dpois(x = incidence_observed, lambda = lambda, log = TRUE)
 ##' }
 ##'
-##' # Construct the particle_filter object:
-##' p <- particle_filter$new(data, gen, compare)
-##' p$run(list(), 100, TRUE)
+##' # Construct the particle_filter object with 100 particles
+##' p <- particle_filter$new(data, gen, 100, compare)
+##' p$run(list(), save_history = TRUE)
 ##'
 ##' # Our simulated trajectories, with the "real" data superimposed
 ##' matplot(data_raw$day, t(p$history[1, , -1]), type = "l",
