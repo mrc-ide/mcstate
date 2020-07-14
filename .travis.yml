@@ -6,7 +6,7 @@ addons:
     packages:
       - libnode-dev
 r_github_packages:
-  - mrc-ide/dust@i22-no-rcpp
+  - mrc-ide/dust
 r_packages:
   - covr
 after_success:
