@@ -292,18 +292,16 @@ test_that("Control the starting point of the simulation", {
 
 
 test_that("control filter", {
-  expect_equal(
-    validate_dust_params(NULL),
-    list(n_threads = 1L, seed = 1L))
-  expect_equal(
-    validate_dust_params(list(n_threads = 0, seed = 0)),
-    list(n_threads = 1L, seed = 1L))
-  expect_equal(
-    validate_dust_params(list(n_threads = 2, seed = 8)),
-    list(n_threads = 2L, seed = 8L))
-  expect_equal(
-    validate_dust_params(list(n_threads = 2, seed = 8.5)),
-    list(n_threads = 2L, seed = 8L))
+  dat <- example_sir()
+  expect_error(
+    particle_filter$new(dat$data, dat$model, 0, dat$compare),
+    "'n_particles' must be at least 1")
+  expect_error(
+    particle_filter$new(dat$data, dat$model, 1, dat$compare, seed = -1),
+    "'seed' must be at least 1")
+  expect_error(
+    particle_filter$new(dat$data, dat$model, 1, dat$compare, n_threads = -1),
+    "'n_threads' must be at least 1")
 })
 
 

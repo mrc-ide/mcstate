@@ -174,9 +174,10 @@ particle_filter <- R6::R6Class(
       private$index <- index
       private$initial <- initial
 
-      private$n_particles <- n_particles
-      private$n_threads <- n_threads
-      private$seed <- seed
+      private$n_particles <- assert_scalar_positive_integer(n_particles)
+      private$n_threads <- assert_scalar_positive_integer(n_threads)
+      private$seed <- assert_scalar_positive_integer(seed)
+
       lockBinding("model", self)
     },
 
@@ -443,28 +444,6 @@ particle_steps <- function(steps, step_start) {
     steps[1, 1] <- max(step_start)
   }
   steps
-}
-
-
-validate_dust_params <- function(run_params) {
-  if (is.null(run_params)) {
-    run_params <- list(n_threads = 1L, seed = 1L)
-  } else {
-    run_params[["n_threads"]] <-
-      validate_dust_params_size(run_params[["n_threads"]])
-    run_params[["seed"]] <-
-      validate_dust_params_size(run_params[["seed"]])
-  }
-  run_params
-}
-
-
-validate_dust_params_size <- function(x) {
-  if (is.null(x) || x < 1) {
-    1L
-  } else {
-    as.integer(x)
-  }
 }
 
 
