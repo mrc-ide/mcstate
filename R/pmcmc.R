@@ -139,7 +139,7 @@ run_mcmc_chain <- function(n_mcmc,
   curr_ll <- filter$run2(n_particles,
                          save_history = FALSE,
                          index = vars$index,
-                         pars = curr_pars,
+                         pars = as.list(curr_pars),
                          run_params = run_params)
   curr_lpost <- curr_lprior + curr_ll
 
@@ -193,7 +193,7 @@ run_mcmc_chain <- function(n_mcmc,
     prop_ll <- filter$run2(n_particles,
                            save_history = FALSE,
                            index = vars$index,
-                           pars = prop_pars,
+                           pars = as.list(prop_pars),
                            run_params = run_params)
     prop_lpost <- prop_lprior + prop_ll
 

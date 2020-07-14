@@ -23,8 +23,7 @@ grid_search <- function(range, filter, n_particles, tolerance=1E-2,
 
   # Run the search, which returns a log-likelihood
   flat_log_ll <- vnapply(seq_len(nrow(vars$expanded)), function(i) {
-    # For compatibility with the MCMC
-    pars <- as.numeric(vars$expanded[i, ])
+    pars <- vars$expanded[i, ]
     names(pars) <- colnames(vars$expanded)
     filter$run2(n_particles, save_history = FALSE, index = vars$index,
                 pars = pars, run_params = run_params)})
