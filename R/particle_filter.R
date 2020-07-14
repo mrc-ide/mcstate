@@ -203,7 +203,6 @@ particle_filter <- R6::R6Class(
                    pars_initial = NULL) {
       compare <- private$compare
       steps <- private$steps
-      run_params <- validate_dust_params(run_params)
 
       if (is.null(private$last_model)) {
         model <- self$model$new(data = pars_model, step = steps[[1L]],
