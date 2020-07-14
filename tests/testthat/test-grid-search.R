@@ -13,7 +13,7 @@ test_that("Simple grid search with SIR model", {
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index)
 
-  res <- grid_search(range, p, n_particles)
+  res <- grid_search(range, p)
 
   expect_is(res, "mcstate_scan")
 
@@ -44,7 +44,7 @@ test_that("SIR model parameters are can be inferred correctly", {
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index)
 
-  res <- grid_search(range, p, n_particles)
+  res <- grid_search(range, p)
 
   # Correct parameter estimate is the highest
   expect_true(res$renorm_mat_ll[2, 2] == max(res$renorm_mat_ll))
@@ -75,7 +75,7 @@ test_that("Start date can be sampled", {
                            index = dat$index, initial = initial)
 
   set.seed(1)
-  grid_res <- grid_search(range, p, n_particles)
+  grid_res <- grid_search(range, p)
   expect_true(grid_res$renorm_mat_ll[2, 3] == max(grid_res$renorm_mat_ll))
 })
 
@@ -95,7 +95,7 @@ test_that("pars_compare can be sampled", {
 
 
   set.seed(1)
-  grid_res <- grid_search(range, p, n_particles)
+  grid_res <- grid_search(range, p)
   ## NOTE: this is a fragile test - I've had to update the index twice
   expect_true(grid_res$renorm_mat_ll[2, 1] == max(grid_res$renorm_mat_ll))
 })

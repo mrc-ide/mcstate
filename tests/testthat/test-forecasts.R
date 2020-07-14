@@ -17,11 +17,10 @@ test_that("Sampling and forecasting from a grid search", {
   forecast_steps <- 0
 
   set.seed(1)
-  grid_res <- grid_search(range, p, n_particles)
+  grid_res <- grid_search(range, p)
   forecast_res <- forecast(grid_res,
                            filter = p,
                            n_sample_pars = n_sample_pars,
-                           n_particles = n_particles,
                            forecast_steps = forecast_steps)
 
   # check structure is as expected
@@ -62,7 +61,6 @@ test_that("Sampling and forecasting from a grid search", {
   forecast_res <- forecast(grid_res,
                            filter = p,
                            n_sample_pars = n_sample_pars,
-                           n_particles = n_particles,
                            forecast_steps = forecast_steps)
   for (i in seq_len(n_sample_pars)) {
     # 5 quantities, 101 steps
@@ -89,7 +87,7 @@ test_that("Sampling and forecasting from an MCMC", {
 
   dat <- example_sir()
   n_particles <- 20
-  p <- particle_filter$new(dat$data, dat$model, dat$compare, n_particles,
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index)
   n_mcmc <- 100
   n_chains <- 2
@@ -97,12 +95,11 @@ test_that("Sampling and forecasting from an MCMC", {
   forecast_steps <- 0
 
   set.seed(1)
-  mcmc_res <- pmcmc(range, lprior, p, n_particles, n_mcmc, proposal_kernel,
-             n_chains = n_chains)
+  mcmc_res <- pmcmc(range, lprior, p, n_mcmc, proposal_kernel,
+                    n_chains = n_chains)
   forecast_res <- forecast(mcmc_res,
                            filter = p,
                            n_sample_pars = n_sample_pars,
-                           n_particles = n_particles,
                            forecast_steps = forecast_steps,
                            burn_in = 10)
 
@@ -144,7 +141,6 @@ test_that("Sampling and forecasting from an MCMC", {
   forecast_res <- forecast(mcmc_res,
                            filter = p,
                            n_sample_pars = n_sample_pars,
-                           n_particles = n_particles,
                            forecast_steps = forecast_steps)
   for (i in seq_len(n_sample_pars)) {
     # 5 quantities, 101 steps
