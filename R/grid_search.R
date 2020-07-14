@@ -20,7 +20,7 @@ grid_search <- function(range, filter, tolerance = 0.01) {
   flat_log_ll <- vnapply(seq_len(nrow(vars$expanded)), function(i) {
     pars <- vars$expanded[i, ]
     names(pars) <- colnames(vars$expanded)
-    filter$run2(save_history = FALSE, index = vars$index, pars = pars)
+    filter$run2(pars, vars$index)
   })
 
   mat_log_ll <- matrix(

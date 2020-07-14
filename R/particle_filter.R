@@ -303,15 +303,21 @@ particle_filter <- R6::R6Class(
       log_likelihood
     },
 
-    ##' Run the particle filter, modifying parameters
-    ##'
-    ##' @param save_history Logical, indicating if the history of all
-    ##' particles should be saved
-    ##'
-    ##' @param index A parameter index
+    ##' Run the particle filter, allocating a vector of parameters across
+    ##' the different tuneable components (model, initial and compare).
+    ##' This is a wrapper around the \code{$run()} method, used by
+    ##' \code{\link{pmcmc}} and \code{\link{grid_search}} though it can
+    ##' be used directly (the name may change in future).
     ##'
     ##' @param pars A list of parameters
-    run2 = function(save_history = FALSE, index, pars) {
+    ##'
+    ##' @param index A parameter index; this must be a list with elements
+    ##' \code{pars_model}, \code{pars_compare} and \code{pars_initial},
+    ##' indicating the argument of \code{$run()} they apply to.
+    ##'
+    ##' @param save_history Logical, indicating if the history of all
+    ##' particles should be saved.
+    run2 = function(pars, index, save_history = FALSE) {
       pars_model <- pars_compare <- pars_initial <- NULL
       if (length(index$pars_model) > 0) {
         pars_model <- pars[index$pars_model]

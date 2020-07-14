@@ -126,9 +126,7 @@ run_mcmc_chain <- function(n_mcmc,
   curr_lprior <- calc_lprior(curr_pars, lprior_funcs)
 
   # run particle filter on initial parameters
-  curr_ll <- filter$run2(save_history = FALSE,
-                         index = vars$index,
-                         pars = as.list(curr_pars))
+  curr_ll <- filter$run2(as.list(curr_pars), vars$index)
   curr_lpost <- curr_lprior + curr_ll
 
   # checks on log_prior and log_likelihood functions
@@ -178,9 +176,7 @@ run_mcmc_chain <- function(n_mcmc,
 
     ## calculate proposed prior / lhood / posterior
     prop_lprior <- calc_lprior(prop_pars, lprior_funcs)
-    prop_ll <- filter$run2(save_history = FALSE,
-                           index = vars$index,
-                           pars = as.list(prop_pars))
+    prop_ll <- filter$run2(as.list(prop_pars), vars$index)
     prop_lpost <- prop_lprior + prop_ll
 
     # calculate probability of acceptance

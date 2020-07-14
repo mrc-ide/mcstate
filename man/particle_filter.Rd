@@ -205,7 +205,11 @@ particles should be saved}
 \subsection{Returns}{
 A single numeric value representing the log-likelihood
 (\code{-Inf} if the model is impossible)
-Run the particle filter, modifying parameters
+Run the particle filter, allocating a vector of parameters across
+the different tuneable components (model, initial and compare).
+This is a wrapper around the \code{$run()} method, used by
+\code{\link{pmcmc}} and \code{\link{grid_search}} though it can
+be used directly (the name may change in future).
 }
 }
 \if{html}{\out{<hr>}}
@@ -213,18 +217,20 @@ Run the particle filter, modifying parameters
 \if{latex}{\out{\hypertarget{method-run2}{}}}
 \subsection{Method \code{run2()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_filter$run2(save_history = FALSE, index, pars)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter$run2(pars, index, save_history = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
+\item{\code{pars}}{A list of parameters}
+
+\item{\code{index}}{A parameter index; this must be a list with elements
+\code{pars_model}, \code{pars_compare} and \code{pars_initial},
+indicating the argument of \code{$run()} they apply to.}
+
 \item{\code{save_history}}{Logical, indicating if the history of all
-particles should be saved}
-
-\item{\code{index}}{A parameter index}
-
-\item{\code{pars}}{A list of parameters
+particles should be saved.
 Create predicted trajectories, based on the final point of a
 run with the particle filter}
 }

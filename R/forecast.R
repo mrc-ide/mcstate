@@ -99,7 +99,7 @@ forecast.mcstate_pmcmc_list <- function(x, ...,
 }
 
 run_and_forecast <- function(model_params, filter, index, forecast_steps) {
-  filter$run2(save_history = TRUE, index, model_params)
+  filter$run2(model_params, index, save_history = TRUE)
   if (forecast_steps > 0) {
     forward_steps <- seq.int(0, forecast_steps)
     trajectories <- filter$predict(forward_steps, append = TRUE)
