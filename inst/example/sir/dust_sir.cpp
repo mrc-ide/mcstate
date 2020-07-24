@@ -37,8 +37,8 @@ public:
 
     double p_SI = 1 - std::exp(-(data_.beta) * I / (double) N);
     double p_IR = 1 - std::exp(-(data_.gamma));
-    double n_IR = dust::distr::rbinom(rng_state, p_IR * data_.dt);
-    double n_SI = dust::distr::rbinom(rng_state, p_SI * data_.dt);
+    double n_IR = dust::distr::rbinom(rng_state, I, p_IR * data_.dt);
+    double n_SI = dust::distr::rbinom(rng_state, S, p_SI * data_.dt);
 
     state_next[0] = S - n_SI;
     state_next[1] = I + n_SI - n_IR;
