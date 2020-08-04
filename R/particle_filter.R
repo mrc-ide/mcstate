@@ -112,7 +112,7 @@ particle_filter <- R6::R6Class(
     ##' is a \code{list} of observed data corresponding to the current
     ##' time's row in the \code{data} object provided here in the
     ##' constructor.  \code{pars} is any additional parameters passed
-    ##' through to the comparison function (via the \code{pars_compare}
+    ##' through to the comparison function (via the \code{pars}
     ##' argument to \code{$run}).
     ##'
     ##' @param index An index function. This is used to compute the
@@ -132,7 +132,7 @@ particle_filter <- R6::R6Class(
     ##' (the result of calling \code{$info()} as for \code{index}),
     ##' \code{n_particles} (the number of particles that the particle
     ##' filter is using) and \code{pars} (parameters passed in in the
-    ##' \code{$run} method via the \code{pars_initial} argument).  It
+    ##' \code{$run} method via the \code{pars} argument).  It
     ##' must return a list, which can have the elements \code{state}
     ##' (initial model state, passed to the particle filter - either a
     ##' vector or a matrix, and overriding the initial conditions
@@ -183,53 +183,44 @@ particle_filter <- R6::R6Class(
 
     ##' Run the particle filter
     ##'
-    ##' @param pars_model The \code{data} object passed into dust,
-    ##' which may contain parameters for your model (these might affect
-    ##' running and/or initial conditions, depending on your model and
-    ##' if you are using \code{initial} / \code{pars_initial} below).
+    ##' @param pars A list representing parameters. This will be passed as
+    ##' the \code{pars} argument to your model, to your \code{compare}
+    ##' function, and (if using) to your \code{initial} function. It must
+    ##' be an R list (not vector or \code{NULL}) because that is what a
+    ##' dust model currently requires on initialisation or `$reset` - we
+    ##' may relax this later. You may want to put your observation and
+    ##' initial parameters under their own keys (e.g.,
+    ##' \code{pars$initial$whatever}), but this is up to you. Extra keys
+    ##' are silently ignored by dust models.
     ##'
     ##' @param save_history Logical, indicating if the history of all
-    ##' particles should be saved
-    ##'
-    ##' @param pars_compare Optional parameters to use when applying
-    ##' the \code{compare} function.  These parameters will be passed as
-    ##' the 4th argument to \code{compare}.
-    ##'
-    ##' @param pars_initial Parameters passed through to the \code{initial}
-    ##' function (if provided).
+    ##' particles should be saved. If saving history, then it can be
+    ##' queried later with the \code{$history} element on the object.
     ##'
     ##' @return A single numeric value representing the log-likelihood
     ##' (\code{-Inf} if the model is impossible)
-    run = function(pars_model = NULL, pars_compare = NULL, pars_initial = NULL,
-                   save_history = FALSE) {
+    run = function(pars = list(), save_history = FALSE) {
       compare <- private$compare
       steps <- private$steps
 
-      ## Needed by the cpp11 interface
-      pars_model <- as.list(pars_model)
-
       if (is.null(private$last_model)) {
-        model <- self$model$new(data = pars_model, step = steps[[1L]],
+        model <- self$model$new(data = pars, step = steps[[1L]],
                                 n_particles = private$n_particles,
                                 n_threads = private$n_threads,
                                 seed = private$seed)
       } else {
         model <- private$last_model
-        model$reset(pars_model, steps[[1L]])
+        model$reset(pars, steps[[1L]])
       }
 
       if (!is.null(private$initial)) {
-        initial <- private$initial(model$info(), private$n_particles,
-                                   pars_initial)
+        initial <- private$initial(model$info(), private$n_particles, pars)
         if (is.list(initial)) {
           steps <- particle_steps(private$steps, initial$step)
           model$set_state(initial$state, initial$step)
         } else {
           model$set_state(initial)
         }
-      } else if (!is.null(pars_initial)) {
-        stop(paste("'pars_initial' was provided but you do not have",
-                   "an 'initial' function to pass it to"))
       }
 
       if (is.null(private$index)) {
@@ -268,8 +259,7 @@ particle_filter <- R6::R6Class(
           history[, , t + 1L] <- model$state(index_state)
         }
 
-        log_weights <- compare(res, prev_res, private$data[[t]],
-                               pars_compare)
+        log_weights <- compare(res, prev_res, private$data[[t]], pars)
         if (is.null(log_weights)) {
           prev_res <- res
         } else {
