@@ -7,6 +7,16 @@ assert_is <- function(x, what, name = deparse(substitute(x))) {
 }
 
 
+assert_named <- function (x, unique = FALSE, name = deparse(substitute(x))) {
+  if (is.null(names(x))) {
+    stop(sprintf("'%s' must be named", name), call. = FALSE)
+  }
+  if (unique && any(duplicated(names(x)))) {
+    stop(sprintf("'%s' must have unique names", name), call. = FALSE)
+  }
+}
+
+
 assert_integer <- function(x, name = deparse(substitute(x)),
                            what = "integer") {
   if (!(is.integer(x))) {
@@ -16,6 +26,14 @@ assert_integer <- function(x, name = deparse(substitute(x)),
       stop(sprintf("'%s' must be an %s", name, what), call. = FALSE)
     }
     x <- as.integer(round(x))
+  }
+  invisible(x)
+}
+
+
+assert_logical <- function(x, name = deparse(substitute(x))) {
+  if (!(is.logical(x))) {
+    stop(sprintf("'%s' must be a logical", name, what), call. = FALSE)
   }
   invisible(x)
 }
@@ -44,5 +62,13 @@ assert_scalar_positive_integer <- function(x, name = deparse(substitute(x))) {
   if (x < 1L) {
     stop(sprintf("'%s' must be at least 1", name), call. = FALSE)
   }
+  invisible(x)
+}
+
+
+assert_scalar_logical <- function(x, name = deparse(substitute(x))) {
+  force(name)
+  assert_scalar(x, name)
+  assert_logical(x, name)
   invisible(x)
 }
