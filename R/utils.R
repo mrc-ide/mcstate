@@ -42,3 +42,21 @@ dde_abind <- function(a, b) {
 split_df_rows <- function(x) {
   unname(split(x, seq_len(nrow(x))))
 }
+
+
+rmvnorm_generator <- function(vcv) {
+  vcv <- unname(vcv)
+  if (!isSymmetric(vcv, tol = sqrt(.Machine$double.eps))) {
+    stop("vcv must be symmetric")
+  }
+  ev <- eigen(vcv, symmetric = TRUE)
+  if (!all(ev$values >= -sqrt(.Machine$double.eps) * abs(ev$values[1]))) {
+    stop("vcv must be positive definite")
+  }
+  n <- nrow(vcv)
+  res <- t(ev$vectors %*% (t(ev$vectors) * sqrt(pmax(ev$values, 0))))
+
+  function(mean) {
+    mean + drop(rnorm(ncol(vcv)) %*% res)
+  }
+}
