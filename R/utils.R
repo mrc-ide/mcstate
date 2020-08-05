@@ -8,8 +8,18 @@ mcstate_file <- function(path) {
 }
 
 
+vlapply <- function(x, fun, ...) {
+  vapply(x, fun, logical(1), ...)
+}
+
+
 vnapply <- function(x, fun, ...) {
   vapply(x, fun, numeric(1), ...)
+}
+
+
+list_to_numeric <- function(x) {
+  vnapply(x, identity)
 }
 
 
