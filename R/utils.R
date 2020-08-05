@@ -43,7 +43,8 @@ split_df_rows <- function(x) {
   unname(split(x, seq_len(nrow(x))))
 }
 
-
+##' @importFrom mvtnorm rmvnorm
+##' @importFrom stats rnorm
 rmvnorm_generator <- function(vcv) {
   vcv <- unname(vcv)
   if (!isSymmetric(vcv, tol = sqrt(.Machine$double.eps))) {

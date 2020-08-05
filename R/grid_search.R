@@ -52,8 +52,7 @@ grid_search <- function(range, filter, tolerance = 0.01) {
 
 grid_search_validate_range <- function(range) {
   # Defined in pmcmc.R
-  index <- validate_range(range,
-    c("name", "min", "max", "n", "target"))
+  index <- validate_range(range, c("name", "min", "max", "n"))
 
   if (nrow(range) != 2L) {
     stop("Expected exactly two rows in 'range'")
@@ -92,4 +91,23 @@ zero_boundary <- function(array, tolerance) {
     all(abs(array[nrow(array), ]) < tolerance) &&
     all(abs(array[, ncol(array)]) < tolerance)
   zero_edges
+}
+
+# General range validation used by pmcmc and grid search
+validate_range <- function(range, expected_names, data) {
+  assert_is(range, "data.frame")
+  msg <- setdiff(expected_names, names(range))
+  if (length(msg) > 0L) {
+    stop("Missing columns from range: ",
+           paste(squote(msg), collapse = ", "))
+  }
+
+  if (anyDuplicated(range$name)) {
+    stop("Duplicate 'name' entries not allowed in range")
+  }
+
+  index <- lapply(targets, function(t) which(range$target == t))
+  names(index) <- targets
+
+  index
 }

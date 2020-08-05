@@ -85,6 +85,17 @@ pmcmc_parameters <- R6::R6Class(
       vnapply(private$parameters, "[[", "initial")
     },
 
+    names = function() {
+      names(private$parameters)
+    },
+
+    summary = function() {
+      data_frame(name = self$names(),
+                 min = private$min,
+                 max = private$max,
+                 discrete = private$discrete)
+    },
+
     prior = function(theta) {
       lp <- Map(function(p, value) p$prior(value), private$parameters, theta)
       sum(list_to_numeric(lp))
