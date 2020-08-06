@@ -5,16 +5,29 @@
 \title{Run a pmcmc sampler}
 \usage{
 pmcmc(
-  mcmc_range,
-  lprior_funcs,
+  pars,
   filter,
-  n_mcmc,
-  proposal_kernel,
-  output_proposals = FALSE,
-  n_chains = 1
+  n_steps,
+  return_proposals = FALSE,
+  n_chains = 1,
+  force_multichain = FALSE
 )
 }
 \arguments{
+\item{filter}{A particle filter object}
+
+\item{n_steps}{Number of MCMC steps}
+
+\item{return_proposals}{Logical indicating whether proposed parameter
+jumps should be returned along with results}
+
+\item{n_chains}{Number of chains to run. If greater than 1, then
+we return a \code{mcstate_pmcmc_list} object which contains
+output for each chain, and an estimate of the Gelman's rhat.}
+
+\item{force_multichain}{Return a multichain object even when
+\code{n_chains} is 1}
+
 \item{mcmc_range}{\code{data.frame} detailing parameters to sample.
 Must contain columns 'name' (parameter names), 'init' (initial values),
 'min' (minimum values), 'max' (maximum values),
@@ -26,31 +39,27 @@ A named list for each parameter listed in \code{pars_to_sample}.
 Each value must be a function which takes named parameter vector as
   input, returns a single numeric which is log of the prior probability.}
 
-\item{filter}{A particle filter to sample}
-
-\item{n_mcmc}{Number of MCMC steps}
-
 \item{proposal_kernel}{named matrix of proposal covariance for parameters}
-
-\item{output_proposals}{Logical indicating whether proposed parameter
-jumps should be output along with results}
-
-\item{n_chains}{Number of chains to run}
 }
 \value{
-an mcmc object containing
-- List of inputs
-- Matrix of accepted parameter samples, rows = iterations
-  as well as log prior, (particle filter estimate of) log likelihood
-  and log posterior
+Either a \code{mcstate_pmcmc} object or
+  \code{mcstate_pmcmc_list} object, depending on the value of
+  \code{n_chains}.
 }
 \description{
-This is a basic Metropolis-Hastings MCMC sampler.
-The \code{filter} is run with a set of parameters to evaluate the
-likeihood. A new set of parameters is proposed, and these likelihoods are
-compared, jumping with probability equal to their ratio. This is repeated
-for \code{n_mcmc} proposals, \code{n_chains} independent times.
+Run a pmcmc sampler
 }
 \details{
-Run a pmcmc sampler
+This is a basic Metropolis-Hastings MCMC sampler.  The
+\code{filter} is run with a set of parameters to evaluate the
+likelihood. A new set of parameters is proposed, and these
+likelihoods are compared, jumping with probability equal to their
+ratio. This is repeated for \code{n_mcmc} proposals,
+\code{n_chains} independent times.
+
+While this function is called \code{pmcmc} and requires a particle
+filter object, there's nothing special about it for particle
+filtering. However, we may need to add things in the future that
+make assumptions about the particle filter, so we have named it
+with a "p".
 }

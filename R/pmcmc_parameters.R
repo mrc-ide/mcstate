@@ -1,3 +1,32 @@
+##' Describe a single parameter for use within the pmcmc. Note that
+##' the name is not set here, but will end up being naturally defined
+##' when used with \code{\link{pmcmc_parameters}}, which collects
+##' these together for use with \code{\link{pmcmc}}.
+##'
+##' @title Describe single pmcmc parameter
+##'
+##' @param initial Initial value for the parameter
+##'
+##' @param min Optional minimum value for the parameter (otherwise
+##'   -Inf). If given, then \code{initial} must be at least this
+##'   value.
+##'
+##' @param max Optional max value for the parameter (otherwise
+##'   Inf). If given, then \code{initial} must be at most this
+##'   value.
+##'
+##' @param discrete Logical, indicating if this parameter is
+##'   discrete. If \code{TRUE} then the parameter will be rounded
+##'   after a new paramater is proposed.
+##'
+##' @param prior A prior function (if not given an improper flat prior
+##'   is used - be careful!). It must be a function that takes a
+##'   single argument, being the value of this parmater. If given,
+##'   then \code{prior(initial)} must evaluate to a finite value.
+##'
+##' @export
+##' @examples
+##' pmcmc_parameter(0.1)
 pmcmc_parameter <- function(initial, min = -Inf, max = Inf, discrete = FALSE,
                             prior = NULL) {
   assert_scalar_logical(discrete)
@@ -30,6 +59,39 @@ pmcmc_parameter <- function(initial, min = -Inf, max = Inf, discrete = FALSE,
 }
 
 
+##' @title pmcmc_parameters
+##'
+##' @description Construct parameters for use with
+##'   \code{\link{pmcmc}}. This creates a utility object that is used
+##'   internally to work with parameters. Most users only need to
+##'   construct this object, but see the examples for how it can be
+##'   used.
+##'
+##' @export
+##' @examples
+##' #Construct an object with two parameters:
+##' pars <- mcstate::pmcmc_parameters$new(
+##'   list(a = mcstate::pmcmc_parameter(0.1, min = 0, max = 1,
+##'                                     prior = function(a) log(a)),
+##'        b = mcstate::pmcmc_parameter(0, prior = dnorm)),
+##'   matrix(c(1, 0.5, 0.5, 2), 2, 2))
+##'
+##' # Initial parameters
+##' p <- pars$initial()
+##' p
+##'
+##' # Propose a new parameter point
+##' pars$propose(p)
+##'
+##' # Information about parameters:
+##' pars$names()
+##' pars$summary()
+##'
+##' # Compute prior
+##' pars$prior(p)
+##'
+##' # Transform data for your model
+##' pars$model(p)
 pmcmc_parameters <- R6::R6Class(
   "pmcmc_parameters",
 
@@ -43,6 +105,26 @@ pmcmc_parameters <- R6::R6Class(
   ),
 
   public = list(
+    ##' Create the pmcmc_parameters object
+    ##'
+    ##' @param parameters A named \code{list} of
+    ##' \code{\link{pmcmc_parameter}} objects, each of which describe a
+    ##' single parameter in your model.
+    ##'
+    ##' @param proposal A square proposal distribution corresponding to the
+    ##' variance-covariance matrix of a multivariate gaussian distribution
+    ##' used to generate new parameters. It must have the same number of
+    ##' rows and columns as there are elements in \code{parameters}, and if
+    ##' named the names must correspond exactly to the names in
+    ##' \code{parameters}. Because it corresponds to a variance-covariance
+    ##' matrix it must be symmetric and positive definite.
+    ##'
+    ##' @param transform An optional transformation function to apply
+    ##' to your parameter vector immiediately before passing it to the
+    ##' model function. If not given, then \code{\link{as.list}} is
+    ##' used, as dust models require this. However, if t you need to
+    ##' generate derived parameters from those being actively sampled
+    ##' you can do arbitrary transformations here.
     initialize = function(parameters, proposal, transform = NULL) {
       assert_named(parameters)
       assert_is(parameters, "list")
@@ -84,14 +166,19 @@ pmcmc_parameters <- R6::R6Class(
       private$max <- vnapply(private$parameters, "[[", "max")
     },
 
+    ##' @description Return the initial parameter values as a named numeric
+    ##' vector
     initial = function() {
       vnapply(private$parameters, "[[", "initial")
     },
 
+    ##' @description Return the names of the parameters
     names = function() {
       names(private$parameters)
     },
 
+    ##' @description Return a \code{data.frame} with information about
+    ##' parameters (name, min, max, and discrete).
     summary = function() {
       data_frame(name = self$names(),
                  min = private$min,
@@ -99,17 +186,33 @@ pmcmc_parameters <- R6::R6Class(
                  discrete = private$discrete)
     },
 
+    ##' Compute the prior for a parameter vector
+    ##'
+    ##' @param theta a parameter vector in the same order as your
+    ##' parameters were defined in (see \code{$names()} for that order.
     prior = function(theta) {
       lp <- Map(function(p, value) p$prior(value), private$parameters, theta)
       sum(list_to_numeric(lp))
     },
 
+    ##' Propose a new parameter vector given a current parameter
+    ##' vector. This proposes a new parameter vector given your current
+    ##' vector and the variance-covariance matrix of your proposal
+    ##' kernel, discretises any discrete values, and reflects bounded
+    ##' parameters until they lie within \code{min}:\code{max}.
+    ##'
+    ##' @param theta a parameter vector in the same order as your
+    ##' parameters were defined in (see \code{$names()} for that order.
     propose = function(theta) {
       theta <- private$proposal(theta)
       theta[private$discrete] <- round(theta[private$discrete])
       reflect_proposal(theta, private$min, private$max)
     },
 
+    ##' Apply the model transformation function to a parameter vector.
+    ##'
+    ##' @param theta a parameter vector in the same order as your
+    ##' parameters were defined in (see \code{$names()} for that order.
     model = function(theta) {
       private$transform(theta)
     }

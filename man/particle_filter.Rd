@@ -80,7 +80,6 @@ Create the particle filter}
 \itemize{
 \item \href{#method-new}{\code{particle_filter$new()}}
 \item \href{#method-run}{\code{particle_filter$run()}}
-\item \href{#method-run2}{\code{particle_filter$run2()}}
 \item \href{#method-predict}{\code{particle_filter$predict()}}
 }
 }
@@ -124,7 +123,7 @@ the model produces them (\code{NULL} otherwise) and \code{data}
 is a \code{list} of observed data corresponding to the current
 time's row in the \code{data} object provided here in the
 constructor.  \code{pars} is any additional parameters passed
-through to the comparison function (via the \code{pars_compare}
+through to the comparison function (via the \code{pars}
 argument to \code{$run}).}
 
 \item{\code{index}}{An index function. This is used to compute the
@@ -144,7 +143,7 @@ given, then this function must accept 3 arguments: \code{info}
 (the result of calling \code{$info()} as for \code{index}),
 \code{n_particles} (the number of particles that the particle
 filter is using) and \code{pars} (parameters passed in in the
-\code{$run} method via the \code{pars_initial} argument).  It
+\code{$run} method via the \code{pars} argument).  It
 must return a list, which can have the elements \code{state}
 (initial model state, passed to the particle filter - either a
 vector or a matrix, and overriding the initial conditions
@@ -174,67 +173,33 @@ Run the particle filter}
 \if{latex}{\out{\hypertarget{method-run}{}}}
 \subsection{Method \code{run()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_filter$run(
-  pars_model = NULL,
-  pars_compare = NULL,
-  pars_initial = NULL,
-  save_history = FALSE
-)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter$run(pars = list(), save_history = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{pars_model}}{The \code{data} object passed into dust,
-which may contain parameters for your model (these might affect
-running and/or initial conditions, depending on your model and
-if you are using \code{initial} / \code{pars_initial} below).}
-
-\item{\code{pars_compare}}{Optional parameters to use when applying
-the \code{compare} function.  These parameters will be passed as
-the 4th argument to \code{compare}.}
-
-\item{\code{pars_initial}}{Parameters passed through to the \code{initial}
-function (if provided).}
+\item{\code{pars}}{A list representing parameters. This will be passed as
+the \code{pars} argument to your model, to your \code{compare}
+function, and (if using) to your \code{initial} function. It must
+be an R list (not vector or \code{NULL}) because that is what a
+dust model currently requires on initialisation or `$reset` - we
+may relax this later. You may want to put your observation and
+initial parameters under their own keys (e.g.,
+\code{pars$initial$whatever}), but this is up to you. Extra keys
+are silently ignored by dust models.}
 
 \item{\code{save_history}}{Logical, indicating if the history of all
-particles should be saved}
+particles should be saved. If saving history, then it can be
+queried later with the \code{$history} element on the object.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
 A single numeric value representing the log-likelihood
 (\code{-Inf} if the model is impossible)
-Run the particle filter, allocating a vector of parameters across
-the different tuneable components (model, initial and compare).
-This is a wrapper around the \code{$run()} method, used by
-\code{\link{pmcmc}} and \code{\link{grid_search}} though it can
-be used directly (the name may change in future).
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-run2"></a>}}
-\if{latex}{\out{\hypertarget{method-run2}{}}}
-\subsection{Method \code{run2()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_filter$run2(pars, index, save_history = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{pars}}{A list of parameters}
-
-\item{\code{index}}{A parameter index; this must be a list with elements
-\code{pars_model}, \code{pars_compare} and \code{pars_initial},
-indicating the argument of \code{$run()} they apply to.}
-
-\item{\code{save_history}}{Logical, indicating if the history of all
-particles should be saved.
 Create predicted trajectories, based on the final point of a
-run with the particle filter}
-}
-\if{html}{\out{</div>}}
+run with the particle filter
 }
 }
 \if{html}{\out{<hr>}}
