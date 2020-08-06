@@ -20,3 +20,20 @@ test_that("rmvnorm_generator agrees with rmvnorm", {
 
   expect_equal(res, cmp)
 })
+
+
+test_that("rmvnorm_generator requires symmetric matrix", {
+  expect_error(
+    rmvnorm_generator(matrix(1:4, 2, 2)),
+    "vcv must be symmetric")
+  expect_error(
+    rmvnorm_generator(matrix(1, 2, 6)),
+    "vcv must be symmetric")
+})
+
+
+test_that("rmvnorm_generator requires positive definite", {
+  expect_error(
+    rmvnorm_generator(matrix(c(1, 2, 2, 1), 2, 2)),
+    "vcv must be positive definite")
+})
