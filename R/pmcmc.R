@@ -83,7 +83,6 @@ pmcmc_combine_chains <- function(x, burn_in) {
   drop <- seq_len(burn_in)
   ## TODO: should this include the chain id?
   ## TODO: Can we eliminate this function?
-  ## TODO: if burn_in is zero this will not work
   ret <- do.call(rbind, lapply(x$chains, function(el) el$results[-drop, ]))
   rownames(ret) <- NULL
   ret

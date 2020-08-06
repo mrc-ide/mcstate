@@ -536,6 +536,29 @@ test_that("can combine chains", {
 })
 
 
+test_that("can't combine chains by taking more than burnin", {
+  dat <- example_mvnorm()
+  set.seed(1)
+  res <- pmcmc(dat$pars, dat$filter, 100, n_chains = 3)
+  expect_error(
+    pmcmc_combine_chains(res, 101),
+    "burn_in must be less than the total chain length")
+  expect_equal(
+    nrow(pmcmc_combine_chains(res, 100)),
+    3)
+})
+
+
+test_that("Can't combine all chains with no burnin", {
+  dat <- example_mvnorm()
+  set.seed(1)
+  res <- pmcmc(dat$pars, dat$filter, 10, n_chains = 3)
+  expect_error(
+    pmcmc_combine_chains(res, 0),
+    "'burn_in' must be at least 1")
+})
+
+
 test_that("notify failure to compute gelman's diagnistic", {
   dat <- example_mvnorm()
   set.seed(1)
