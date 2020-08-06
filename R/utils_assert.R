@@ -33,7 +33,7 @@ assert_integer <- function(x, name = deparse(substitute(x)),
 
 assert_logical <- function(x, name = deparse(substitute(x))) {
   if (!(is.logical(x))) {
-    stop(sprintf("'%s' must be a logical", name, what), call. = FALSE)
+    stop(sprintf("'%s' must be a logical", name), call. = FALSE)
   }
   invisible(x)
 }
