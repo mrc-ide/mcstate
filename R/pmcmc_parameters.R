@@ -126,7 +126,7 @@ pmcmc_parameters <- R6::R6Class(
     ##' generate derived parameters from those being actively sampled
     ##' you can do arbitrary transformations here.
     initialize = function(parameters, proposal, transform = NULL) {
-      assert_named(parameters)
+      assert_named(parameters, TRUE)
       assert_is(parameters, "list")
       if (length(parameters) == 0) {
         stop("At least one parameter is required")

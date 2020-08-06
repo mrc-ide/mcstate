@@ -40,33 +40,6 @@ forecast <- function(x, ...,
   UseMethod("forecast", x)
 }
 
-##' Forecast for grid search
-##' @rdname forecast
-##' @method forecast mcstate_scan
-forecast.mcstate_scan <- function(x, ...,
-                                  filter,
-                                  n_sample_pars = 10,
-                                  forecast_steps = 0) {
-
-  # sample proportional to probability
-  sample_idx <- sample(nrow(x$vars$expanded),
-                       size = n_sample_pars,
-                       replace = TRUE,
-                       prob = x$renorm_mat_ll)
-  pairs <- x$vars$expanded[sample_idx, ]
-
-  traces <- lapply(split_df_rows(pairs), run_and_forecast,
-                   filter, x$vars$index, forecast_steps)
-
-  # combine and return
-  res <- list("trajectories" = traces,
-              "parameters" = pairs)
-
-  class(res) <- "mcstate_forecast"
-  return(res)
-
-}
-
 ##' Forecast for MCMC
 ##' @rdname forecast
 ##' @method forecast mcstate_pmcmc_list
@@ -107,39 +80,4 @@ run_and_forecast <- function(model_params, filter, index, forecast_steps) {
     trajectories <- filter$history
   }
   trajectories
-}
-
-##' @export
-plot.mcstate_forecast <- function(x, ..., what = 1, data = NULL,
-                                  ylab = NULL, title = NULL, col = "grey80") {
-  partition_index <- as.integer(what)
-  if (partition_index < 1 || partition_index > nrow(x$trajectories[[1]])) {
-    stop("'what' must be a valid index for a partition")
-  }
-
-  title <- title %||% paste("Partition", partition_index)
-  ylab <- ylab %||% paste("Partition", partition_index)
-
-  particles <- array(0, dim(x$trajectories[[1]])[-1])
-  for (i in seq_len(length(x$trajectories))) {
-    particles <- particles + x$trajectories[[i]][partition_index, , ]
-  }
-  particles <- particles / length(x$trajectories)
-
-  plot_particles(particles, ylab = ylab, title = title, col = col)
-  if (!is.null(data)) {
-    points(data, pch = 19)
-  }
-}
-
-##' @importFrom graphics plot points matlines
-##' @importFrom stats quantile
-plot_particles <- function(particles, ylab, title, col = "#44111144") {
-  plot(particles[, 1], type = "n", ylab = ylab, xlab = "Step",
-       ylim = range(particles, na.rm = TRUE), main = title)
-  ## Individual traces
-  matlines(t(particles), col = col, lty = 1)
-  ## Quantiles
-  quantiles <- t(apply(particles, 2, quantile, c(0.025, 0.5, 0.975)))
-  matlines(quantiles, col = "black", lty = "dashed")
 }

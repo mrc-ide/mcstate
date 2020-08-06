@@ -2,13 +2,10 @@
 % Please edit documentation in R/forecast.R
 \name{forecast}
 \alias{forecast}
-\alias{forecast.mcstate_scan}
 \alias{forecast.mcstate_pmcmc_list}
 \title{Sample Grid Scan}
 \usage{
 forecast(x, ..., filter, n_sample_pars = 10, forecast_steps = 0, burn_in = 0)
-
-\method{forecast}{mcstate_scan}(x, ..., filter, n_sample_pars = 10, forecast_steps = 0)
 
 \method{forecast}{mcstate_pmcmc_list}(x, ..., filter, n_sample_pars = 10, forecast_steps = 0, burn_in = 1)
 }

@@ -34,9 +34,6 @@ test_that("MCMC can run", {
                   mcmc_results$acceptance_rate <= 1))
   expect_true(all(mcmc_results$ess >= 0))
 
-  summary(mcmc_results)
-  plot(mcmc_results)
-
   # Multiple chains
   n_chains <- 3
   burn_in <- 10
@@ -47,15 +44,9 @@ test_that("MCMC can run", {
   expect_equal(nrow(multi_chain$rhat$psrf), nrow(range))
   expect_length(multi_chain$chains, 3)
 
-  summary(multi_chain)
-  plot(multi_chain)
-
   multi_chain_master <- create_master_chain(multi_chain, burn_in = burn_in)
   expect_equal(ncol(multi_chain_master), 5)
   expect_equal(nrow(multi_chain_master), (n_mcmc + 1L - burn_in) * n_chains)
-
-  summary(multi_chain_master)
-  plot(multi_chain_master)
 })
 
 test_that("MCMC doesn't move away from correct parameters", {
@@ -138,9 +129,6 @@ test_that("MCMC runs on different targets", {
   expect_true(all(mcmc_results$acceptance_rate >= 0 &
                   mcmc_results$acceptance_rate <= 1))
   expect_true(all(mcmc_results$ess >= 0))
-
-  summary(mcmc_results)
-  plot(mcmc_results)
 })
 
 test_that("Proposals are correctly reflected", {
@@ -545,16 +533,6 @@ test_that("can combine chains", {
                check.attributes = FALSE)
   expect_equal(combined[101:150, ], rbind(res$chains[[3]]$results[52:101, ]),
                check.attributes = FALSE)
-})
-
-
-test_that("can compute summary of a chain", {
-  dat <- example_mvnorm()
-  set.seed(1)
-  res <- pmcmc(dat$pars, dat$filter, 50, return_proposals = TRUE)
-  ans <- summary(res)
-  expect_type(ans, "list")
-  expect_setequal(names(ans), c("summary", "corr_mat", "sd"))
 })
 
 

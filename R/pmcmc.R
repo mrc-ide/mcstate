@@ -63,6 +63,33 @@ pmcmc <- function(pars, filter, n_steps, return_proposals = FALSE,
 }
 
 
+##' Combine multiple chains into a single (master) chain
+##'
+##' @title Combine multiple chains into a single (master) chain
+##'
+##' @param x An mcstate_pmcmc_list containing chains to combine
+##'
+##' @param burn_in an integer denoting the number of samples to discard
+##' from each chain
+##'
+##' @export
+pmcmc_combine_chains <- function(x, burn_in) {
+  assert_is(x, "mcstate_pmcmc_list")
+  assert_scalar_positive_integer(burn_in)
+  len <- nrow(x$chains[[1L]]$results)
+  if (burn_in >= len) {
+    stop("burn_in must be less than the total chain length")
+  }
+  drop <- seq_len(burn_in)
+  ## TODO: should this include the chain id?
+  ## TODO: Can we eliminate this function?
+  ## TODO: if burn_in is zero this will not work
+  ret <- do.call(rbind, lapply(x$chains, function(el) el$results[-drop, ]))
+  rownames(ret) <- NULL
+  ret
+}
+
+
 mcmc <- function(pars, target, n_steps, return_proposals) {
   curr_pars <- pars$initial()
   curr_lprior <- pars$prior(curr_pars)

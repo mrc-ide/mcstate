@@ -54,9 +54,6 @@ test_that("Sampling and forecasting from a grid search", {
   r_r2 <- mapply(f, grid$x, grid$y, 3)
   expect_gt(mean(r_r2), 0.99)
 
-  plot(forecast_res, what = 2, data = dat$history[2, 1, ],
-       title = "I", ylab = "I")
-
   # check that forecasting is possible
   forecast_steps <- 5
   forecast_res <- forecast(grid_res,
@@ -67,10 +64,6 @@ test_that("Sampling and forecasting from a grid search", {
     # 5 quantities, 101 steps
     expect_equal(dim(forecast_res$trajectories[[i]]), c(3, n_particles, 106))
   }
-
-  plot(forecast_res, what = 3, data = dat$history[3, 1, ],
-       title = "R", ylab = "R")
-
 })
 
 test_that("Sampling and forecasting from an MCMC", {
@@ -135,9 +128,6 @@ test_that("Sampling and forecasting from an MCMC", {
   r_r2 <- mapply(f, grid$x, grid$y, 3)
   expect_gt(mean(r_r2), 0.99)
 
-  plot(forecast_res, what = 2, data = dat$history[2, 1, ],
-       title = "I", ylab = "I")
-
   # check that forecasting is possible
   forecast_steps <- 5
   forecast_res <- forecast(mcmc_res,
@@ -148,19 +138,4 @@ test_that("Sampling and forecasting from an MCMC", {
     # 5 quantities, 101 steps
     expect_equal(dim(forecast_res$trajectories[[i]]), c(3, n_particles, 106))
   }
-
-  plot(forecast_res, what = 3, data = dat$history[2, 1, ],
-       title = "R", ylab = "R")
-
-})
-
-
-test_that("Can't plot outside of range", {
-  x <- list(trajectories = list(matrix(NA, 10)))
-  expect_error(
-    plot.mcstate_forecast(x, what = 0),
-    "'what' must be a valid index for a partition")
-  expect_error(
-    plot.mcstate_forecast(x, what = 11),
-    "'what' must be a valid index for a partition")
 })
