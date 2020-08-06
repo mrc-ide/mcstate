@@ -107,7 +107,7 @@ mcmc <- function(pars, target, n_steps, return_proposals) {
   out <- list(results = results,
               pars = pars$names(),
               acceptance_rate = acceptance_rate(results),
-              ess = coda::effectiveSize(results))
+              ess = effective_size(results))
 
   if (return_proposals) {
     out$proposals <- proposals$as_data_frame()

@@ -556,3 +556,13 @@ test_that("can compute summary of a chain", {
   expect_type(ans, "list")
   expect_setequal(names(ans), c("summary", "corr_mat", "sd"))
 })
+
+
+test_that("notify failure to compute gelman's diagnistic", {
+  dat <- example_mvnorm()
+  set.seed(1)
+  expect_message(
+    res <- pmcmc(dat$pars, dat$filter, 50, force_multichain = TRUE),
+    "Could not calculate rhat: .+")
+  expect_null(res$rhat)
+})
