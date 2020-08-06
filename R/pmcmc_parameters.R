@@ -222,7 +222,25 @@ pmcmc_parameters <- R6::R6Class(
 ## create function to reflect proposal boundaries at pars_min and pars_max
 ## this ensures the proposal is symetrical and we can simplify the MH step
 reflect_proposal <- function(x, x_min, x_max) {
-  ## TODO: Cope with infinite or missing ranges
-  x_range <- x_max - x_min
-  abs((x + x_range - x_min) %% (2 * x_range) - x_range) + x_min
+  i <- x < x_min | x > x_max
+  if (any(i)) {
+    i_both <- i & is.finite(x_min) & is.finite(x_max)
+    i_min <- i & is.finite(x_min) & !is.finite(x_max)
+    i_max <- i & !is.finite(x_min) & is.finite(x_max)
+    x[i_both] <- reflect_proposal_both(x[i_both], x_min[i_both], x_max[i_both])
+    x[i_min] <- reflect_proposal_one(x[i_min], x_min[i_min])
+    x[i_max] <- reflect_proposal_one(x[i_max], x_max[i_max])
+  }
+  x
+}
+
+
+reflect_proposal_both <- function(x, x_min, x_max) {
+  x_r <- x_max - x_min
+  abs((x + x_r - x_min) %% (2 * x_r) - x_r) + x_min
+}
+
+
+reflect_proposal_one <- function(x, x_bound) {
+  2 * x_bound - x
 }

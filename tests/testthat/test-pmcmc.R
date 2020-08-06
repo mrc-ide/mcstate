@@ -566,3 +566,35 @@ test_that("notify failure to compute gelman's diagnistic", {
     "Could not calculate rhat: .+")
   expect_null(res$rhat)
 })
+
+
+test_that("Reflect parameters: double sided", {
+  expect_equal(reflect_proposal(0.4, 0, 1), 0.4)
+  expect_equal(reflect_proposal(1.4, 0, 1), 0.6)
+  expect_equal(reflect_proposal(2.4, 0, 1), 0.4)
+
+  expect_equal(reflect_proposal(0:2 + 0.4, rep(0, 3), rep(1, 3)),
+               c(0.4, 0.6, 0.4))
+  expect_equal(reflect_proposal(0:2 + 1.4, rep(1, 3), rep(2, 3)),
+               c(1.4, 1.6, 1.4))
+})
+
+
+test_that("Reflect parameters: infinite", {
+  p <- rnorm(10)
+  expect_equal(reflect_proposal(p, rep(-Inf, 5), rep(Inf, 5)), p)
+})
+
+
+test_that("reflect parameters: lower", {
+  expect_equal(reflect_proposal(-0.4, 0, Inf), 0.4)
+  expect_equal(reflect_proposal(0.6, 1, Inf), 1.4)
+  expect_equal(reflect_proposal(0.6, 0, Inf), 0.6)
+})
+
+
+test_that("reflect parameters: upper", {
+  expect_equal(reflect_proposal(1.4, -Inf, 1), 0.6)
+  expect_equal(reflect_proposal(0.4, -Inf, 0), -0.4)
+  expect_equal(reflect_proposal(0.4, -Inf, 1), 0.4)
+})
