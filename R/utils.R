@@ -43,6 +43,12 @@ split_df_rows <- function(x) {
   unname(split(x, seq_len(nrow(x))))
 }
 
+
+data_frame <- function(...) {
+  data.frame(..., stringsAsFactors = FALSE)
+}
+
+
 ##' @importFrom mvtnorm rmvnorm
 ##' @importFrom stats rnorm
 rmvnorm_generator <- function(vcv) {

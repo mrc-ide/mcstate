@@ -81,8 +81,3 @@ example_mvnorm <- function() {
 
   list(target = target, filter = filter, pars = pars)
 }
-
-
-data_frame <- function(...) {
-  data.frame(..., stringsAsFactors = FALSE)
-}
