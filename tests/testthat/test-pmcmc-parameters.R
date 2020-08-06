@@ -18,6 +18,26 @@ test_that("Can provide a prior", {
 })
 
 
+test_that("parameter initial point must lie in range", {
+  expect_silent(pmcmc_parameter(0))
+  expect_silent(pmcmc_parameter(0, min = 0))
+  expect_silent(pmcmc_parameter(0, max = 0))
+  expect_error(pmcmc_parameter(0, min = 1),
+               "'initial' must be >= 'min' (1)", fixed = TRUE)
+  expect_error(pmcmc_parameter(0, max = -1),
+               "'initial' must be <= 'max' (-1)", fixed = TRUE)
+})
+
+
+test_that("initial value must satify prior", {
+  expect_silent(
+    pmcmc_parameter(10, prior = log))
+  expect_error(
+    pmcmc_parameter(0, prior = log),
+    "Your prior function returned an non-finite value on initial value")
+})
+
+
 ## TODO: Break this up a bit
 test_that("parameters", {
   proposal_kernel <- diag(2) * 1e-4
@@ -117,4 +137,53 @@ test_that("can compute prior", {
   expect_equal(
     p$prior(list(beta = 1, gamma = 0)),
     dexp(1, log = TRUE) + dnorm(0, log = TRUE))
+})
+
+
+test_that("all inputs to pmcmc_parameters must be pmcmc_parameter objects", {
+  expect_error(
+    pmcmc_parameters$new(NULL, proposal = diag(2)),
+    "'parameters' must be named")
+  expect_error(
+    pmcmc_parameters$new(setNames(list(), character(0)), proposal = diag(2)),
+    "At least one parameter is required")
+
+  expect_error(
+    pmcmc_parameters$new(setNames(list(1, 2), character(0)),
+                         proposal = diag(2)),
+    "Expected all elements of '...' to be 'pmcmc_parameter' objects",
+    fixed = TRUE)
+})
+
+
+test_that("proposal matrix and parameters must conform", {
+  pars <- list(beta = pmcmc_parameter(0.2), gamma = pmcmc_parameter(0.1))
+  expect_error(
+    pmcmc_parameters$new(pars, proposal = diag(1)),
+    "Expected a square proposal matrix with 2 rows and columns")
+  expect_error(
+    pmcmc_parameters$new(pars, proposal = diag(3)),
+    "Expected a square proposal matrix with 2 rows and columns")
+  expect_error(
+    pmcmc_parameters$new(pars, proposal = matrix(0, 3, 2)),
+    "Expected a square proposal matrix with 2 rows and columns")
+})
+
+
+test_that("if proposal has names, they must match parameters", {
+  pars <- list(beta = pmcmc_parameter(0.2), gamma = pmcmc_parameter(0.1))
+  m <- function(a, b = a) {
+    matrix(1, length(a), length(b), dimnames = list(a, b))
+  }
+
+  expect_error(
+    pmcmc_parameters$new(pars, proposal = m(c("a", "b"))),
+    "Expected dimension names of 'proposal' to match parmeters")
+  expect_error(
+    pmcmc_parameters$new(pars, proposal = m(c("a", "b"), names(pars))),
+    "Expected dimension names of 'proposal' to match parmeters")
+  expect_error(
+    pmcmc_parameters$new(pars, proposal = m(names(pars), c("a", "b"))),
+    "Expected dimension names of 'proposal' to match parmeters")
+  expect_silent(pmcmc_parameters$new(pars, proposal = m(names(pars))))
 })

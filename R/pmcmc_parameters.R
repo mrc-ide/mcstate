@@ -44,12 +44,15 @@ pmcmc_parameters <- R6::R6Class(
 
   public = list(
     initialize = function(parameters, proposal, transform = NULL) {
+      assert_named(parameters)
+      assert_is(parameters, "list")
+      if (length(parameters) == 0) {
+        stop("At least one parameter is required")
+      }
       ok <- vlapply(parameters, inherits, "pmcmc_parameter")
       if (!all(ok)) {
         stop("Expected all elements of '...' to be 'pmcmc_parameter' objects")
       }
-
-      expect_named(parameters)
 
       if (is.null(transform)) {
         transform <- as.list
