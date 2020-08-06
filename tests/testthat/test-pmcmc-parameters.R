@@ -149,8 +149,7 @@ test_that("all inputs to pmcmc_parameters must be pmcmc_parameter objects", {
     "At least one parameter is required")
 
   expect_error(
-    pmcmc_parameters$new(setNames(list(1, 2), character(0)),
-                         proposal = diag(2)),
+    pmcmc_parameters$new(list(a = 1, b = 2), proposal = diag(2)),
     "Expected all elements of '...' to be 'pmcmc_parameter' objects",
     fixed = TRUE)
 })
