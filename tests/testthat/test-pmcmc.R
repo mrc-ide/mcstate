@@ -1,6 +1,7 @@
 context("pmcmc")
 
 test_that("MCMC can run", {
+  skip("old test")
   proposal_kernel <- diag(2) * 1e-4
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("beta", "gamma")
 
@@ -40,7 +41,7 @@ test_that("MCMC can run", {
   n_chains <- 3
   burn_in <- 10
   multi_chain <- pmcmc(range, lprior, p, n_mcmc, proposal_kernel,
-                        n_chains = n_chains)
+                       n_chains = n_chains)
 
   expect_equal(class(multi_chain), "mcstate_pmcmc_list")
   expect_equal(nrow(multi_chain$rhat$psrf), nrow(range))
@@ -58,6 +59,7 @@ test_that("MCMC can run", {
 })
 
 test_that("MCMC doesn't move away from correct parameters", {
+  skip("old test")
   range <- data.frame(name = c("beta", "gamma"),
                       init = c(0.2, 0.1),
                       min = c(0, 0),
@@ -86,6 +88,7 @@ test_that("MCMC doesn't move away from correct parameters", {
 })
 
 test_that("MCMC runs on different targets", {
+  skip("old test")
   # All three targets
   range <- data.frame(name = c("beta", "step_start", "exp_noise"),
                       init = c(0.2, 200, 1e6),
@@ -99,12 +102,12 @@ test_that("MCMC runs on different targets", {
                  "step_start" = function(pars) log(1e-10),
                  "exp_noise" = function(pars) log(1e-10))
   proposal_kernel <- matrix(c(0.001^2, 0, 0,
-                             0, 0.001^2, 0,
-                             0,       0, 10^2),
-                             nrow = 3, byrow = TRUE,
-                        dimnames = list(
-                          range$name,
-                          range$name))
+                              0, 0.001^2, 0,
+                              0,       0, 10^2),
+                            nrow = 3, byrow = TRUE,
+                            dimnames = list(
+                              range$name,
+                              range$name))
   initial <- function(info, n_particles, pars) {
     list(step = pars[["step_start"]])
   }
@@ -141,8 +144,9 @@ test_that("MCMC runs on different targets", {
 })
 
 test_that("Proposals are correctly reflected", {
+  skip("old test")
   expect_equal(object = reflect_proposal(x = 6, floor = 1, cap = 5),
-              expected = 4)
+               expected = 4)
   expect_equal(object = reflect_proposal(x = 0, floor = 1, cap = 5),
                expected = 2)
   expect_equal(object = reflect_proposal(x = 10, floor = 1, cap = 5),
@@ -156,14 +160,15 @@ test_that("Proposals are correctly reflected", {
 
   df <- with(tmp, reflect_proposal(x, floor, cap))
   vec <- with(tmp, mapply(FUN = reflect_proposal,
-                        x = x,
-                        floor = floor,
-                        cap = cap))
+                          x = x,
+                          floor = floor,
+                          cap = cap))
 
   expect_equal(df, vec)
 })
 
 test_that("MCMC jumps behave as expected", {
+  skip("old test")
   ## check that proposing jumps of size zero results in the
   ## initial parameter being retained
   range <- data.frame(name = c("beta", "gamma"),
@@ -176,10 +181,10 @@ test_that("MCMC jumps behave as expected", {
   lprior <- list("beta" = function(pars) log(1e-10),
                  "gamma" = function(pars) log(1e-10))
   proposal_kernel <- matrix(rep(0, 4),
-                        nrow = 2, byrow = TRUE,
-                        dimnames = list(
-                          range$name,
-                          range$name))
+                            nrow = 2, byrow = TRUE,
+                            dimnames = list(
+                              range$name,
+                              range$name))
 
   dat <- example_sir()
   n_particles <- 20
@@ -188,12 +193,12 @@ test_that("MCMC jumps behave as expected", {
   n_mcmc <- 500
   n_chains <- 1
   mcmc_results <- pmcmc(range, lprior, p, n_mcmc, proposal_kernel,
-             n_chains = n_chains, output_proposals = TRUE)
+                        n_chains = n_chains, output_proposals = TRUE)
 
   expect_equal(object = mcmc_results$results$beta,
-                expected = rep(range$init[1], n_mcmc + 1))
+               expected = rep(range$init[1], n_mcmc + 1))
   expect_equal(object = mcmc_results$results$gamma,
-                expected = rep(range$init[2], n_mcmc + 1))
+               expected = rep(range$init[2], n_mcmc + 1))
   expect_true(!all(diff(mcmc_results$results$log_likelihood) == 0))
   expect_equal(dim(mcmc_results$proposals), c(n_mcmc + 1L, 6))
 
@@ -201,20 +206,20 @@ test_that("MCMC jumps behave as expected", {
   set.seed(1)
   proposal_kernel <- matrix(c(0.01^2, 0,
                               0, 0.01^2),
-                        nrow = 2, byrow = TRUE,
-                        dimnames = list(
-                          range$name,
-                          range$name))
+                            nrow = 2, byrow = TRUE,
+                            dimnames = list(
+                              range$name,
+                              range$name))
   no_covar_results <- pmcmc(range, lprior, p, n_mcmc,
                             proposal_kernel, n_chains = n_chains,
                             output_proposals = TRUE)
   set.seed(1)
   proposal_kernel <- matrix(c(0.01^2, 0.01^2,
-                          0.01^2, 0.01^2),
-                        nrow = 2, byrow = TRUE,
-                        dimnames = list(
-                          range$name,
-                          range$name))
+                              0.01^2, 0.01^2),
+                            nrow = 2, byrow = TRUE,
+                            dimnames = list(
+                              range$name,
+                              range$name))
   covar_results <- pmcmc(range, lprior, p, n_mcmc,
                          proposal_kernel, n_chains = n_chains,
                          output_proposals = TRUE)
@@ -222,6 +227,7 @@ test_that("MCMC jumps behave as expected", {
 })
 
 test_that("MCMC range input errors", {
+  skip("old test")
   range <- data.frame(name = c("beta", "gamma"),
                       init = c(-0.2, 0.1),
                       min = c(0, 0),
@@ -276,7 +282,7 @@ test_that("MCMC range input errors", {
                       stringsAsFactors = FALSE)
   expect_error(mcmc_validate_range(range),
                paste0("Invalid target 'model_pars': must be one of ",
-               "'pars_model', 'pars_compare', 'pars_initial'"))
+                      "'pars_model', 'pars_compare', 'pars_initial'"))
   range <- data.frame(names = c("beta", "gamma"),
                       init = c(0.2, 0.1),
                       min = c(0, 0),
@@ -298,6 +304,7 @@ test_that("MCMC range input errors", {
 })
 
 test_that("MCMC function input errors", {
+  skip("old test")
   range <- data.frame(name = c("beta", "gamma"),
                       init = c(0.2, 0.1),
                       min = c(0, 0),
@@ -331,7 +338,7 @@ test_that("MCMC function input errors", {
   expect_error(pmcmc(range, lprior, p, n_mcmc, proposal_kernel,
                      n_chains = n_chains),
                paste0("lprior_funcs must return a single numeric representing ",
-               "the log prior"))
+                      "the log prior"))
   lprior <- list("beta" = function(pars) log(0),
                  "gamma" = function(pars) 0)
   expect_error(pmcmc(range, lprior, p, n_mcmc, proposal_kernel,
@@ -350,6 +357,7 @@ test_that("MCMC function input errors", {
 })
 
 test_that("Master chain errors", {
+  skip("old test")
   expect_error(create_master_chain(list(rep(NA, 10))),
                "x must be a pmcmc_list object")
 
@@ -401,7 +409,7 @@ test_that("mcmc works for uniform distribution on unit square", {
 
   set.seed(1)
   testthat::try_again(5, {
-    res <- mcmc(1000, pars, target, FALSE)
+    res <- mcmc(pars, target, 1000, FALSE)
     expect_equal(res$acceptance_rate[["a"]], 1)
     expect_equal(res$acceptance_rate[["b"]], 1)
     expect_true(abs(mean(res$results$a) - 0.5) < 0.05)
@@ -423,7 +431,7 @@ test_that("mcmc works for multivariate gaussian", {
 
   set.seed(1)
   testthat::try_again(5, {
-    res <- mcmc(1000, pars, target, FALSE)
+    res <- mcmc(pars, target, 1000, FALSE)
     i <- seq(1, 1000, by = 20)
     expect_s3_class(res, "mcstate_pmcmc")
     expect_gt(ks.test(res$results$a[i], "pnorm")$p.value, 0.05)
@@ -444,7 +452,7 @@ test_that("multi-chain mcmc", {
          b = pmcmc_parameter(0.5, min = 0, max = 1)),
     proposal = proposal_kernel)
 
-  res <- mcmc_multichain(3, 1000, pars, target, FALSE)
+  res <- mcmc_multichain(pars, target, 1000, 3, FALSE)
 })
 
 
@@ -465,7 +473,7 @@ test_that("pmcmc interface", {
   res <- pmcmc(pars, filter, 100)
   expect_is(res, "mcstate_pmcmc")
   set.seed(1)
-  expect_identical(mcmc(pars, filter, 100, FALSE), res)
+  expect_identical(mcmc(pars, filter$run, 100, FALSE), res)
 })
 
 
@@ -477,7 +485,7 @@ test_that("pmcmc passes expected arguments through to lower-level functions", {
   with_mock(
     "mcstate:::mcmc" = mock_mcmc,
     "mcstate:::mcmc_multichain" = mock_mcmc_multichain, {
-      pmcmc(pars, filter, 100)
+      pmcmc(dat$pars, dat$filter, 100)
     })
   mockery::expect_called(mock_mcmc, 1)
   mockery::expect_called(mock_mcmc_multichain, 0)
@@ -494,7 +502,7 @@ test_that("pmcmc can force multichain with just one chain", {
   with_mock(
     "mcstate:::mcmc" = mock_mcmc,
     "mcstate:::mcmc_multichain" = mock_mcmc_multichain, {
-      pmcmc(pars, filter, 100, force_multichain = TRUE)
+      pmcmc(dat$pars, dat$filter, 100, force_multichain = TRUE)
     })
   mockery::expect_called(mock_mcmc, 0)
   mockery::expect_called(mock_mcmc_multichain, 1)
@@ -519,4 +527,32 @@ test_that("can return proposals", {
   ## Whenever we improved we definitely have the same answer:
   i <- res$results$log_likelihood[-1] > res$results$log_likelihood[-51]
   expect_equal(p2[which(i) + 1], p1[which(i) + 1])
+})
+
+
+test_that("can combine chains", {
+  dat <- example_mvnorm()
+  set.seed(1)
+  res <- pmcmc(dat$pars, dat$filter, 100, return_proposals = TRUE,
+               n_chains = 3)
+  combined <- pmcmc_combine_chains(res, 51)
+
+  expect_s3_class(combined, "data.frame")
+  expect_equal(nrow(combined), 150)
+  expect_equal(combined[1:50, ], rbind(res$chains[[1]]$results[52:101, ]),
+               check.attributes = FALSE)
+  expect_equal(combined[51:100, ], rbind(res$chains[[2]]$results[52:101, ]),
+               check.attributes = FALSE)
+  expect_equal(combined[101:150, ], rbind(res$chains[[3]]$results[52:101, ]),
+               check.attributes = FALSE)
+})
+
+
+test_that("can compute summary of a chain", {
+  dat <- example_mvnorm()
+  set.seed(1)
+  res <- pmcmc(dat$pars, dat$filter, 50, return_proposals = TRUE)
+  ans <- summary(res)
+  expect_type(ans, "list")
+  expect_setequal(names(ans), c("summary", "corr_mat", "sd"))
 })

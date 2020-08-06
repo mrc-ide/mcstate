@@ -12,7 +12,7 @@ test_that("Can construct a parameter", {
 
 
 test_that("Can provide a prior", {
-  f <- function(p) log(-p)
+  f <- function(p) log(1/p)
   p <- pmcmc_parameter(1, prior = f)
   expect_identical(p$prior, f)
 })

@@ -127,8 +127,8 @@ mcmc_multichain <- function(pars, target, n_steps, n_chains,
   ## had problems with future etc failing to spawn properly, so
   ## holding off on that for now.
   chains <- lapply(seq_len(n_chains), function(i)
-    mcmc(n_steps, pars, target, return_proposals))
-  res <- list(rhat = gelman_diagnostic(chains),
+    mcmc(pars, target, n_steps, return_proposals))
+  res <- list(rhat = gelman_diagnostic(chains, pars),
               chains = chains,
               pars = pars$summary())
   class(res) <- "mcstate_pmcmc_list"
@@ -179,7 +179,7 @@ gelman_diagnostic <- function(chains, pars) {
 
 acceptance_rate <- function(chain) {
   ## TODO: this is actually pretty awful internally
-  coda::rejectionRate(coda::as.mcmc(chain))
+  1 - coda::rejectionRate(coda::as.mcmc(chain))
 }
 
 

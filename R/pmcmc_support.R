@@ -10,28 +10,20 @@
 ##' from each chain
 ##'
 ##' @export
-create_master_chain <- function(x, burn_in) {
-
-  if (class(x) != "mcstate_pmcmc_list") {
-    stop("x must be a pmcmc_list object")
+pmcmc_combine_chains <- function(x, burn_in) {
+  assert_is(x, "mcstate_pmcmc_list")
+  assert_scalar_positive_integer(burn_in)
+  len <- nrow(x$chains[[1L]]$results)
+  if (burn_in >= len) {
+    stop("burn_in must be less than the total chain length")
   }
-  if (!is.numeric(burn_in)) {
-    stop("burn_in must be an integer")
-  }
-  if (burn_in < 0) {
-    stop("burn_in must not be negative")
-  }
-  if (burn_in >= nrow(x$chains[[1]]$results)) {
-    stop("burn_in is greater than chain length")
-  }
-
-  chains <- lapply(
-    X = x$chains,
-    FUN = function(z) z$results[-seq_len(burn_in), ]
-  )
-
-  master <- do.call(what = rbind, args = chains)
-  master
+  drop <- seq_len(burn_in)
+  ## TODO: should this include the chain id?
+  ## TODO: Can we eliminate this function?
+  ## TODO: if burn_in is zero this will not work
+  ret <- do.call(rbind, lapply(x$chains, function(el) el$results[-drop, ]))
+  rownames(ret) <- NULL
+  ret
 }
 
 #
@@ -41,6 +33,8 @@ create_master_chain <- function(x, burn_in) {
 ##' @export
 ##' @importFrom stats cor sd
 summary.mcstate_pmcmc <- function(object, ...) {
+  ## TODO: these feel a bit half thought out - why are our
+  ## probabilities included here?
 
   par_names <- colnames(object$results)
   traces <- object$results
@@ -69,7 +63,7 @@ summary.mcstate_pmcmc <- function(object, ...) {
 ##' @export
 summary.mcstate_pmcmc_list <- function(object, ..., burn_in = 1) {
 
-  master_chain <- create_master_chain(x = object,
+  master_chain <- pmcmc_combine_chains(x = object,
                                       burn_in = burn_in)
 
   z <- list(results = master_chain)
@@ -157,7 +151,7 @@ plot.mcstate_pmcmc_list <- function(x, burn_in = 1, ...) {
   cols_trace <- rev(viridis::viridis(n_chains))
 
   # compile master chain and order by log posterior for plotting
-  master_chain <- create_master_chain(x, burn_in = burn_in)
+  master_chain <- pmcmc_combine_chains(x, burn_in = burn_in)
 
   master_chain <- master_chain[order(master_chain$log_posterior), ]
   cols <- viridis::cividis(nrow(master_chain))
