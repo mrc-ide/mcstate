@@ -46,7 +46,7 @@ example_sir <- function() {
 }
 
 
-example_uniform <- function() {
+example_uniform <- function(proposal_kernel = NULL) {
   target <- function(p, ...) {
     1
   }
@@ -56,8 +56,10 @@ example_uniform <- function() {
                            trajectories = function(i) matrix(1, 2, 10)),
                       class = "particle_filter")
 
-  proposal_kernel <- diag(2) * 0.1
-  row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("a", "b")
+  if (is.null(proposal_kernel)) {
+    proposal_kernel <- diag(2) * 0.1
+    row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("a", "b")
+  }
 
   pars <- pmcmc_parameters$new(
     list(a = pmcmc_parameter(0.5, min = 0, max = 1),
