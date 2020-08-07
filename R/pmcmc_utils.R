@@ -1,15 +1,3 @@
-acceptance_rate <- function(chain) {
-  ## TODO: this is actually pretty awful internally
-  1 - coda::rejectionRate(coda::as.mcmc(chain))
-}
-
-
-effective_size <- function(chain) {
-  ## TODO: do we ever want the ess of the probabilities?
-  coda::effectiveSize(coda::as.mcmc(chain))
-}
-
-
 mcstate_pmcmc <- function(pars, probabilities, state, trajectories) {
   ret <- list(pars = pars,
               probabilities = probabilities,

@@ -39,11 +39,6 @@ dde_abind <- function(a, b) {
 }
 
 
-split_df_rows <- function(x) {
-  unname(split(x, seq_len(nrow(x))))
-}
-
-
 data_frame <- function(...) {
   data.frame(..., stringsAsFactors = FALSE)
 }

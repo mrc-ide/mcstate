@@ -89,3 +89,16 @@ example_mvnorm <- function() {
 
   list(target = target, filter = filter, pars = pars)
 }
+
+
+## Some form of these will likely go back into the package later
+acceptance_rate <- function(chain) {
+  ## TODO: this is actually pretty awful internally
+  1 - coda::rejectionRate(coda::as.mcmc(chain))
+}
+
+
+effective_size <- function(chain) {
+  ## TODO: do we ever want the ess of the probabilities?
+  coda::effectiveSize(coda::as.mcmc(chain))
+}
