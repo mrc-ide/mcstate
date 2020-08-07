@@ -186,3 +186,19 @@ test_that("if proposal has names, they must match parameters", {
     "Expected dimension names of 'proposal' to match parmeters")
   expect_silent(pmcmc_parameters$new(pars, proposal = m(names(pars))))
 })
+
+
+test_that("can summarise parameters", {
+  p <- pmcmc_parameters$new(
+    list(
+      beta = pmcmc_parameter(0.2, min = 0, max = 1,
+                             prior = function(p) log(1e-10)),
+      gamma = pmcmc_parameter(0.1, min = 0, max = 1,
+                              prior = function(p) log(1e-10))),
+    proposal = diag(2))
+
+  expect_equal(p$names(), c("beta", "gamma"))
+  expect_equal(
+    p$summary(),
+    data_frame(name = c("beta", "gamma"), min = 0, max = 1, discrete = FALSE))
+})

@@ -161,9 +161,12 @@ pmcmc_parameters <- R6::R6Class(
       private$proposal <- rmvnorm_generator(proposal)
       private$transform <- transform
 
-      private$discrete <- vlapply(private$parameters, "[[", "discrete")
-      private$min <- vnapply(private$parameters, "[[", "min")
-      private$max <- vnapply(private$parameters, "[[", "max")
+      private$discrete <- vlapply(private$parameters, "[[", "discrete",
+                                  USE.NAMES = FALSE)
+      private$min <- vnapply(private$parameters, "[[", "min",
+                             USE.NAMES = FALSE)
+      private$max <- vnapply(private$parameters, "[[", "max",
+                             USE.NAMES = FALSE)
     },
 
     ##' @description Return the initial parameter values as a named numeric
