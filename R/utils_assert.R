@@ -7,7 +7,7 @@ assert_is <- function(x, what, name = deparse(substitute(x))) {
 }
 
 
-assert_named <- function (x, unique = FALSE, name = deparse(substitute(x))) {
+assert_named <- function(x, unique = FALSE, name = deparse(substitute(x))) {
   if (is.null(names(x))) {
     stop(sprintf("'%s' must be named", name), call. = FALSE)
   }
