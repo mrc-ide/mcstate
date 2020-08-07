@@ -1,70 +1,29 @@
 context("forecast")
 
-test_that("Sampling and forecasting from a grid search", {
-  skip("redo")
-  range <- data.frame(name = c("beta", "gamma"),
-                      min = c(0.13, 0.05),
-                      max = c(0.25, 0.15),
-                      n = c(6, 9),
-                      target = "pars_model",
-                      stringsAsFactors = FALSE)
+test_that("Sample from an MCMC", {
+  proposal_kernel <- diag(2) * 1e-4
+  row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("beta", "gamma")
+
+  pars <- pmcmc_parameters$new(
+    list(beta = pmcmc_parameter(0.2, min = 0, max = 1,
+                                prior = function(p) log(1e-10)),
+         gamma = pmcmc_parameter(0.1, min = 0, max = 1,
+                                 prior = function(p) log(1e-10))),
+    proposal = proposal_kernel)
 
   dat <- example_sir()
   n_particles <- 100
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index)
-  state <- dat$y0
-  n_sample_pars <- 10
-  forecast_steps <- 0
 
   set.seed(1)
-  grid_res <- grid_search(range, p)
-  forecast_res <- forecast(grid_res,
-                           filter = p,
-                           n_sample_pars = n_sample_pars,
-                           forecast_steps = forecast_steps)
+  results <- pmcmc(pars, p, 30, n_chains = 3)
 
-  # check structure is as expected
-  expect_is(forecast_res, "mcstate_forecast")
-  expect_equal(dim(forecast_res$parameters), c(n_sample_pars, nrow(range)))
-  expect_equal(names(forecast_res$parameters), range$name)
-  # Number of parameter samples as expected
-  expect_length(forecast_res$trajectories, n_sample_pars)
-  for (i in seq_len(n_sample_pars)) {
-    # 3 states, 101 steps
-    expect_equal(dim(forecast_res$trajectories[[i]]), c(3, n_particles, 101))
-  }
 
-  # check that the input data is recovered
-  # averages over all parameter samples and all particles
-  grid <- expand.grid(x = seq_len(n_sample_pars), y = seq_len(n_particles))
 
-  f <- function(i, j, k) {
-    fit <- lm(forecast_res$trajectories[[i]][k, j, ] ~ dat$history[k, 1, ])
-    summary(fit)$adj.r.squared
-  }
 
-  s_r2 <- mapply(f, grid$x, grid$y, 1)
-  expect_gt(mean(s_r2), 0.99)
-
-  # I is much more noisy - and a better test case
-  i_r2 <- mapply(f, grid$x, grid$y, 2)
-  expect_gt(mean(i_r2), 0.95)
-
-  r_r2 <- mapply(f, grid$x, grid$y, 3)
-  expect_gt(mean(r_r2), 0.99)
-
-  # check that forecasting is possible
-  forecast_steps <- 5
-  forecast_res <- forecast(grid_res,
-                           filter = p,
-                           n_sample_pars = n_sample_pars,
-                           forecast_steps = forecast_steps)
-  for (i in seq_len(n_sample_pars)) {
-    # 5 quantities, 101 steps
-    expect_equal(dim(forecast_res$trajectories[[i]]), c(3, n_particles, 106))
-  }
 })
+
 
 test_that("Sampling and forecasting from an MCMC", {
   skip("redo")
