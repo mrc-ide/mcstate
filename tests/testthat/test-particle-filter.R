@@ -535,3 +535,32 @@ test_that("can save history", {
     drop(p$history(10:20)),
     res[, 10:20, ])
 })
+
+
+test_that("can't get state or history until model is run", {
+  dat <- example_sir()
+  n_particles <- 42
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
+  expect_error(
+    p$state(),
+    "Model has not yet been run")
+  expect_error(
+    p$history(),
+    "Model has not yet been run")
+})
+
+
+test_that("can filter state on extraction", {
+  dat <- example_sir()
+  n_particles <- 42
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
+  res <- p$run()
+  expect_is(res, "numeric")
+
+  state <- p$state()
+  expect_equal(p$state(1), state[1, , drop = FALSE])
+  state <- p$state()
+  expect_equal(p$state(2:3), state[2:3, , drop = FALSE])
+})

@@ -57,3 +57,14 @@ test_that("wrap long variable names nicely", {
     x[[4]],
     "    dddddddddddddddddddddddddddddddddddddddd")
 })
+
+
+test_that("can filter trajectories with dropping dimensions", {
+  m <- array(1:20, c(1, 4, 5))
+  expect_equal(
+    sample_trajectory(m, 2),
+    matrix(m[, 2, ], 1, 5))
+  expect_equal(
+    sample_trajectory(m, 2:3),
+    matrix(m[, 2:3, ], 2, 5))
+})
