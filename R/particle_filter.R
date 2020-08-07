@@ -85,7 +85,7 @@ particle_filter <- R6::R6Class(
     ##' at each step that has been run
     unique_particles = NULL,
 
-    ##' @field Number of particles used (readonly)
+    ##' @field n_particles Number of particles used (readonly)
     n_particles = NULL,
 
     ##' Create the particle filter
@@ -301,12 +301,36 @@ particle_filter <- R6::R6Class(
       log_likelihood
     },
 
-    ## TODO: should get an option to take a single trajectory
+    ##' @description Extract the current model state, optionally filtering.
+    ##' If the model has not yet been run, then this method will throw an
+    ##' error. Returns a matrix with the number of rows being the number of
+    ##' model states, and the number of columns being the number of
+    ##' particles.
+    ##'
+    ##' @param index_state Optional vector of states to extract
     state = function(index_state = NULL) {
+      if (is.null(private$last_model)) {
+        stop("Model has not yet been run")
+      }
+      ## TODO: should get an option to take a single trajectory
       private$last_model$state(index_state)
     },
 
+    ##' @description Extract the particle trajectories. Requires that
+    ##' the model was run with \code{save_history = FALSE}, which does
+    ##' incur a performance cost. This method will throw an error if
+    ##' the model has not run, or was run without \code{save_history =
+    ##' TRUE}. Returns a 3d array with dimensions corrsponding to (1)
+    ##' model state, filtered by \code{index$run} if provided, (2)
+    ##' particle (following \code{index_particle} if provided), (3)
+    ##' time point.
+    ##'
+    ##' @param index_particle Optional vector of particle indices to return.
+    ##' If \code{NULL} we return all particles' histories.
     history = function(index_particle = NULL) {
+      if (is.null(private$last_model)) {
+        stop("Model has not yet been run")
+      }
       history_value <- private$last_history_value
       if (is.null(history_value)) {
         stop("Can't get history as model was run with save_history = FALSE")

@@ -50,11 +50,12 @@ p <- particle_filter$new(data, gen, 100, compare)
 p$run(save_history = TRUE)
 
 # Our simulated trajectories, with the "real" data superimposed
-matplot(data_raw$day, t(p$history[1, , -1]), type = "l",
+history <- p$history()
+matplot(data_raw$day, t(history[1, , -1]), type = "l",
          xlab = "Time", ylab = "State",
-         col = "#ff000022", lty = 1, ylim = range(p$history))
-matlines(data_raw$day, t(p$history[2, , -1]), col = "#ffff0022", lty = 1)
-matlines(data_raw$day, t(p$history[3, , -1]), col = "#0000ff22", lty = 1)
+         col = "#ff000022", lty = 1, ylim = range(history))
+matlines(data_raw$day, t(history[2, , -1]), col = "#ffff0022", lty = 1)
+matlines(data_raw$day, t(history[3, , -1]), col = "#0000ff22", lty = 1)
 matpoints(data_raw$day, t(history[1:3, , -1]), pch = 19,
           col = c("red", "yellow", "blue"))
 }
@@ -64,13 +65,10 @@ matpoints(data_raw$day, t(history[1:3, , -1]), pch = 19,
 \item{\code{model}}{The dust model generator being simulated (cannot be
 re-bound)}
 
-\item{\code{state}}{The final state of the last run of the particle filter}
-
-\item{\code{history}}{The history of the last run of the particle filter
-(if enabled with \code{save_history = TRUE}, otherwise NULL}
-
 \item{\code{unique_particles}}{The number of unique particles sampled
-at each step that has been run
+at each step that has been run}
+
+\item{\code{n_particles}}{Number of particles used (readonly)
 Create the particle filter}
 }
 \if{html}{\out{</div>}}
@@ -80,6 +78,8 @@ Create the particle filter}
 \itemize{
 \item \href{#method-new}{\code{particle_filter$new()}}
 \item \href{#method-run}{\code{particle_filter$run()}}
+\item \href{#method-state}{\code{particle_filter$state()}}
+\item \href{#method-history}{\code{particle_filter$history()}}
 \item \href{#method-predict}{\code{particle_filter$predict()}}
 }
 }
@@ -191,15 +191,61 @@ are silently ignored by dust models.}
 
 \item{\code{save_history}}{Logical, indicating if the history of all
 particles should be saved. If saving history, then it can be
-queried later with the \code{$history} element on the object.}
+queried later with the \code{$history} method on the object.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
 A single numeric value representing the log-likelihood
 (\code{-Inf} if the model is impossible)
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-state"></a>}}
+\if{latex}{\out{\hypertarget{method-state}{}}}
+\subsection{Method \code{state()}}{
+Extract the current model state, optionally filtering.
+If the model has not yet been run, then this method will throw an
+error. Returns a matrix with the number of rows being the number of
+model states, and the number of columns being the number of
+particles.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter$state(index_state = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{index_state}}{Optional vector of states to extract}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-history"></a>}}
+\if{latex}{\out{\hypertarget{method-history}{}}}
+\subsection{Method \code{history()}}{
+Extract the particle trajectories. Requires that
+the model was run with \code{save_history = FALSE}, which does
+incur a performance cost. This method will throw an error if
+the model has not run, or was run without \code{save_history =
+TRUE}. Returns a 3d array with dimensions corrsponding to (1)
+model state, filtered by \code{index$run} if provided, (2)
+particle (following \code{index_particle} if provided), (3)
+time point.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter$history(index_particle = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{index_particle}}{Optional vector of particle indices to return.
+If \code{NULL} we return all particles' histories.
 Create predicted trajectories, based on the final point of a
-run with the particle filter
+run with the particle filter}
+}
+\if{html}{\out{</div>}}
 }
 }
 \if{html}{\out{<hr>}}

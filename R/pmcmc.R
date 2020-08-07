@@ -41,7 +41,7 @@
 ##'   be selected for each.
 ##'
 ##' @return A \code{mcstate_pmcmc} object containing \code{pars}
-##'   (sampled parameters} and \code{probabilities} (log prior, log
+##'   (sampled parameters) and \code{probabilities} (log prior, log
 ##'   likelihood and log posterior values for these
 ##'   probabilities). Two additional fields may be present:
 ##'   \code{state} (if \code{return_state} was \code{TRUE}),
