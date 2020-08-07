@@ -38,7 +38,6 @@ test_that("initial value must satify prior", {
 })
 
 
-## TODO: Break this up a bit
 test_that("parameters", {
   proposal_kernel <- diag(2) * 1e-4
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("beta", "gamma")
