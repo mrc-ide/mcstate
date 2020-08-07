@@ -132,12 +132,7 @@ pmcmc <- function(pars, filter, n_steps, save_state = FALSE,
     trajectories <- list_to_array(history_trajectories$get())
   }
 
-  out <- list(pars = pars,
-              probabilities = probabilities,
-              state = state,
-              trajectories = trajectories)
-  class(out) <- "mcstate_pmcmc"
-  out
+  mcstate_pmcmc(pars, probabilities, state, trajectories)
 }
 
 
@@ -149,31 +144,6 @@ sample_trajectory <- function(history, index) {
     dim(ret) <- dim(history)[c(1, 3)]
   }
   ret
-}
-
-
-## Calculates the gelman diagnostic for multiple chains, if possible
-gelman_diagnostic <- function(chains, pars) {
-  chains_coda <- lapply(chains, function(x)
-    coda::as.mcmc(x$results[pars$names()]))
-  tryCatch(
-    coda::gelman.diag(chains_coda),
-    error = function(e) {
-      message("Could not calculate rhat: ", e$message)
-      NULL
-    })
-}
-
-
-acceptance_rate <- function(chain) {
-  ## TODO: this is actually pretty awful internally
-  1 - coda::rejectionRate(coda::as.mcmc(chain))
-}
-
-
-effective_size <- function(chain) {
-  ## TODO: do we ever want the ess of the probabilities?
-  coda::effectiveSize(coda::as.mcmc(chain))
 }
 
 

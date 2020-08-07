@@ -1,3 +1,5 @@
+##' Create forecasts based on a
+##'
 ##' Take a grid search produced by \code{\link{grid_search}} and
 ##' sample \code{n_sample_pars} from the parameter grid uses based
 ##' on their probability. For each parameter pair chosen, run particle
@@ -30,31 +32,18 @@
 ##'
 ##' @export
 ##' @importFrom utils tail
-forecast <- function(x, ...,
-                     filter,
-                     n_sample_pars = 10,
-                     forecast_steps = 0,
-                     burn_in = 0) {
+forecast <- function(x, filter, n_sample_pars = 10, forecast_steps = 0,
+                     burn_in = 1) {
+  browser()
   assert_integer(n_sample_pars)
   assert_integer(forecast_steps)
-  UseMethod("forecast", x)
-}
-
-##' Forecast for MCMC
-##' @rdname forecast
-##' @method forecast mcstate_pmcmc_list
-forecast.mcstate_pmcmc_list <- function(x, ...,
-                                        filter,
-                                        n_sample_pars = 10,
-                                        forecast_steps = 0,
-                                        burn_in = 1) {
 
   # discard burn-in and sample
   par_names <- colnames(x$chains[[1]]$results)
   par_names <- par_names[!(par_names %in% c("log_prior",
                                             "log_likelihood",
                                             "log_posterior"))]
-  chains <- create_master_chain(x, burn_in)
+  chains <- combine_mcmc_chains(x, burn_in)
   param_grid <- chains[sample.int(n = nrow(chains),
                                   size = n_sample_pars,
                                   replace = FALSE), par_names]
@@ -71,8 +60,8 @@ forecast.mcstate_pmcmc_list <- function(x, ...,
 
 }
 
-run_and_forecast <- function(model_params, filter, index, forecast_steps) {
-  filter$run2(model_params, index, save_history = TRUE)
+run_and_forecast <- function(pars, filter, forecast_steps) {
+  filter$run(pars, save_history = TRUE)
   if (forecast_steps > 0) {
     forward_steps <- seq.int(0, forecast_steps)
     trajectories <- filter$predict(forward_steps, append = TRUE)
