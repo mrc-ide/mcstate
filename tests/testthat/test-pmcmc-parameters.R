@@ -59,7 +59,7 @@ test_that("parameters", {
   p0 <- p$initial()
   p1 <- p$propose(p0)
   set.seed(1)
-  expect_equal(p1, drop(rmvnorm(1, p0, proposal_kernel)))
+  expect_equal(p1, rmvnorm_generator(proposal_kernel)(p0))
 })
 
 

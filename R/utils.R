@@ -44,7 +44,6 @@ data_frame <- function(...) {
 }
 
 
-##' @importFrom mvtnorm rmvnorm
 ##' @importFrom stats rnorm
 rmvnorm_generator <- function(vcv) {
   vcv <- unname(vcv)
