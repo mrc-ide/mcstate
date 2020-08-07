@@ -32,9 +32,6 @@
 ##'
 ##' @param proposal_kernel named matrix of proposal covariance for parameters
 ##'
-##' @param return_proposals Logical indicating whether proposed parameter
-##' jumps should be returned along with results
-##'
 ##' @param n_chains Number of chains to run. If greater than 1, then
 ##'   we return a \code{mcstate_pmcmc_list} object which contains
 ##'   output for each chain, and an estimate of the Gelman's rhat.
@@ -42,23 +39,33 @@
 ##' @param force_multichain Return a multichain object even when
 ##'   \code{n_chains} is 1
 ##'
+##' @param collect_burnin Number of iterations to run before starting
+##'   collection
+##'
+##' @param collect_interval Interval between samples
+##'
 ##' @return Either a \code{mcstate_pmcmc} object or
 ##'   \code{mcstate_pmcmc_list} object, depending on the value of
 ##'   \code{n_chains}.
 ##'
 ##' @export
 ##' @import coda
-pmcmc <- function(pars, filter, n_steps, return_proposals = FALSE,
-                  n_chains = 1, force_multichain = FALSE) {
+pmcmc <- function(pars, filter, n_steps, return_state = FALSE, n_chains = 1,
+                  force_multichain = FALSE) {
   assert_is(pars, "pmcmc_parameters")
   assert_is(filter, "particle_filter")
   assert_scalar_logical(return_proposals)
 
+  reporting <- list(return_proposals = FALSE,
+                    collect = list(
+                      burnin = collect_burnin,
+                      interval = collect_interval))
+
   target <- filter$run
   if (force_multichain || n_chains > 1) {
-    mcmc_multichain(pars, target, n_steps, n_chains, return_proposals)
+    mcmc_multichain(pars, target, n_steps, n_chains, reporting)
   } else {
-    mcmc(pars, target, n_steps, return_proposals)
+    mcmc(pars, target, n_steps, reporting)
   }
 }
 
@@ -89,56 +96,88 @@ pmcmc_combine_chains <- function(x, burn_in) {
 }
 
 
-mcmc <- function(pars, target, n_steps, return_proposals) {
+sample_trajectories <- function(history, index) {
+  d <- dim(history)
+  history <- history[, index, , drop = TRUE]
+  dim(history) <- d[c(1, 3)]
+  history
+}
+
+
+mcmc <- function(pars, filter, n_steps, save_state, save_trajectories) {
+  history_pars <- history_collector(n_steps)
+  history_probabilities <- history_collector(n_steps)
+  history_state <- history_collector(n_steps)
+  history_trajectories <- history_collector(n_steps)
+
   curr_pars <- pars$initial()
   curr_lprior <- pars$prior(curr_pars)
-  curr_llik <- target(pars$model(curr_pars))
+  curr_llik <- filter$run(pars$model(curr_pars), save_trajectories)
   curr_lpost <- curr_lprior + curr_llik
 
-  history <- pmcmc_history(n_steps, curr_pars, curr_lprior, curr_llik,
-                           curr_lpost)
+  history_pars$add(1L, curr_pars)
+  history_probabilities$add(1L, c(curr_lprior, curr_llik, curr_lpost))
 
-  if (return_proposals) {
-    proposals <- pmcmc_history(n_steps, curr_pars, curr_lprior, curr_llik,
-                               curr_lpost)
+  n_particles <- filter$n_particles
+
+  particle_idx <- sample.int(n_particles, 1)
+  if (save_trajectories) {
+    curr_trajectories <- sample_trajectories(filter$history(particle_idx))
+    history_trajectories$add(1L, curr_trajectories)
+  }
+
+  if (save_state) {
+    curr_state <- filter$state()[, particle_idx, drop = TRUE]
+    history_state$add(1L, curr_state)
   }
 
   for (i in seq_len(n_steps)) {
     prop_pars <- pars$propose(curr_pars)
     prop_lprior <- pars$prior(prop_pars)
-    prop_llik <- target(pars$model(prop_pars))
+    prop_llik <- filter$run(pars$model(prop_pars), save_trajectories)
     prop_lpost <- prop_lprior + prop_llik
-
-    exp(prop_lpost)
-    exp(curr_lpost)
 
     if (runif(1) < exp(prop_lpost - curr_lpost)) {
       curr_pars <- prop_pars
       curr_lprior <- prop_lprior
       curr_llik <- prop_llik
       curr_lpost <- prop_lpost
+
+      particle_idx <- sample.int(n_particles, 1)
+      if (save_trajectories) {
+        curr_trajectories <- sample_trajectories(filter$history(particle_idx))
+      }
+      if (save_state) {
+        curr_state <- filter$state()[, particle_idx, drop = TRUE]
+      }
     }
 
-    history$add(curr_pars, curr_lprior, curr_llik, curr_lpost)
-    if (return_proposals) {
-      proposals$add(prop_pars, prop_lprior, prop_llik, prop_lpost)
+    idx <- i + 1L
+    history_pars$add(idx, curr_pars)
+    history_probabilities$add(idx, c(curr_lprior, curr_llik, curr_lpost))
+    if (save_trajectories) {
+      history_trajectories$add(idx, curr_trajectories)
+    }
+    if (save_state) {
+      history_state$add(idx, curr_state)
     }
   }
 
-  ## TODO: this is all up for grabs. Things that feel worthwhile:
-  ## * do we return coda objects?
-  ## * what parameter metadata do we save here (names, ranges, etc)
-  ## * do we split the probabilities from the parameter estimates?
-  results <- history$as_data_frame()
-  out <- list(results = results,
-              pars = pars$names(),
-              acceptance_rate = acceptance_rate(results),
-              ess = effective_size(results))
+  pars <- set_colnames(list_to_matrix(history_pars$get()),
+                       names(curr_pars))
+  probabilities <- set_colnames(list_to_matrix(history_probabilities$get()),
+                       c("log_prior", "log_likelihood", "log_posterior"))
 
-  if (return_proposals) {
-    out$proposals <- proposals$as_data_frame()
+  state <- trajectories <- NULL
+  if (save_state) {
+    state <- t(list_to_matrix(history_state$get()))
+  }
+  if (save_trajectories) {
+    trajectories <- list_to_array(history_trajectories$get())
   }
 
+  out <- list(pars = pars, probabilities = probabilities, state = state,
+              trajectories = trajectories)
   class(out) <- "mcstate_pmcmc"
   out
 }
@@ -212,4 +251,27 @@ acceptance_rate <- function(chain) {
 effective_size <- function(chain) {
   ## TODO: do we ever want the ess of the probabilities?
   coda::effectiveSize(coda::as.mcmc(chain))
+}
+
+
+## Generic history collector, collects anything at all into a list
+history_collector <- function(n, burn_in = 0L, interval = 1L) {
+  data <- vector("list", n + 1L)
+  add <- function(i, value) {
+    if (i > burn_in && i %% interval == 0) {
+      data[[i]] <<- value
+    }
+  }
+
+  get <- function() {
+    data
+  }
+
+  list(add = add, get = get)
+}
+
+
+pmcmc_history <- function(n, reporting) {
+  list(chain = history_collector(n_steps),
+       state = history_collector(n_steps, reporting))
 }

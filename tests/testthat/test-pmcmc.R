@@ -1,50 +1,86 @@
 context("pmcmc")
 
+
+test_that("run pmcmc with the particle filter and retain history", {
+  proposal_kernel <- diag(2) * 1e-4
+  row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("beta", "gamma")
+
+  pars <- pmcmc_parameters$new(
+    list(beta = pmcmc_parameter(0.2, min = 0, max = 1,
+                                prior = function(p) log(1e-10)),
+         gamma = pmcmc_parameter(0.1, min = 0, max = 1,
+                                 prior = function(p) log(1e-10))),
+    proposal = proposal_kernel)
+
+  dat <- example_sir()
+  n_particles <- 100
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index)
+  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index)
+
+  set.seed(1)
+  results1 <- mcmc(pars, p1, 30, TRUE, TRUE)
+  set.seed(1)
+  results2 <- mcmc(pars, p2, 30, FALSE, FALSE)
+
+  expect_setequal(
+    names(results1),
+    c("pars", "probabilities", "state", "trajectories"))
+
+  ## Including or not the history does not change the mcmc trajectory:
+  expect_identical(names(results1), names(results2))
+  expect_equal(results1$pars, results2$pars)
+  expect_equal(results1$probabilities, results2$probabilities)
+
+  ## We did mix
+  expect_true(all(acceptance_rate(results1$pars) > 0))
+
+  ## Parameters and probabilities have the expected shape
+  expect_equal(dim(results1$pars), c(2, 31))
+  expect_equal(colnames(results1$pars), c("beta", "gamma"))
+
+  expect_equal(dim(results1$probabilities), c(3, 31))
+  expect_equal(colnames(results1$probabilities),
+               c("log_prior", "log_likelihood", "log_posterior"))
+
+  ## History, if returned, has the correct shape
+  expect_equal(dim(results1$state), c(4, 31)) # state, mcmc
+  expect_equal(dim(results1$trajectories), c(3, 101, 31)) # state, time, mcmc
+  expect_equal(
+    results1$trajectories[, ncol(results1$trajectories), ],
+    results1$state[1:3, ])
+})
+
+
 ## TODO: Ed and Lilith we could use better tests throughout here. The
 ## sampler should be ok to run for ~10k iterations without taking too
 ## long to be annoying in tests.
 test_that("mcmc works for uniform distribution on unit square", {
-  ## Uniform distribution:
-  target <- function(p) 1
-
-  proposal_kernel <- diag(2) * 0.1
-  row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("a", "b")
-
-  pars <- pmcmc_parameters$new(
-    list(a = pmcmc_parameter(0.5, min = 0, max = 1),
-         b = pmcmc_parameter(0.5, min = 0, max = 1)),
-    proposal = proposal_kernel)
+  dat <- example_uniform()
 
   set.seed(1)
   testthat::try_again(5, {
-    res <- mcmc(pars, target, 1000, FALSE)
-    expect_equal(res$acceptance_rate[["a"]], 1)
-    expect_equal(res$acceptance_rate[["b"]], 1)
-    expect_true(abs(mean(res$results$a) - 0.5) < 0.05)
-    expect_true(abs(mean(res$results$b) - 0.5) < 0.05)
+    res <- mcmc(dat$pars, dat$filter, 1000, FALSE, FALSE)
+    expect_s3_class(res, "mcstate_pmcmc")
+    expect_true(all(acceptance_rate(res$pars) == 1))
+    expect_true(abs(mean(res$pars[, "a"]) - 0.5) < 0.05)
+    expect_true(abs(mean(res$pars[, "b"]) - 0.5) < 0.05)
   })
 })
 
 
 test_that("mcmc works for multivariate gaussian", {
-  target <- function(p) {
-    mvtnorm::dmvnorm(unlist(p), log = TRUE)
-  }
-
-  proposal_kernel <- diag(2)
-  pars <- pmcmc_parameters$new(
-    list(a = pmcmc_parameter(0, min = -100, max = 100),
-         b = pmcmc_parameter(0, min = -100, max = 100)),
-    proposal = proposal_kernel)
+  dat <- example_mvnorm()
 
   set.seed(1)
   testthat::try_again(5, {
-    res <- mcmc(pars, target, 1000, FALSE)
+    res <- mcmc(dat$pars, dat$filter, 1000, FALSE, FALSE)
     i <- seq(1, 1000, by = 20)
     expect_s3_class(res, "mcstate_pmcmc")
-    expect_gt(ks.test(res$results$a[i], "pnorm")$p.value, 0.05)
-    expect_gt(ks.test(res$results$b[i], "pnorm")$p.value, 0.05)
-    expect_lt(abs(cov(res$results$a, res$results$b)), 0.1)
+    expect_gt(ks.test(res$pars[i, "a"], "pnorm")$p.value, 0.05)
+    expect_gt(ks.test(res$pars[i, "b"], "pnorm")$p.value, 0.05)
+    expect_lt(abs(cov(res$pars)[1, 2]), 0.1)
   })
 })
 
@@ -223,29 +259,6 @@ test_that("reflect parameters: upper", {
   expect_equal(reflect_proposal(1.4, -Inf, 1), 0.6)
   expect_equal(reflect_proposal(0.4, -Inf, 0), -0.4)
   expect_equal(reflect_proposal(0.4, -Inf, 1), 0.4)
-})
-
-
-test_that("run pmcmc with the particle filter", {
-  proposal_kernel <- diag(2) * 1e-4
-  row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("beta", "gamma")
-
-  pars <- pmcmc_parameters$new(
-    list(beta = pmcmc_parameter(0.2, min = 0, max = 1,
-                                prior = function(p) log(1e-10)),
-         gamma = pmcmc_parameter(0.1, min = 0, max = 1,
-                                 prior = function(p) log(1e-10))),
-    proposal = proposal_kernel)
-
-  dat <- example_sir()
-  n_particles <- 100
-  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                           index = dat$index)
-
-  ## A single chain
-  set.seed(1)
-  results <- pmcmc(pars, p, 30)
-  expect_true(all(results$acceptance_rate[1:2] > 0))
 })
 
 

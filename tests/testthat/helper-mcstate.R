@@ -47,10 +47,13 @@ example_sir <- function() {
 
 
 example_uniform <- function() {
-  target <- target <- function(p) {
+  target <- function(p, ...) {
     1
   }
-  filter <- structure(list(run = target),
+  filter <- structure(list(run = target,
+                           n_particles = 10,
+                           state = function() matrix(1, 2, 10),
+                           trajectories = function(i) matrix(1, 2, 10)),
                       class = "particle_filter")
 
   proposal_kernel <- diag(2) * 0.1
@@ -66,11 +69,14 @@ example_uniform <- function() {
 
 
 example_mvnorm <- function() {
-  target <- function(p) {
+  target <- function(p, ...) {
     mvtnorm::dmvnorm(unlist(p), log = TRUE)
   }
 
-  filter <- structure(list(run = target),
+  filter <- structure(list(run = target,
+                           n_particles = 10,
+                           state = function() matrix(1, 2, 10),
+                           trajectories = function(i) matrix(1, 2, 10)),
                       class = "particle_filter")
 
   proposal_kernel <- diag(2)
