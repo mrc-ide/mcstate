@@ -5,6 +5,7 @@
 ##'   interface will be implemented later.
 ##'
 ##' @export
+##' @importFrom R6 R6Class
 ##' @examples
 ##' # A basic SIR model included in the package:
 ##' path <- system.file("example/sir/dust_sir.cpp", package = "mcstate")
