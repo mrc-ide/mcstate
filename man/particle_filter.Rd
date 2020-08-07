@@ -68,8 +68,7 @@ re-bound)}
 \item{\code{unique_particles}}{The number of unique particles sampled
 at each step that has been run}
 
-\item{\code{n_particles}}{Number of particles used (readonly)
-Create the particle filter}
+\item{\code{n_particles}}{Number of particles used (readonly)}
 }
 \if{html}{\out{</div>}}
 }
@@ -87,6 +86,7 @@ Create the particle filter}
 \if{html}{\out{<a id="method-new"></a>}}
 \if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
+Create the particle filter
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{particle_filter$new(
   data,

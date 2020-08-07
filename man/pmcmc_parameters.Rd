@@ -34,8 +34,6 @@ pars$prior(p)
 
 # Transform data for your model
 pars$model(p)
-Create the pmcmc_parameters object
-
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -54,6 +52,7 @@ Create the pmcmc_parameters object
 \if{html}{\out{<a id="method-new"></a>}}
 \if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
+Create the pmcmc_parameters object
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters$new(parameters, proposal, transform = NULL)}\if{html}{\out{</div>}}
 }

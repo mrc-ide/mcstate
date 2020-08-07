@@ -89,7 +89,7 @@ particle_filter <- R6::R6Class(
     ##' @field n_particles Number of particles used (readonly)
     n_particles = NULL,
 
-    ##' Create the particle filter
+    ##' @description Create the particle filter
     ##'
     ##' @param data The data set to be used for the particle filter.
     ##' Must be a \code{\link{data.frame}} with at least columns

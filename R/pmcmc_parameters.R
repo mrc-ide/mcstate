@@ -105,7 +105,7 @@ pmcmc_parameters <- R6::R6Class(
   ),
 
   public = list(
-    ##' Create the pmcmc_parameters object
+    ##' @description Create the pmcmc_parameters object
     ##'
     ##' @param parameters A named \code{list} of
     ##' \code{\link{pmcmc_parameter}} objects, each of which describe a
