@@ -70,7 +70,7 @@ re-bound)}
 \item{\code{unique_particles}}{The number of unique particles sampled
 at each step that has been run}
 
-\item{\code{n_particles}}{Number of particles used (readonly)}
+\item{\code{n_particles}}{Number of particles used (read only)}
 }
 \if{html}{\out{</div>}}
 }
@@ -231,7 +231,7 @@ Extract the particle trajectories. Requires that
 the model was run with \code{save_history = TRUE}, which does
 incur a performance cost. This method will throw an error if
 the model has not run, or was run without \code{save_history =
-TRUE}. Returns a 3d array with dimensions corrsponding to (1)
+TRUE}. Returns a 3d array with dimensions corresponding to (1)
 model state, filtered by \code{index$run} if provided, (2)
 particle (following \code{index_particle} if provided), (3)
 time point.

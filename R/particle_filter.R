@@ -88,7 +88,7 @@ particle_filter <- R6::R6Class(
     ##' at each step that has been run
     unique_particles = NULL,
 
-    ##' @field n_particles Number of particles used (readonly)
+    ##' @field n_particles Number of particles used (read only)
     n_particles = NULL,
 
     ##' @description Create the particle filter
@@ -323,7 +323,7 @@ particle_filter <- R6::R6Class(
     ##' the model was run with \code{save_history = TRUE}, which does
     ##' incur a performance cost. This method will throw an error if
     ##' the model has not run, or was run without \code{save_history =
-    ##' TRUE}. Returns a 3d array with dimensions corrsponding to (1)
+    ##' TRUE}. Returns a 3d array with dimensions corresponding to (1)
     ##' model state, filtered by \code{index$run} if provided, (2)
     ##' particle (following \code{index_particle} if provided), (3)
     ##' time point.

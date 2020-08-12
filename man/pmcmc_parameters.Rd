@@ -45,7 +45,6 @@ pars$model(p)
 \item \href{#method-prior}{\code{pmcmc_parameters$prior()}}
 \item \href{#method-propose}{\code{pmcmc_parameters$propose()}}
 \item \href{#method-model}{\code{pmcmc_parameters$model()}}
-\item \href{#method-clone}{\code{pmcmc_parameters$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -73,7 +72,7 @@ named the names must correspond exactly to the names in
 matrix it must be symmetric and positive definite.}
 
 \item{\code{transform}}{An optional transformation function to apply
-to your parameter vector immiediately before passing it to the
+to your parameter vector immediately before passing it to the
 model function. If not given, then \code{\link{as.list}} is
 used, as dust models require this. However, if t you need to
 generate derived parameters from those being actively sampled
@@ -168,23 +167,6 @@ Apply the model transformation function to a parameter vector.}
 \describe{
 \item{\code{theta}}{a parameter vector in the same order as your
 parameters were defined in (see \code{$names()} for that order.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters$clone(deep = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
 }
 \if{html}{\out{</div>}}
 }

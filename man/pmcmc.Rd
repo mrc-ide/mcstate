@@ -18,7 +18,7 @@ translation functions for use with the particle filter).}
 \item{save_state}{Logical, indicating if the state should be saved
 at the end of the simulation. If \code{TRUE}, then a single
 randomly selected particle's state will be collected at the end
-of each mcmc step. This is the full state (i.e., unaffected by
+of each MCMC step. This is the full state (i.e., unaffected by
 and \code{index} used in the particle filter) so that the
 process may be restarted from this point for projections.  If
 \code{save_trajectories} is \code{TRUE} the same particle will
@@ -27,7 +27,7 @@ be selected for each.}
 \item{save_trajectories}{Logical, indicating if the particle
 trajectories should be saved during the simulation. If
 \code{TRUE}, then a single randomly selected particle's
-trajectory will be collected at the end of each mcmc step.  This
+trajectory will be collected at the end of each MCMC step.  This
 is the filtered state (i.e., using the \code{state} component of
 \code{index} provided to the particle filter).  If
 \code{save_state} is \code{TRUE} the same particle will

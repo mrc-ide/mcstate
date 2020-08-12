@@ -55,6 +55,3 @@ mcstate::particle_filter_data(d, "day", 4)
 # will be longer (see the first row)
 mcstate::particle_filter_data(d, "day", 4, 0)
 }
-\author{
-Rich Fitzjohn
-}

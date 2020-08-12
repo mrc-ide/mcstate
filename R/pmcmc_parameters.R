@@ -8,11 +8,11 @@
 ##' @param initial Initial value for the parameter
 ##'
 ##' @param min Optional minimum value for the parameter (otherwise
-##'   -Inf). If given, then \code{initial} must be at least this
+##'   \code{-Inf}). If given, then \code{initial} must be at least this
 ##'   value.
 ##'
 ##' @param max Optional max value for the parameter (otherwise
-##'   Inf). If given, then \code{initial} must be at most this
+##'   \code{Inf}). If given, then \code{initial} must be at most this
 ##'   value.
 ##'
 ##' @param discrete Logical, indicating if this parameter is
@@ -121,7 +121,7 @@ pmcmc_parameters <- R6::R6Class(
     ##' matrix it must be symmetric and positive definite.
     ##'
     ##' @param transform An optional transformation function to apply
-    ##' to your parameter vector immiediately before passing it to the
+    ##' to your parameter vector immediately before passing it to the
     ##' model function. If not given, then \code{\link{as.list}} is
     ##' used, as dust models require this. However, if t you need to
     ##' generate derived parameters from those being actively sampled

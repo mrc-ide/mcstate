@@ -10,11 +10,11 @@ pmcmc_parameter(initial, min = -Inf, max = Inf, discrete = FALSE, prior = NULL)
 \item{initial}{Initial value for the parameter}
 
 \item{min}{Optional minimum value for the parameter (otherwise
--Inf). If given, then \code{initial} must be at least this
+\code{-Inf}). If given, then \code{initial} must be at least this
 value.}
 
 \item{max}{Optional max value for the parameter (otherwise
-Inf). If given, then \code{initial} must be at most this
+\code{Inf}). If given, then \code{initial} must be at most this
 value.}
 
 \item{discrete}{Logical, indicating if this parameter is

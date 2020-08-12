@@ -31,9 +31,6 @@
 ##'   must be at most equal to the first value of the \code{time}
 ##'   column, minus 1 (i.e., \code{data[[time]] - 1}).
 ##'
-##' @export
-##' @author Rich Fitzjohn
-##'
 ##' @return A data.frame with new columns \code{step_start} and
 ##'   \code{step_end} (required by \code{\link{particle_filter}}),
 ##'   along side all previous data except for the time variable, which
