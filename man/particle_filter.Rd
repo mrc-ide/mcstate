@@ -228,7 +228,7 @@ particles.
 \if{latex}{\out{\hypertarget{method-history}{}}}
 \subsection{Method \code{history()}}{
 Extract the particle trajectories. Requires that
-the model was run with \code{save_history = FALSE}, which does
+the model was run with \code{save_history = TRUE}, which does
 incur a performance cost. This method will throw an error if
 the model has not run, or was run without \code{save_history =
 TRUE}. Returns a 3d array with dimensions corrsponding to (1)

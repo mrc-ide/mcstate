@@ -19,11 +19,11 @@ value.}
 
 \item{discrete}{Logical, indicating if this parameter is
 discrete. If \code{TRUE} then the parameter will be rounded
-after a new paramater is proposed.}
+after a new parameter is proposed.}
 
 \item{prior}{A prior function (if not given an improper flat prior
 is used - be careful!). It must be a function that takes a
-single argument, being the value of this parmater. If given,
+single argument, being the value of this parameter. If given,
 then \code{prior(initial)} must evaluate to a finite value.}
 }
 \description{
