@@ -4,53 +4,61 @@
 \alias{pmcmc}
 \title{Run a pmcmc sampler}
 \usage{
-pmcmc(
-  mcmc_range,
-  lprior_funcs,
-  filter,
-  n_mcmc,
-  proposal_kernel,
-  output_proposals = FALSE,
-  n_chains = 1
-)
+pmcmc(pars, filter, n_steps, save_state = FALSE, save_trajectories = FALSE)
 }
 \arguments{
-\item{mcmc_range}{\code{data.frame} detailing parameters to sample.
-Must contain columns 'name' (parameter names), 'init' (initial values),
-'min' (minimum values), 'max' (maximum values),
-'discrete (boolean indicating whether a discrete quantity)' and
-'target'}
+\item{pars}{A \code{\link{pmcmc_parameters}} object containing
+information about parameters (ranges, priors, proposal kernel,
+translation functions for use with the particle filter).}
 
-\item{lprior_funcs}{functions to calculate log prior for each parameter.
-A named list for each parameter listed in \code{pars_to_sample}.
-Each value must be a function which takes named parameter vector as
-  input, returns a single numeric which is log of the prior probability.}
+\item{filter}{A \code{\link{particle_filter}} object}
 
-\item{filter}{A particle filter to sample}
+\item{n_steps}{Number of MCMC steps to run}
 
-\item{n_mcmc}{Number of MCMC steps}
+\item{save_state}{Logical, indicating if the state should be saved
+at the end of the simulation. If \code{TRUE}, then a single
+randomly selected particle's state will be collected at the end
+of each MCMC step. This is the full state (i.e., unaffected by
+and \code{index} used in the particle filter) so that the
+process may be restarted from this point for projections.  If
+\code{save_trajectories} is \code{TRUE} the same particle will
+be selected for each.}
 
-\item{proposal_kernel}{named matrix of proposal covariance for parameters}
-
-\item{output_proposals}{Logical indicating whether proposed parameter
-jumps should be output along with results}
-
-\item{n_chains}{Number of chains to run}
+\item{save_trajectories}{Logical, indicating if the particle
+trajectories should be saved during the simulation. If
+\code{TRUE}, then a single randomly selected particle's
+trajectory will be collected at the end of each MCMC step.  This
+is the filtered state (i.e., using the \code{state} component of
+\code{index} provided to the particle filter).  If
+\code{save_state} is \code{TRUE} the same particle will
+be selected for each.}
 }
 \value{
-an mcmc object containing
-- List of inputs
-- Matrix of accepted parameter samples, rows = iterations
-  as well as log prior, (particle filter estimate of) log likelihood
-  and log posterior
+A \code{mcstate_pmcmc} object containing \code{pars}
+  (sampled parameters) and \code{probabilities} (log prior, log
+  likelihood and log posterior values for these
+  probabilities). Two additional fields may be present:
+  \code{state} (if \code{return_state} was \code{TRUE}),
+  containing the final state of a randomly selected particle at
+  the end of the simulation, for each step (will be a matrix with
+  as many rows as your state has variables, and as \code{n_steps +
+  1} columns corresponding to each step). \code{trajectories} will
+  include a 3d array of particle trajectories through the
+  simulation (if \code{return_trajectories} was \code{TRUE}).
 }
 \description{
-This is a basic Metropolis-Hastings MCMC sampler.
-The \code{filter} is run with a set of parameters to evaluate the
-likeihood. A new set of parameters is proposed, and these likelihoods are
-compared, jumping with probability equal to their ratio. This is repeated
-for \code{n_mcmc} proposals, \code{n_chains} independent times.
+Run a pmcmc sampler
 }
 \details{
-Run a pmcmc sampler
+This is a basic Metropolis-Hastings MCMC sampler.  The
+\code{filter} is run with a set of parameters to evaluate the
+likelihood. A new set of parameters is proposed, and these
+likelihoods are compared, jumping with probability equal to their
+ratio. This is repeated for \code{n_mcmc} proposals.
+
+While this function is called \code{pmcmc} and requires a particle
+filter object, there's nothing special about it for particle
+filtering. However, we may need to add things in the future that
+make assumptions about the particle filter, so we have named it
+with a "p".
 }

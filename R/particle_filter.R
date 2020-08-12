@@ -5,6 +5,7 @@
 ##'   interface will be implemented later.
 ##'
 ##' @export
+##' @importFrom R6 R6Class
 ##' @examples
 ##' # A basic SIR model included in the package:
 ##' path <- system.file("example/sir/dust_sir.cpp", package = "mcstate")
@@ -15,15 +16,15 @@
 ##' dt <- 1/4
 ##' day <- seq(1, 100)
 ##' incidence <- rep(NA, length(day))
-##' history <- array(NA_real_, c(4, 1, 101))
-##' history[, 1, 1] <- sir$state()
+##' true_history <- array(NA_real_, c(4, 1, 101))
+##' true_history[, 1, 1] <- sir$state()
 ##' for (i in day) {
-##'    state_start <- sir$state()
-##'    sir$run(i / dt)
-##'    state_end <- sir$state()
-##'    history[, 1, i + 1] <- state_end
-##'    # Reduction in S
-##'    incidence[i] <- state_start[1, 1] - state_end[1, 1]
+##'   state_start <- sir$state()
+##'   sir$run(i / dt)
+##'   state_end <- sir$state()
+##'   true_history[, 1, i + 1] <- state_end
+##'   # Reduction in S
+##'   incidence[i] <- state_start[1, 1] - state_end[1, 1]
 ##' }
 ##'
 ##' # Convert this into our required format:
@@ -32,14 +33,16 @@
 ##'
 ##' # A comparison function
 ##' compare <- function(state, prev_state, observed, pars = NULL) {
-##'   if (is.null(pars)) {
-##'     pars <- list(exp_noise = 1e6)
+##'   if (is.null(pars$exp_noise)) {
+##'     exp_noise <- 1e6
+##'   } else {
+##'     exp_noise <- pars$exp_noise
 ##'   }
 ##'   incidence_modelled <- prev_state[1,] - state[1,]
 ##'   incidence_observed <- observed$incidence
 ##'   lambda <- incidence_modelled +
-##'     rexp(n = length(incidence_modelled), rate = pars$exp_noise)
-##'   dpois(x = incidence_observed, lambda = lambda, log = TRUE)
+##'     rexp(length(incidence_modelled), exp_noise)
+##'   dpois(incidence_observed, lambda, log = TRUE)
 ##' }
 ##'
 ##' # Construct the particle_filter object with 100 particles
@@ -47,12 +50,13 @@
 ##' p$run(save_history = TRUE)
 ##'
 ##' # Our simulated trajectories, with the "real" data superimposed
-##' matplot(data_raw$day, t(p$history[1, , -1]), type = "l",
-##'          xlab = "Time", ylab = "State",
-##'          col = "#ff000022", lty = 1, ylim = range(p$history))
-##' matlines(data_raw$day, t(p$history[2, , -1]), col = "#ffff0022", lty = 1)
-##' matlines(data_raw$day, t(p$history[3, , -1]), col = "#0000ff22", lty = 1)
-##' matpoints(data_raw$day, t(history[1:3, , -1]), pch = 19,
+##' history <- p$history()
+##' matplot(data_raw$day, t(history[1, , -1]), type = "l",
+##'         xlab = "Time", ylab = "State",
+##'         col = "#ff000022", lty = 1, ylim = range(history))
+##' matlines(data_raw$day, t(history[2, , -1]), col = "#ffff0022", lty = 1)
+##' matlines(data_raw$day, t(history[3, , -1]), col = "#0000ff22", lty = 1)
+##' matpoints(data_raw$day, t(true_history[1:3, , -1]), pch = 19,
 ##'           col = c("red", "yellow", "blue"))
 particle_filter <- R6::R6Class(
   "particle_filter",
@@ -66,11 +70,12 @@ particle_filter <- R6::R6Class(
     n_steps = NULL,
     compare = NULL,
     ## Control for dust
-    n_particles = NULL,
-    n_threads = NULL,
     seed = NULL,
+    n_threads = NULL,
     ## Updated when the model is run
     last_model = NULL,
+    last_history_value = NULL,
+    last_history_order = NULL,
     index_state = NULL
   ),
 
@@ -79,18 +84,14 @@ particle_filter <- R6::R6Class(
     ##' re-bound)
     model = NULL,
 
-    ##' @field state The final state of the last run of the particle filter
-    state = NULL,
-
-    ##' @field history The history of the last run of the particle filter
-    ##' (if enabled with \code{save_history = TRUE}, otherwise NULL
-    history = NULL,
-
     ##' @field unique_particles The number of unique particles sampled
     ##' at each step that has been run
     unique_particles = NULL,
 
-    ##' Create the particle filter
+    ##' @field n_particles Number of particles used (read only)
+    n_particles = NULL,
+
+    ##' @description Create the particle filter
     ##'
     ##' @param data The data set to be used for the particle filter.
     ##' Must be a \code{\link{data.frame}} with at least columns
@@ -112,7 +113,7 @@ particle_filter <- R6::R6Class(
     ##' is a \code{list} of observed data corresponding to the current
     ##' time's row in the \code{data} object provided here in the
     ##' constructor.  \code{pars} is any additional parameters passed
-    ##' through to the comparison function (via the \code{pars_compare}
+    ##' through to the comparison function (via the \code{pars}
     ##' argument to \code{$run}).
     ##'
     ##' @param index An index function. This is used to compute the
@@ -132,7 +133,7 @@ particle_filter <- R6::R6Class(
     ##' (the result of calling \code{$info()} as for \code{index}),
     ##' \code{n_particles} (the number of particles that the particle
     ##' filter is using) and \code{pars} (parameters passed in in the
-    ##' \code{$run} method via the \code{pars_initial} argument).  It
+    ##' \code{$run} method via the \code{pars} argument).  It
     ##' must return a list, which can have the elements \code{state}
     ##' (initial model state, passed to the particle filter - either a
     ##' vector or a matrix, and overriding the initial conditions
@@ -174,62 +175,55 @@ particle_filter <- R6::R6Class(
       private$index <- index
       private$initial <- initial
 
-      private$n_particles <- assert_scalar_positive_integer(n_particles)
+      self$n_particles <- assert_scalar_positive_integer(n_particles)
       private$n_threads <- assert_scalar_positive_integer(n_threads)
       private$seed <- assert_scalar_positive_integer(seed)
 
       lockBinding("model", self)
+      lockBinding("n_particles", self)
     },
 
     ##' Run the particle filter
     ##'
-    ##' @param pars_model The \code{data} object passed into dust,
-    ##' which may contain parameters for your model (these might affect
-    ##' running and/or initial conditions, depending on your model and
-    ##' if you are using \code{initial} / \code{pars_initial} below).
+    ##' @param pars A list representing parameters. This will be passed as
+    ##' the \code{pars} argument to your model, to your \code{compare}
+    ##' function, and (if using) to your \code{initial} function. It must
+    ##' be an R list (not vector or \code{NULL}) because that is what a
+    ##' dust model currently requires on initialisation or `$reset` - we
+    ##' may relax this later. You may want to put your observation and
+    ##' initial parameters under their own keys (e.g.,
+    ##' \code{pars$initial$whatever}), but this is up to you. Extra keys
+    ##' are silently ignored by dust models.
     ##'
     ##' @param save_history Logical, indicating if the history of all
-    ##' particles should be saved
-    ##'
-    ##' @param pars_compare Optional parameters to use when applying
-    ##' the \code{compare} function.  These parameters will be passed as
-    ##' the 4th argument to \code{compare}.
-    ##'
-    ##' @param pars_initial Parameters passed through to the \code{initial}
-    ##' function (if provided).
+    ##' particles should be saved. If saving history, then it can be
+    ##' queried later with the \code{$history} method on the object.
     ##'
     ##' @return A single numeric value representing the log-likelihood
     ##' (\code{-Inf} if the model is impossible)
-    run = function(pars_model = NULL, pars_compare = NULL, pars_initial = NULL,
-                   save_history = FALSE) {
+    run = function(pars = list(), save_history = FALSE) {
       compare <- private$compare
       steps <- private$steps
-
-      ## Needed by the cpp11 interface
-      pars_model <- as.list(pars_model)
+      np <- self$n_particles
 
       if (is.null(private$last_model)) {
-        model <- self$model$new(data = pars_model, step = steps[[1L]],
-                                n_particles = private$n_particles,
+        model <- self$model$new(data = pars, step = steps[[1L]],
+                                n_particles = np,
                                 n_threads = private$n_threads,
                                 seed = private$seed)
       } else {
         model <- private$last_model
-        model$reset(pars_model, steps[[1L]])
+        model$reset(pars, steps[[1L]])
       }
 
       if (!is.null(private$initial)) {
-        initial <- private$initial(model$info(), private$n_particles,
-                                   pars_initial)
+        initial <- private$initial(model$info(), np, pars)
         if (is.list(initial)) {
           steps <- particle_steps(private$steps, initial$step)
           model$set_state(initial$state, initial$step)
         } else {
           model$set_state(initial)
         }
-      } else if (!is.null(pars_initial)) {
-        stop(paste("'pars_initial' was provided but you do not have",
-                   "an 'initial' function to pass it to"))
       }
 
       if (is.null(private$index)) {
@@ -250,28 +244,36 @@ particle_filter <- R6::R6Class(
       ##
       ## TODO(dust#47): It would be nicer to have a better way of
       ## controlling this, especially to deal with irregular data.
+      ##
+      ## TODO: We might want to save the history on the particle
+      ## filter somewhere where we can just allocate the space and
+      ## query from it using the tree structure more directly.
       prev_res <- model$run(steps[[1]])
 
-      unique_particles <- rep(private$n_particles, private$n_steps + 1)
+      unique_particles <- rep(np, private$n_steps + 1)
       if (save_history) {
         state <- model$state(index_state)
-        history <- array(NA_real_, c(dim(state), private$n_steps + 1))
-        history[, , 1] <- state
+        history_value <- array(NA_real_, c(dim(state), private$n_steps + 1))
+        history_value[, , 1] <- state
+        history_order <- matrix(seq_len(np), np, private$n_steps + 1)
       } else {
-        history <- NULL
+        history_value <- NULL
+        history_order <- NULL
       }
 
       log_likelihood <- 0
       for (t in seq_len(private$n_steps)) {
         res <- model$run(steps[t, 2])
         if (save_history) {
-          history[, , t + 1L] <- model$state(index_state)
+          history_value[, , t + 1L] <- model$state(index_state)
         }
 
-        log_weights <- compare(res, prev_res, private$data[[t]],
-                               pars_compare)
+        log_weights <- compare(res, prev_res, private$data[[t]], pars)
         if (is.null(log_weights)) {
           prev_res <- res
+          if (save_history) {
+            history_order[, t + 1L] <- seq_len(np)
+          }
         } else {
           weights <- scale_log_weights(log_weights)
           log_likelihood <- log_likelihood + weights$average
@@ -284,54 +286,78 @@ particle_filter <- R6::R6Class(
           unique_particles[t + 1L] <- length(unique(kappa))
           model$reorder(kappa)
           ## Because we will use the values from "run" a second time
-          ## in the compare function, we need to reorder theem as
+          ## in the compare function, we need to reorder them as
           ## well.
           prev_res <- res[, kappa, drop = FALSE]
           if (save_history) {
-            ## TODO(#28): possible churn here
-            history <- history[, kappa, , drop = FALSE]
+            history_order[, t + 1L] <- kappa
           }
         }
       }
 
-      self$history <- history
+      private$last_history_value <- history_value
+      private$last_history_order <- history_order
       self$unique_particles <- unique_particles
-      self$state <- model$state(index_state)
       private$last_model <- model
       private$index_state <- index_state
 
       log_likelihood
     },
 
-    ##' Run the particle filter, allocating a vector of parameters across
-    ##' the different tuneable components (model, initial and compare).
-    ##' This is a wrapper around the \code{$run()} method, used by
-    ##' \code{\link{pmcmc}} and \code{\link{grid_search}} though it can
-    ##' be used directly (the name may change in future).
+    ##' @description Extract the current model state, optionally filtering.
+    ##' If the model has not yet been run, then this method will throw an
+    ##' error. Returns a matrix with the number of rows being the number of
+    ##' model states, and the number of columns being the number of
+    ##' particles.
     ##'
-    ##' @param pars A list of parameters
+    ##' @param index_state Optional vector of states to extract
+    state = function(index_state = NULL) {
+      if (is.null(private$last_model)) {
+        stop("Model has not yet been run")
+      }
+      ## TODO: should get an option to take a single trajectory
+      private$last_model$state(index_state)
+    },
+
+    ##' @description Extract the particle trajectories. Requires that
+    ##' the model was run with \code{save_history = TRUE}, which does
+    ##' incur a performance cost. This method will throw an error if
+    ##' the model has not run, or was run without \code{save_history =
+    ##' TRUE}. Returns a 3d array with dimensions corresponding to (1)
+    ##' model state, filtered by \code{index$run} if provided, (2)
+    ##' particle (following \code{index_particle} if provided), (3)
+    ##' time point.
     ##'
-    ##' @param index A parameter index; this must be a list with elements
-    ##' \code{pars_model}, \code{pars_compare} and \code{pars_initial},
-    ##' indicating the argument of \code{$run()} they apply to.
-    ##'
-    ##' @param save_history Logical, indicating if the history of all
-    ##' particles should be saved.
-    run2 = function(pars, index, save_history = FALSE) {
-      pars_model <- pars_compare <- pars_initial <- NULL
-      if (length(index$pars_model) > 0) {
-        pars_model <- pars[index$pars_model]
+    ##' @param index_particle Optional vector of particle indices to return.
+    ##' If \code{NULL} we return all particles' histories.
+    history = function(index_particle = NULL) {
+      if (is.null(private$last_model)) {
+        stop("Model has not yet been run")
+      }
+      history_value <- private$last_history_value
+      if (is.null(history_value)) {
+        stop("Can't get history as model was run with save_history = FALSE")
       }
 
-      if (length(index$pars_compare) > 0) {
-        pars_compare <- pars[index$pars_compare]
+      history_order <- private$last_history_order
+
+      if (is.null(index_particle)) {
+        index_particle <- seq_len(ncol(history_value))
       }
 
-      if (length(index$pars_initial) > 0) {
-        pars_initial <- pars[index$pars_initial]
+      ny <- nrow(history_value)
+      np <- length(index_particle)
+      nt <- ncol(history_order)
+
+      idx <- matrix(NA_integer_, np, nt)
+      for (i in rev(seq_len(ncol(idx)))) {
+        index_particle <- idx[, i] <- history_order[index_particle, i]
       }
 
-      self$run(pars_model, pars_compare, pars_initial, save_history)
+      cidx <- cbind(seq_len(ny),
+                    rep(idx, each = ny),
+                    rep(seq_len(nt), each = ny * np))
+      array(history_value[cidx], c(ny, np, nt))
     },
 
     ##' Create predicted trajectories, based on the final point of a
@@ -347,10 +373,11 @@ particle_filter <- R6::R6Class(
     ##' @return A 3d array with dimensions representing (1) the state
     ##' vector, (2) the particle, (3) time
     predict = function(t, append = FALSE) {
-      if (is.null(self$state)) {
+      ## TODO: this just needs major work really
+      if (is.null(private$last_model)) {
         stop("Particle filter has not been run")
       }
-      if (append && is.null(self$history)) {
+      if (append && is.null(private$last_history_value)) {
         stop("Can't append without history")
       }
       if (t[[1]] != 0) {
@@ -366,12 +393,17 @@ particle_filter <- R6::R6Class(
         ##
         ## If not we can reset the state and model time and state (that
         ## needs a little dust support too)
+        ##
+        ## What we *really* need is the way to kick off dust with
+        ## multiple parameter sets.
         stop("Can't yet run predict multiple times!")
       }
       step <- step_end + t
 
       index_state <- private$index_state
-      res <- array(NA_real_, dim = c(dim(self$state), length(step) - 1))
+      ny <-
+        if (is.null(index_state)) nrow(self$state()) else length(index_state)
+      res <- array(NA_real_, c(ny, self$n_particles, length(step) - 1))
       forecast_step <- 0L
       for (t in step[-1L]) {
         model$run(t)
@@ -379,7 +411,7 @@ particle_filter <- R6::R6Class(
         res[, , forecast_step] <- model$state(index_state)
       }
       if (append) {
-        res <- dde_abind(self$history, res)
+        res <- dde_abind(self$history(), res)
       }
 
       res

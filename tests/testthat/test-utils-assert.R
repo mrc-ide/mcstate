@@ -39,3 +39,17 @@ test_that("assert_scalar_positive_integer", {
   expect_error(assert_scalar_positive_integer(value),
                "'value' must be at least 1")
 })
+
+
+test_that("assert_named", {
+  expect_error(assert_named(1), "must be named")
+  expect_error(assert_named(setNames(1:2, c("a", "a")), TRUE),
+               "must have unique names")
+  expect_silent(assert_named(setNames(1:2, c("a", "a")), FALSE))
+})
+
+
+test_that("assert_logical", {
+  expect_error(assert_logical("one"), "must be a logical")
+  expect_error(assert_logical(1), "must be a logical")
+})

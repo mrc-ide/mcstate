@@ -8,11 +8,15 @@ test_that("run particle filter on sir model", {
   res <- p$run()
   expect_is(res, "numeric")
 
-  expect_is(p$state, "matrix")
-  expect_equal(dim(p$state), c(3, n_particles))
+  state <- p$state()
+  expect_is(state, "matrix")
+  expect_equal(dim(state), c(4, n_particles))
+
   expect_equal(length(p$unique_particles), nrow(dat$data) + 1)
   expect_true(all(p$unique_particles <= n_particles & p$unique_particles >= 1))
-  expect_null(p$history)
+  expect_error(
+    p$history(),
+    "Can't get history as model was run with save_history = FALSE")
 })
 
 
@@ -44,13 +48,13 @@ test_that("run particle filter without index", {
   p2 <- particle_filter$new(dat$data, dat$model, n_particles, compare2)
 
   set.seed(1)
-  ll1 <- p1$run()
+  ll1 <- p1$run(save_history = TRUE)
   set.seed(1)
-  ll2 <- p2$run()
+  ll2 <- p2$run(save_history = TRUE)
   expect_identical(ll1, ll2)
 
-  expect_equal(dim(p1$state), c(3, n_particles))
-  expect_equal(dim(p2$state), c(4, n_particles))
+  expect_equal(dim(p1$history()), c(3, n_particles, 101))
+  expect_equal(dim(p2$history()), c(4, n_particles, 101))
 })
 
 
@@ -60,7 +64,7 @@ test_that("particle filter likelihood is worse with worse parameters", {
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index)
   ll1 <- p$run()
-  ll2 <- p$run(pars_model = list(gamma = 1, beta = 1))
+  ll2 <- p$run(pars = list(gamma = 1, beta = 1))
   expect_true(ll1 > ll2)
 })
 
@@ -84,8 +88,9 @@ test_that("stop simulation when likelihood is impossible", {
   expect_equal(res, -Inf)
 
   i <- (which(dat$data$incidence > 15)[[1]] + 2):steps
-  expect_false(any(is.na(p$history[, , !i])))
-  expect_true(all(is.na(p$history[, , i])))
+  history <- p$history()
+  expect_false(any(is.na(history[, , !i])))
+  expect_true(all(is.na(history[, , i])))
 })
 
 
@@ -144,7 +149,7 @@ test_that("predict", {
   expect_equal(dim(res2), c(3, n_particles, steps + length(t) - 1))
 
   ## history is prepended
-  expect_equal(res2[, , 1:steps], p2$history)
+  expect_equal(res2[, , 1:steps], p2$history())
 
   ## appended predictions match the raw predictions
   expect_equal(res2[, , (steps + 1):(steps + length(t) - 1)], res1)
@@ -249,18 +254,18 @@ test_that("Control the comparison function", {
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index)
 
-  pars_compare <- list(exp_noise = 1)
-  ll1 <- p$run(pars_compare = pars_compare)
+  pars <- list(compare = list(exp_noise = 1))
+  ll1 <- p$run(pars = pars)
 
-  pars_compare <- list(exp_noise = 0.01)
-  ll2 <- p$run(pars_compare = pars_compare)
+  pars$compare$exp_noise <- 0.01
+  ll2 <- p$run(pars = pars)
   expect_true(ll2 < ll1)
 })
 
 
 test_that("Control the starting point of the simulation", {
   initial <- function(info, n_particles, pars) {
-    list(step = pars)
+    list(step = pars$initial)
   }
 
   dat <- example_sir()
@@ -281,12 +286,12 @@ test_that("Control the starting point of the simulation", {
   p2 <- particle_filter$new(data, dat$model, n_particles, dat$compare,
                             index = dat$index, initial = initial)
   set.seed(1)
-  ll2 <- p2$run(pars_initial = as.integer(offset))
+  ll2 <- p2$run(list(initial = as.integer(offset)))
   expect_identical(ll1, ll2)
 
   ## Running from the beginning is much worse:
   set.seed(1)
-  ll3 <- p2$run(pars_initial = 0L)
+  ll3 <- p2$run(list(initial = 0L))
   expect_true(ll3 < ll1)
 })
 
@@ -347,16 +352,6 @@ test_that("initial must be sensible", {
 })
 
 
-test_that("check for unconsumed pars_initial", {
-  dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, 100, dat$compare,
-                           index = dat$index)
-  expect_error(
-    p$run(pars_initial = list(1, 2)),
-    "'pars_initial' was provided but you do not have")
-})
-
-
 test_that("we do not reorder particles when compare is NULL", {
   dat <- example_sir()
   n_particles <- 42
@@ -378,14 +373,14 @@ test_that("initialise with simple state", {
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index, initial = initial)
 
-  ll1 <- p$run(pars_initial = list(I0 = 200), save_history = TRUE)
-  expect_equal(p$history[, , 1],
+  ll1 <- p$run(list(I0 = 200), save_history = TRUE)
+  expect_equal(p$history()[, , 1],
                matrix(c(1000, 200, 0), 3, n_particles))
-  ll2 <- p$run(pars_initial = list(I0 = 1), save_history = TRUE)
-  expect_equal(p$history[, , 1],
+  ll2 <- p$run(list(I0 = 1), save_history = TRUE)
+  expect_equal(p$history()[, , 1],
                matrix(c(1000, 1, 0), 3, n_particles))
-  ll3 <- p$run(pars_initial = list(I0 = 10), save_history = TRUE)
-  expect_equal(p$history[, , 1],
+  ll3 <- p$run(list(I0 = 10), save_history = TRUE)
+  expect_equal(p$history()[, , 1],
                matrix(c(1000, 10, 0), 3, n_particles))
 
   expect_true(ll1 < ll3)
@@ -414,8 +409,8 @@ test_that("initialise with complex state", {
   pars <- list(I0 = 10)
 
   set.seed(1)
-  ll <- p$run(pars_initial = pars, save_history = TRUE)
-  expect_equal(p$history[, , 1],
+  ll <- p$run(pars, save_history = TRUE)
+  expect_equal(p$history()[, , 1],
                initial(NULL, n_particles, pars)[1:3, ])
 })
 
@@ -457,14 +452,14 @@ test_that("Control the starting point of the simulation", {
   p2 <- particle_filter$new(data, dat$model, n_particles, dat$compare,
                             index = dat$index, initial = initial)
   set.seed(1)
-  ll2 <- p2$run(pars_initial = list(I0 = 10, step = offset),
+  ll2 <- p2$run(list(I0 = 10, step = offset),
                 save_history = TRUE)
 
   expect_identical(ll1, ll2)
 
   ## Running from the beginning is much worse:
   set.seed(1)
-  ll3 <- p2$run(pars_initial = list(I0 = 10, step = 0),
+  ll3 <- p2$run(list(I0 = 10, step = 0),
                 save_history = TRUE)
   expect_true(ll3 < ll1)
 })
@@ -505,12 +500,67 @@ test_that("Variable initial starting point of the simulation", {
                            index = dat$index, initial = initial)
   pars <- list(I0 = 10, step_mean = 20, step_offset = 400)
   set.seed(1)
-  ll <- p$run(pars_initial = pars, save_history = TRUE)
+  ll <- p$run(pars, save_history = TRUE)
   expect_equal(ll, 0)
 
   mod <- p$model$new(list(), step = 0, n_particles = n_particles)
   tmp <- initial(NULL, n_particles, pars)
   mod$set_state(tmp$state, tmp$step)
-  expect_equal(p$history[, , 1], mod$state()[1:3, ])
+  expect_equal(p$history()[, , 1], mod$state()[1:3, ])
   expect_equal(mod$step(), max(tmp$step))
+})
+
+
+test_that("can save history", {
+  dat <- example_sir()
+  n_particles <- 42
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
+  p$run(save_history = TRUE)
+  res <- p$history()
+
+  ## If we have correctly sampled trajectories, then we'll have
+  ## monotonic S and R within a particle:
+  expect_true(all(diff(t(res[1, , ])) <= 0))
+  expect_true(all(diff(t(res[3, , ])) >= 0))
+
+  ## Can get just a few histories
+  expect_equal(
+    drop(p$history(1)),
+    res[, 1, ])
+  expect_equal(
+    drop(p$history(10)),
+    res[, 10, ])
+  expect_equal(
+    drop(p$history(10:20)),
+    res[, 10:20, ])
+})
+
+
+test_that("can't get state or history until model is run", {
+  dat <- example_sir()
+  n_particles <- 42
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
+  expect_error(
+    p$state(),
+    "Model has not yet been run")
+  expect_error(
+    p$history(),
+    "Model has not yet been run")
+})
+
+
+test_that("can filter state on extraction", {
+  dat <- example_sir()
+  n_particles <- 42
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
+  res <- p$run()
+  expect_is(res, "numeric")
+
+  state <- p$state()
+  expect_equal(p$state(1), state[1, , drop = FALSE])
+  state <- p$state()
+  expect_equal(p$state(2:3), state[2:3, , drop = FALSE])
 })

@@ -18,15 +18,15 @@ sir <- gen$new(data = list(), step = 0, n_particles = 1)
 dt <- 1/4
 day <- seq(1, 100)
 incidence <- rep(NA, length(day))
-history <- array(NA_real_, c(4, 1, 101))
-history[, 1, 1] <- sir$state()
+true_history <- array(NA_real_, c(4, 1, 101))
+true_history[, 1, 1] <- sir$state()
 for (i in day) {
-   state_start <- sir$state()
-   sir$run(i / dt)
-   state_end <- sir$state()
-   history[, 1, i + 1] <- state_end
-   # Reduction in S
-   incidence[i] <- state_start[1, 1] - state_end[1, 1]
+  state_start <- sir$state()
+  sir$run(i / dt)
+  state_end <- sir$state()
+  true_history[, 1, i + 1] <- state_end
+  # Reduction in S
+  incidence[i] <- state_start[1, 1] - state_end[1, 1]
 }
 
 # Convert this into our required format:
@@ -35,14 +35,16 @@ data <- particle_filter_data(data_raw, "day", 4)
 
 # A comparison function
 compare <- function(state, prev_state, observed, pars = NULL) {
-  if (is.null(pars)) {
-    pars <- list(exp_noise = 1e6)
+  if (is.null(pars$exp_noise)) {
+    exp_noise <- 1e6
+  } else {
+    exp_noise <- pars$exp_noise
   }
   incidence_modelled <- prev_state[1,] - state[1,]
   incidence_observed <- observed$incidence
   lambda <- incidence_modelled +
-    rexp(n = length(incidence_modelled), rate = pars$exp_noise)
-  dpois(x = incidence_observed, lambda = lambda, log = TRUE)
+    rexp(length(incidence_modelled), exp_noise)
+  dpois(incidence_observed, lambda, log = TRUE)
 }
 
 # Construct the particle_filter object with 100 particles
@@ -50,12 +52,13 @@ p <- particle_filter$new(data, gen, 100, compare)
 p$run(save_history = TRUE)
 
 # Our simulated trajectories, with the "real" data superimposed
-matplot(data_raw$day, t(p$history[1, , -1]), type = "l",
-         xlab = "Time", ylab = "State",
-         col = "#ff000022", lty = 1, ylim = range(p$history))
-matlines(data_raw$day, t(p$history[2, , -1]), col = "#ffff0022", lty = 1)
-matlines(data_raw$day, t(p$history[3, , -1]), col = "#0000ff22", lty = 1)
-matpoints(data_raw$day, t(history[1:3, , -1]), pch = 19,
+history <- p$history()
+matplot(data_raw$day, t(history[1, , -1]), type = "l",
+        xlab = "Time", ylab = "State",
+        col = "#ff000022", lty = 1, ylim = range(history))
+matlines(data_raw$day, t(history[2, , -1]), col = "#ffff0022", lty = 1)
+matlines(data_raw$day, t(history[3, , -1]), col = "#0000ff22", lty = 1)
+matpoints(data_raw$day, t(true_history[1:3, , -1]), pch = 19,
           col = c("red", "yellow", "blue"))
 }
 \section{Public fields}{
@@ -64,14 +67,10 @@ matpoints(data_raw$day, t(history[1:3, , -1]), pch = 19,
 \item{\code{model}}{The dust model generator being simulated (cannot be
 re-bound)}
 
-\item{\code{state}}{The final state of the last run of the particle filter}
-
-\item{\code{history}}{The history of the last run of the particle filter
-(if enabled with \code{save_history = TRUE}, otherwise NULL}
-
 \item{\code{unique_particles}}{The number of unique particles sampled
-at each step that has been run
-Create the particle filter}
+at each step that has been run}
+
+\item{\code{n_particles}}{Number of particles used (read only)}
 }
 \if{html}{\out{</div>}}
 }
@@ -80,7 +79,8 @@ Create the particle filter}
 \itemize{
 \item \href{#method-new}{\code{particle_filter$new()}}
 \item \href{#method-run}{\code{particle_filter$run()}}
-\item \href{#method-run2}{\code{particle_filter$run2()}}
+\item \href{#method-state}{\code{particle_filter$state()}}
+\item \href{#method-history}{\code{particle_filter$history()}}
 \item \href{#method-predict}{\code{particle_filter$predict()}}
 }
 }
@@ -88,6 +88,7 @@ Create the particle filter}
 \if{html}{\out{<a id="method-new"></a>}}
 \if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
+Create the particle filter
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{particle_filter$new(
   data,
@@ -124,7 +125,7 @@ the model produces them (\code{NULL} otherwise) and \code{data}
 is a \code{list} of observed data corresponding to the current
 time's row in the \code{data} object provided here in the
 constructor.  \code{pars} is any additional parameters passed
-through to the comparison function (via the \code{pars_compare}
+through to the comparison function (via the \code{pars}
 argument to \code{$run}).}
 
 \item{\code{index}}{An index function. This is used to compute the
@@ -144,7 +145,7 @@ given, then this function must accept 3 arguments: \code{info}
 (the result of calling \code{$info()} as for \code{index}),
 \code{n_particles} (the number of particles that the particle
 filter is using) and \code{pars} (parameters passed in in the
-\code{$run} method via the \code{pars_initial} argument).  It
+\code{$run} method via the \code{pars} argument).  It
 must return a list, which can have the elements \code{state}
 (initial model state, passed to the particle filter - either a
 vector or a matrix, and overriding the initial conditions
@@ -174,63 +175,75 @@ Run the particle filter}
 \if{latex}{\out{\hypertarget{method-run}{}}}
 \subsection{Method \code{run()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_filter$run(
-  pars_model = NULL,
-  pars_compare = NULL,
-  pars_initial = NULL,
-  save_history = FALSE
-)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter$run(pars = list(), save_history = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{pars_model}}{The \code{data} object passed into dust,
-which may contain parameters for your model (these might affect
-running and/or initial conditions, depending on your model and
-if you are using \code{initial} / \code{pars_initial} below).}
-
-\item{\code{pars_compare}}{Optional parameters to use when applying
-the \code{compare} function.  These parameters will be passed as
-the 4th argument to \code{compare}.}
-
-\item{\code{pars_initial}}{Parameters passed through to the \code{initial}
-function (if provided).}
+\item{\code{pars}}{A list representing parameters. This will be passed as
+the \code{pars} argument to your model, to your \code{compare}
+function, and (if using) to your \code{initial} function. It must
+be an R list (not vector or \code{NULL}) because that is what a
+dust model currently requires on initialisation or `$reset` - we
+may relax this later. You may want to put your observation and
+initial parameters under their own keys (e.g.,
+\code{pars$initial$whatever}), but this is up to you. Extra keys
+are silently ignored by dust models.}
 
 \item{\code{save_history}}{Logical, indicating if the history of all
-particles should be saved}
+particles should be saved. If saving history, then it can be
+queried later with the \code{$history} method on the object.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
 A single numeric value representing the log-likelihood
 (\code{-Inf} if the model is impossible)
-Run the particle filter, allocating a vector of parameters across
-the different tuneable components (model, initial and compare).
-This is a wrapper around the \code{$run()} method, used by
-\code{\link{pmcmc}} and \code{\link{grid_search}} though it can
-be used directly (the name may change in future).
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-run2"></a>}}
-\if{latex}{\out{\hypertarget{method-run2}{}}}
-\subsection{Method \code{run2()}}{
+\if{html}{\out{<a id="method-state"></a>}}
+\if{latex}{\out{\hypertarget{method-state}{}}}
+\subsection{Method \code{state()}}{
+Extract the current model state, optionally filtering.
+If the model has not yet been run, then this method will throw an
+error. Returns a matrix with the number of rows being the number of
+model states, and the number of columns being the number of
+particles.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_filter$run2(pars, index, save_history = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter$state(index_state = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{pars}}{A list of parameters}
+\item{\code{index_state}}{Optional vector of states to extract}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-history"></a>}}
+\if{latex}{\out{\hypertarget{method-history}{}}}
+\subsection{Method \code{history()}}{
+Extract the particle trajectories. Requires that
+the model was run with \code{save_history = TRUE}, which does
+incur a performance cost. This method will throw an error if
+the model has not run, or was run without \code{save_history =
+TRUE}. Returns a 3d array with dimensions corresponding to (1)
+model state, filtered by \code{index$run} if provided, (2)
+particle (following \code{index_particle} if provided), (3)
+time point.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter$history(index_particle = NULL)}\if{html}{\out{</div>}}
+}
 
-\item{\code{index}}{A parameter index; this must be a list with elements
-\code{pars_model}, \code{pars_compare} and \code{pars_initial},
-indicating the argument of \code{$run()} they apply to.}
-
-\item{\code{save_history}}{Logical, indicating if the history of all
-particles should be saved.
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{index_particle}}{Optional vector of particle indices to return.
+If \code{NULL} we return all particles' histories.
 Create predicted trajectories, based on the final point of a
 run with the particle filter}
 }

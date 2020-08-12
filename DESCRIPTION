@@ -1,6 +1,6 @@
 Package: mcstate
 Title: Monte Carlo Methods for State Space Models
-Version: 0.1.2
+Version: 0.2.0
 Authors@R: c(person("Rich", "FitzJohn", role = c("aut", "cre"),
                     email = "rich.fitzjohn@gmail.com"),
              person("Marc", "Baguelin", role = "aut"),
@@ -20,14 +20,15 @@ Language: en-GB
 URL: https://github.com/mrc-ide/mcstate
 BugReports: https://github.com/mrc-ide/mcstate/issues
 Imports:
-    dust (>= 0.4.1),
-    coda,
-    mvtnorm,
-    viridis
+    R6,
+    dust (>= 0.4.1)
 Suggests:
     brio,
+    coda,
     decor,
+    mvtnorm,
     testthat,
     tibble,
-    vctrs
+    vctrs,
+    withr
 RoxygenNote: 7.1.0

@@ -8,8 +8,18 @@ mcstate_file <- function(path) {
 }
 
 
+vlapply <- function(x, fun, ...) {
+  vapply(x, fun, logical(1), ...)
+}
+
+
 vnapply <- function(x, fun, ...) {
   vapply(x, fun, numeric(1), ...)
+}
+
+
+list_to_numeric <- function(x) {
+  vnapply(x, identity)
 }
 
 
@@ -29,6 +39,46 @@ dde_abind <- function(a, b) {
 }
 
 
-split_df_rows <- function(x) {
-  unname(split(x, seq_len(nrow(x))))
+data_frame <- function(...) {
+  data.frame(..., stringsAsFactors = FALSE)
+}
+
+
+##' @importFrom stats rnorm
+rmvnorm_generator <- function(vcv) {
+  vcv <- unname(vcv)
+  if (!isSymmetric(vcv, tol = sqrt(.Machine$double.eps))) {
+    stop("vcv must be symmetric")
+  }
+  ev <- eigen(vcv, symmetric = TRUE)
+  if (!all(ev$values >= -sqrt(.Machine$double.eps) * abs(ev$values[1]))) {
+    stop("vcv must be positive definite")
+  }
+  n <- nrow(vcv)
+  res <- t(ev$vectors %*% (t(ev$vectors) * sqrt(pmax(ev$values, 0))))
+
+  function(mean) {
+    mean + drop(rnorm(ncol(vcv)) %*% res)
+  }
+}
+
+
+list_to_matrix <- function(data) {
+  len <- lengths(data)
+  stopifnot(all(len == len[[1]]))
+  len <- len[[1L]]
+  matrix(unlist(data, FALSE, FALSE), length(data), len, byrow = TRUE)
+}
+
+
+list_to_array <- function(data) {
+  len <- lengths(data)
+  stopifnot(all(len == len[[1L]]))
+  array(unlist(data, FALSE, FALSE), c(dim(data[[1L]]), length(data)))
+}
+
+
+set_colnames <- function(m, nms) {
+  colnames(m) <- nms
+  m
 }

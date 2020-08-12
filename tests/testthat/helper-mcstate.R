@@ -12,7 +12,7 @@ example_sir <- function() {
     if (is.na(observed$incidence)) {
       return(NULL)
     }
-    exp_noise <- pars[["exp_noise"]] %||% 1e6
+    exp_noise <- pars$compare$exp_noise %||% 1e6
     ## This is on the *filtered* state (i.e., returned by run())
     incidence_modelled <-
       state[1, , drop = TRUE] - prev_state[1, , drop = TRUE]
@@ -46,6 +46,59 @@ example_sir <- function() {
 }
 
 
-data_frame <- function(...) {
-  data.frame(..., stringsAsFactors = FALSE)
+example_uniform <- function(proposal_kernel = NULL) {
+  target <- function(p, ...) {
+    1
+  }
+  filter <- structure(list(run = target,
+                           n_particles = 10,
+                           state = function() matrix(1, 2, 10),
+                           trajectories = function(i) matrix(1, 2, 10)),
+                      class = "particle_filter")
+
+  if (is.null(proposal_kernel)) {
+    proposal_kernel <- diag(2) * 0.1
+    row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("a", "b")
+  }
+
+  pars <- pmcmc_parameters$new(
+    list(a = pmcmc_parameter(0.5, min = 0, max = 1),
+         b = pmcmc_parameter(0.5, min = 0, max = 1)),
+    proposal = proposal_kernel)
+
+  list(target = target, filter = filter, pars = pars)
+}
+
+
+example_mvnorm <- function() {
+  target <- function(p, ...) {
+    mvtnorm::dmvnorm(unlist(p), log = TRUE)
+  }
+
+  filter <- structure(list(run = target,
+                           n_particles = 10,
+                           state = function() matrix(1, 2, 10),
+                           trajectories = function(i) matrix(1, 2, 10)),
+                      class = "particle_filter")
+
+  proposal_kernel <- diag(2)
+  pars <- pmcmc_parameters$new(
+    list(a = pmcmc_parameter(0, min = -100, max = 100),
+         b = pmcmc_parameter(0, min = -100, max = 100)),
+    proposal = proposal_kernel)
+
+  list(target = target, filter = filter, pars = pars)
+}
+
+
+## Some form of these will likely go back into the package later
+acceptance_rate <- function(chain) {
+  ## TODO: this is actually pretty awful internally
+  1 - coda::rejectionRate(coda::as.mcmc(chain))
+}
+
+
+effective_size <- function(chain) {
+  ## TODO: do we ever want the ess of the probabilities?
+  coda::effectiveSize(coda::as.mcmc(chain))
 }
