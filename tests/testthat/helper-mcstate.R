@@ -112,3 +112,21 @@ effective_size <- function(chain) {
   ## TODO: do we ever want the ess of the probabilities?
   coda::effectiveSize(coda::as.mcmc(chain))
 }
+
+
+test_cache <- new.env()
+
+
+example_sir_pmcmc <- function() {
+  if (is.null(test_cache$example_sir_pmcmc)) {
+    dat <- example_sir()
+
+    n_particles <- 100
+    p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                             index = dat$index)
+    set.seed(1)
+    dat$pmcmc <- pmcmc(dat$pars, p, 30, TRUE, TRUE)
+    test_cache$example_sir_pmcmc <- dat
+  }
+  test_cache$example_sir_pmcmc
+}
