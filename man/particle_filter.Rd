@@ -82,6 +82,7 @@ at each step that has been run}
 \item \href{#method-state}{\code{particle_filter$state()}}
 \item \href{#method-history}{\code{particle_filter$history()}}
 \item \href{#method-predict}{\code{particle_filter$predict()}}
+\item \href{#method-predict_info}{\code{particle_filter$predict_info()}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -274,5 +275,17 @@ appended onto the previous history of the simulation.}
 A 3d array with dimensions representing (1) the state
 vector, (2) the particle, (3) time
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-predict_info"></a>}}
+\if{latex}{\out{\hypertarget{method-predict_info}{}}}
+\subsection{Method \code{predict_info()}}{
+Return a list of information that would be used to restart a
+simulation (in addition to state). This exists to support internal
+functions and should not need to be called by end-users.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter$predict_info()}\if{html}{\out{</div>}}
+}
+
 }
 }
