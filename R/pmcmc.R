@@ -119,20 +119,30 @@ pmcmc <- function(pars, filter, n_steps, save_state = FALSE,
     }
   }
 
-  pars <- set_colnames(list_to_matrix(history_pars$get()),
-                       names(curr_pars))
+  pars_matrix <- set_colnames(list_to_matrix(history_pars$get()),
+                              names(curr_pars))
   probabilities <- set_colnames(list_to_matrix(history_probabilities$get()),
                        c("log_prior", "log_likelihood", "log_posterior"))
 
-  state <- trajectories <- NULL
+  predict <- state <- trajectories <- NULL
   if (save_state) {
     state <- t(list_to_matrix(history_state$get()))
+
+    ## Extract the transformation function from the pars object as
+    ## it's all we want; this is a bit of a hack but it works for now
+    ## at least.
+    transform <- pars[[".__enclos_env__"]]$private$transform
+
+    ## This information is required in order to run predictions but
+    ## adds a significant overhead to the model.
+    predict <- c(filter$predict_info(),
+                 list(transform = transform, model = filter$model))
   }
   if (save_trajectories) {
     trajectories <- list_to_array(history_trajectories$get())
   }
 
-  mcstate_pmcmc(pars, probabilities, state, trajectories)
+  mcstate_pmcmc(pars_matrix, probabilities, state, trajectories, predict)
 }
 
 

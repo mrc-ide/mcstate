@@ -415,6 +415,16 @@ particle_filter <- R6::R6Class(
       }
 
       res
+    },
+
+    ##' @description
+    ##' Return a list of information that would be used to restart a
+    ##' simulation (in addition to state). This exists to support internal
+    ##' functions and should not need to be called by end-users.
+    predict_info = function() {
+      list(n_threads = private$last_model$n_threads(),
+           index = private$index_state,
+           step = last(private$data)$step_end)
     }
   ))
 

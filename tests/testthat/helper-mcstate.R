@@ -40,9 +40,19 @@ example_sir <- function() {
     list(run = 4L, state = 1:3)
   }
 
+  proposal_kernel <- diag(2) * 1e-4
+  row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("beta", "gamma")
+
+  pars <- pmcmc_parameters$new(
+    list(beta = pmcmc_parameter(0.2, min = 0, max = 1,
+                                prior = function(p) log(1e-10)),
+         gamma = pmcmc_parameter(0.1, min = 0, max = 1,
+                                 prior = function(p) log(1e-10))),
+    proposal = proposal_kernel)
+
   list(model = model, compare = compare, y0 = y0,
        data_raw = data_raw, data = data, history = history,
-       index = index)
+       index = index, pars = pars)
 }
 
 

@@ -82,3 +82,8 @@ set_colnames <- function(m, nms) {
   colnames(m) <- nms
   m
 }
+
+
+last <- function(x) {
+  x[[length(x)]]
+}

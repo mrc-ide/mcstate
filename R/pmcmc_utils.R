@@ -1,8 +1,9 @@
-mcstate_pmcmc <- function(pars, probabilities, state, trajectories) {
+mcstate_pmcmc <- function(pars, probabilities, state, trajectories, predict) {
   ret <- list(pars = pars,
               probabilities = probabilities,
               state = state,
-              trajectories = trajectories)
+              trajectories = trajectories,
+              predict = predict)
   class(ret) <- "mcstate_pmcmc"
   ret
 }
