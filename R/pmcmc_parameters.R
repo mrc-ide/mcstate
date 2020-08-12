@@ -94,6 +94,7 @@ pmcmc_parameter <- function(initial, min = -Inf, max = Inf, discrete = FALSE,
 ##' pars$model(p)
 pmcmc_parameters <- R6::R6Class(
   "pmcmc_parameters",
+  cloneable = FALSE,
 
   private = list(
     parameters = NULL,
