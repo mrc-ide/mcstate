@@ -22,3 +22,20 @@ test_that("can run a prediction from a mcmc run", {
   expect_true(all(diff(t(y[1, , ])) <= 0))
   expect_true(all(diff(t(y[3, , ])) >= 0))
 })
+
+
+test_that("Can rehydrate mcmc results and predict", {
+  dat <- example_sir()
+
+  n_particles <- 100
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
+
+  set.seed(1)
+  results <- pmcmc(dat$pars, p, 30, TRUE, TRUE)
+  steps <- seq(results$predict$step, by = 4, length.out = 26)
+  y1 <- pmcmc_predict(results, steps)
+
+  results <- unserialize(serialize(results, NULL))
+  expect_identical(pmcmc_predict(results, steps), y1)
+})
