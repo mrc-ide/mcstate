@@ -72,7 +72,7 @@ test_that("reflect parameters: upper", {
 
 test_that("proposal uses provided covariance structure", {
   dat <- example_uniform(proposal_kernel = matrix(0.1, 2, 2))
-  res <- pmcmc(dat$pars, dat$filter, 100)
+  res <- pmcmc(dat$pars, dat$filter, 100, FALSE, FALSE)
 
   expect_true(all(acceptance_rate(res$pars) == 1))
   expect_equal(res$pars[, 1], res$pars[, 2])

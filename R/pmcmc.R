@@ -29,7 +29,11 @@
 ##'   and \code{index} used in the particle filter) so that the
 ##'   process may be restarted from this point for projections.  If
 ##'   \code{save_trajectories} is \code{TRUE} the same particle will
-##'   be selected for each.
+##'   be selected for each. The default is \code{TRUE}, which will
+##'   cause \code{n_state} * \code{n_steps} of data to be output
+##'   alongside your results. Set this argument to \code{FALSE} to
+##'   save space, or use \code{\link{pmcmc_thin}} after running the
+##'   MCMC.
 ##'
 ##' @param save_trajectories Logical, indicating if the particle
 ##'   trajectories should be saved during the simulation. If
@@ -53,7 +57,7 @@
 ##'   simulation (if \code{return_trajectories} was \code{TRUE}).
 ##'
 ##' @export
-pmcmc <- function(pars, filter, n_steps, save_state = FALSE,
+pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
                   save_trajectories = FALSE) {
   assert_is(pars, "pmcmc_parameters")
   assert_is(filter, "particle_filter")

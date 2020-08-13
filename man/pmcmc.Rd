@@ -4,7 +4,7 @@
 \alias{pmcmc}
 \title{Run a pmcmc sampler}
 \usage{
-pmcmc(pars, filter, n_steps, save_state = FALSE, save_trajectories = FALSE)
+pmcmc(pars, filter, n_steps, save_state = TRUE, save_trajectories = FALSE)
 }
 \arguments{
 \item{pars}{A \code{\link{pmcmc_parameters}} object containing
@@ -22,7 +22,11 @@ of each MCMC step. This is the full state (i.e., unaffected by
 and \code{index} used in the particle filter) so that the
 process may be restarted from this point for projections.  If
 \code{save_trajectories} is \code{TRUE} the same particle will
-be selected for each.}
+be selected for each. The default is \code{TRUE}, which will
+cause \code{n_state} * \code{n_steps} of data to be output
+alongside your results. Set this argument to \code{FALSE} to
+save space, or use \code{\link{pmcmc_thin}} after running the
+MCMC.}
 
 \item{save_trajectories}{Logical, indicating if the particle
 trajectories should be saved during the simulation. If
