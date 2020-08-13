@@ -187,7 +187,7 @@ Run the particle filter}
 the \code{pars} argument to your model, to your \code{compare}
 function, and (if using) to your \code{initial} function. It must
 be an R list (not vector or \code{NULL}) because that is what a
-dust model currently requires on initialisation or `$reset` - we
+dust model currently requires on initialisation or \code{$reset} - we
 may relax this later. You may want to put your observation and
 initial parameters under their own keys (e.g.,
 \code{pars$initial$whatever}), but this is up to you. Extra keys

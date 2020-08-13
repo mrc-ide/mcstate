@@ -1,18 +1,18 @@
-##' Run predictions from the results of [pmcmc()]. This function can
-##' also be called by running [predict()] on the object, using R's S3
-##' dispatch.
+##' Run predictions from the results of \code{\link{pmcmc}}. This
+##' function can also be called by running \code{\link{predict}} on
+##' the object, using R's S3 dispatch.
 ##'
 ##' @title Run predictions from PMCMC
 ##'
-##' @param object The results of running [pmcmc()] with `return_state
-##'   = TRUE` (without this extra information, prediction is not
-##'   possible)
+##' @param object The results of running \code{\link{pmcmc}} with
+##'   \code{return_state = TRUE} (without this extra information,
+##'   prediction is not possible)
 ##'
 ##' @param steps A vector of time steps to return predictions for. The
 ##'   first value must be the final value run in your simulation. An
 ##'   error will be thrown if you get this value wrong, look in
-##'   `object$predict$step` (or the error message) for the correct
-##'   value.
+##'   \code{object$predict$step} (or the error message) for the
+##'   correct value.
 ##'
 ##' @param n_threads The number of threads used in the simulation. If
 ##'   not given, we default to the value used in the particle filter

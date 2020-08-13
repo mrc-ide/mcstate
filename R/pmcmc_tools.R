@@ -6,16 +6,16 @@
 ##' @param object Results of running [pmcmc()]
 ##'
 ##' @param burnin Optional integer number of iterations to discard as
-##'   "burn-in". If given then samples `1:burnin` will be excluded
-##'   from your results. Remember that the first sample represents the
-##'   starting point of the chain. It is an error if this is not a
-##'   positive integer or is greater than or equal to the number of
-##'   samples (i.e., there must be at least one sample remaining after
-##'   discarding burnin).
+##'   "burn-in". If given then samples \code{1:burnin} will be
+##'   excluded from your results. Remember that the first sample
+##'   represents the starting point of the chain. It is an error if
+##'   this is not a positive integer or is greater than or equal to
+##'   the number of samples (i.e., there must be at least one sample
+##'   remaining after discarding burnin).
 ##'
 ##' @param thin Optional integer thinning factor. If given, then every
-##'   `thin`'th sample is retained (e.g., if `thin` is 10 then we keep
-##'   samples 1, 11, 21, ...).
+##'   \code{thin}'th sample is retained (e.g., if \code{thin} is 10
+##'   then we keep samples 1, 11, 21, ...).
 ##'
 ##' @export
 pmcmc_thin <- function(object, burnin = NULL, thin = NULL) {
