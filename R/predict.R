@@ -43,7 +43,6 @@ pmcmc_predict <- function(object, steps, n_threads = NULL, seed = 1L) {
 
 
 ##' @export
-predict.mcstate_pmcmc <- function(object, steps, n_threads = NULL, seed = 1L,
-                                  ...) {
-  pmcmc_predict(object, steps, n_threads, seed)
+predict.mcstate_pmcmc <- function(object, ...) {
+  pmcmc_predict(object, ...)
 }
