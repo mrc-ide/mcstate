@@ -23,11 +23,6 @@ list_to_numeric <- function(x) {
 }
 
 
-squote <- function(x) {
-  sprintf("'%s'", x)
-}
-
-
 ## Array-bind on 3rd dimension
 abind3 <- function(a, b) {
   na <- dim(a)[3]
