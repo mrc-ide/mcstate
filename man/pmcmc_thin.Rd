@@ -7,7 +7,7 @@
 pmcmc_thin(object, burnin = NULL, thin = NULL)
 }
 \arguments{
-\item{object}{Results of running [pmcmc()]}
+\item{object}{Results of running \code{\link{pmcmc}}}
 
 \item{burnin}{Optional integer number of iterations to discard as
 "burn-in". If given then samples \code{1:burnin} will be
@@ -22,7 +22,7 @@ remaining after discarding burnin).}
 then we keep samples 1, 11, 21, ...).}
 }
 \description{
-Thin results of running [pmcmc()]. This function may be useful
-before using [pmcmc_predict()], or before saving pmcmc output to
-disk.
+Thin results of running \code{\link{pmcmc}}. This function may be
+useful before using \code{\link{pmcmc_predict}}, or before saving
+pmcmc output to disk.
 }

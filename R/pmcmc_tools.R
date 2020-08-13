@@ -1,9 +1,9 @@
-##' Thin results of running [pmcmc()]. This function may be useful
-##' before using [pmcmc_predict()], or before saving pmcmc output to
-##' disk.
+##' Thin results of running \code{\link{pmcmc}}. This function may be
+##' useful before using \code{\link{pmcmc_predict}}, or before saving
+##' pmcmc output to disk.
 ##'
 ##' @title Thin a pmcmc chain
-##' @param object Results of running [pmcmc()]
+##' @param object Results of running \code{\link{pmcmc}}
 ##'
 ##' @param burnin Optional integer number of iterations to discard as
 ##'   "burn-in". If given then samples \code{1:burnin} will be
