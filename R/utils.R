@@ -28,7 +28,8 @@ squote <- function(x) {
 }
 
 
-dde_abind <- function(a, b) {
+## Array-bind on 3rd dimension
+abind3 <- function(a, b) {
   na <- dim(a)[3]
   nb <- dim(b)[3]
   nab <- dim(a)[1:2]

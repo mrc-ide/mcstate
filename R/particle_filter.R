@@ -416,7 +416,7 @@ particle_filter <- R6::R6Class(
         res[, , forecast_step] <- model$state(index_state)
       }
       if (append) {
-        res <- dde_abind(self$history(), res)
+        res <- abind3(self$history(), res)
       }
 
       res

@@ -16,7 +16,7 @@ bind_mcstate_trajectories <- function(a, b) {
             dim(a)[1:2] == dim(b)[1:2])
 
   step <- c(a$step, b$step[-1])
-  state <- dde_abind(a$state, b$state[, , -1, drop = FALSE])
+  state <- abind3(a$state, b$state[, , -1, drop = FALSE])
   predicted <- c(a$predicted, b$predicted[-1])
 
   mcstate_trajectories(step, a$rate, state, predicted)
