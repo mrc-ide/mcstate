@@ -62,12 +62,13 @@ test_that("particle filter data creates data", {
 test_that("particle filter can offset initial data", {
   d <- data.frame(hour = 11:20, a = runif(10), b = runif(10))
   res <- particle_filter_data(d, "hour", 4, 1)
-  expect_equal(
-    res,
-    data.frame(hour_start = c(1, 11:19),
-               hour_end = 11:20,
-               step_start = c(4, 11:19 * 4),
-               step_end = 11:20 * 4,
-               a = d$a,
-               b = d$b))
+  cmp <- data.frame(hour_start = c(1, 11:19),
+                    hour_end = 11:20,
+                    step_start = c(4, 11:19 * 4),
+                    step_end = 11:20 * 4,
+                    a = d$a,
+                    b = d$b)
+  attr(cmp, "rate") <- 4
+  attr(cmp, "time") <- "hour"
+  expect_equal(res, cmp)
 })
