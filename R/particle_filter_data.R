@@ -64,7 +64,11 @@ particle_filter_data <- function(data, time, rate, initial_time = NULL) {
       "The first time must be at least 1 (but was given %d)", t[[1L]]))
   }
 
-  rate <- assert_integer(rate)
+  if (nrow(data) < 2) {
+    stop("Expected at least two time windows")
+  }
+
+  rate <- assert_scalar_positive_integer(rate)
 
   time_end <- t
   time_start <- t - 1L
@@ -88,5 +92,7 @@ particle_filter_data <- function(data, time, rate, initial_time = NULL) {
   names(ret)[1:2] <- paste0(time, c("_start", "_end"))
   attr(ret, "rate") <- rate
   attr(ret, "time") <- time
+  class(ret) <- c("particle_filter_data", "data.frame")
+
   ret
 }

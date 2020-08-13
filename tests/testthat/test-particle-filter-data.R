@@ -70,5 +70,16 @@ test_that("particle filter can offset initial data", {
                     b = d$b)
   attr(cmp, "rate") <- 4
   attr(cmp, "time") <- "hour"
+  class(cmp) <- c("particle_filter_data", "data.frame")
   expect_equal(res, cmp)
+})
+
+
+test_that("require more than one observation", {
+  d <- data.frame(hour = 1:2, a = 2:3, b = 3:4)
+  expect_error(
+    particle_filter_data(d[1, ], "hour", 10),
+    "Expected at least two time windows")
+  expect_silent(
+    particle_filter_data(d, "hour", 10))
 })

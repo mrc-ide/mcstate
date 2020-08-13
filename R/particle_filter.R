@@ -94,10 +94,12 @@ particle_filter <- R6::R6Class(
 
     ##' @description Create the particle filter
     ##'
-    ##' @param data The data set to be used for the particle filter.
-    ##' Must be a \code{\link{data.frame}} with at least columns
-    ##' \code{step_start} and \code{step_end}.  Additional columns are
-    ##' used for comparison with the simulation.
+    ##' @param data The data set to be used for the particle filter,
+    ##' created by \code{\link{particle_filter_data}}. This is essentially
+    ##' a \code{\link{data.frame}} with at least columns \code{step_start}
+    ##' and \code{step_end}, along with any additional data used in the
+    ##' \code{compare} function, and additional information about how your
+    ##' steps relate to time.
     ##'
     ##' @param model A stochastic model to use.  Must be a
     ##' \code{dust_generator} object.
@@ -166,13 +168,13 @@ particle_filter <- R6::R6Class(
       if (!is.null(initial) && !is.function(initial)) {
         stop("'initial' must be function if not NULL")
       }
+      assert_is(data, "particle_filter_data")
 
       self$model <- model
-      private$data <- particle_filter_validate_data(data)
-      private$data_split <- df_to_list_of_lists(private$data)
-      private$steps <- unname(as.matrix(
-        private$data[c("step_start", "step_end")]))
-      private$n_steps <- nrow(private$data)
+      private$data <- data
+      private$data_split <- df_to_list_of_lists(data)
+      private$steps <- unname(as.matrix(data[c("step_start", "step_end")]))
+      private$n_steps <- nrow(data)
       private$compare <- compare
       private$index <- index
       private$initial <- initial
@@ -431,25 +433,6 @@ particle_filter <- R6::R6Class(
            rate = attr(private$data, "rate", exact = TRUE))
     }
   ))
-
-
-particle_filter_validate_data <- function(data) {
-  assert_is(data, "data.frame")
-  msg <- setdiff(c("step_start", "step_end"), names(data))
-  if (length(msg)) {
-    stop("Expected columns missing from data: ",
-         paste(squote(msg), collapse = ", "))
-  }
-  if (nrow(data) < 2) {
-    stop("Expected at least two time windows")
-  }
-  ## TODO: step_start and step_end must be integer-like
-  if (all(data$step_start[-1] != data$step_end[-nrow(data)])) {
-    stop("Expected time windows to be adjacent")
-  }
-
-  data
-}
 
 
 ##' @importFrom stats runif
