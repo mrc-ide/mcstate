@@ -30,7 +30,9 @@ filter to the predictions created here.}
 not given, we default to the value used in the particle filter
 that was used in the pmcmc.}
 
-\item{seed}{The random number seed - a positive integer.}
+\item{seed}{The random number seed - a positive integer. Note that
+this will be removed, or the interface altered, in a future
+version.}
 }
 \description{
 Run predictions from the results of [pmcmc()]. This function can

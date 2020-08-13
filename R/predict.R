@@ -18,7 +18,9 @@
 ##'   not given, we default to the value used in the particle filter
 ##'   that was used in the pmcmc.
 ##'
-##' @param seed The random number seed - a positive integer.
+##' @param seed The random number seed - a positive integer. Note that
+##'   this will be removed, or the interface altered, in a future
+##'   version.
 ##'
 ##' @param prepend_trajectories Prepend trajectories from the particle
 ##'   filter to the predictions created here.
