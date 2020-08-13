@@ -63,12 +63,13 @@ particle_filter <- R6::R6Class(
   cloneable = FALSE,
 
   private = list(
+    ## Control over the data
     data = NULL,
     data_split = NULL,
     steps = NULL,
+    ## Functions used for initial conditions, data comparisons and indices
     index = NULL,
     initial = NULL,
-    n_steps = NULL,
     compare = NULL,
     ## Control for dust
     seed = NULL,
@@ -77,7 +78,7 @@ particle_filter <- R6::R6Class(
     last_model = NULL,
     last_history_value = NULL,
     last_history_order = NULL,
-    index_state = NULL
+    last_index_state = NULL
   ),
 
   public = list(
@@ -174,7 +175,6 @@ particle_filter <- R6::R6Class(
       private$data <- data
       private$data_split <- df_to_list_of_lists(data)
       private$steps <- unname(as.matrix(data[c("step_start", "step_end")]))
-      private$n_steps <- nrow(data)
       private$compare <- compare
       private$index <- index
       private$initial <- initial
@@ -209,6 +209,7 @@ particle_filter <- R6::R6Class(
       compare <- private$compare
       steps <- private$steps
       np <- self$n_particles
+      n_steps <- nrow(steps)
 
       if (is.null(private$last_model)) {
         model <- self$model$new(data = pars, step = steps[[1L]],
@@ -254,19 +255,19 @@ particle_filter <- R6::R6Class(
       ## query from it using the tree structure more directly.
       prev_res <- model$run(steps[[1]])
 
-      unique_particles <- rep(np, private$n_steps + 1)
+      unique_particles <- rep(np, n_steps + 1)
       if (save_history) {
         state <- model$state(index_state)
-        history_value <- array(NA_real_, c(dim(state), private$n_steps + 1))
+        history_value <- array(NA_real_, c(dim(state), n_steps + 1))
         history_value[, , 1] <- state
-        history_order <- matrix(seq_len(np), np, private$n_steps + 1)
+        history_order <- matrix(seq_len(np), np, n_steps + 1)
       } else {
         history_value <- NULL
         history_order <- NULL
       }
 
       log_likelihood <- 0
-      for (t in seq_len(private$n_steps)) {
+      for (t in seq_len(n_steps)) {
         res <- model$run(steps[t, 2])
         if (save_history) {
           history_value[, , t + 1L] <- model$state(index_state)
@@ -303,7 +304,7 @@ particle_filter <- R6::R6Class(
       private$last_history_order <- history_order
       self$unique_particles <- unique_particles
       private$last_model <- model
-      private$index_state <- index_state
+      private$last_index_state <- index_state
 
       log_likelihood
     },
@@ -389,7 +390,7 @@ particle_filter <- R6::R6Class(
       }
       model <- private$last_model
 
-      step_end <- private$data_split[[private$n_steps]]$step_end
+      step_end <- last(private$data_split)$step_end
       if (model$step() != step_end) {
         ## TODO(#24): We need to be able to predict multiple times and that
         ## does not work as we lose the state here. This needs support
@@ -404,7 +405,7 @@ particle_filter <- R6::R6Class(
       }
       step <- step_end + t
 
-      index_state <- private$index_state
+      index_state <- private$last_index_state
       ny <-
         if (is.null(index_state)) nrow(self$state()) else length(index_state)
       res <- array(NA_real_, c(ny, self$n_particles, length(step) - 1))
@@ -428,7 +429,7 @@ particle_filter <- R6::R6Class(
     predict_info = function() {
       ## TODO: this name is terrible.
       list(n_threads = private$last_model$n_threads(),
-           index = private$index_state,
+           index = private$last_index_state,
            step = c(private$data$step_start[[1]], private$data$step_end),
            rate = attr(private$data, "rate", exact = TRUE))
     }
