@@ -62,12 +62,24 @@ test_that("particle filter data creates data", {
 test_that("particle filter can offset initial data", {
   d <- data.frame(hour = 11:20, a = runif(10), b = runif(10))
   res <- particle_filter_data(d, "hour", 4, 1)
-  expect_equal(
-    res,
-    data.frame(hour_start = c(1, 11:19),
-               hour_end = 11:20,
-               step_start = c(4, 11:19 * 4),
-               step_end = 11:20 * 4,
-               a = d$a,
-               b = d$b))
+  cmp <- data.frame(hour_start = c(1, 11:19),
+                    hour_end = 11:20,
+                    step_start = c(4, 11:19 * 4),
+                    step_end = 11:20 * 4,
+                    a = d$a,
+                    b = d$b)
+  attr(cmp, "rate") <- 4
+  attr(cmp, "time") <- "hour"
+  class(cmp) <- c("particle_filter_data", "data.frame")
+  expect_equal(res, cmp)
+})
+
+
+test_that("require more than one observation", {
+  d <- data.frame(hour = 1:2, a = 2:3, b = 3:4)
+  expect_error(
+    particle_filter_data(d[1, ], "hour", 10),
+    "Expected at least two time windows")
+  expect_silent(
+    particle_filter_data(d, "hour", 10))
 })

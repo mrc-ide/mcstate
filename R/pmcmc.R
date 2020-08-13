@@ -29,7 +29,11 @@
 ##'   and \code{index} used in the particle filter) so that the
 ##'   process may be restarted from this point for projections.  If
 ##'   \code{save_trajectories} is \code{TRUE} the same particle will
-##'   be selected for each.
+##'   be selected for each. The default is \code{TRUE}, which will
+##'   cause \code{n_state} * \code{n_steps} of data to be output
+##'   alongside your results. Set this argument to \code{FALSE} to
+##'   save space, or use \code{\link{pmcmc_thin}} after running the
+##'   MCMC.
 ##'
 ##' @param save_trajectories Logical, indicating if the particle
 ##'   trajectories should be saved during the simulation. If
@@ -53,7 +57,7 @@
 ##'   simulation (if \code{return_trajectories} was \code{TRUE}).
 ##'
 ##' @export
-pmcmc <- function(pars, filter, n_steps, save_state = FALSE,
+pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
                   save_trajectories = FALSE) {
   assert_is(pars, "pmcmc_parameters")
   assert_is(filter, "particle_filter")
@@ -119,20 +123,46 @@ pmcmc <- function(pars, filter, n_steps, save_state = FALSE,
     }
   }
 
-  pars <- set_colnames(list_to_matrix(history_pars$get()),
-                       names(curr_pars))
+  pars_matrix <- set_colnames(list_to_matrix(history_pars$get()),
+                              names(curr_pars))
   probabilities <- set_colnames(list_to_matrix(history_probabilities$get()),
                        c("log_prior", "log_likelihood", "log_posterior"))
 
-  state <- trajectories <- NULL
+  predict <- state <- trajectories <- NULL
   if (save_state) {
     state <- t(list_to_matrix(history_state$get()))
+
+    ## Extract the transformation function from the pars object as
+    ## it's all we want; this is a bit of a hack but it works for now
+    ## at least.
+    transform <- pars[[".__enclos_env__"]]$private$transform
+
+    ## Information about how the particle filter was configured:
+    info <- filter$predict_info()
+
+    ## This information is required in order to run predictions but
+    ## adds a significant space overhead to the saved data (model is
+    ## fairly large, and transform could capture anything in scope if
+    ## it is a closure).
+    predict <- list(transform = transform,
+                    model = filter$model,
+                    n_threads = info$n_threads,
+                    index = info$index,
+                    rate = info$rate,
+                    step = last(info$step))
   }
   if (save_trajectories) {
-    trajectories <- list_to_array(history_trajectories$get())
+    info <- filter$predict_info()
+    ## Permute trajectories from [state x mcmc x particle] to
+    ## [state x particle x mcmc] so that they match the ones that we
+    ## will generate with predict
+    trajectories_state <-
+      aperm(list_to_array(history_trajectories$get()), c(1, 3, 2))
+    trajectories <- mcstate_trajectories(info$step, info$rate,
+                                         trajectories_state, FALSE)
   }
 
-  mcstate_pmcmc(pars, probabilities, state, trajectories)
+  mcstate_pmcmc(pars_matrix, probabilities, state, trajectories, predict)
 }
 
 

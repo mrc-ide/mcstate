@@ -23,12 +23,8 @@ list_to_numeric <- function(x) {
 }
 
 
-squote <- function(x) {
-  sprintf("'%s'", x)
-}
-
-
-dde_abind <- function(a, b) {
+## Array-bind on 3rd dimension
+abind3 <- function(a, b) {
   na <- dim(a)[3]
   nb <- dim(b)[3]
   nab <- dim(a)[1:2]
@@ -81,4 +77,14 @@ list_to_array <- function(data) {
 set_colnames <- function(m, nms) {
   colnames(m) <- nms
   m
+}
+
+
+last <- function(x) {
+  x[[length(x)]]
+}
+
+
+df_to_list_of_lists <- function(x) {
+  lapply(unname(split(x, seq_len(nrow(x)))), as.list)
 }

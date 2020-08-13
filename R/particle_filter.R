@@ -63,11 +63,13 @@ particle_filter <- R6::R6Class(
   cloneable = FALSE,
 
   private = list(
+    ## Control over the data
     data = NULL,
+    data_split = NULL,
     steps = NULL,
+    ## Functions used for initial conditions, data comparisons and indices
     index = NULL,
     initial = NULL,
-    n_steps = NULL,
     compare = NULL,
     ## Control for dust
     seed = NULL,
@@ -76,7 +78,7 @@ particle_filter <- R6::R6Class(
     last_model = NULL,
     last_history_value = NULL,
     last_history_order = NULL,
-    index_state = NULL
+    last_index_state = NULL
   ),
 
   public = list(
@@ -93,10 +95,12 @@ particle_filter <- R6::R6Class(
 
     ##' @description Create the particle filter
     ##'
-    ##' @param data The data set to be used for the particle filter.
-    ##' Must be a \code{\link{data.frame}} with at least columns
-    ##' \code{step_start} and \code{step_end}.  Additional columns are
-    ##' used for comparison with the simulation.
+    ##' @param data The data set to be used for the particle filter,
+    ##' created by \code{\link{particle_filter_data}}. This is essentially
+    ##' a \code{\link{data.frame}} with at least columns \code{step_start}
+    ##' and \code{step_end}, along with any additional data used in the
+    ##' \code{compare} function, and additional information about how your
+    ##' steps relate to time.
     ##'
     ##' @param model A stochastic model to use.  Must be a
     ##' \code{dust_generator} object.
@@ -165,12 +169,12 @@ particle_filter <- R6::R6Class(
       if (!is.null(initial) && !is.function(initial)) {
         stop("'initial' must be function if not NULL")
       }
+      assert_is(data, "particle_filter_data")
 
       self$model <- model
-      private$data <- particle_filter_validate_data(data)
-      private$steps <- cbind(vnapply(private$data, "[[", "step_start"),
-                             vnapply(private$data, "[[", "step_end"))
-      private$n_steps <- length(private$data)
+      private$data <- data
+      private$data_split <- df_to_list_of_lists(data)
+      private$steps <- unname(as.matrix(data[c("step_start", "step_end")]))
       private$compare <- compare
       private$index <- index
       private$initial <- initial
@@ -189,7 +193,7 @@ particle_filter <- R6::R6Class(
     ##' the \code{pars} argument to your model, to your \code{compare}
     ##' function, and (if using) to your \code{initial} function. It must
     ##' be an R list (not vector or \code{NULL}) because that is what a
-    ##' dust model currently requires on initialisation or `$reset` - we
+    ##' dust model currently requires on initialisation or \code{$reset} - we
     ##' may relax this later. You may want to put your observation and
     ##' initial parameters under their own keys (e.g.,
     ##' \code{pars$initial$whatever}), but this is up to you. Extra keys
@@ -205,6 +209,7 @@ particle_filter <- R6::R6Class(
       compare <- private$compare
       steps <- private$steps
       np <- self$n_particles
+      n_steps <- nrow(steps)
 
       if (is.null(private$last_model)) {
         model <- self$model$new(data = pars, step = steps[[1L]],
@@ -250,25 +255,25 @@ particle_filter <- R6::R6Class(
       ## query from it using the tree structure more directly.
       prev_res <- model$run(steps[[1]])
 
-      unique_particles <- rep(np, private$n_steps + 1)
+      unique_particles <- rep(np, n_steps + 1)
       if (save_history) {
         state <- model$state(index_state)
-        history_value <- array(NA_real_, c(dim(state), private$n_steps + 1))
+        history_value <- array(NA_real_, c(dim(state), n_steps + 1))
         history_value[, , 1] <- state
-        history_order <- matrix(seq_len(np), np, private$n_steps + 1)
+        history_order <- matrix(seq_len(np), np, n_steps + 1)
       } else {
         history_value <- NULL
         history_order <- NULL
       }
 
       log_likelihood <- 0
-      for (t in seq_len(private$n_steps)) {
+      for (t in seq_len(n_steps)) {
         res <- model$run(steps[t, 2])
         if (save_history) {
           history_value[, , t + 1L] <- model$state(index_state)
         }
 
-        log_weights <- compare(res, prev_res, private$data[[t]], pars)
+        log_weights <- compare(res, prev_res, private$data_split[[t]], pars)
         if (is.null(log_weights)) {
           prev_res <- res
           if (save_history) {
@@ -299,7 +304,7 @@ particle_filter <- R6::R6Class(
       private$last_history_order <- history_order
       self$unique_particles <- unique_particles
       private$last_model <- model
-      private$index_state <- index_state
+      private$last_index_state <- index_state
 
       log_likelihood
     },
@@ -360,83 +365,18 @@ particle_filter <- R6::R6Class(
       array(history_value[cidx], c(ny, np, nt))
     },
 
-    ##' Create predicted trajectories, based on the final point of a
-    ##' run with the particle filter
-    ##'
-    ##' @param t The steps to predict from, \emph{offset from the final
-    ##' point}. As a result the first time-point of \code{t} must be 0.
-    ##' The predictions will not however, include that point.
-    ##'
-    ##' @param append Logical, indicating if the predictions should be
-    ##' appended onto the previous history of the simulation.
-    ##'
-    ##' @return A 3d array with dimensions representing (1) the state
-    ##' vector, (2) the particle, (3) time
-    predict = function(t, append = FALSE) {
-      ## TODO: this just needs major work really
-      if (is.null(private$last_model)) {
-        stop("Particle filter has not been run")
-      }
-      if (append && is.null(private$last_history_value)) {
-        stop("Can't append without history")
-      }
-      if (t[[1]] != 0) {
-        stop("Expected first 't' element to be zero")
-      }
-      model <- private$last_model
-
-      step_end <- private$data[[private$n_steps]]$step_end
-      if (model$step() != step_end) {
-        ## TODO(#24): We need to be able to predict multiple times and that
-        ## does not work as we lose the state here. This needs support
-        ## in dust?
-        ##
-        ## If not we can reset the state and model time and state (that
-        ## needs a little dust support too)
-        ##
-        ## What we *really* need is the way to kick off dust with
-        ## multiple parameter sets.
-        stop("Can't yet run predict multiple times!")
-      }
-      step <- step_end + t
-
-      index_state <- private$index_state
-      ny <-
-        if (is.null(index_state)) nrow(self$state()) else length(index_state)
-      res <- array(NA_real_, c(ny, self$n_particles, length(step) - 1))
-      forecast_step <- 0L
-      for (t in step[-1L]) {
-        model$run(t)
-        forecast_step <- forecast_step + 1L
-        res[, , forecast_step] <- model$state(index_state)
-      }
-      if (append) {
-        res <- dde_abind(self$history(), res)
-      }
-
-      res
+    ##' @description
+    ##' Return a list of information that would be used to restart a
+    ##' simulation (in addition to state). This exists to support internal
+    ##' functions and should not need to be called by end-users.
+    predict_info = function() {
+      ## TODO: this name is terrible.
+      list(n_threads = private$last_model$n_threads(),
+           index = private$last_index_state,
+           step = c(private$data$step_start[[1]], private$data$step_end),
+           rate = attr(private$data, "rate", exact = TRUE))
     }
   ))
-
-
-particle_filter_validate_data <- function(data) {
-  assert_is(data, "data.frame")
-  msg <- setdiff(c("step_start", "step_end"), names(data))
-  if (length(msg)) {
-    stop("Expected columns missing from data: ",
-         paste(squote(msg), collapse = ", "))
-  }
-  if (nrow(data) < 2) {
-    stop("Expected at least two time windows")
-  }
-  ## TODO: step_start and step_end must be integer-like
-  if (all(data$step_start[-1] != data$step_end[-nrow(data)])) {
-    stop("Expected time windows to be adjacent")
-  }
-
-  ## Processing to make future use nicer:
-  lapply(unname(split(data, seq_len(nrow(data)))), as.list)
-}
 
 
 ##' @importFrom stats runif
