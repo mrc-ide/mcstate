@@ -365,63 +365,6 @@ particle_filter <- R6::R6Class(
       array(history_value[cidx], c(ny, np, nt))
     },
 
-    ##' Create predicted trajectories, based on the final point of a
-    ##' run with the particle filter
-    ##'
-    ##' @param t The steps to predict from, \emph{offset from the final
-    ##' point}. As a result the first time-point of \code{t} must be 0.
-    ##' The predictions will not however, include that point.
-    ##'
-    ##' @param append Logical, indicating if the predictions should be
-    ##' appended onto the previous history of the simulation.
-    ##'
-    ##' @return A 3d array with dimensions representing (1) the state
-    ##' vector, (2) the particle, (3) time
-    predict = function(t, append = FALSE) {
-      ## TODO: this just needs major work really
-      if (is.null(private$last_model)) {
-        stop("Particle filter has not been run")
-      }
-      if (append && is.null(private$last_history_value)) {
-        stop("Can't append without history")
-      }
-      if (t[[1]] != 0) {
-        stop("Expected first 't' element to be zero")
-      }
-      model <- private$last_model
-
-      step_end <- last(private$data_split)$step_end
-      if (model$step() != step_end) {
-        ## TODO(#24): We need to be able to predict multiple times and that
-        ## does not work as we lose the state here. This needs support
-        ## in dust?
-        ##
-        ## If not we can reset the state and model time and state (that
-        ## needs a little dust support too)
-        ##
-        ## What we *really* need is the way to kick off dust with
-        ## multiple parameter sets.
-        stop("Can't yet run predict multiple times!")
-      }
-      step <- step_end + t
-
-      index_state <- private$last_index_state
-      ny <-
-        if (is.null(index_state)) nrow(self$state()) else length(index_state)
-      res <- array(NA_real_, c(ny, self$n_particles, length(step) - 1))
-      forecast_step <- 0L
-      for (t in step[-1L]) {
-        model$run(t)
-        forecast_step <- forecast_step + 1L
-        res[, , forecast_step] <- model$state(index_state)
-      }
-      if (append) {
-        res <- abind3(self$history(), res)
-      }
-
-      res
-    },
-
     ##' @description
     ##' Return a list of information that would be used to restart a
     ##' simulation (in addition to state). This exists to support internal
