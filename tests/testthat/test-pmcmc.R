@@ -104,7 +104,7 @@ test_that("run pmcmc with the particle filter and retain history", {
 
   expect_setequal(
     names(results1),
-    c("pars", "probabilities", "state", "trajectories"))
+    c("pars", "probabilities", "state", "trajectories", "predict"))
 
   ## Including or not the history does not change the mcmc trajectory:
   expect_identical(names(results1), names(results2))
@@ -124,8 +124,25 @@ test_that("run pmcmc with the particle filter and retain history", {
 
   ## History, if returned, has the correct shape
   expect_equal(dim(results1$state), c(4, 31)) # state, mcmc
-  expect_equal(dim(results1$trajectories), c(3, 101, 31)) # state, time, mcmc
+
+  ## Trajectories, if returned, have the same shape
+  expect_s3_class(results1$trajectories, "mcstate_trajectories")
+  expect_equal(dim(results1$trajectories$state), c(3, 31, 101))
   expect_equal(
-    results1$trajectories[, ncol(results1$trajectories), ],
+    results1$trajectories$state[, , dim(results1$trajectories$state)[3]],
     results1$state[1:3, ])
+  expect_equal(results1$trajectories$predicted, rep(FALSE, 101))
+  expect_equal(results1$trajectories$step, seq(0, 400, by = 4))
+  expect_equal(results1$trajectories$rate, 4)
+
+  ## Additional information required to predict
+  expect_setequal(
+    names(results1$predict),
+    c("transform", "model", "n_threads", "index", "rate", "step"))
+  expect_identical(results1$predict$transform, as.list)
+  expect_identical(results1$predict$model, dat$model)
+  expect_equal(results1$predict$n_threads, 1L)
+  expect_equal(results1$predict$index, 1:3)
+  expect_equal(results1$predict$rate, 4)
+  expect_equal(results1$predict$step, last(dat$data$step_end))
 })

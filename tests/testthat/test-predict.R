@@ -1,4 +1,4 @@
-context("predictn")
+context("predict")
 
 test_that("can run a prediction from a mcmc run", {
   dat <- example_sir()
@@ -13,14 +13,18 @@ test_that("can run a prediction from a mcmc run", {
   steps <- seq(tail(dat$data$step_end, 1), by = 4, length.out = 26)
   y <- pmcmc_predict(results, steps)
 
-  expect_equal(dim(y), c(3, 31, length(steps)))
+  expect_equal(y$step, steps)
+  expect_equal(y$rate, 4)
+  expect_equal(y$predicted, rep(TRUE, length(steps)))
+
+  expect_equal(dim(y$state), c(3, 31, length(steps)))
 
   ## Start from correct point
-  expect_equal(y[, , 1], results$state[1:3, ])
+  expect_equal(y$state[, , 1], results$state[1:3, ])
 
   ## Check predictions are reasonable:
-  expect_true(all(diff(t(y[1, , ])) <= 0))
-  expect_true(all(diff(t(y[3, , ])) >= 0))
+  expect_true(all(diff(t(y$state[1, , ])) <= 0))
+  expect_true(all(diff(t(y$state[3, , ])) >= 0))
 })
 
 
@@ -32,6 +36,22 @@ test_that("Can rehydrate mcmc results and predict", {
 
   results <- unserialize(serialize(results, NULL))
   expect_identical(pmcmc_predict(results, steps), y1)
+})
+
+
+test_that("Can combine runs with predictions", {
+  results <- example_sir_pmcmc()$pmcmc
+
+  steps <- seq(results$predict$step, by = 4, length.out = 26)
+  y1 <- pmcmc_predict(results, steps, prepend_trajectories = TRUE)
+  y2 <- pmcmc_predict(results, steps)
+
+  expect_is(y1, "mcstate_trajectories")
+  expect_equal(y1$rate, 4)
+  expect_equal(y1$step, seq(0, 500, by = 4))
+  expect_equal(y1$predicted, rep(c(FALSE, TRUE), c(101, 25)))
+  expect_identical(y1$state[, , 101:126], y2$state)
+  expect_equal(y1$state[, , 1:101], results$trajectories$state)
 })
 
 

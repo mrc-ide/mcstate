@@ -20,9 +20,10 @@ format.mcstate_pmcmc <- function(x, ...) {
   if (is.null(x$trajectories)) {
     str_trajectories <- sprintf("  trajectories: (not included)")
   } else {
+    trajectories <- x$trajectories$state
     str_trajectories <- sprintf(
       "  trajectories: %d x %d x %d array of particle trajectories",
-      nrow(x$trajectories), ncol(x$trajectories), dim(x$trajectories)[[3]])
+      nrow(trajectories), ncol(trajectories), dim(trajectories)[[3]])
   }
 
   indent <- 4

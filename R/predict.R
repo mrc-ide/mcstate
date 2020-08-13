@@ -20,8 +20,12 @@
 ##'
 ##' @param seed The random number seed - a positive integer.
 ##'
+##' @param prepend_trajectories Prepend trajectories from the particle
+##'   filter to the predictions created here.
+##'
 ##' @export
-pmcmc_predict <- function(object, steps, n_threads = NULL, seed = 1L) {
+pmcmc_predict <- function(object, steps, prepend_trajectories = FALSE,
+                          n_threads = NULL, seed = 1L) {
   if (is.null(object$predict)) {
     stop("mcmc was run with return_state = FALSE, can't predict")
   }
@@ -31,6 +35,10 @@ pmcmc_predict <- function(object, steps, n_threads = NULL, seed = 1L) {
   if (steps[[1]] != object$predict$step) {
     stop(sprintf("Expected steps[1] to be %d", object$predict$step))
   }
+  if (prepend_trajectories && is.null(object$trajectories)) {
+    stop(paste("mcmc was run with return_trajectories = FALSE,",
+               "can't prepend trajectories"))
+  }
 
   state <- object$state
   data <- apply(object$pars, 1, object$predict$transform)
@@ -38,7 +46,14 @@ pmcmc_predict <- function(object, steps, n_threads = NULL, seed = 1L) {
   model <- object$predict$model
   n_threads <- n_threads %||% object$predict$n_threads
 
-  dust::dust_simulate(model, steps, data, state, index, n_threads, seed)
+  y <- dust::dust_simulate(model, steps, data, state, index, n_threads, seed)
+
+  res <- mcstate_trajectories(steps, object$predict$rate, y, TRUE)
+  if (prepend_trajectories) {
+    res <- bind_mcstate_trajectories(object$trajectories, res)
+  }
+
+  res
 }
 
 

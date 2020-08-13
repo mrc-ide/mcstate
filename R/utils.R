@@ -87,3 +87,8 @@ set_colnames <- function(m, nms) {
 last <- function(x) {
   x[[length(x)]]
 }
+
+
+df_to_list_of_lists <- function(x) {
+  lapply(unname(split(x, seq_len(nrow(x)))), as.list)
+}

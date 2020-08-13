@@ -133,13 +133,26 @@ pmcmc <- function(pars, filter, n_steps, save_state = FALSE,
     ## at least.
     transform <- pars[[".__enclos_env__"]]$private$transform
 
+    ## Information about how the particle filter was configured:
+    info <- filter$predict_info()
+
     ## This information is required in order to run predictions but
-    ## adds a significant overhead to the model.
-    predict <- c(filter$predict_info(),
-                 list(transform = transform, model = filter$model))
+    ## adds a significant space overhead to the saved data (model is
+    ## fairly large, and transform could capture anything in scope if
+    ## it is a closure).
+    predict <- list(transform = transform,
+                    model = filter$model,
+                    n_threads = info$n_threads,
+                    index = info$index,
+                    rate = info$rate,
+                    step = last(info$step))
   }
   if (save_trajectories) {
-    trajectories <- list_to_array(history_trajectories$get())
+    info <- filter$predict_info()
+    trajectories_state <-
+      aperm(list_to_array(history_trajectories$get()), c(1, 3, 2))
+    trajectories <- mcstate_trajectories(info$step, info$rate,
+                                         trajectories_state, FALSE)
   }
 
   mcstate_pmcmc(pars_matrix, probabilities, state, trajectories, predict)

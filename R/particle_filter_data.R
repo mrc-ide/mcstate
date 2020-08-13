@@ -86,5 +86,7 @@ particle_filter_data <- function(data, time, rate, initial_time = NULL) {
                     step_end = time_end * rate,
                     data[names(data) != time])
   names(ret)[1:2] <- paste0(time, c("_start", "_end"))
+  attr(ret, "rate") <- rate
+  attr(ret, "time") <- time
   ret
 }

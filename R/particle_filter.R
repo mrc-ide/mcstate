@@ -64,6 +64,7 @@ particle_filter <- R6::R6Class(
 
   private = list(
     data = NULL,
+    data_split = NULL,
     steps = NULL,
     index = NULL,
     initial = NULL,
@@ -168,9 +169,10 @@ particle_filter <- R6::R6Class(
 
       self$model <- model
       private$data <- particle_filter_validate_data(data)
-      private$steps <- cbind(vnapply(private$data, "[[", "step_start"),
-                             vnapply(private$data, "[[", "step_end"))
-      private$n_steps <- length(private$data)
+      private$data_split <- df_to_list_of_lists(private$data)
+      private$steps <- unname(as.matrix(
+        private$data[c("step_start", "step_end")]))
+      private$n_steps <- nrow(private$data)
       private$compare <- compare
       private$index <- index
       private$initial <- initial
@@ -268,7 +270,7 @@ particle_filter <- R6::R6Class(
           history_value[, , t + 1L] <- model$state(index_state)
         }
 
-        log_weights <- compare(res, prev_res, private$data[[t]], pars)
+        log_weights <- compare(res, prev_res, private$data_split[[t]], pars)
         if (is.null(log_weights)) {
           prev_res <- res
           if (save_history) {
@@ -385,7 +387,7 @@ particle_filter <- R6::R6Class(
       }
       model <- private$last_model
 
-      step_end <- private$data[[private$n_steps]]$step_end
+      step_end <- private$data_split[[private$n_steps]]$step_end
       if (model$step() != step_end) {
         ## TODO(#24): We need to be able to predict multiple times and that
         ## does not work as we lose the state here. This needs support
@@ -422,9 +424,11 @@ particle_filter <- R6::R6Class(
     ##' simulation (in addition to state). This exists to support internal
     ##' functions and should not need to be called by end-users.
     predict_info = function() {
+      ## TODO: this name is terrible.
       list(n_threads = private$last_model$n_threads(),
            index = private$index_state,
-           step = last(private$data)$step_end)
+           step = c(private$data$step_start[[1]], private$data$step_end),
+           rate = attr(private$data, "rate", exact = TRUE))
     }
   ))
 
@@ -444,8 +448,7 @@ particle_filter_validate_data <- function(data) {
     stop("Expected time windows to be adjacent")
   }
 
-  ## Processing to make future use nicer:
-  lapply(unname(split(data, seq_len(nrow(data)))), as.list)
+  data
 }
 
 
