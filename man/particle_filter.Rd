@@ -81,7 +81,6 @@ at each step that has been run}
 \item \href{#method-run}{\code{particle_filter$run()}}
 \item \href{#method-state}{\code{particle_filter$state()}}
 \item \href{#method-history}{\code{particle_filter$history()}}
-\item \href{#method-predict}{\code{particle_filter$predict()}}
 \item \href{#method-predict_info}{\code{particle_filter$predict_info()}}
 }
 }
@@ -106,10 +105,12 @@ Create the particle filter
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{data}}{The data set to be used for the particle filter.
-Must be a \code{\link{data.frame}} with at least columns
-\code{step_start} and \code{step_end}.  Additional columns are
-used for comparison with the simulation.}
+\item{\code{data}}{The data set to be used for the particle filter,
+created by \code{\link{particle_filter_data}}. This is essentially
+a \code{\link{data.frame}} with at least columns \code{step_start}
+and \code{step_end}, along with any additional data used in the
+\code{compare} function, and additional information about how your
+steps relate to time.}
 
 \item{\code{model}}{A stochastic model to use.  Must be a
 \code{dust_generator} object.}
@@ -244,36 +245,9 @@ time point.
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{index_particle}}{Optional vector of particle indices to return.
-If \code{NULL} we return all particles' histories.
-Create predicted trajectories, based on the final point of a
-run with the particle filter}
+If \code{NULL} we return all particles' histories.}
 }
 \if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-predict"></a>}}
-\if{latex}{\out{\hypertarget{method-predict}{}}}
-\subsection{Method \code{predict()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_filter$predict(t, append = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{t}}{The steps to predict from, \emph{offset from the final
-point}. As a result the first time-point of \code{t} must be 0.
-The predictions will not however, include that point.}
-
-\item{\code{append}}{Logical, indicating if the predictions should be
-appended onto the previous history of the simulation.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A 3d array with dimensions representing (1) the state
-vector, (2) the particle, (3) time
 }
 }
 \if{html}{\out{<hr>}}

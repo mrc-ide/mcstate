@@ -4,7 +4,13 @@
 \alias{pmcmc_predict}
 \title{Run predictions from PMCMC}
 \usage{
-pmcmc_predict(object, steps, n_threads = NULL, seed = 1L)
+pmcmc_predict(
+  object,
+  steps,
+  prepend_trajectories = FALSE,
+  n_threads = NULL,
+  seed = 1L
+)
 }
 \arguments{
 \item{object}{The results of running [pmcmc()] with `return_state
@@ -16,6 +22,9 @@ first value must be the final value run in your simulation. An
 error will be thrown if you get this value wrong, look in
 `object$predict$step` (or the error message) for the correct
 value.}
+
+\item{prepend_trajectories}{Prepend trajectories from the particle
+filter to the predictions created here.}
 
 \item{n_threads}{The number of threads used in the simulation. If
 not given, we default to the value used in the particle filter
