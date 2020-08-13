@@ -149,6 +149,9 @@ pmcmc <- function(pars, filter, n_steps, save_state = FALSE,
   }
   if (save_trajectories) {
     info <- filter$predict_info()
+    ## Permute trajectories from [state x mcmc x particle] to
+    ## [state x particle x mcmc] so that they match the ones that we
+    ## will generate with predict
     trajectories_state <-
       aperm(list_to_array(history_trajectories$get()), c(1, 3, 2))
     trajectories <- mcstate_trajectories(info$step, info$rate,
