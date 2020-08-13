@@ -17,7 +17,7 @@
 ##'
 ##' @export
 pmcmc_thin <- function(object, burnin = NULL, thin = NULL) {
-  expect_is(object, "mcstate_pmcmc")
+  assert_is(object, "mcstate_pmcmc")
   n <- nrow(object$pars)
   i <- seq_len(n)
   if (!is.null(burnin)) {
