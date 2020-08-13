@@ -39,21 +39,12 @@ test_that("burnin and thin can be used together", {
 })
 
 
-test_that("can discard whole chain", {
+test_that("can't discard the whole chain (or more)", {
   results <- example_sir_pmcmc()$pmcmc
-  res <- pmcmc_thin(results, 31)
-  i <- integer(0)
-  expect_identical(res$pars, results$pars[i, ])
-  expect_identical(res$probabilities, results$probabilities[i, ])
-  expect_identical(res$state, results$state[, i])
-  expect_identical(res$trajectories$state, results$trajectories$state[, i, ])
-})
-
-
-test_that("can't discard more than the whole chain", {
-  results <- example_sir_pmcmc()$pmcmc
-  expect_error(pmcmc_thin(results, 32),
-               "'burnin' can be at most 31 for your results")
+  expect_error(pmcmc_thin(results, 31),
+               "'burnin' can be at most 30 for your results")
+  expect_error(pmcmc_thin(results, 100),
+               "'burnin' can be at most 30 for your results")
 })
 
 
