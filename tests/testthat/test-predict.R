@@ -98,3 +98,14 @@ test_that("S3 method works as expected", {
   y2 <- pmcmc_predict(results, steps)
   expect_identical(y1, y2)
 })
+
+
+test_that("can't prepend history if trajectories not saved", {
+  results <- example_sir_pmcmc()$pmcmc
+  results$trajectories <- NULL
+
+  steps <- seq(results$predict$step, by = 4, length.out = 26)
+  expect_error(
+    pmcmc_predict(results, steps, prepend_trajectories = TRUE),
+    "mcmc was run with return_trajectories = FALSE, can't prepend trajectories")
+})
