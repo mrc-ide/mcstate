@@ -1,12 +1,12 @@
 ##' Run a pmcmc sampler
 ##'
 ##' This is a basic Metropolis-Hastings MCMC sampler.  The
-##' \code{filter} is run with a set of parameters to evaluate the
+##' `filter` is run with a set of parameters to evaluate the
 ##' likelihood. A new set of parameters is proposed, and these
 ##' likelihoods are compared, jumping with probability equal to their
-##' ratio. This is repeated for \code{n_mcmc} proposals.
+##' ratio. This is repeated for `n_mcmc` proposals.
 ##'
-##' While this function is called \code{pmcmc} and requires a particle
+##' While this function is called `pmcmc` and requires a particle
 ##' filter object, there's nothing special about it for particle
 ##' filtering. However, we may need to add things in the future that
 ##' make assumptions about the particle filter, so we have named it
@@ -14,47 +14,47 @@
 ##'
 ##' @title Run a pmcmc sampler
 ##'
-##' @param pars A \code{\link{pmcmc_parameters}} object containing
+##' @param pars A [`pmcmc_parameters`] object containing
 ##'   information about parameters (ranges, priors, proposal kernel,
 ##'   translation functions for use with the particle filter).
 ##'
-##' @param filter A \code{\link{particle_filter}} object
+##' @param filter A [`particle_filter`] object
 ##'
 ##' @param n_steps Number of MCMC steps to run
 ##'
 ##' @param save_state Logical, indicating if the state should be saved
-##'   at the end of the simulation. If \code{TRUE}, then a single
+##'   at the end of the simulation. If `TRUE`, then a single
 ##'   randomly selected particle's state will be collected at the end
 ##'   of each MCMC step. This is the full state (i.e., unaffected by
-##'   and \code{index} used in the particle filter) so that the
+##'   and `index` used in the particle filter) so that the
 ##'   process may be restarted from this point for projections.  If
-##'   \code{save_trajectories} is \code{TRUE} the same particle will
-##'   be selected for each. The default is \code{TRUE}, which will
-##'   cause \code{n_state} * \code{n_steps} of data to be output
-##'   alongside your results. Set this argument to \code{FALSE} to
-##'   save space, or use \code{\link{pmcmc_thin}} after running the
+##'   `save_trajectories` is `TRUE` the same particle will
+##'   be selected for each. The default is `TRUE`, which will
+##'   cause `n_state` * `n_steps` of data to be output
+##'   alongside your results. Set this argument to `FALSE` to
+##'   save space, or use [pmcmc_thin()] after running the
 ##'   MCMC.
 ##'
 ##' @param save_trajectories Logical, indicating if the particle
 ##'   trajectories should be saved during the simulation. If
-##'   \code{TRUE}, then a single randomly selected particle's
+##'   `TRUE`, then a single randomly selected particle's
 ##'   trajectory will be collected at the end of each MCMC step.  This
-##'   is the filtered state (i.e., using the \code{state} component of
-##'   \code{index} provided to the particle filter).  If
-##'   \code{save_state} is \code{TRUE} the same particle will
+##'   is the filtered state (i.e., using the `state` component of
+##'   `index` provided to the particle filter).  If
+##'   `save_state` is `TRUE` the same particle will
 ##'   be selected for each.
 ##'
-##' @return A \code{mcstate_pmcmc} object containing \code{pars}
-##'   (sampled parameters) and \code{probabilities} (log prior, log
+##' @return A `mcstate_pmcmc` object containing `pars`
+##'   (sampled parameters) and `probabilities` (log prior, log
 ##'   likelihood and log posterior values for these
 ##'   probabilities). Two additional fields may be present:
-##'   \code{state} (if \code{return_state} was \code{TRUE}),
+##'   `state` (if `return_state` was `TRUE`),
 ##'   containing the final state of a randomly selected particle at
 ##'   the end of the simulation, for each step (will be a matrix with
-##'   as many rows as your state has variables, and as \code{n_steps +
-##'   1} columns corresponding to each step). \code{trajectories} will
+##'   as many rows as your state has variables, and as `n_steps +
+##'   1` columns corresponding to each step). `trajectories` will
 ##'   include a 3d array of particle trajectories through the
-##'   simulation (if \code{return_trajectories} was \code{TRUE}).
+##'   simulation (if `return_trajectories` was `TRUE`).
 ##'
 ##' @export
 pmcmc <- function(pars, filter, n_steps, save_state = TRUE,

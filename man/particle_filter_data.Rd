@@ -7,7 +7,7 @@
 particle_filter_data(data, time, rate, initial_time = NULL)
 }
 \arguments{
-\item{data}{A \code{\link{data.frame}} of data}
+\item{data}{A \code{\link[=data.frame]{data.frame()}} of data}
 
 \item{time}{The name of a column within \code{data} that
 represents your measure of time.  This column must be
@@ -25,10 +25,10 @@ column, minus 1 (i.e., \code{data[[time]] - 1}).}
 }
 \value{
 A data.frame with new columns \code{step_start} and
-  \code{step_end} (required by \code{\link{particle_filter}}),
-  along side all previous data except for the time variable, which
-  is replaced by new \code{<time>_start} and \code{<time>_end}
-  columns.
+\code{step_end} (required by \code{\link{particle_filter}}),
+along side all previous data except for the time variable, which
+is replaced by new \verb{<time>_start} and \verb{<time>_end}
+columns.
 }
 \description{
 Prepare data for use with the \code{\link{particle_filter}}.  This
@@ -43,8 +43,7 @@ We require that the time variable increments in unit steps; this
 may be relaxed in future to even steps, or possibly irregular
 steps, but for now this assumption is required.  We assume that
 the data in the first column is recorded at the end of a period of
-1 time unit.  So if you have in the first column \code{time = 10,
-data = 100} we assume that the model steps from time 9 to to time
+1 time unit.  So if you have in the first column \verb{time = 10, data = 100} we assume that the model steps from time 9 to to time
 10 and at that period the data has value 100.
 }
 \examples{

@@ -1,12 +1,12 @@
-##' Thin results of running \code{\link{pmcmc}}. This function may be
-##' useful before using \code{\link{pmcmc_predict}}, or before saving
+##' Thin results of running [pmcmc()]. This function may be
+##' useful before using [pmcmc_predict()], or before saving
 ##' pmcmc output to disk.
 ##'
 ##' @title Thin a pmcmc chain
-##' @param object Results of running \code{\link{pmcmc}}
+##' @param object Results of running [pmcmc()]
 ##'
 ##' @param burnin Optional integer number of iterations to discard as
-##'   "burn-in". If given then samples \code{1:burnin} will be
+##'   "burn-in". If given then samples `1:burnin` will be
 ##'   excluded from your results. Remember that the first sample
 ##'   represents the starting point of the chain. It is an error if
 ##'   this is not a positive integer or is greater than or equal to
@@ -14,7 +14,7 @@
 ##'   remaining after discarding burnin).
 ##'
 ##' @param thin Optional integer thinning factor. If given, then every
-##'   \code{thin}'th sample is retained (e.g., if \code{thin} is 10
+##'   `thin`'th sample is retained (e.g., if `thin` is 10
 ##'   then we keep samples 1, 11, 21, ...).
 ##'
 ##' @export
