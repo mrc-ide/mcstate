@@ -5,10 +5,10 @@
 \title{pmcmc_parameters}
 \description{
 Construct parameters for use with
-  \code{\link{pmcmc}}. This creates a utility object that is used
-  internally to work with parameters. Most users only need to
-  construct this object, but see the examples for how it can be
-  used.
+\code{\link[=pmcmc]{pmcmc()}}. This creates a utility object that is used
+internally to work with parameters. Most users only need to
+construct this object, but see the examples for how it can be
+used.
 }
 \examples{
 #Construct an object with two parameters:
@@ -60,7 +60,7 @@ Create the pmcmc_parameters object
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{parameters}}{A named \code{list} of
-\code{\link{pmcmc_parameter}} objects, each of which describe a
+\link{pmcmc_parameter} objects, each of which describe a
 single parameter in your model.}
 
 \item{\code{proposal}}{A square proposal distribution corresponding to the
@@ -73,7 +73,7 @@ matrix it must be symmetric and positive definite.}
 
 \item{\code{transform}}{An optional transformation function to apply
 to your parameter vector immediately before passing it to the
-model function. If not given, then \code{\link{as.list}} is
+model function. If not given, then \link{as.list} is
 used, as dust models require this. However, if t you need to
 generate derived parameters from those being actively sampled
 you can do arbitrary transformations here.}
@@ -126,7 +126,7 @@ Compute the prior for a parameter vector
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{theta}}{a parameter vector in the same order as your
-parameters were defined in (see \code{$names()} for that order.
+parameters were defined in (see \verb{$names()} for that order.
 Propose a new parameter vector given a current parameter
 vector. This proposes a new parameter vector given your current
 vector and the variance-covariance matrix of your proposal
@@ -148,7 +148,7 @@ parameters until they lie within \code{min}:\code{max}.}
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{theta}}{a parameter vector in the same order as your
-parameters were defined in (see \code{$names()} for that order.
+parameters were defined in (see \verb{$names()} for that order.
 Apply the model transformation function to a parameter vector.}
 }
 \if{html}{\out{</div>}}
@@ -166,7 +166,7 @@ Apply the model transformation function to a parameter vector.}
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{theta}}{a parameter vector in the same order as your
-parameters were defined in (see \code{$names()} for that order.}
+parameters were defined in (see \verb{$names()} for that order.}
 }
 \if{html}{\out{</div>}}
 }

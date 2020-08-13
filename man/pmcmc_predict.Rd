@@ -13,7 +13,7 @@ pmcmc_predict(
 )
 }
 \arguments{
-\item{object}{The results of running \code{\link{pmcmc}} with
+\item{object}{The results of running \code{\link[=pmcmc]{pmcmc()}} with
 \code{return_state = TRUE} (without this extra information,
 prediction is not possible)}
 
@@ -35,7 +35,7 @@ this will be removed, or the interface altered, in a future
 version.}
 }
 \description{
-Run predictions from the results of \code{\link{pmcmc}}. This
-function can also be called by running \code{\link{predict}} on
+Run predictions from the results of \code{\link[=pmcmc]{pmcmc()}}. This
+function can also be called by running \code{\link[=predict]{predict()}} on
 the object, using R's S3 dispatch.
 }

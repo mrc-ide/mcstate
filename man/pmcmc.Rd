@@ -25,7 +25,7 @@ process may be restarted from this point for projections.  If
 be selected for each. The default is \code{TRUE}, which will
 cause \code{n_state} * \code{n_steps} of data to be output
 alongside your results. Set this argument to \code{FALSE} to
-save space, or use \code{\link{pmcmc_thin}} after running the
+save space, or use \code{\link[=pmcmc_thin]{pmcmc_thin()}} after running the
 MCMC.}
 
 \item{save_trajectories}{Logical, indicating if the particle
@@ -39,16 +39,15 @@ be selected for each.}
 }
 \value{
 A \code{mcstate_pmcmc} object containing \code{pars}
-  (sampled parameters) and \code{probabilities} (log prior, log
-  likelihood and log posterior values for these
-  probabilities). Two additional fields may be present:
-  \code{state} (if \code{return_state} was \code{TRUE}),
-  containing the final state of a randomly selected particle at
-  the end of the simulation, for each step (will be a matrix with
-  as many rows as your state has variables, and as \code{n_steps +
-  1} columns corresponding to each step). \code{trajectories} will
-  include a 3d array of particle trajectories through the
-  simulation (if \code{return_trajectories} was \code{TRUE}).
+(sampled parameters) and \code{probabilities} (log prior, log
+likelihood and log posterior values for these
+probabilities). Two additional fields may be present:
+\code{state} (if \code{return_state} was \code{TRUE}),
+containing the final state of a randomly selected particle at
+the end of the simulation, for each step (will be a matrix with
+as many rows as your state has variables, and as \code{n_steps + 1} columns corresponding to each step). \code{trajectories} will
+include a 3d array of particle trajectories through the
+simulation (if \code{return_trajectories} was \code{TRUE}).
 }
 \description{
 Run a pmcmc sampler

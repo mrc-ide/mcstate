@@ -30,7 +30,7 @@ then \code{prior(initial)} must evaluate to a finite value.}
 Describe a single parameter for use within the pmcmc. Note that
 the name is not set here, but will end up being naturally defined
 when used with \code{\link{pmcmc_parameters}}, which collects
-these together for use with \code{\link{pmcmc}}.
+these together for use with \code{\link[=pmcmc]{pmcmc()}}.
 }
 \examples{
 pmcmc_parameter(0.1)

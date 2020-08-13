@@ -5,8 +5,8 @@
 \title{Particle filter}
 \description{
 Create a \code{particle_filter} object for running
-  and interacting with a particle filter.  A higher-level
-  interface will be implemented later.
+and interacting with a particle filter.  A higher-level
+interface will be implemented later.
 }
 \examples{
 # A basic SIR model included in the package:
@@ -106,8 +106,8 @@ Create the particle filter
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{data}}{The data set to be used for the particle filter,
-created by \code{\link{particle_filter_data}}. This is essentially
-a \code{\link{data.frame}} with at least columns \code{step_start}
+created by \code{\link[=particle_filter_data]{particle_filter_data()}}. This is essentially
+a \code{\link[=data.frame]{data.frame()}} with at least columns \code{step_start}
 and \code{step_end}, along with any additional data used in the
 \code{compare} function, and additional information about how your
 steps relate to time.}
@@ -128,12 +128,12 @@ is a \code{list} of observed data corresponding to the current
 time's row in the \code{data} object provided here in the
 constructor.  \code{pars} is any additional parameters passed
 through to the comparison function (via the \code{pars}
-argument to \code{$run}).}
+argument to \verb{$run}).}
 
 \item{\code{index}}{An index function. This is used to compute the
 "interesting" indexes of your model. It must be a function of
 one argument, which will be the result of calling the
-\code{$info()} method on your model. It should return a list
+\verb{$info()} method on your model. It should return a list
 with elements \code{run} (indices to return at the end of each
 run, passed through to your compare function) and \code{state}
 (indices to return if saving state). These indices can overlap
@@ -144,10 +144,10 @@ forth.}
 
 \item{\code{initial}}{A function to generate initial conditions. If
 given, then this function must accept 3 arguments: \code{info}
-(the result of calling \code{$info()} as for \code{index}),
+(the result of calling \verb{$info()} as for \code{index}),
 \code{n_particles} (the number of particles that the particle
 filter is using) and \code{pars} (parameters passed in in the
-\code{$run} method via the \code{pars} argument).  It
+\verb{$run} method via the \code{pars} argument).  It
 must return a list, which can have the elements \code{state}
 (initial model state, passed to the particle filter - either a
 vector or a matrix, and overriding the initial conditions
@@ -187,7 +187,7 @@ Run the particle filter}
 the \code{pars} argument to your model, to your \code{compare}
 function, and (if using) to your \code{initial} function. It must
 be an R list (not vector or \code{NULL}) because that is what a
-dust model currently requires on initialisation or \code{$reset} - we
+dust model currently requires on initialisation or \verb{$reset} - we
 may relax this later. You may want to put your observation and
 initial parameters under their own keys (e.g.,
 \code{pars$initial$whatever}), but this is up to you. Extra keys
@@ -195,7 +195,7 @@ are silently ignored by dust models.}
 
 \item{\code{save_history}}{Logical, indicating if the history of all
 particles should be saved. If saving history, then it can be
-queried later with the \code{$history} method on the object.}
+queried later with the \verb{$history} method on the object.}
 }
 \if{html}{\out{</div>}}
 }
@@ -232,8 +232,7 @@ particles.
 Extract the particle trajectories. Requires that
 the model was run with \code{save_history = TRUE}, which does
 incur a performance cost. This method will throw an error if
-the model has not run, or was run without \code{save_history =
-TRUE}. Returns a 3d array with dimensions corresponding to (1)
+the model has not run, or was run without \code{save_history = TRUE}. Returns a 3d array with dimensions corresponding to (1)
 model state, filtered by \code{index$run} if provided, (2)
 particle (following \code{index_particle} if provided), (3)
 time point.

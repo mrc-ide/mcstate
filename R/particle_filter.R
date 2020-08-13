@@ -1,6 +1,6 @@
 ##' @title Particle filter
 ##'
-##' @description Create a \code{particle_filter} object for running
+##' @description Create a `particle_filter` object for running
 ##'   and interacting with a particle filter.  A higher-level
 ##'   interface will be implemented later.
 ##'
@@ -96,36 +96,36 @@ particle_filter <- R6::R6Class(
     ##' @description Create the particle filter
     ##'
     ##' @param data The data set to be used for the particle filter,
-    ##' created by \code{\link{particle_filter_data}}. This is essentially
-    ##' a \code{\link{data.frame}} with at least columns \code{step_start}
-    ##' and \code{step_end}, along with any additional data used in the
-    ##' \code{compare} function, and additional information about how your
+    ##' created by [particle_filter_data()]. This is essentially
+    ##' a [data.frame()] with at least columns `step_start`
+    ##' and `step_end`, along with any additional data used in the
+    ##' `compare` function, and additional information about how your
     ##' steps relate to time.
     ##'
     ##' @param model A stochastic model to use.  Must be a
-    ##' \code{dust_generator} object.
+    ##' `dust_generator` object.
     ##'
     ##' @param n_particles The number of particles to simulate
     ##'
     ##' @param compare A comparison function.  Must take arguments
-    ##' \code{state}, \code{output}, \code{data} and \code{pars} as arguments
+    ##' `state`, `output`, `data` and `pars` as arguments
     ##' (though the arguments may have different names).
-    ##' \code{state} is the simulated model state (a matrix with as
+    ##' `state` is the simulated model state (a matrix with as
     ##' many rows as there are state variables and as many columns as
-    ##' there are particles.  \code{output} is the output variables, if
-    ##' the model produces them (\code{NULL} otherwise) and \code{data}
-    ##' is a \code{list} of observed data corresponding to the current
-    ##' time's row in the \code{data} object provided here in the
-    ##' constructor.  \code{pars} is any additional parameters passed
-    ##' through to the comparison function (via the \code{pars}
-    ##' argument to \code{$run}).
+    ##' there are particles.  `output` is the output variables, if
+    ##' the model produces them (`NULL` otherwise) and `data`
+    ##' is a `list` of observed data corresponding to the current
+    ##' time's row in the `data` object provided here in the
+    ##' constructor.  `pars` is any additional parameters passed
+    ##' through to the comparison function (via the `pars`
+    ##' argument to `$run`).
     ##'
     ##' @param index An index function. This is used to compute the
     ##' "interesting" indexes of your model. It must be a function of
     ##' one argument, which will be the result of calling the
-    ##' \code{$info()} method on your model. It should return a list
-    ##' with elements \code{run} (indices to return at the end of each
-    ##' run, passed through to your compare function) and \code{state}
+    ##' `$info()` method on your model. It should return a list
+    ##' with elements `run` (indices to return at the end of each
+    ##' run, passed through to your compare function) and `state`
     ##' (indices to return if saving state). These indices can overlap
     ##' but do not have to. This argument is optional but using it will
     ##' likely speed up your simulation if you have more than a few
@@ -133,22 +133,22 @@ particle_filter <- R6::R6Class(
     ##' forth.
     ##'
     ##' @param initial A function to generate initial conditions. If
-    ##' given, then this function must accept 3 arguments: \code{info}
-    ##' (the result of calling \code{$info()} as for \code{index}),
-    ##' \code{n_particles} (the number of particles that the particle
-    ##' filter is using) and \code{pars} (parameters passed in in the
-    ##' \code{$run} method via the \code{pars} argument).  It
-    ##' must return a list, which can have the elements \code{state}
+    ##' given, then this function must accept 3 arguments: `info`
+    ##' (the result of calling `$info()` as for `index`),
+    ##' `n_particles` (the number of particles that the particle
+    ##' filter is using) and `pars` (parameters passed in in the
+    ##' `$run` method via the `pars` argument).  It
+    ##' must return a list, which can have the elements `state`
     ##' (initial model state, passed to the particle filter - either a
     ##' vector or a matrix, and overriding the initial conditions
-    ##' provided by your model) and \code{step} (the initial step,
+    ##' provided by your model) and `step` (the initial step,
     ##' overriding the first step of your data - this must occur within
-    ##' your first epoch in your \code{data} provided to the
+    ##' your first epoch in your `data` provided to the
     ##' constructor, i.e., not less than the first element of
-    ##' \code{step_start} and not more than \code{step_end}). Your function
-    ##' can also return a vector or matrix of \code{state} and not alter
+    ##' `step_start` and not more than `step_end`). Your function
+    ##' can also return a vector or matrix of `state` and not alter
     ##' the starting step, which is equivalent to returning
-    ##' \code{list(state = state, step = NULL)}.
+    ##' `list(state = state, step = NULL)`.
     ##'
     ##' @param n_threads Number of threads to use when running the
     ##' simulation. Defaults to 1, and should not be set higher than the
@@ -156,7 +156,7 @@ particle_filter <- R6::R6Class(
     ##'
     ##' @param seed Seed for the random number generator on initial
     ##' creation; must be a positive integer. Note that this is unrelated
-    ##' to R's random number generator (see \code{\link{dust}}).
+    ##' to R's random number generator (see [`dust`]).
     initialize = function(data, model, n_particles, compare,
                           index = NULL, initial = NULL,
                           n_threads = 1L, seed = 1L) {
@@ -190,21 +190,21 @@ particle_filter <- R6::R6Class(
     ##' Run the particle filter
     ##'
     ##' @param pars A list representing parameters. This will be passed as
-    ##' the \code{pars} argument to your model, to your \code{compare}
-    ##' function, and (if using) to your \code{initial} function. It must
-    ##' be an R list (not vector or \code{NULL}) because that is what a
-    ##' dust model currently requires on initialisation or \code{$reset} - we
+    ##' the `pars` argument to your model, to your `compare`
+    ##' function, and (if using) to your `initial` function. It must
+    ##' be an R list (not vector or `NULL`) because that is what a
+    ##' dust model currently requires on initialisation or `$reset` - we
     ##' may relax this later. You may want to put your observation and
     ##' initial parameters under their own keys (e.g.,
-    ##' \code{pars$initial$whatever}), but this is up to you. Extra keys
+    ##' `pars$initial$whatever`), but this is up to you. Extra keys
     ##' are silently ignored by dust models.
     ##'
     ##' @param save_history Logical, indicating if the history of all
     ##' particles should be saved. If saving history, then it can be
-    ##' queried later with the \code{$history} method on the object.
+    ##' queried later with the `$history` method on the object.
     ##'
     ##' @return A single numeric value representing the log-likelihood
-    ##' (\code{-Inf} if the model is impossible)
+    ##' (`-Inf` if the model is impossible)
     run = function(pars = list(), save_history = FALSE) {
       compare <- private$compare
       steps <- private$steps
@@ -325,16 +325,16 @@ particle_filter <- R6::R6Class(
     },
 
     ##' @description Extract the particle trajectories. Requires that
-    ##' the model was run with \code{save_history = TRUE}, which does
+    ##' the model was run with `save_history = TRUE`, which does
     ##' incur a performance cost. This method will throw an error if
-    ##' the model has not run, or was run without \code{save_history =
-    ##' TRUE}. Returns a 3d array with dimensions corresponding to (1)
-    ##' model state, filtered by \code{index$run} if provided, (2)
-    ##' particle (following \code{index_particle} if provided), (3)
+    ##' the model has not run, or was run without `save_history =
+    ##' TRUE`. Returns a 3d array with dimensions corresponding to (1)
+    ##' model state, filtered by `index$run` if provided, (2)
+    ##' particle (following `index_particle` if provided), (3)
     ##' time point.
     ##'
     ##' @param index_particle Optional vector of particle indices to return.
-    ##' If \code{NULL} we return all particles' histories.
+    ##' If `NULL` we return all particles' histories.
     history = function(index_particle = NULL) {
       if (is.null(private$last_model)) {
         stop("Model has not yet been run")
