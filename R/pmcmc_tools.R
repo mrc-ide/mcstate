@@ -43,7 +43,7 @@ pmcmc_filter <- function(object, i) {
     object$state <- object$state[, i, drop = FALSE]
   }
   if (!is.null(object$trajectories)) {
-    object$trajectories <- object$trajectories[, , i, drop = FALSE]
+    object$trajectories$state <- object$trajectories$state[, i, , drop = FALSE]
   }
   object
 }

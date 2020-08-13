@@ -13,7 +13,7 @@ test_that("discarding burnin drops beginnings of chain", {
   expect_identical(res$pars, results$pars[i, ])
   expect_identical(res$probabilities, results$probabilities[i, ])
   expect_identical(res$state, results$state[, i])
-  expect_identical(res$trajectories, results$trajectories[, , i])
+  expect_identical(res$trajectories$state, results$trajectories$state[, i, ])
 })
 
 
@@ -24,7 +24,7 @@ test_that("thinning drops all over chain", {
   expect_identical(res$pars, results$pars[i, ])
   expect_identical(res$probabilities, results$probabilities[i, ])
   expect_identical(res$state, results$state[, i])
-  expect_identical(res$trajectories, results$trajectories[, , i])
+  expect_identical(res$trajectories$state, results$trajectories$state[, i, ])
 })
 
 
@@ -35,7 +35,7 @@ test_that("burnin and thin can be used together", {
   expect_identical(res$pars, results$pars[i, ])
   expect_identical(res$probabilities, results$probabilities[i, ])
   expect_identical(res$state, results$state[, i])
-  expect_identical(res$trajectories, results$trajectories[, , i])
+  expect_identical(res$trajectories$state, results$trajectories$state[, i, ])
 })
 
 
@@ -46,7 +46,7 @@ test_that("can discard whole chain", {
   expect_identical(res$pars, results$pars[i, ])
   expect_identical(res$probabilities, results$probabilities[i, ])
   expect_identical(res$state, results$state[, i])
-  expect_identical(res$trajectories, results$trajectories[, , i])
+  expect_identical(res$trajectories$state, results$trajectories$state[, i, ])
 })
 
 
