@@ -128,7 +128,12 @@ pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
   probabilities <- set_colnames(list_to_matrix(history_probabilities$get()),
                        c("log_prior", "log_likelihood", "log_posterior"))
 
-  predict <- state <- trajectories <- NULL
+  info <- predict <- state <- trajectories <- NULL
+
+  if (save_state || save_trajectories) {
+    info <- filter$predict_info()
+  }
+
   if (save_state) {
     state <- t(list_to_matrix(history_state$get()))
 
@@ -136,9 +141,6 @@ pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
     ## it's all we want; this is a bit of a hack but it works for now
     ## at least.
     transform <- pars[[".__enclos_env__"]]$private$transform
-
-    ## Information about how the particle filter was configured:
-    info <- filter$predict_info()
 
     ## This information is required in order to run predictions but
     ## adds a significant space overhead to the saved data (model is
@@ -149,10 +151,11 @@ pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
                     n_threads = info$n_threads,
                     index = info$index,
                     rate = info$rate,
+                    seed = info$seed,
                     step = last(info$step))
   }
+
   if (save_trajectories) {
-    info <- filter$predict_info()
     ## Permute trajectories from [state x mcmc x particle] to
     ## [state x particle x mcmc] so that they match the ones that we
     ## will generate with predict

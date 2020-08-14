@@ -98,7 +98,7 @@ Create the particle filter
   index = NULL,
   initial = NULL,
   n_threads = 1L,
-  seed = 1L
+  seed = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -165,8 +165,11 @@ simulation. Defaults to 1, and should not be set higher than the
 number of cores available to the machine.}
 
 \item{\code{seed}}{Seed for the random number generator on initial
-creation; must be a positive integer. Note that this is unrelated
-to R's random number generator (see \code{\link{dust}}).
+creation. Can be \code{NULL} (to initialise using R's random number
+generator), a positive integer, or a raw vector - see \code{\link[dust:dust]{dust::dust}}
+and \code{\link[dust:dust_rng]{dust::dust_rng}} for more details. Note that the random number
+stream is unrelated from R's random number generator, except for
+initialisation with \code{seed = NULL}.
 Run the particle filter}
 }
 \if{html}{\out{</div>}}
