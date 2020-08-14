@@ -38,8 +38,9 @@ pass in \code{seed = object$predict$seed}. However, do not do this if
 you are gong to run \code{pmcmc_predict()} multiple times the result
 will be identical. If you do want to call predict with this
 state multiple times you should call
-\code{\link[dust:dust_rng_state_advance]{dust::dust_rng_state_advance()}} with a \code{times} argument of \code{i + 1} for the \code{i}'th usage (i.e., advance twice for the first
-usage, three times for the 2nd, etc).}
+\code{\link[dust:dust_rng_state_long_jump]{dust::dust_rng_state_long_jump()}} with a \code{times} argument of \code{i}
+for the \code{i}'th usage (i.e., once for the first usage,
+two times for the 2nd, etc).}
 }
 \description{
 Run predictions from the results of \code{\link[=pmcmc]{pmcmc()}}. This

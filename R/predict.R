@@ -26,9 +26,9 @@
 ##'   you are gong to run `pmcmc_predict()` multiple times the result
 ##'   will be identical. If you do want to call predict with this
 ##'   state multiple times you should call
-##'   [dust::dust_rng_state_advance()] with a `times` argument of `i +
-##'   1` for the `i`'th usage (i.e., advance twice for the first
-##'   usage, three times for the 2nd, etc).
+##'   [dust::dust_rng_state_long_jump()] with a `times` argument of `i`
+##'   for the `i`'th usage (i.e., once for the first usage,
+##'   two times for the 2nd, etc).
 ##'
 ##' @param prepend_trajectories Prepend trajectories from the particle
 ##'   filter to the predictions created here.
@@ -55,7 +55,6 @@ pmcmc_predict <- function(object, steps, prepend_trajectories = FALSE,
   index <- object$predict$index
   model <- object$predict$model
   n_threads <- n_threads %||% object$predict$n_threads
-  seed <- seed %||% object$predict$seed
 
   y <- dust::dust_simulate(model, steps, data, state, index, n_threads, seed)
 

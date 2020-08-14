@@ -376,7 +376,7 @@ particle_filter <- R6::R6Class(
       ## TODO: this name is terrible.
       list(n_threads = private$last_model$n_threads(),
            index = private$last_index_state,
-           seed = private$last_model$rng_state(TRUE),
+           seed = private$last_model$rng_state(first_only = TRUE),
            step = c(private$data$step_start[[1]], private$data$step_end),
            rate = attr(private$data, "rate", exact = TRUE))
     }
