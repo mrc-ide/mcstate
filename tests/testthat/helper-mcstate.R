@@ -1,10 +1,5 @@
-models <- list(
-  sir = dust::dust(mcstate_file("example/sir/dust_sir.cpp"), type = "sir",
-                   quiet = TRUE))
-
-
 example_sir <- function() {
-  model <- models$sir
+  model <- dust::dust_example("sir")
   sir <- model$new(data = list(), step = 0, n_particles = 1)
   y0 <- sir$state()
 

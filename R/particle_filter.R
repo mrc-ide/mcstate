@@ -7,9 +7,8 @@
 ##' @export
 ##' @importFrom R6 R6Class
 ##' @examples
-##' # A basic SIR model included in the package:
-##' path <- system.file("example/sir/dust_sir.cpp", package = "mcstate")
-##' gen <- dust::dust(path)
+##' # A basic SIR model included in the dust package
+##' gen <- dust::dust_example("sir")
 ##'
 ##' # Some data that we will fit to, using 1 particle:
 ##' sir <- gen$new(data = list(), step = 0, n_particles = 1)
