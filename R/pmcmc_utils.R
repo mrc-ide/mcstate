@@ -47,8 +47,6 @@ print.mcstate_pmcmc <- function(x, ...) {
 }
 
 
-##' @importFrom progress progress_bar
-
 ## NOTE: we need to expose a 'force' argument here for testing, as
 ## otherwise under R CMD check the progress bar does not run.
 pmcmc_progress <- function(n, show, force = FALSE) {
