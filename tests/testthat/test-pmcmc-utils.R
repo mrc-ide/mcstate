@@ -71,7 +71,7 @@ test_that("can filter trajectories with dropping dimensions", {
 })
 
 
-test_that("progress bar is a noop when verbose = FALSE", {
+test_that("progress bar is a noop when progress = FALSE", {
   p <- pmcmc_progress(3, FALSE)
   expect_silent(p())
   expect_null(p())
@@ -79,7 +79,7 @@ test_that("progress bar is a noop when verbose = FALSE", {
 })
 
 
-test_that("progress bar creates progress_bar when verbose = TRUE", {
+test_that("progress bar creates progress_bar when progress = TRUE", {
   p <- pmcmc_progress(3, TRUE)
   Sys.sleep(0.2)
   expect_message(

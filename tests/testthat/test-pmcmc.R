@@ -177,9 +177,9 @@ test_that("collecting state from model yields an RNG state", {
 })
 
 
-test_that("running pmcmc with verbose = TRUE prints messages", {
+test_that("running pmcmc with progress = TRUE prints messages", {
   dat <- example_uniform()
   expect_message(
-    pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE, verbose = TRUE),
+    pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE, progress = TRUE),
     "Finished 1000 steps in ")
 })
