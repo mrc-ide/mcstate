@@ -1,6 +1,7 @@
-##' Thin results of running [pmcmc()]. This function may be
-##' useful before using [pmcmc_predict()], or before saving
-##' pmcmc output to disk.
+##' Thin results of running [pmcmc()]. This function may be useful
+##' before using [pmcmc_predict()], or before saving pmcmc output to
+##' disk.  `pmcmc_thin` takes every `thin`'th sample, while
+##' `pmcmc_sample` randomly selects a total of `n_sample` samples.
 ##'
 ##' @title Thin a pmcmc chain
 ##' @param object Results of running [pmcmc()]
@@ -42,6 +43,19 @@ pmcmc_thin <- function(object, burnin = NULL, thin = NULL) {
 }
 
 
+##' @param n_sample The number of samples to draw from `object` *with
+##'   replacement*. This means that `n_sample` can be larger than the
+##'   total number of samples taken (though it probably should not)
+##'
+##' @export
+##' @rdname pmcmc_thin
+pmcmc_sample <- function(object, n_sample, burnin = NULL) {
+  object <- pmcmc_thin(object, burnin)
+  i <- sample.int(nrow(object$pars), n_sample, replace = TRUE)
+  pmcmc_filter(object, i)
+}
+
+
 pmcmc_filter <- function(object, i) {
   if (!is.null(object$chain)) {
     object$chain <- object$chain[i]
@@ -59,13 +73,18 @@ pmcmc_filter <- function(object, i) {
 }
 
 
-pmcmc_sample <- function(object, n, burnin = NULL) {
-  object <- pmcmc_thin(object, burnin)
-  i <- sample(nrow(object$pars), n, replace = TRUE)
-  pmcmc_filter(object, i)
-}
-
-
+##' Combine multiple [pmcmc()] samples into one object
+##'
+##' @title Combine pmcmc samples
+##'
+##' @param ... Arguments representing [pmcmc()] sample, i.e.,
+##'   `mcstate_pmcmc` objects. Alternatively, pass a list as the
+##'   argument `samples`. Names are ignored.
+##'
+##' @param samples A list of `mcstate_pmcmc` objects. This is often
+##'   more convenient for programming against than `...`
+##'
+##' @export
 pmcmc_combine <- function(..., samples = list(...)) {
   if (!all(vlapply(samples, inherits, "mcstate_pmcmc"))) {
     stop("All elements of '...' must be 'mcstate_pmcmc' objects")
