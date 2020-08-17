@@ -3,11 +3,6 @@
 }
 
 
-mcstate_file <- function(path) {
-  system.file(path, package = "mcstate", mustWork = TRUE)
-}
-
-
 vlapply <- function(x, fun, ...) {
   vapply(x, fun, logical(1), ...)
 }
