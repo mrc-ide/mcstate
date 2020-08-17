@@ -130,3 +130,8 @@ example_sir_pmcmc <- function() {
   }
   test_cache$example_sir_pmcmc
 }
+
+
+r6_private <- function(x) {
+  x[[".__enclos_env__"]]$private
+}

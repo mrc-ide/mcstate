@@ -138,11 +138,40 @@ test_that("run pmcmc with the particle filter and retain history", {
   ## Additional information required to predict
   expect_setequal(
     names(results1$predict),
-    c("transform", "model", "n_threads", "index", "rate", "step"))
+    c("transform", "model", "n_threads", "index", "rate", "step", "seed"))
   expect_identical(results1$predict$transform, as.list)
   expect_identical(results1$predict$model, dat$model)
   expect_equal(results1$predict$n_threads, 1L)
   expect_equal(results1$predict$index, 1:3)
   expect_equal(results1$predict$rate, 4)
   expect_equal(results1$predict$step, last(dat$data$step_end))
+  expect_is(results1$predict$seed, "raw")
+})
+
+
+test_that("collecting state from model yields an RNG state", {
+  dat <- example_sir()
+  n_particles <- 30
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  p3 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 2L)
+
+  set.seed(1)
+  results1 <- pmcmc(dat$pars, p1, 5, FALSE, FALSE)
+  set.seed(1)
+  results2 <- pmcmc(dat$pars, p2, 5, TRUE, FALSE)
+  set.seed(1)
+  results3 <- pmcmc(dat$pars, p3, 5, TRUE, FALSE)
+
+  expect_identical(
+    r6_private(p1)$last_model$rng_state(),
+    r6_private(p2)$last_model$rng_state())
+  expect_identical(
+    results2$predict$seed,
+    r6_private(p1)$last_model$rng_state()[1:32])
+  expect_false(
+    identical(results2$predict$seed, results3$predict$seed))
 })

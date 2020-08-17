@@ -155,11 +155,14 @@ particle_filter <- R6::R6Class(
     ##' number of cores available to the machine.
     ##'
     ##' @param seed Seed for the random number generator on initial
-    ##' creation; must be a positive integer. Note that this is unrelated
-    ##' to R's random number generator (see [`dust`]).
+    ##' creation. Can be `NULL` (to initialise using R's random number
+    ##' generator), a positive integer, or a raw vector - see [`dust::dust`]
+    ##' and [`dust::dust_rng`] for more details. Note that the random number
+    ##' stream is unrelated from R's random number generator, except for
+    ##' initialisation with `seed = NULL`.
     initialize = function(data, model, n_particles, compare,
                           index = NULL, initial = NULL,
-                          n_threads = 1L, seed = 1L) {
+                          n_threads = 1L, seed = NULL) {
       if (!is_dust_generator(model)) {
         stop("'model' must be a dust_generator")
       }
@@ -181,7 +184,7 @@ particle_filter <- R6::R6Class(
 
       self$n_particles <- assert_scalar_positive_integer(n_particles)
       private$n_threads <- assert_scalar_positive_integer(n_threads)
-      private$seed <- assert_scalar_positive_integer(seed)
+      private$seed <- seed
 
       lockBinding("model", self)
       lockBinding("n_particles", self)
@@ -373,6 +376,7 @@ particle_filter <- R6::R6Class(
       ## TODO: this name is terrible.
       list(n_threads = private$last_model$n_threads(),
            index = private$last_index_state,
+           seed = private$last_model$rng_state(first_only = TRUE),
            step = c(private$data$step_start[[1]], private$data$step_end),
            rate = attr(private$data, "rate", exact = TRUE))
     }

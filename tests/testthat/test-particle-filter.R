@@ -174,9 +174,6 @@ test_that("control filter", {
     particle_filter$new(dat$data, dat$model, 0, dat$compare),
     "'n_particles' must be at least 1")
   expect_error(
-    particle_filter$new(dat$data, dat$model, 1, dat$compare, seed = -1),
-    "'seed' must be at least 1")
-  expect_error(
     particle_filter$new(dat$data, dat$model, 1, dat$compare, n_threads = -1),
     "'n_threads' must be at least 1")
 })
@@ -369,13 +366,13 @@ test_that("Variable initial starting point of the simulation", {
   }
 
   p <- particle_filter$new(data, dat$model, n_particles, compare,
-                           index = dat$index, initial = initial)
+                           index = dat$index, initial = initial, seed = 1L)
   pars <- list(I0 = 10, step_mean = 20, step_offset = 400)
   set.seed(1)
   ll <- p$run(pars, save_history = TRUE)
   expect_equal(ll, 0)
 
-  mod <- p$model$new(list(), step = 0, n_particles = n_particles)
+  mod <- p$model$new(list(), step = 0, n_particles = n_particles, seed = 1L)
   tmp <- initial(NULL, n_particles, pars)
   mod$set_state(tmp$state, tmp$step)
   expect_equal(p$history()[, , 1], mod$state()[1:3, ])

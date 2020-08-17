@@ -32,10 +32,10 @@ test_that("Can rehydrate mcmc results and predict", {
   results <- example_sir_pmcmc()$pmcmc
 
   steps <- seq(results$predict$step, by = 4, length.out = 26)
-  y1 <- pmcmc_predict(results, steps)
+  y1 <- pmcmc_predict(results, steps, seed = 1L)
 
   results <- unserialize(serialize(results, NULL))
-  expect_identical(pmcmc_predict(results, steps), y1)
+  expect_identical(pmcmc_predict(results, steps, seed = 1L), y1)
 })
 
 
@@ -43,8 +43,8 @@ test_that("Can combine runs with predictions", {
   results <- example_sir_pmcmc()$pmcmc
 
   steps <- seq(results$predict$step, by = 4, length.out = 26)
-  y1 <- pmcmc_predict(results, steps, prepend_trajectories = TRUE)
-  y2 <- pmcmc_predict(results, steps)
+  y1 <- pmcmc_predict(results, steps, prepend_trajectories = TRUE, seed = 1L)
+  y2 <- pmcmc_predict(results, steps, seed = 1L)
 
   expect_is(y1, "mcstate_trajectories")
   expect_equal(y1$rate, 4)
@@ -97,6 +97,19 @@ test_that("S3 method works as expected", {
   set.seed(1)
   y2 <- pmcmc_predict(results, steps)
   expect_identical(y1, y2)
+})
+
+
+test_that("seed = NULL respects R's seed", {
+  results <- example_sir_pmcmc()$pmcmc
+  steps <- seq(results$predict$step, by = 4, length.out = 26)
+  set.seed(1)
+  y1 <- pmcmc_predict(results, steps)
+  y2 <- pmcmc_predict(results, steps)
+  set.seed(1)
+  y3 <- pmcmc_predict(results, steps)
+  expect_false(identical(y1, y2))
+  expect_identical(y1, y3)
 })
 
 

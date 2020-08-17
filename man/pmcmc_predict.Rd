@@ -9,7 +9,7 @@ pmcmc_predict(
   steps,
   prepend_trajectories = FALSE,
   n_threads = NULL,
-  seed = 1L
+  seed = NULL
 )
 }
 \arguments{
@@ -30,9 +30,17 @@ filter to the predictions created here.}
 not given, we default to the value used in the particle filter
 that was used in the pmcmc.}
 
-\item{seed}{The random number seed - a positive integer. Note that
-this will be removed, or the interface altered, in a future
-version.}
+\item{seed}{The random number seed (see \code{\link{particle_filter}}). The
+default value of \code{NULL} will seed the dust random number
+generator from R's random number generator. However, you can
+pick up from the same RNG stream used in the simulation if you
+pass in \code{seed = object$predict$seed}. However, do not do this if
+you are gong to run \code{pmcmc_predict()} multiple times the result
+will be identical. If you do want to call predict with this
+state multiple times you should call
+\code{\link[dust:dust_rng_state_long_jump]{dust::dust_rng_state_long_jump()}} with a \code{times} argument of \code{i}
+for the \code{i}'th usage (i.e., once for the first usage,
+two times for the 2nd, etc).}
 }
 \description{
 Run predictions from the results of \code{\link[=pmcmc]{pmcmc()}}. This

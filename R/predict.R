@@ -18,16 +18,24 @@
 ##'   not given, we default to the value used in the particle filter
 ##'   that was used in the pmcmc.
 ##'
-##' @param seed The random number seed - a positive integer. Note that
-##'   this will be removed, or the interface altered, in a future
-##'   version.
+##' @param seed The random number seed (see [`particle_filter`]). The
+##'   default value of `NULL` will seed the dust random number
+##'   generator from R's random number generator. However, you can
+##'   pick up from the same RNG stream used in the simulation if you
+##'   pass in `seed = object$predict$seed`. However, do not do this if
+##'   you are gong to run `pmcmc_predict()` multiple times the result
+##'   will be identical. If you do want to call predict with this
+##'   state multiple times you should call
+##'   [dust::dust_rng_state_long_jump()] with a `times` argument of `i`
+##'   for the `i`'th usage (i.e., once for the first usage,
+##'   two times for the 2nd, etc).
 ##'
 ##' @param prepend_trajectories Prepend trajectories from the particle
 ##'   filter to the predictions created here.
 ##'
 ##' @export
 pmcmc_predict <- function(object, steps, prepend_trajectories = FALSE,
-                          n_threads = NULL, seed = 1L) {
+                          n_threads = NULL, seed = NULL) {
   if (is.null(object$predict)) {
     stop("mcmc was run with return_state = FALSE, can't predict")
   }

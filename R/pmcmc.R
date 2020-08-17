@@ -129,6 +129,7 @@ pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
                        c("log_prior", "log_likelihood", "log_posterior"))
 
   predict <- state <- trajectories <- NULL
+
   if (save_state) {
     state <- t(list_to_matrix(history_state$get()))
 
@@ -149,8 +150,10 @@ pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
                     n_threads = info$n_threads,
                     index = info$index,
                     rate = info$rate,
+                    seed = info$seed,
                     step = last(info$step))
   }
+
   if (save_trajectories) {
     info <- filter$predict_info()
     ## Permute trajectories from [state x mcmc x particle] to
