@@ -49,3 +49,10 @@ pmcmc_filter <- function(object, i) {
   }
   object
 }
+
+
+pmcmc_sample <- function(object, n, burnin = NULL) {
+  object <- pmcmc_thin(object, burnin)
+  i <- sample(nrow(object$pars), n, replace = TRUE)
+  pmcmc_filter(object, i)
+}
