@@ -73,8 +73,8 @@ pmcmc_combine <- function(..., samples = list(...)) {
   if (any(!vlapply(samples, function(x) is.null(x$chain)))) {
     stop("Chains have already been combined")
   }
-  if (length(samples) == 0) {
-    stop("At least 1 samples object must be provided")
+  if (length(samples) < 2) {
+    stop("At least 2 samples objects must be provided")
   }
   if (length(unique(lapply(samples, function(x) colnames(x$pars)))) != 1L) {
     stop("All parameters must have the same names")
@@ -83,9 +83,14 @@ pmcmc_combine <- function(..., samples = list(...)) {
     stop("All chains must have the same length")
   }
 
+  iteration <- lapply(samples, "[[", "iteration")
+  if (length(unique(iteration)) != 1L) {
+    stop("All chains must have the same iterations")
+  }
+  iteration <- unlist(iteration, FALSE, FALSE)
+
   chain <- rep(seq_along(samples), each = nrow(samples[[1]]$pars))
 
-  iteration <- unlist(lapply(samples, "[[", "iteration"))
   pars <- do.call(rbind, lapply(samples, "[[", "pars"))
   probabilities <- do.call(rbind, lapply(samples, "[[", "probabilities"))
 
@@ -101,7 +106,8 @@ pmcmc_combine <- function(..., samples = list(...)) {
 
   trajectories <- lapply(samples, "[[", "trajectories")
   if (!all_or_none(vlapply(trajectories, is.null))) {
-    stop("If 'state' is present for any samples, it must be present for all")
+    stop(paste("If 'trajectories' is present for any samples, it must be",
+               "present for all"))
   }
   if (is.null(trajectories[[1]])) {
     trajectories <- NULL

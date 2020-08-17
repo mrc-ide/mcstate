@@ -148,3 +148,132 @@ test_that("can thin combined chains", {
     res,
     pmcmc_combine(samples = lapply(results, pmcmc_thin, 10, 4)))
 })
+
+
+test_that("combining ignores names", {
+  results <- example_sir_pmcmc2()$results
+  expect_identical(
+    pmcmc_combine(samples = results),
+    pmcmc_combine(samples = list(a = results[[1]],
+                                 b = results[[2]],
+                                 c = results[[3]])))
+  expect_identical(
+    pmcmc_combine(samples = results),
+    pmcmc_combine(a = results[[1]], b = results[[2]], c = results[[3]]))
+})
+
+
+test_that("combining requires at least one run", {
+  results <- example_sir_pmcmc2()$results
+  expect_error(pmcmc_combine(),
+               "At least 2 samples objects must be provided")
+  expect_error(pmcmc_combine(samples = NULL),
+               "At least 2 samples objects must be provided")
+  expect_error(pmcmc_combine(results[[1]]),
+               "At least 2 samples objects must be provided")
+})
+
+
+test_that("can't recombine chains", {
+  results <- example_sir_pmcmc2()$results
+  expect_error(
+    pmcmc_combine(results[[1]], pmcmc_combine(results[[2]], results[[3]])),
+    "Chains have already been combined")
+})
+
+
+test_that("require consistent data", {
+  results <- example_sir_pmcmc2()$results
+  a <- results[[1]]
+  b <- results[[2]]
+  expect_error(
+    pmcmc_combine(a, pmcmc_thin(b, burnin = 1)),
+    "All chains must have the same length")
+})
+
+
+test_that("can't combine chains with different parameters", {
+  results <- example_sir_pmcmc2()$results
+  a <- results[[1]]
+  a$pars <- cbind(a$pars, zeta = 1)
+  expect_error(
+    pmcmc_combine(a, results[[2]]),
+    "All parameters must have the same names")
+})
+
+
+test_that("combine require the same iterations", {
+  results <- example_sir_pmcmc2()$results
+  a <- results[[1]]
+  a$iteration <- a$iteration + 1
+  expect_error(
+    pmcmc_combine(a, results[[2]]),
+    "All chains must have the same iterations")
+})
+
+
+test_that("Can't combine chains that differ in if they have state", {
+  results <- example_sir_pmcmc2()$results
+  a <- results[[1]]
+  a$state <- NULL
+  expect_error(
+    pmcmc_combine(a, results[[2]]),
+    "If 'state' is present for any samples, it must be present for all")
+})
+
+
+test_that("Can't combine chains that differ in if they have trajectories", {
+  results <- example_sir_pmcmc2()$results
+  a <- results[[1]]
+  a$trajectories <- NULL
+  expect_error(
+    pmcmc_combine(a, results[[2]]),
+    "If 'trajectories' is present for any samples, it must be present for all")
+})
+
+
+test_that("Can't combine inconsistent trajectories", {
+  results <- example_sir_pmcmc2()$results
+  a <- results[[1]]
+  a$trajectories$rate <- a$trajectories$rate + 1
+  expect_error(
+    pmcmc_combine(a, results[[2]]),
+    "trajectories data is inconsistent")
+})
+
+
+test_that("check object types for combine", {
+  results <- example_sir_pmcmc2()$results
+  expect_error(
+    pmcmc_combine(results[[1]], NULL),
+    "All elements of '...' must be 'mcstate_pmcmc' objects", fixed = TRUE)
+  expect_error(
+    pmcmc_combine(samples = list(results[[1]], NULL)),
+    "All elements of '...' must be 'mcstate_pmcmc' objects", fixed = TRUE)
+})
+
+
+test_that("can sample from a mcmc", {
+  results <- example_sir_pmcmc()$pmcmc
+  sub <- pmcmc_sample(results, 10, burnin = 10)
+  expect_equal(nrow(sub$pars), 10)
+  expect_true(all(sub$iteration >= 10))
+})
+
+
+test_that("sampling is with replacement", {
+  results <- example_sir_pmcmc()$pmcmc
+  sub <- pmcmc_sample(results, 50, burnin = 10)
+  expect_equal(nrow(sub$pars), 50)
+  expect_true(all(sub$iteration >= 10))
+  expect_true(any(duplicated(sub$iteration)))
+})
+
+
+test_that("can sample from a combined chain", {
+  results <- pmcmc_combine(samples = example_sir_pmcmc2()$results)
+  sub <- pmcmc_sample(results, 50, burnin = 10)
+  expect_equal(nrow(sub$pars), 50)
+  expect_true(all(1:3 %in% sub$chain))
+  expect_true(all(sub$iteration >= 10))
+})
