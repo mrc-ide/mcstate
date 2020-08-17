@@ -7,7 +7,7 @@ test_that("format and print the simplest object", {
   x <- mcstate_pmcmc(pars, probs, NULL, NULL, NULL)
 
   expected <- c(
-    "<mcstate_pmcmc> (9 samples)",
+    "<mcstate_pmcmc> (10 samples)",
     "  pars: 10 x 4 matrix of parameters",
     "    a, b, c, d",
     "  probabilities: 10 x 3 matrix of log-probabilities",
@@ -31,13 +31,30 @@ test_that("format and print with state", {
   x <- mcstate_pmcmc(pars, probs, state, trajectories, predict)
 
   expected <- c(
-    "<mcstate_pmcmc> (9 samples)",
+    "<mcstate_pmcmc> (10 samples)",
     "  pars: 10 x 4 matrix of parameters",
     "    a, b, c, d",
     "  probabilities: 10 x 3 matrix of log-probabilities",
     "    x, y, z",
     "  state: 4 x 10 matrix of final states",
     "  trajectories: 4 x 10 x 20 array of particle trajectories")
+
+  expect_equal(format(x), expected)
+  expect_output(print(x), paste(expected, collapse = "\n"), fixed = TRUE)
+})
+
+
+test_that("print multichain object", {
+  x <- pmcmc_combine(samples = example_sir_pmcmc2()$results)
+
+  expected <- c(
+    "<mcstate_pmcmc> (93 samples across 3 chains)",
+    "  pars: 93 x 2 matrix of parameters",
+    "    beta, gamma",
+    "  probabilities: 93 x 3 matrix of log-probabilities",
+    "    log_prior, log_likelihood, log_posterior",
+    "  state: 4 x 93 matrix of final states",
+    "  trajectories: 3 x 93 x 101 array of particle trajectories")
 
   expect_equal(format(x), expected)
   expect_output(print(x), paste(expected, collapse = "\n"), fixed = TRUE)

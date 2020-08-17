@@ -42,9 +42,9 @@ test_that("burnin and thin can be used together", {
 test_that("can't discard the whole chain (or more)", {
   results <- example_sir_pmcmc()$pmcmc
   expect_error(pmcmc_thin(results, 31),
-               "'burnin' can be at most 30 for your results")
+               "'burnin' must be less than 30 for your results")
   expect_error(pmcmc_thin(results, 100),
-               "'burnin' can be at most 30 for your results")
+               "'burnin' must be less than 30 for your results")
 })
 
 
@@ -59,4 +59,92 @@ test_that("Can thin when no state/trajectories present", {
   expect_identical(res$probabilities, results$probabilities[i, ])
   expect_null(res$state)
   expect_null(res$trajectories)
+})
+
+
+test_that("can combine chains", {
+  results <- example_sir_pmcmc2()$results
+
+  results1 <- results[[1]]
+  results2 <- results[[2]]
+  results3 <- results[[3]]
+
+  res <- pmcmc_combine(results1, results2, results3)
+
+  n_mcmc <- nrow(results1$pars)
+  n_par <- ncol(results1$pars)
+  n_particles <- nrow(results1$state)
+  n_index <- nrow(results1$trajectories$state)
+  n_time <- dim(results1$trajectories$state)[[3]]
+
+  n_mcmc3 <- n_mcmc * 3
+
+  expect_equal(dim(res$pars), c(n_mcmc3, n_par))
+  expect_equal(dim(res$probabilities), c(n_mcmc3, 3))
+  expect_equal(dim(res$state), c(nrow(results1$state), n_mcmc3))
+  expect_equal(dim(res$trajectories$state), c(n_index, n_mcmc3, n_time))
+
+  i <- seq_len(n_mcmc) + n_mcmc
+  expect_equal(res$pars[i, ], results2$pars)
+  expect_equal(res$probabilities[i, ], results2$probabilities)
+  expect_equal(res$state[, i], results2$state)
+  expect_equal(res$trajectories$state[, i, ], results2$trajectories$state)
+})
+
+
+test_that("can combine chains with list interface", {
+  results <- example_sir_pmcmc2()$results
+  expect_identical(
+    pmcmc_combine(results[[1]], results[[2]], results[[3]]),
+    pmcmc_combine(samples = results))
+})
+
+
+test_that("can combine chains without samples or state", {
+  f <- function(x) {
+    x$state <- NULL
+    x$trajectories <- NULL
+    x$predict <- NULL
+    x
+  }
+
+  results1 <- example_sir_pmcmc2()$results
+  results2 <- lapply(results1, f)
+  combined1 <- pmcmc_combine(samples = results1)
+  combined2 <- pmcmc_combine(samples = results2)
+
+  expect_null(combined2$state)
+  expect_null(combined2$trajectories)
+  expect_null(combined2$predict)
+
+  nms <- setdiff(names(combined1), c("state", "trajectories", "predict"))
+  expect_identical(combined1[nms], combined2[nms])
+})
+
+
+test_that("can drop burnin from combined chains", {
+  results <- example_sir_pmcmc2()$results
+  combined <- pmcmc_combine(samples = results)
+  res <- pmcmc_thin(combined, burnin = 10)
+  expect_equal(res$chain, rep(1:3, each = 21))
+  expect_equal(res$iteration, rep(10:30, 3))
+
+  ## Same performed either way:
+  expect_identical(
+    res,
+    pmcmc_combine(samples = lapply(results, pmcmc_thin, burnin = 10)))
+})
+
+
+test_that("can thin combined chains", {
+  results <- example_sir_pmcmc2()$results
+  combined <- pmcmc_combine(samples = results)
+  res <- pmcmc_thin(combined, burnin = 10, thin = 4)
+  expect_equal(res$chain, rep(1:3, each = 6))
+  expect_equal(res$iteration, rep(seq(10, 30, by = 4), 3))
+
+  ## Same performed either way:
+  expect_identical(
+    res,
+    pmcmc_combine(samples = lapply(results, pmcmc_thin, 10, 4)))
 })

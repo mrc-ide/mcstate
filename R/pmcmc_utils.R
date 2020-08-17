@@ -1,5 +1,8 @@
-mcstate_pmcmc <- function(pars, probabilities, state, trajectories, predict) {
-  ret <- list(pars = pars,
+mcstate_pmcmc <- function(pars, probabilities, state, trajectories, predict,
+                          chain = NULL, iteration = NULL) {
+  ret <- list(chain = chain,
+              iteration = iteration %||% seq.int(0, length.out = nrow(pars)),
+              pars = pars,
               probabilities = probabilities,
               state = state,
               trajectories = trajectories,
@@ -26,8 +29,15 @@ format.mcstate_pmcmc <- function(x, ...) {
       nrow(trajectories), ncol(trajectories), dim(trajectories)[[3]])
   }
 
+  if (is.null(x$chain)) {
+    header <- sprintf("<mcstate_pmcmc> (%d samples)", nrow(x$pars))
+  } else {
+    header <- sprintf("<mcstate_pmcmc> (%d samples across %d chains)",
+                      nrow(x$pars), length(unique(x$chain)))
+  }
+
   indent <- 4
-  c(sprintf("<mcstate_pmcmc> (%d samples)", nrow(x$pars) - 1L),
+  c(header,
     sprintf("  pars: %d x %d matrix of parameters", nrow(x$pars), ncol(x$pars)),
     strwrap(paste(colnames(x$pars), collapse = ", "),
             indent = indent, exdent = indent),
