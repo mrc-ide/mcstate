@@ -48,7 +48,10 @@ print.mcstate_pmcmc <- function(x, ...) {
 
 
 ##' @importFrom progress progress_bar
-pmcmc_progress <- function(n, show) {
+
+## NOTE: we need to expose a 'force' argument here for testing, as
+## otherwise under R CMD check the progress bar does not run.
+pmcmc_progress <- function(n, show, force = FALSE) {
   if (show) {
     fmt <- "pmcmc step :current / :total [:bar] ETA :eta"
     t0 <- Sys.time()
@@ -56,7 +59,7 @@ pmcmc_progress <- function(n, show) {
       message(sprintf("Finished %d steps in %s",
                       n, format(Sys.time() - t0, digits = 0)))
     }
-    p <- progress::progress_bar$new(fmt, n, callback = callback)
+    p <- progress::progress_bar$new(fmt, n, callback = callback, force = force)
     p$tick(0)
     p$tick
   } else {
