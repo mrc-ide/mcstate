@@ -175,3 +175,11 @@ test_that("collecting state from model yields an RNG state", {
   expect_false(
     identical(results2$predict$seed, results3$predict$seed))
 })
+
+
+test_that("running pmcmc with progress = TRUE prints messages", {
+  dat <- example_uniform()
+  expect_message(
+    pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE, progress = TRUE),
+    "Finished 1000 steps in ")
+})

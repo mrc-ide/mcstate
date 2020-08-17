@@ -44,6 +44,9 @@
 ##'   `save_state` is `TRUE` the same particle will
 ##'   be selected for each.
 ##'
+##' @param progress Logical, indicating if a progress bar should be
+##'   displayed, using [`progress::progress_bar`].
+##'
 ##' @return A `mcstate_pmcmc` object containing `pars`
 ##'   (sampled parameters) and `probabilities` (log prior, log
 ##'   likelihood and log posterior values for these
@@ -58,7 +61,7 @@
 ##'
 ##' @export
 pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
-                  save_trajectories = FALSE) {
+                  save_trajectories = FALSE, progress = FALSE) {
   assert_is(pars, "pmcmc_parameters")
   assert_is(filter, "particle_filter")
   assert_scalar_positive_integer(n_steps)
@@ -92,7 +95,11 @@ pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
     history_state$add(curr_state)
   }
 
+  tick <- pmcmc_progress(n_steps, progress)
+
   for (i in seq_len(n_steps)) {
+    tick()
+
     prop_pars <- pars$propose(curr_pars)
     prop_lprior <- pars$prior(prop_pars)
     prop_llik <- filter$run(pars$model(prop_pars), save_trajectories)
