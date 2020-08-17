@@ -69,3 +69,26 @@ test_that("can filter trajectories with dropping dimensions", {
     sample_trajectory(m, 2:3),
     matrix(m[, 2:3, ], 2, 5))
 })
+
+
+test_that("progress bar is a noop when verbose = FALSE", {
+  p <- pmcmc_progress(3, FALSE)
+  expect_silent(p())
+  expect_null(p())
+  expect_silent(p())
+})
+
+
+test_that("progress bar creates progress_bar when verbose = TRUE", {
+  p <- pmcmc_progress(3, TRUE)
+  Sys.sleep(0.2)
+  expect_message(
+    p(),
+    "pmcmc step 1 / 3 \\[=*>-+] ETA")
+  expect_s3_class(
+    suppressMessages(p()),
+    "progress_bar")
+  expect_message(
+    p(),
+    "Finished 3 steps in [0-9]+ secs")
+})

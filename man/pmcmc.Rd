@@ -4,7 +4,14 @@
 \alias{pmcmc}
 \title{Run a pmcmc sampler}
 \usage{
-pmcmc(pars, filter, n_steps, save_state = TRUE, save_trajectories = FALSE)
+pmcmc(
+  pars,
+  filter,
+  n_steps,
+  save_state = TRUE,
+  save_trajectories = FALSE,
+  progress = FALSE
+)
 }
 \arguments{
 \item{pars}{A \code{\link{pmcmc_parameters}} object containing
@@ -36,6 +43,9 @@ is the filtered state (i.e., using the \code{state} component of
 \code{index} provided to the particle filter).  If
 \code{save_state} is \code{TRUE} the same particle will
 be selected for each.}
+
+\item{progress}{Logical, indicating if a progress bar should be
+displayed, using \code{\link[progress:progress_bar]{progress::progress_bar}}.}
 }
 \value{
 A \code{mcstate_pmcmc} object containing \code{pars}

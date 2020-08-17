@@ -45,3 +45,21 @@ print.mcstate_pmcmc <- function(x, ...) {
   cat(paste0(format(x), "\n", collapse = ""))
   invisible(x)
 }
+
+
+##' @importFrom progress progress_bar
+pmcmc_progress <- function(n, show) {
+  if (show) {
+    fmt <- "pmcmc step :current / :total [:bar] ETA :eta"
+    t0 <- Sys.time()
+    callback <- function(p) {
+      message(sprintf("Finished %d steps in %s",
+                      n, format(Sys.time() - t0, digits = 0)))
+    }
+    p <- progress::progress_bar$new(fmt, n, callback = callback)
+    p$tick(0)
+    p$tick
+  } else {
+    function() NULL
+  }
+}
