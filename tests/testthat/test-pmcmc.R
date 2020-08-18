@@ -104,7 +104,11 @@ test_that("run pmcmc with the particle filter and retain history", {
 
   expect_setequal(
     names(results1),
-    c("pars", "probabilities", "state", "trajectories", "predict"))
+    c("chain", "iteration",
+      "pars", "probabilities", "state", "trajectories", "predict"))
+
+  expect_null(results1$chain)
+  expect_equal(results1$iteration, 0:30)
 
   ## Including or not the history does not change the mcmc trajectory:
   expect_identical(names(results1), names(results2))

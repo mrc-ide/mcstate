@@ -127,6 +127,25 @@ example_sir_pmcmc <- function() {
 }
 
 
+example_sir_pmcmc2 <- function() {
+  if (is.null(test_cache$example_sir_pmcmc2)) {
+    dat <- example_sir()
+
+    n_particles <- 10
+    p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                             index = dat$index)
+    set.seed(1)
+
+    dat$results <- list(
+      pmcmc(dat$pars, p, 30, TRUE, TRUE),
+      pmcmc(dat$pars, p, 30, TRUE, TRUE),
+      pmcmc(dat$pars, p, 30, TRUE, TRUE))
+    test_cache$example_sir_pmcmc2 <- dat
+  }
+  test_cache$example_sir_pmcmc2
+}
+
+
 r6_private <- function(x) {
   x[[".__enclos_env__"]]$private
 }

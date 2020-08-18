@@ -2,9 +2,12 @@
 % Please edit documentation in R/pmcmc_tools.R
 \name{pmcmc_thin}
 \alias{pmcmc_thin}
+\alias{pmcmc_sample}
 \title{Thin a pmcmc chain}
 \usage{
 pmcmc_thin(object, burnin = NULL, thin = NULL)
+
+pmcmc_sample(object, n_sample, burnin = NULL)
 }
 \arguments{
 \item{object}{Results of running \code{\link[=pmcmc]{pmcmc()}}}
@@ -20,9 +23,14 @@ remaining after discarding burnin).}
 \item{thin}{Optional integer thinning factor. If given, then every
 \code{thin}'th sample is retained (e.g., if \code{thin} is 10
 then we keep samples 1, 11, 21, ...).}
+
+\item{n_sample}{The number of samples to draw from \code{object} \emph{with
+replacement}. This means that \code{n_sample} can be larger than the
+total number of samples taken (though it probably should not)}
 }
 \description{
-Thin results of running \code{\link[=pmcmc]{pmcmc()}}. This function may be
-useful before using \code{\link[=pmcmc_predict]{pmcmc_predict()}}, or before saving
-pmcmc output to disk.
+Thin results of running \code{\link[=pmcmc]{pmcmc()}}. This function may be useful
+before using \code{\link[=pmcmc_predict]{pmcmc_predict()}}, or before saving pmcmc output to
+disk.  \code{pmcmc_thin} takes every \code{thin}'th sample, while
+\code{pmcmc_sample} randomly selects a total of \code{n_sample} samples.
 }

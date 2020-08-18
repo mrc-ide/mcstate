@@ -83,3 +83,8 @@ last <- function(x) {
 df_to_list_of_lists <- function(x) {
   lapply(unname(split(x, seq_len(nrow(x)))), as.list)
 }
+
+
+all_or_none <- function(x) {
+  all(x) || !any(x)
+}
