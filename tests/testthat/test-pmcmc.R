@@ -187,3 +187,60 @@ test_that("running pmcmc with progress = TRUE prints messages", {
     pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE, progress = TRUE),
     "Finished 1000 steps in ")
 })
+
+
+test_that("run multiple chains", {
+  dat <- example_uniform()
+
+  set.seed(1)
+  res1 <- pmcmc(dat$pars, dat$filter, 100, FALSE, FALSE, n_chains = 1)
+  expect_s3_class(res1, "mcstate_pmcmc")
+  expect_null(res1$chain)
+
+  set.seed(1)
+  res3 <- pmcmc(dat$pars, dat$filter, 100, FALSE, FALSE, n_chains = 3)
+  expect_s3_class(res3, "mcstate_pmcmc")
+  expect_equal(res3$chain, rep(1:3, each = 101))
+
+  expect_equal(res1$pars, res3$pars[1:101, ])
+})
+
+
+test_that("progress in multiple chains", {
+  dat <- example_uniform()
+  expect_message(
+    pmcmc(dat$pars, dat$filter, 100, FALSE, FALSE, progress = TRUE,
+          n_chains = 3),
+    "Running chain 2 / 3")
+})
+
+
+test_that("All arguments forwarded to multiple chains", {
+  skip_if_not_installed("mockery")
+  dat <- example_uniform()
+  res <- list(
+    pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE),
+    pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE),
+    pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE))
+
+  mock_pmcmc_single_chain <- mockery::mock(
+    res[[1]], res[[1]], res[[2]], res[[3]])
+  with_mock("mcstate::pmcmc_single_chain" = mock_pmcmc_single_chain, {
+    ans1 <- pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE, FALSE)
+    ans2 <- pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE, FALSE, n_chains = 3)
+  })
+
+  mockery::expect_called(mock_pmcmc_single_chain, 4)
+  args <- mockery::mock_args(mock_pmcmc_single_chain)
+  expect_equal(args[[1]],
+               list(dat$pars, dat$filter, 1000, FALSE, FALSE, FALSE))
+  expect_equal(args[[2]],
+               list(dat$pars, dat$filter, 1000, FALSE, FALSE, FALSE))
+  expect_equal(args[[3]],
+               list(dat$pars, dat$filter, 1000, FALSE, FALSE, FALSE))
+  expect_equal(args[[4]],
+               list(dat$pars, dat$filter, 1000, FALSE, FALSE, FALSE))
+
+  expect_equal(ans1, res[[1]])
+  expect_equal(ans2, pmcmc_combine(samples = res))
+})

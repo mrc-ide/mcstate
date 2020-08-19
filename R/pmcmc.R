@@ -47,6 +47,11 @@
 ##' @param progress Logical, indicating if a progress bar should be
 ##'   displayed, using [`progress::progress_bar`].
 ##'
+##' @param n_chains Optional integer, indicating the number of chains
+##'   to run. If more than one then we run a series of chains and
+##'   merge them with [pmcmc_combine()]. Chains are run in series,
+##'   with the same filter.
+##'
 ##' @return A `mcstate_pmcmc` object containing `pars`
 ##'   (sampled parameters) and `probabilities` (log prior, log
 ##'   likelihood and log posterior values for these
@@ -61,13 +66,35 @@
 ##'
 ##' @export
 pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
-                  save_trajectories = FALSE, progress = FALSE) {
+                  save_trajectories = FALSE, progress = FALSE,
+                  n_chains = 1) {
   assert_is(pars, "pmcmc_parameters")
   assert_is(filter, "particle_filter")
   assert_scalar_positive_integer(n_steps)
   assert_scalar_logical(save_state)
   assert_scalar_logical(save_trajectories)
+  assert_scalar_positive_integer(n_chains)
 
+  if (n_chains == 1) {
+    pmcmc_single_chain(pars, filter, n_steps,
+                       save_state, save_trajectories, progress)
+  } else {
+    samples <- vector("list", n_chains)
+    for (i in seq_along(samples)) {
+      if (progress) {
+        message(sprintf("Running chain %d / %d", i, n_chains))
+      }
+      samples[[i]] <- pmcmc_single_chain(pars, filter, n_steps,
+                                         save_state, save_trajectories,
+                                         progress)
+    }
+    pmcmc_combine(samples = samples)
+  }
+}
+
+pmcmc_single_chain <- function(pars, filter, n_steps,
+                               save_state, save_trajectories,
+                               progress) {
   n_particles <- filter$n_particles
 
   history_pars <- history_collector(n_steps)
