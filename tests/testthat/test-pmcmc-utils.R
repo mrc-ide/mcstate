@@ -101,7 +101,7 @@ test_that("progress bar creates progress_bar when progress = TRUE", {
   Sys.sleep(0.2)
   expect_message(
     p(),
-    "pmcmc step 1 / 3 \\[=*>-+] ETA")
+    "Step 1 / 3 \\[=*>-+\\] ETA .* \\| 00:00:[0-9]{2} so far")
   expect_s3_class(
     suppressMessages(p()),
     "progress_bar")
