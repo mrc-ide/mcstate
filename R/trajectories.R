@@ -17,6 +17,7 @@ bind_mcstate_trajectories <- function(a, b) {
 
   step <- c(a$step, b$step[-1])
   state <- abind3(a$state, b$state[, , -1, drop = FALSE])
+  rownames(state) <- rownames(b$state) %||% rownames(a$state)
   predicted <- c(a$predicted, b$predicted[-1])
 
   mcstate_trajectories(step, a$rate, state, predicted)

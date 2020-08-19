@@ -57,6 +57,7 @@ pmcmc_predict <- function(object, steps, prepend_trajectories = FALSE,
   n_threads <- n_threads %||% object$predict$n_threads
 
   y <- dust::dust_simulate(model, steps, data, state, index, n_threads, seed)
+  rownames(y) <- names(index)
 
   res <- mcstate_trajectories(steps, object$predict$rate, y, TRUE)
   if (prepend_trajectories) {

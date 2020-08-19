@@ -244,3 +244,32 @@ test_that("All arguments forwarded to multiple chains", {
   expect_equal(ans1, res[[1]])
   expect_equal(ans2, pmcmc_combine(samples = res))
 })
+
+
+test_that("return names on pmcmc output", {
+  proposal_kernel <- diag(2) * 1e-4
+  row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("beta", "gamma")
+
+  pars <- pmcmc_parameters$new(
+    list(pmcmc_parameter("beta", 0.2, min = 0, max = 1,
+                         prior = function(p) log(1e-10)),
+         pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
+                         prior = function(p) log(1e-10))),
+    proposal = proposal_kernel)
+
+  dat <- example_sir()
+  n_particles <- 10
+  index2 <- function(info) list(run = 4L, state = c(a = 1, b = 2, c = 3))
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index)
+  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = index2)
+
+  set.seed(1)
+  results1 <- pmcmc(pars, p1, 5, TRUE, TRUE)
+  set.seed(1)
+  results2 <- pmcmc(pars, p2, 5, TRUE, TRUE)
+
+  expect_null(rownames(results1$trajectories$state))
+  expect_equal(rownames(results2$trajectories$state), c("a", "b", "c"))
+})

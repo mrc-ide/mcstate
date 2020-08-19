@@ -122,3 +122,18 @@ test_that("can't prepend history if trajectories not saved", {
     pmcmc_predict(results, steps, prepend_trajectories = TRUE),
     "mcmc was run with return_trajectories = FALSE, can't prepend trajectories")
 })
+
+
+test_that("names are copied from index into predictions", {
+  results <- example_sir_pmcmc()$pmcmc
+  steps <- seq(results$predict$step, by = 4, length.out = 26)
+  y1 <- pmcmc_predict(results, steps, seed = 1L)
+
+  names(results$predict$index) <- c("a", "b", "c")
+  y2 <- pmcmc_predict(results, steps, seed = 1L)
+  y3 <- pmcmc_predict(results, steps, prepend_trajectories = TRUE, seed = 1L)
+
+  expect_null(rownames(y1$state))
+  expect_equal(rownames(y2$state), c("a", "b", "c"))
+  expect_equal(rownames(y3$state), c("a", "b", "c"))
+})
