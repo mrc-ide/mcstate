@@ -213,3 +213,33 @@ test_that("progress in multiple chains", {
           n_chains = 3),
     "Running chain 2 / 3")
 })
+
+
+test_that("All arguments forwarded to multiple chains", {
+  skip_if_not_installed("mockery")
+  dat <- example_uniform()
+  res <- list(
+    pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE),
+    pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE),
+    pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE))
+
+  mock_pmcmc1 <- mockery::mock(res[[1]], res[[1]], res[[2]], res[[3]])
+  with_mock("mcstate::pmcmc1" = mock_pmcmc1, {
+    ans1 <- pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE, FALSE)
+    ans2 <- pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE, FALSE, n_chains = 3)
+  })
+
+  mockery::expect_called(mock_pmcmc1, 4)
+  args <- mockery::mock_args(mock_pmcmc1)
+  expect_equal(args[[1]],
+               list(dat$pars, dat$filter, 1000, FALSE, FALSE, FALSE))
+  expect_equal(args[[2]],
+               list(dat$pars, dat$filter, 1000, FALSE, FALSE, FALSE))
+  expect_equal(args[[3]],
+               list(dat$pars, dat$filter, 1000, FALSE, FALSE, FALSE))
+  expect_equal(args[[4]],
+               list(dat$pars, dat$filter, 1000, FALSE, FALSE, FALSE))
+
+  expect_equal(ans1, res[[1]])
+  expect_equal(ans2, pmcmc_combine(samples = res))
+})

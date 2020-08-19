@@ -27,6 +27,7 @@ Suggests:
     brio,
     coda,
     decor,
+    mockery,
     mvtnorm,
     testthat,
     tibble,
