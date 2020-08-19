@@ -10,7 +10,8 @@ pmcmc(
   n_steps,
   save_state = TRUE,
   save_trajectories = FALSE,
-  progress = FALSE
+  progress = FALSE,
+  n_chains = 1
 )
 }
 \arguments{
@@ -46,6 +47,11 @@ be selected for each.}
 
 \item{progress}{Logical, indicating if a progress bar should be
 displayed, using \code{\link[progress:progress_bar]{progress::progress_bar}}.}
+
+\item{n_chains}{Optional integer, indicating the number of chains
+to run. If more than one then we run a series of chains and
+merge them with \code{\link[=pmcmc_combine]{pmcmc_combine()}}. Chains are run in series,
+with the same filter.}
 }
 \value{
 A \code{mcstate_pmcmc} object containing \code{pars}

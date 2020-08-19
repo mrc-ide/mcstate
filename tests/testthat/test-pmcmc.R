@@ -187,3 +187,29 @@ test_that("running pmcmc with progress = TRUE prints messages", {
     pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE, progress = TRUE),
     "Finished 1000 steps in ")
 })
+
+
+test_that("run multiple chains", {
+  dat <- example_uniform()
+
+  set.seed(1)
+  res1 <- pmcmc(dat$pars, dat$filter, 100, FALSE, FALSE, n_chains = 1)
+  expect_s3_class(res1, "mcstate_pmcmc")
+  expect_null(res1$chain)
+
+  set.seed(1)
+  res3 <- pmcmc(dat$pars, dat$filter, 100, FALSE, FALSE, n_chains = 3)
+  expect_s3_class(res3, "mcstate_pmcmc")
+  expect_equal(res3$chain, rep(1:3, each = 101))
+
+  expect_equal(res1$pars, res3$pars[1:101, ])
+})
+
+
+test_that("progress in multiple chains", {
+  dat <- example_uniform()
+  expect_message(
+    pmcmc(dat$pars, dat$filter, 100, FALSE, FALSE, progress = TRUE,
+          n_chains = 3),
+    "Running chain 2 / 3")
+})
