@@ -271,5 +271,5 @@ test_that("return names on pmcmc output", {
   results2 <- pmcmc(pars, p2, 5, TRUE, TRUE)
 
   expect_null(rownames(results1$trajectories$state))
-  expect_equal(rownames(results2$trajectories$state), c("a", "b", "c")))
+  expect_equal(rownames(results2$trajectories$state), c("a", "b", "c"))
 })
