@@ -76,22 +76,25 @@ pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
   assert_scalar_positive_integer(n_chains)
 
   if (n_chains == 1) {
-    pmcmc1(pars, filter, n_steps, save_state, save_trajectories, progress)
+    pmcmc_single_chain(pars, filter, n_steps,
+                       save_state, save_trajectories, progress)
   } else {
     samples <- vector("list", n_chains)
     for (i in seq_along(samples)) {
       if (progress) {
         message(sprintf("Running chain %d / %d", i, n_chains))
       }
-      samples[[i]] <-
-        pmcmc1(pars, filter, n_steps, save_state, save_trajectories, progress)
+      samples[[i]] <- pmcmc_single_chain(pars, filter, n_steps,
+                                         save_state, save_trajectories,
+                                         progress)
     }
     pmcmc_combine(samples = samples)
   }
 }
 
-pmcmc1 <- function(pars, filter, n_steps, save_state, save_trajectories,
-                   progress) {
+pmcmc_single_chain <- function(pars, filter, n_steps,
+                               save_state, save_trajectories,
+                               progress) {
   n_particles <- filter$n_particles
 
   history_pars <- history_collector(n_steps)

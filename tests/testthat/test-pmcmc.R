@@ -223,14 +223,15 @@ test_that("All arguments forwarded to multiple chains", {
     pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE),
     pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE))
 
-  mock_pmcmc1 <- mockery::mock(res[[1]], res[[1]], res[[2]], res[[3]])
-  with_mock("mcstate::pmcmc1" = mock_pmcmc1, {
+  mock_pmcmc_single_chain <- mockery::mock(
+    res[[1]], res[[1]], res[[2]], res[[3]])
+  with_mock("mcstate::pmcmc_single_chain" = mock_pmcmc_single_chain, {
     ans1 <- pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE, FALSE)
     ans2 <- pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE, FALSE, n_chains = 3)
   })
 
-  mockery::expect_called(mock_pmcmc1, 4)
-  args <- mockery::mock_args(mock_pmcmc1)
+  mockery::expect_called(mock_pmcmc_single_chain, 4)
+  args <- mockery::mock_args(mock_pmcmc_single_chain)
   expect_equal(args[[1]],
                list(dat$pars, dat$filter, 1000, FALSE, FALSE, FALSE))
   expect_equal(args[[2]],
