@@ -13,6 +13,11 @@ vnapply <- function(x, fun, ...) {
 }
 
 
+vcapply <- function(x, fun, ...) {
+  vapply(x, fun, character(1), ...)
+}
+
+
 list_to_numeric <- function(x) {
   vnapply(x, identity)
 }
@@ -87,4 +92,9 @@ df_to_list_of_lists <- function(x) {
 
 all_or_none <- function(x) {
   all(x) || !any(x)
+}
+
+
+squote <- function(x) {
+  sprintf("'%s'", x)
 }

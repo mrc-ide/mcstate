@@ -13,9 +13,9 @@ used.
 \examples{
 #Construct an object with two parameters:
 pars <- mcstate::pmcmc_parameters$new(
-  list(a = mcstate::pmcmc_parameter(0.1, min = 0, max = 1,
-                                    prior = function(a) log(a)),
-       b = mcstate::pmcmc_parameter(0, prior = dnorm)),
+  list(mcstate::pmcmc_parameter("a", 0.1, min = 0, max = 1,
+                                prior = function(a) log(a)),
+       mcstate::pmcmc_parameter("b", 0, prior = dnorm)),
   matrix(c(1, 0.5, 0.5, 2), 2, 2))
 
 # Initial parameters
@@ -59,9 +59,11 @@ Create the pmcmc_parameters object
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{parameters}}{A named \code{list} of
+\item{\code{parameters}}{A \code{list} of
 \link{pmcmc_parameter} objects, each of which describe a
-single parameter in your model.}
+single parameter in your model. If \code{parameters} is named, then
+these names must match the \verb{$name} element of each parameter is
+used (this is verified).}
 
 \item{\code{proposal}}{A square proposal distribution corresponding to the
 variance-covariance matrix of a multivariate gaussian distribution

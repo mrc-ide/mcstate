@@ -4,9 +4,18 @@
 \alias{pmcmc_parameter}
 \title{Describe single pmcmc parameter}
 \usage{
-pmcmc_parameter(initial, min = -Inf, max = Inf, discrete = FALSE, prior = NULL)
+pmcmc_parameter(
+  name,
+  initial,
+  min = -Inf,
+  max = Inf,
+  discrete = FALSE,
+  prior = NULL
+)
 }
 \arguments{
+\item{name}{Name for the parameter (a string)}
+
 \item{initial}{Initial value for the parameter}
 
 \item{min}{Optional minimum value for the parameter (otherwise
@@ -33,5 +42,5 @@ when used with \code{\link{pmcmc_parameters}}, which collects
 these together for use with \code{\link[=pmcmc]{pmcmc()}}.
 }
 \examples{
-pmcmc_parameter(0.1)
+pmcmc_parameter("a", 0.1)
 }

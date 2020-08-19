@@ -39,10 +39,10 @@ example_sir <- function() {
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("beta", "gamma")
 
   pars <- pmcmc_parameters$new(
-    list(beta = pmcmc_parameter(0.2, min = 0, max = 1,
-                                prior = function(p) log(1e-10)),
-         gamma = pmcmc_parameter(0.1, min = 0, max = 1,
-                                 prior = function(p) log(1e-10))),
+    list(pmcmc_parameter("beta", 0.2, min = 0, max = 1,
+                         prior = function(p) log(1e-10)),
+         pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
+                         prior = function(p) log(1e-10))),
     proposal = proposal_kernel)
 
   list(model = model, compare = compare, y0 = y0,
@@ -67,8 +67,8 @@ example_uniform <- function(proposal_kernel = NULL) {
   }
 
   pars <- pmcmc_parameters$new(
-    list(a = pmcmc_parameter(0.5, min = 0, max = 1),
-         b = pmcmc_parameter(0.5, min = 0, max = 1)),
+    list(pmcmc_parameter("a", 0.5, min = 0, max = 1),
+         pmcmc_parameter("b", 0.5, min = 0, max = 1)),
     proposal = proposal_kernel)
 
   list(target = target, filter = filter, pars = pars)
@@ -88,8 +88,8 @@ example_mvnorm <- function() {
 
   proposal_kernel <- diag(2)
   pars <- pmcmc_parameters$new(
-    list(a = pmcmc_parameter(0, min = -100, max = 100),
-         b = pmcmc_parameter(0, min = -100, max = 100)),
+    list(pmcmc_parameter("a", 0, min = -100, max = 100),
+         pmcmc_parameter("b", 0, min = -100, max = 100)),
     proposal = proposal_kernel)
 
   list(target = target, filter = filter, pars = pars)
