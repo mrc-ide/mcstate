@@ -195,6 +195,7 @@ pmcmc_single_chain <- function(pars, filter, n_steps,
     ## will generate with predict
     trajectories_state <-
       aperm(list_to_array(history_trajectories$get()), c(1, 3, 2))
+    rownames(trajectories_state) <- names(info$index)
     trajectories <- mcstate_trajectories(info$step, info$rate,
                                          trajectories_state, FALSE)
   }
