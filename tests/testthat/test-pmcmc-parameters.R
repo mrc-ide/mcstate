@@ -206,3 +206,33 @@ test_that("can summarise parameters", {
     p$summary(),
     data_frame(name = c("beta", "gamma"), min = 0, max = 1, discrete = FALSE))
 })
+
+
+test_that("duplicate parameter names are rejected", {
+  expect_error(
+    pmcmc_parameters$new(
+      list(pmcmc_parameter("a", 0.2), pmcmc_parameter("a", 0.1)),
+      matrix(1, 2, 2)),
+    "Duplicate parameter names: 'a'")
+  expect_error(
+    pmcmc_parameters$new(
+      list(pmcmc_parameter("a", 0.2),
+           pmcmc_parameter("a", 0.1),
+           pmcmc_parameter("a", 0.1),
+           pmcmc_parameter("b", 0.1),
+           pmcmc_parameter("c", 0.1),
+           pmcmc_parameter("c", 0.1)),
+      matrix(1, 6, 6)),
+    "Duplicate parameter names: 'a', 'c'")
+})
+
+
+test_that("named parameters must match parameter names", {
+  pars <- list(pmcmc_parameter("a", 0.2), pmcmc_parameter("b", 0.1))
+  m <- matrix(1, 2, 2)
+  expect_silent(
+    pmcmc_parameters$new(setNames(pars, c("a", "b")), m))
+  expect_error(
+    pmcmc_parameters$new(setNames(pars, c("b", "a")), m),
+    "'parameters' is named, but the names do not match parameters")
+})

@@ -61,8 +61,9 @@ Create the pmcmc_parameters object
 \describe{
 \item{\code{parameters}}{A \code{list} of
 \link{pmcmc_parameter} objects, each of which describe a
-single parameter in your model. Any names on the \code{parameters} list
-are ignored, and the \verb{$name} element of each parameter is used.}
+single parameter in your model. If \code{parameters} is named, then
+these names must match the \verb{$name} element of each parameter is
+used (this is verified).}
 
 \item{\code{proposal}}{A square proposal distribution corresponding to the
 variance-covariance matrix of a multivariate gaussian distribution

@@ -116,8 +116,9 @@ pmcmc_parameters <- R6::R6Class(
     ##'
     ##' @param parameters A `list` of
     ##' [pmcmc_parameter] objects, each of which describe a
-    ##' single parameter in your model. Any names on the `parameters` list
-    ##' are ignored, and the `$name` element of each parameter is used.
+    ##' single parameter in your model. If `parameters` is named, then
+    ##' these names must match the `$name` element of each parameter is
+    ##' used (this is verified).
     ##'
     ##' @param proposal A square proposal distribution corresponding to the
     ##' variance-covariance matrix of a multivariate gaussian distribution
@@ -142,11 +143,16 @@ pmcmc_parameters <- R6::R6Class(
       if (!all(ok)) {
         stop("Expected all elements of '...' to be 'pmcmc_parameter' objects")
       }
-      names(parameters) <- vcapply(parameters, "[[", "name")
-      dups <- names(parameters)[duplicated(names(parameters))]
+      nms <- vcapply(parameters, "[[", "name", USE.NAMES = FALSE)
+      dups <- nms[duplicated(nms)]
       if (length(dups) > 0L) {
-        stop("Duplicate parmeter names are not allowed")
+        stop("Duplicate parameter names: ",
+             paste(squote(unique(dups)), collapse = ", "))
       }
+      if (!is.null(names(parameters)) && !identical(nms, names(parameters))) {
+        stop("'parameters' is named, but the names do not match parameters")
+      }
+      names(parameters) <- nms
 
       if (is.null(transform)) {
         transform <- as.list

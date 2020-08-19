@@ -93,3 +93,8 @@ df_to_list_of_lists <- function(x) {
 all_or_none <- function(x) {
   all(x) || !any(x)
 }
+
+
+squote <- function(x) {
+  sprintf("'%s'", x)
+}
