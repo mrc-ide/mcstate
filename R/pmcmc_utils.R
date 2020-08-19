@@ -61,7 +61,7 @@ print.mcstate_pmcmc <- function(x, ...) {
 ## otherwise under R CMD check the progress bar does not run.
 pmcmc_progress <- function(n, show, force = FALSE) {
   if (show) {
-    fmt <- "pmcmc step :current / :total [:bar] ETA :eta"
+    fmt <- "Step :current / :total [:bar] ETA :eta | :elapsedfull so far"
     t0 <- Sys.time()
     callback <- function(p) {
       message(sprintf("Finished %d steps in %s",
