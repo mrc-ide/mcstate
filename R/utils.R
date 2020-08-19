@@ -13,6 +13,11 @@ vnapply <- function(x, fun, ...) {
 }
 
 
+vcapply <- function(x, fun, ...) {
+  vapply(x, fun, character(1), ...)
+}
+
+
 list_to_numeric <- function(x) {
   vnapply(x, identity)
 }

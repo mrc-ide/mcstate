@@ -84,10 +84,10 @@ test_that("run pmcmc with the particle filter and retain history", {
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("beta", "gamma")
 
   pars <- pmcmc_parameters$new(
-    list(beta = pmcmc_parameter(0.2, min = 0, max = 1,
-                                prior = function(p) log(1e-10)),
-         gamma = pmcmc_parameter(0.1, min = 0, max = 1,
-                                 prior = function(p) log(1e-10))),
+    list(pmcmc_parameter("beta", 0.2, min = 0, max = 1,
+                         prior = function(p) log(1e-10)),
+         pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
+                         prior = function(p) log(1e-10))),
     proposal = proposal_kernel)
 
   dat <- example_sir()

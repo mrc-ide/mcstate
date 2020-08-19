@@ -1,8 +1,9 @@
 context("pmcmc_parameters")
 
 test_that("Can construct a parameter", {
-  p <- pmcmc_parameter(1, 0, 10)
+  p <- pmcmc_parameter("a", 1, 0, 10)
   expect_s3_class(p, "pmcmc_parameter")
+  expect_equal(p$name, "a")
   expect_equal(p$initial, 1)
   expect_equal(p$min, 0)
   expect_equal(p$max, 10)
@@ -13,28 +14,31 @@ test_that("Can construct a parameter", {
 
 test_that("Can provide a prior", {
   f <- function(p) log(1 / p)
-  p <- pmcmc_parameter(1, prior = f)
+  p <- pmcmc_parameter("a", 1, prior = f)
   expect_identical(p$prior, f)
 })
 
 
 test_that("parameter initial point must lie in range", {
-  expect_silent(pmcmc_parameter(0))
-  expect_silent(pmcmc_parameter(0, min = 0))
-  expect_silent(pmcmc_parameter(0, max = 0))
-  expect_error(pmcmc_parameter(0, min = 1),
+  expect_silent(pmcmc_parameter("a", 0))
+  expect_silent(pmcmc_parameter("a", 0, min = 0))
+  expect_silent(pmcmc_parameter("a", 0, max = 0))
+  expect_error(pmcmc_parameter("a", 0, min = 1),
                "'initial' must be >= 'min' (1)", fixed = TRUE)
-  expect_error(pmcmc_parameter(0, max = -1),
+  expect_error(pmcmc_parameter("a", 0, max = -1),
                "'initial' must be <= 'max' (-1)", fixed = TRUE)
 })
 
 
-test_that("initial value must satify prior", {
+test_that("initial value must satify prior and not fail", {
   expect_silent(
-    pmcmc_parameter(10, prior = log))
+    pmcmc_parameter("a", 10, prior = log))
   expect_error(
-    pmcmc_parameter(0, prior = log),
-    "Your prior function returned an non-finite value on initial value")
+    pmcmc_parameter("a", 0, prior = log),
+    "Prior function for 'a' returned a non-finite value on initial value")
+  expect_error(
+    pmcmc_parameter("a", 0, prior = function(p) stop("an error")),
+    "Prior function for 'a' failed to evaluate initial value: an error")
 })
 
 
@@ -44,10 +48,10 @@ test_that("parameters", {
 
   p <- pmcmc_parameters$new(
     list(
-      beta = pmcmc_parameter(0.2, min = 0, max = 1,
-                             prior = function(p) log(1e-10)),
-      gamma = pmcmc_parameter(0.1, min = 0, max = 1,
-                              prior = function(p) log(1e-10))),
+      pmcmc_parameter("beta", 0.2, min = 0, max = 1,
+                      prior = function(p) log(1e-10)),
+      pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
+                      prior = function(p) log(1e-10))),
     proposal = proposal_kernel)
 
   expect_equal(
@@ -68,10 +72,10 @@ test_that("transform parameters returns a list by default", {
 
   p <- pmcmc_parameters$new(
     list(
-      beta = pmcmc_parameter(0.2, min = 0, max = 1,
-                             prior = function(p) log(1e-10)),
-      gamma = pmcmc_parameter(0.1, min = 0, max = 1,
-                              prior = function(p) log(1e-10))),
+      pmcmc_parameter("beta", 0.2, min = 0, max = 1,
+                      prior = function(p) log(1e-10)),
+      pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
+                      prior = function(p) log(1e-10))),
     proposal = proposal_kernel)
 
   expect_equal(
@@ -94,7 +98,7 @@ test_that("provide custom transform and use it", {
   }
 
   p <- pmcmc_parameters$new(
-    list(beta = pmcmc_parameter(0.2), gamma = pmcmc_parameter(0.1)),
+    list(pmcmc_parameter("beta", 0.2), pmcmc_parameter("gamma", 0.1)),
     proposal = proposal_kernel,
     transform = transform)
 
@@ -119,8 +123,8 @@ test_that("can compute prior", {
 
   p <- pmcmc_parameters$new(
     list(
-      beta = pmcmc_parameter(0.2, prior = function(p) dexp(p, log = TRUE)),
-      gamma = pmcmc_parameter(0.1, prior = function(p) dnorm(p, log = TRUE))),
+      pmcmc_parameter("beta", 0.2, prior = function(p) dexp(p, log = TRUE)),
+      pmcmc_parameter("gamma", 0.1, prior = function(p) dnorm(p, log = TRUE))),
     proposal = diag(2),
     transform = transform)
 
@@ -142,9 +146,9 @@ test_that("can compute prior", {
 test_that("all inputs to pmcmc_parameters must be pmcmc_parameter objects", {
   expect_error(
     pmcmc_parameters$new(NULL, proposal = diag(2)),
-    "'parameters' must be named")
+    "'parameters' must be a list")
   expect_error(
-    pmcmc_parameters$new(setNames(list(), character(0)), proposal = diag(2)),
+    pmcmc_parameters$new(list(), proposal = diag(2)),
     "At least one parameter is required")
 
   expect_error(
@@ -155,7 +159,7 @@ test_that("all inputs to pmcmc_parameters must be pmcmc_parameter objects", {
 
 
 test_that("proposal matrix and parameters must conform", {
-  pars <- list(beta = pmcmc_parameter(0.2), gamma = pmcmc_parameter(0.1))
+  pars <- list(pmcmc_parameter("beta", 0.2), pmcmc_parameter("gamma", 0.1))
   expect_error(
     pmcmc_parameters$new(pars, proposal = diag(1)),
     "Expected a square proposal matrix with 2 rows and columns")
@@ -169,7 +173,8 @@ test_that("proposal matrix and parameters must conform", {
 
 
 test_that("if proposal has names, they must match parameters", {
-  pars <- list(beta = pmcmc_parameter(0.2), gamma = pmcmc_parameter(0.1))
+  pars <- list(pmcmc_parameter("beta", 0.2), pmcmc_parameter("gamma", 0.1))
+  nms <- c("beta", "gamma")
   m <- function(a, b = a) {
     matrix(1, length(a), length(b), dimnames = list(a, b))
   }
@@ -178,22 +183,22 @@ test_that("if proposal has names, they must match parameters", {
     pmcmc_parameters$new(pars, proposal = m(c("a", "b"))),
     "Expected dimension names of 'proposal' to match parmeters")
   expect_error(
-    pmcmc_parameters$new(pars, proposal = m(c("a", "b"), names(pars))),
+    pmcmc_parameters$new(pars, proposal = m(c("a", "b"), nms)),
     "Expected dimension names of 'proposal' to match parmeters")
   expect_error(
-    pmcmc_parameters$new(pars, proposal = m(names(pars), c("a", "b"))),
+    pmcmc_parameters$new(pars, proposal = m(nms, c("a", "b"))),
     "Expected dimension names of 'proposal' to match parmeters")
-  expect_silent(pmcmc_parameters$new(pars, proposal = m(names(pars))))
+  expect_silent(pmcmc_parameters$new(pars, proposal = m(nms)))
 })
 
 
 test_that("can summarise parameters", {
   p <- pmcmc_parameters$new(
     list(
-      beta = pmcmc_parameter(0.2, min = 0, max = 1,
-                             prior = function(p) log(1e-10)),
-      gamma = pmcmc_parameter(0.1, min = 0, max = 1,
-                              prior = function(p) log(1e-10))),
+      pmcmc_parameter("beta", 0.2, min = 0, max = 1,
+                      prior = function(p) log(1e-10)),
+      pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
+                      prior = function(p) log(1e-10))),
     proposal = diag(2))
 
   expect_equal(p$names(), c("beta", "gamma"))

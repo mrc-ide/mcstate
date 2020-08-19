@@ -5,6 +5,8 @@
 ##'
 ##' @title Describe single pmcmc parameter
 ##'
+##' @param name Name for the parameter (a string)
+##'
 ##' @param initial Initial value for the parameter
 ##'
 ##' @param min Optional minimum value for the parameter (otherwise
@@ -26,9 +28,10 @@
 ##'
 ##' @export
 ##' @examples
-##' pmcmc_parameter(0.1)
-pmcmc_parameter <- function(initial, min = -Inf, max = Inf, discrete = FALSE,
-                            prior = NULL) {
+##' pmcmc_parameter("a", 0.1)
+pmcmc_parameter <- function(name, initial, min = -Inf, max = Inf,
+                            discrete = FALSE, prior = NULL) {
+  assert_scalar_character(name)
   assert_scalar_logical(discrete)
 
   if (initial < min) {
@@ -45,15 +48,18 @@ pmcmc_parameter <- function(initial, min = -Inf, max = Inf, discrete = FALSE,
     value <- tryCatch(
       prior(initial),
       error = function(e)
-        stop("Failed to evalute your prior function on initial value: ",
-             e$message))
+        stop(sprintf(
+          "Prior function for '%s' failed to evaluate initial value: %s",
+          name, e$message)))
     if (!is.finite(value)) {
-      stop("Your prior function returned an non-finite value on initial value")
+      stop(sprintf(
+        "Prior function for '%s' returned a non-finite value on initial value",
+        name))
     }
   }
 
-  ret <- list(initial = initial, min = min, max = max, discrete = discrete,
-              prior = prior %||% function(p) 0)
+  ret <- list(name = name, initial = initial, min = min, max = max,
+              discrete = discrete, prior = prior %||% function(p) 0)
   class(ret) <- "pmcmc_parameter"
   ret
 }
@@ -71,9 +77,9 @@ pmcmc_parameter <- function(initial, min = -Inf, max = Inf, discrete = FALSE,
 ##' @examples
 ##' #Construct an object with two parameters:
 ##' pars <- mcstate::pmcmc_parameters$new(
-##'   list(a = mcstate::pmcmc_parameter(0.1, min = 0, max = 1,
-##'                                     prior = function(a) log(a)),
-##'        b = mcstate::pmcmc_parameter(0, prior = dnorm)),
+##'   list(mcstate::pmcmc_parameter("a", 0.1, min = 0, max = 1,
+##'                                 prior = function(a) log(a)),
+##'        mcstate::pmcmc_parameter("b", 0, prior = dnorm)),
 ##'   matrix(c(1, 0.5, 0.5, 2), 2, 2))
 ##'
 ##' # Initial parameters
@@ -108,9 +114,10 @@ pmcmc_parameters <- R6::R6Class(
   public = list(
     ##' @description Create the pmcmc_parameters object
     ##'
-    ##' @param parameters A named `list` of
+    ##' @param parameters A `list` of
     ##' [pmcmc_parameter] objects, each of which describe a
-    ##' single parameter in your model.
+    ##' single parameter in your model. Any names on the `parameters` list
+    ##' are ignored, and the `$name` element of each parameter is used.
     ##'
     ##' @param proposal A square proposal distribution corresponding to the
     ##' variance-covariance matrix of a multivariate gaussian distribution
@@ -127,7 +134,6 @@ pmcmc_parameters <- R6::R6Class(
     ##' generate derived parameters from those being actively sampled
     ##' you can do arbitrary transformations here.
     initialize = function(parameters, proposal, transform = NULL) {
-      assert_named(parameters, TRUE)
       assert_is(parameters, "list")
       if (length(parameters) == 0) {
         stop("At least one parameter is required")
@@ -135,6 +141,11 @@ pmcmc_parameters <- R6::R6Class(
       ok <- vlapply(parameters, inherits, "pmcmc_parameter")
       if (!all(ok)) {
         stop("Expected all elements of '...' to be 'pmcmc_parameter' objects")
+      }
+      names(parameters) <- vcapply(parameters, "[[", "name")
+      dups <- names(parameters)[duplicated(names(parameters))]
+      if (length(dups) > 0L) {
+        stop("Duplicate parmeter names are not allowed")
       }
 
       if (is.null(transform)) {
