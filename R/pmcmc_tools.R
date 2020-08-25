@@ -158,6 +158,7 @@ combine_trajectories <- function(trajectories) {
     unlist(trajectories_state),
     dim(trajectories_state[[1]]) * c(1, 1, length(trajectories)))
   state <- aperm(trajectories_state, c(1, 3, 2))
+  rownames(state) <- rownames(trajectories[[1]]$state)
 
   ret <- trajectories[[1]]
   ret$state <- state

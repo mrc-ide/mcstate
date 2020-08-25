@@ -277,3 +277,24 @@ test_that("can sample from a combined chain", {
   expect_true(all(1:3 %in% sub$chain))
   expect_true(all(sub$iteration >= 10))
 })
+
+
+test_that("combining chains keeps rownames", {
+  results <- example_sir_pmcmc2()$results
+
+  nms_t <- c("S", "I", "R")
+  nms_s <- c("S", "I", "R", "inc")
+  for (i in seq_along(results)) {
+    rownames(results[[i]]$trajectories$state) <- nms_t
+    rownames(results[[i]]$state) <- nms_s
+  }
+
+  results1 <- results[[1]]
+  results2 <- results[[2]]
+  results3 <- results[[3]]
+
+  res <- pmcmc_combine(results1, results2, results3)
+
+  expect_equal(rownames(res$state), nms_s)
+  expect_equal(rownames(res$trajectories$state), nms_t)
+})
