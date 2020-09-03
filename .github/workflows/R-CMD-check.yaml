@@ -54,7 +54,7 @@ jobs:
           restore-keys: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-1-
 
       - name: Install system dependencies
-        if: runner.os == 'Linux'
+        if: false && runner.os == 'Linux'
         run: |
           set -x
           while read -r cmd
