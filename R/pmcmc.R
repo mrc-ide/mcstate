@@ -164,39 +164,30 @@ pmcmc_single_chain <- function(pars, filter, n_steps,
 
   predict <- state <- trajectories <- NULL
 
+  if (save_state || save_trajectories) {
+    ## Do we *definitely* need step and rate here?
+    data <- filter$inputs()$data
+    predict <- list(transform = r6_private(pars)$transform,
+                    index = r6_private(filter)$last_index_state,
+                    step = last(data$step_end),
+                    rate = attr(data, "rate", exact = TRUE),
+                    filter = filter$inputs())
+  }
+
   if (save_state) {
     state <- t(list_to_matrix(history_state$get()))
-
-    ## Extract the transformation function from the pars object as
-    ## it's all we want; this is a bit of a hack but it works for now
-    ## at least.
-    transform <- pars[[".__enclos_env__"]]$private$transform
-
-    ## Information about how the particle filter was configured:
-    info <- filter$predict_info()
-
-    ## This information is required in order to run predictions but
-    ## adds a significant space overhead to the saved data (model is
-    ## fairly large, and transform could capture anything in scope if
-    ## it is a closure).
-    predict <- list(transform = transform,
-                    model = filter$model,
-                    n_threads = info$n_threads,
-                    index = info$index,
-                    rate = info$rate,
-                    seed = info$seed,
-                    step = last(info$step))
   }
 
   if (save_trajectories) {
-    info <- filter$predict_info()
     ## Permute trajectories from [state x mcmc x particle] to
     ## [state x particle x mcmc] so that they match the ones that we
     ## will generate with predict
     trajectories_state <-
       aperm(list_to_array(history_trajectories$get()), c(1, 3, 2))
-    rownames(trajectories_state) <- names(info$index)
-    trajectories <- mcstate_trajectories(info$step, info$rate,
+    rownames(trajectories_state) <- names(predict$index)
+    data <- filter$inputs()$data
+    step <- c(data$step_start[[1]], data$step_end)
+    trajectories <- mcstate_trajectories(step, predict$rate,
                                          trajectories_state, FALSE)
   }
 

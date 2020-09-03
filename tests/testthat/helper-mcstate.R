@@ -32,7 +32,7 @@ example_sir <- function() {
   data_raw <- data.frame(day = day, incidence = incidence)
   data <- particle_filter_data(data_raw, "day", 4)
   index <- function(info) {
-    list(run = 4L, state = 1:3)
+      list(run = 4L, state = 1:3)
   }
 
   proposal_kernel <- diag(2) * 1e-4
@@ -44,6 +44,10 @@ example_sir <- function() {
          pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
                          prior = function(p) log(1e-10))),
     proposal = proposal_kernel)
+
+  ## Avoid warnings about scope capture that are not important here.
+  environment(index) <- globalenv()
+  environment(compare) <- globalenv()
 
   list(model = model, compare = compare, y0 = y0,
        data_raw = data_raw, data = data, history = history,
@@ -143,9 +147,4 @@ example_sir_pmcmc2 <- function() {
     test_cache$example_sir_pmcmc2 <- dat
   }
   test_cache$example_sir_pmcmc2
-}
-
-
-r6_private <- function(x) {
-  x[[".__enclos_env__"]]$private
 }
