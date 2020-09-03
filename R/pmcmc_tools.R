@@ -164,3 +164,19 @@ combine_trajectories <- function(trajectories) {
   ret$state <- state
   ret
 }
+
+pmcmc_nowcast <- function(object, pars = NULL) {
+  browser()
+  pars <- apply(object$pars, 1, object$predict$transform)
+  data <- object$predict$data
+  model <- object$predict$model
+  compare <- object$predict$compare
+  index <- object$predict$filter_index
+  
+  # create particle filter object
+  p <- particle_filter$new(data, model, 10, compare, index)
+  # how to feed in parameters that were used here?
+  # run filter and save trajectories
+  p$run(pars[[1]], TRUE)
+}
+
