@@ -433,3 +433,30 @@ test_that("can filter state on extraction", {
   state <- p$state()
   expect_equal(p$state(2:3), state[2:3, , drop = FALSE])
 })
+
+
+test_that("can return inputs", {
+  dat <- example_sir()
+  n_particles <- 42
+  initial <- function(...) NULL
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, initial = initial, seed = 100)
+  inputs <- p$inputs()
+  expect_setequal(names(inputs), names(formals(p$initialize)))
+
+  expect_equal(inputs$data, dat$data)
+  expect_equal(inputs$model, dat$model)
+  expect_equal(inputs$n_particles, n_particles)
+  expect_equal(inputs$index, dat$index)
+  expect_equal(inputs$compare, dat$compare)
+  expect_equal(inputs$initial, initial)
+  expect_equal(inputs$seed, 100)
+
+  res <- p$run()
+
+  inputs2 <- p$inputs()
+  expect_type(inputs2$seed, "raw")
+
+  expect_identical(inputs2[names(inputs2) != "seed"],
+                   inputs[names(inputs) != "seed"])
+})
