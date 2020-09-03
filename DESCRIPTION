@@ -31,3 +31,5 @@ Suggests:
     withr
 RoxygenNote: 7.1.1
 Roxygen: list(markdown = TRUE)
+Remotes:
+    mrc-ide/dust
