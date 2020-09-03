@@ -142,7 +142,8 @@ test_that("run pmcmc with the particle filter and retain history", {
   ## Additional information required to predict
   expect_setequal(
     names(results1$predict),
-    c("transform", "model", "n_threads", "index", "rate", "step", "seed"))
+    c("transform", "model", "n_threads", "index", "rate", "step", "seed",
+      "compare", "data", "filter_index"))
   expect_identical(results1$predict$transform, as.list)
   expect_identical(results1$predict$model, dat$model)
   expect_equal(results1$predict$n_threads, 1L)

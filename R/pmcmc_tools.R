@@ -172,11 +172,10 @@ pmcmc_nowcast <- function(object, pars = NULL) {
   model <- object$predict$model
   compare <- object$predict$compare
   index <- object$predict$filter_index
-  
+
   # create particle filter object
   p <- particle_filter$new(data, model, 10, compare, index)
   # how to feed in parameters that were used here?
   # run filter and save trajectories
   p$run(pars[[1]], TRUE)
 }
-

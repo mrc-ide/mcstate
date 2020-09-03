@@ -193,7 +193,7 @@ pmcmc_single_chain <- function(pars, filter, n_steps,
                     seed = info$seed,
                     step = last(info$step),
                     compare = compare,
-                    data = data, 
+                    data = data,
                     filter_index = filter_index)
   }
 
