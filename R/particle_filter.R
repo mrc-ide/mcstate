@@ -378,6 +378,24 @@ particle_filter <- R6::R6Class(
            seed = private$last_model$rng_state(first_only = TRUE),
            step = c(private$data$step_start[[1]], private$data$step_end),
            rate = attr(private$data, "rate", exact = TRUE))
+    },
+
+    ##' @description
+    ##' Return a list of inputs used to configure the particle filter
+    inputs = function() {
+      if (is.null(private$last_model)) {
+        seed <- private$seed
+      } else {
+        private$last_model$rng_state(first_only = TRUE)
+      }
+      list(data = private$data,
+           model = self$model,
+           n_particles = self$n_particles,
+           index = private$index,
+           initial = private$compare,
+           compare = private$compare,
+           n_threads = private$n_threads,
+           seed = seed)
     }
   ))
 

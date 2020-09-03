@@ -273,3 +273,17 @@ test_that("return names on pmcmc output", {
   expect_null(rownames(results1$trajectories$state))
   expect_equal(rownames(results2$trajectories$state), c("a", "b", "c"))
 })
+
+
+test_that("can reconstruct particle filter with pmcmc output", {
+  res <- example_sir_pmcmc()
+  expect_s3_class(res$pmcmc$predict$data, "particle_filter_data")
+  expect_identical(res$pmcmc$predict$data, res$data)
+
+  predict <- res$pmcmc$predict
+
+  p <- particle_filter$new(predict$data, predict$model, 10,
+                           dat$compare,
+                           index = dat$index)
+
+})
