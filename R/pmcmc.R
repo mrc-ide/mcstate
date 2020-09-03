@@ -172,6 +172,12 @@ pmcmc_single_chain <- function(pars, filter, n_steps,
     ## at least.
     transform <- pars[[".__enclos_env__"]]$private$transform
 
+    ## Extract compare function, data and particle filter index for use in
+    ## re-running particle filter
+    compare <- filter[[".__enclos_env__"]]$private$compare
+    data <- filter[[".__enclos_env__"]]$private$data
+    filter_index <- filter[[".__enclos_env__"]]$private$index
+
     ## Information about how the particle filter was configured:
     info <- filter$predict_info()
 
@@ -185,7 +191,10 @@ pmcmc_single_chain <- function(pars, filter, n_steps,
                     index = info$index,
                     rate = info$rate,
                     seed = info$seed,
-                    step = last(info$step))
+                    step = last(info$step),
+                    compare = compare,
+                    data = data, 
+                    filter_index = filter_index)
   }
 
   if (save_trajectories) {
