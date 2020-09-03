@@ -142,14 +142,12 @@ test_that("run pmcmc with the particle filter and retain history", {
   ## Additional information required to predict
   expect_setequal(
     names(results1$predict),
-    c("transform", "model", "n_threads", "index", "rate", "step", "seed"))
+    c("transform", "index", "rate", "step", "filter"))
   expect_identical(results1$predict$transform, as.list)
-  expect_identical(results1$predict$model, dat$model)
-  expect_equal(results1$predict$n_threads, 1L)
   expect_equal(results1$predict$index, 1:3)
   expect_equal(results1$predict$rate, 4)
   expect_equal(results1$predict$step, last(dat$data$step_end))
-  expect_is(results1$predict$seed, "raw")
+  expect_identical(results1$predict$filter, p1$inputs())
 })
 
 
@@ -174,10 +172,10 @@ test_that("collecting state from model yields an RNG state", {
     r6_private(p1)$last_model$rng_state(),
     r6_private(p2)$last_model$rng_state())
   expect_identical(
-    results2$predict$seed,
+    results2$predict$filter$seed,
     r6_private(p1)$last_model$rng_state()[1:32])
   expect_false(
-    identical(results2$predict$seed, results3$predict$seed))
+    identical(results2$predict$filter$seed, results3$predict$filter$seed))
 })
 
 

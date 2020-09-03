@@ -7,7 +7,11 @@ example_sir <- function() {
     if (is.na(observed$incidence)) {
       return(NULL)
     }
-    exp_noise <- pars$compare$exp_noise %||% 1e6
+    if (is.null(pars$compare$exp_noise)) {
+      exp_noise <- 1e6
+    } else {
+      exp_noise <- pars$compare$exp_noise
+    }
     ## This is on the *filtered* state (i.e., returned by run())
     incidence_modelled <-
       state[1, , drop = TRUE] - prev_state[1, , drop = TRUE]
@@ -44,6 +48,10 @@ example_sir <- function() {
          pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
                          prior = function(p) log(1e-10))),
     proposal = proposal_kernel)
+
+  ## Avoid warnings about scope capture that are not important here.
+  environment(index) <- globalenv()
+  environment(compare) <- globalenv()
 
   list(model = model, compare = compare, y0 = y0,
        data_raw = data_raw, data = data, history = history,
@@ -143,9 +151,4 @@ example_sir_pmcmc2 <- function() {
     test_cache$example_sir_pmcmc2 <- dat
   }
   test_cache$example_sir_pmcmc2
-}
-
-
-r6_private <- function(x) {
-  x[[".__enclos_env__"]]$private
 }

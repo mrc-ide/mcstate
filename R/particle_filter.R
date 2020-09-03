@@ -368,16 +368,26 @@ particle_filter <- R6::R6Class(
     },
 
     ##' @description
-    ##' Return a list of information that would be used to restart a
-    ##' simulation (in addition to state). This exists to support internal
-    ##' functions and should not need to be called by end-users.
-    predict_info = function() {
-      ## TODO: this name is terrible.
-      list(n_threads = private$last_model$n_threads(),
-           index = private$last_index_state,
-           seed = private$last_model$rng_state(first_only = TRUE),
-           step = c(private$data$step_start[[1]], private$data$step_end),
-           rate = attr(private$data, "rate", exact = TRUE))
+    ##' Return a list of inputs used to configure the particle
+    ##' filter. These correspond directly to the argument names for the
+    ##' particle filter constructor and are the same as the input
+    ##' argument with the exception of `seed`, which is the state of
+    ##' the rng if it has been used (this can be used as a seed to
+    ##' restart the model).
+    inputs = function() {
+      if (is.null(private$last_model)) {
+        seed <- private$seed
+      } else {
+        seed <- private$last_model$rng_state(first_only = TRUE)
+      }
+      list(data = private$data,
+           model = self$model,
+           n_particles = self$n_particles,
+           index = private$index,
+           initial = private$initial,
+           compare = private$compare,
+           n_threads = private$n_threads,
+           seed = seed)
     }
   ))
 

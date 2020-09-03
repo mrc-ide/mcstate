@@ -98,3 +98,8 @@ all_or_none <- function(x) {
 squote <- function(x) {
   sprintf("'%s'", x)
 }
+
+
+r6_private <- function(x) {
+  x[[".__enclos_env__"]]$private
+}

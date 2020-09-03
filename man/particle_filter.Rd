@@ -80,7 +80,7 @@ at each step that has been run}
 \item \href{#method-run}{\code{particle_filter$run()}}
 \item \href{#method-state}{\code{particle_filter$state()}}
 \item \href{#method-history}{\code{particle_filter$history()}}
-\item \href{#method-predict_info}{\code{particle_filter$predict_info()}}
+\item \href{#method-inputs}{\code{particle_filter$inputs()}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -252,14 +252,17 @@ If \code{NULL} we return all particles' histories.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-predict_info"></a>}}
-\if{latex}{\out{\hypertarget{method-predict_info}{}}}
-\subsection{Method \code{predict_info()}}{
-Return a list of information that would be used to restart a
-simulation (in addition to state). This exists to support internal
-functions and should not need to be called by end-users.
+\if{html}{\out{<a id="method-inputs"></a>}}
+\if{latex}{\out{\hypertarget{method-inputs}{}}}
+\subsection{Method \code{inputs()}}{
+Return a list of inputs used to configure the particle
+filter. These correspond directly to the argument names for the
+particle filter constructor and are the same as the input
+argument with the exception of \code{seed}, which is the state of
+the rng if it has been used (this can be used as a seed to
+restart the model).
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_filter$predict_info()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter$inputs()}\if{html}{\out{</div>}}
 }
 
 }

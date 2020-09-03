@@ -53,8 +53,8 @@ pmcmc_predict <- function(object, steps, prepend_trajectories = FALSE,
   state <- object$state
   data <- apply(object$pars, 1, object$predict$transform)
   index <- object$predict$index
-  model <- object$predict$model
-  n_threads <- n_threads %||% object$predict$n_threads
+  model <- object$predict$filter$model
+  n_threads <- n_threads %||% object$predict$filter$n_threads
 
   y <- dust::dust_simulate(model, steps, data, state, index, n_threads, seed)
   rownames(y) <- names(index)
