@@ -7,7 +7,11 @@ example_sir <- function() {
     if (is.na(observed$incidence)) {
       return(NULL)
     }
-    exp_noise <- pars$compare$exp_noise %||% 1e6
+    if (is.null(pars$compare$exp_noise)) {
+      exp_noise <- 1e6
+    } else {
+      exp_noise <- pars$compare$exp_noise
+    }
     ## This is on the *filtered* state (i.e., returned by run())
     incidence_modelled <-
       state[1, , drop = TRUE] - prev_state[1, , drop = TRUE]
