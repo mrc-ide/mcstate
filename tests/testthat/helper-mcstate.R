@@ -32,7 +32,7 @@ example_sir <- function() {
   data_raw <- data.frame(day = day, incidence = incidence)
   data <- particle_filter_data(data_raw, "day", 4)
   index <- function(info) {
-      list(run = 4L, state = 1:3)
+    list(run = 4L, state = 1:3)
   }
 
   proposal_kernel <- diag(2) * 1e-4
