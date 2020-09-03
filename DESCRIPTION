@@ -24,14 +24,10 @@ Imports:
     dust (>= 0.4.6),
     progress (>= 1.2.0)
 Suggests:
-    brio,
     coda,
-    decor,
     mockery,
     mvtnorm,
     testthat,
-    tibble,
-    vctrs,
     withr
 RoxygenNote: 7.1.1
 Roxygen: list(markdown = TRUE)
