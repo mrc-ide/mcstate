@@ -460,3 +460,31 @@ test_that("can return inputs", {
   expect_identical(inputs2[names(inputs2) != "seed"],
                    inputs[names(inputs) != "seed"])
 })
+
+
+test_that("return names on history, if present", {
+  dat <- example_sir()
+  n_particles <- 42
+  index <- function(info) {
+    list(run = 4L, state = c(S = 1L, I = 2L, R = 3L))
+  }
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = index, seed = 100)
+  p$run(save_history = TRUE)
+  res <- p$history()
+  expect_equal(rownames(res), c("S", "I", "R"))
+})
+
+
+test_that("no names on history, if absent", {
+  dat <- example_sir()
+  n_particles <- 42
+  index <- function(info) {
+    list(run = 4L, state = 1:3)
+  }
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = index, seed = 100)
+  p$run(save_history = TRUE)
+  res <- p$history()
+  expect_null(rownames(res))
+})
