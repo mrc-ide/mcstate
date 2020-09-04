@@ -1,8 +1,8 @@
 ## mcstate <img src='man/figures/logo.png' align="right" height="139" />
 
 <!-- badges: start -->
-[![Project Status: Concept – Minimal or no implementation has been done yet, or the repository is only intended to be a limited example, demo, or proof-of-concept.](https://www.repostatus.org/badges/latest/concept.svg)](https://www.repostatus.org/#concept)
-[![Build Status](https://travis-ci.com/mrc-ide/mcstate.svg?branch=master)](https://travis-ci.com/mrc-ide/mcstate)
+[![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+[![R build status](https://github.com/mrc-ide/sircovid2/workflows/R-CMD-check/badge.svg)](https://github.com/mrc-ide/sircovid2/actions)
 [![CodeFactor](https://www.codefactor.io/repository/github/mrc-ide/mcstate/badge)](https://www.codefactor.io/repository/github/mrc-ide/mcstate)
 [![codecov.io](https://codecov.io/github/mrc-ide/mcstate/coverage.svg?branch=master)](https://codecov.io/github/mrc-ide/mcstate?branch=master)
 <!-- badges: end -->
