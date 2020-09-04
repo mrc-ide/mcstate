@@ -364,7 +364,9 @@ particle_filter <- R6::R6Class(
       cidx <- cbind(seq_len(ny),
                     rep(idx, each = ny),
                     rep(seq_len(nt), each = ny * np))
-      array(history_value[cidx], c(ny, np, nt))
+      ret <- array(history_value[cidx], c(ny, np, nt))
+      rownames(ret) <- names(private$last_index_state)
+      ret
     },
 
     ##' @description
