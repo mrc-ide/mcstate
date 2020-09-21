@@ -1,0 +1,678 @@
+---
+title: "SIR models with odin, dust and mcstate"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{sir_models}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(odin.dust)
+library(mcstate)
+library(rmarkdown)
+```
+
+# Stochastic SIR model definition
+
+A simple definition of the SIR model, as given in the [odin documentation](https://mrc-ide.github.io/odin/articles/discrete.html) is:
+$$\begin{align*} 
+\frac{dS}{dt} &= -\beta \frac{SI}{N} \\
+\frac{dI}{dt} &= \beta \frac{SI}{N} - \gamma I \\
+\frac{dR}{dt} &= \gamma I \\
+\end{align*}$$
+$S$ is the number of susceptibles, $I$ is the number of infected and $R$ is the number recovered; the total population size $N = S + I + R$ is constant. $\beta$ is the infection rate, $\gamma$ is the recovery rate.
+
+Discretising this model in time steps of width $dt$ gives the following update equations for each time step:
+
+$$\begin{align*} 
+S_{t+1} &= S_t - n_{SI} \\
+I_{t+1} &= I_t + n_{SI} - n_{IR} \\
+R_{t+1} &= R_t - n_{IR}
+\end{align*}$$
+
+where
+$$\begin{align*} 
+n_{SI} &\sim B(S, 1 - e^{-\beta \frac{I}{N} \cdot dt)} \\
+n_{IR} &\sim B(S, 1 - e^{-\gamma \cdot dt)}
+\end{align*}$$
+
+## Implementing the SIR model using [`odin.dust`](https://mrc-ide.github.io/odin.dust/)
+
+The above equations can straightforwardly be written out using the odin DSL:
+
+```r
+## Definition of the time-step and output as "time"
+dt <- user(1)
+initial(time) <- 0
+update(time) <- (step + 1) * dt
+
+## Core equations for transitions between compartments:
+update(S) <- S - n_SI
+update(I) <- I + n_SI - n_IR
+update(R) <- R + n_IR
+
+## Individual probabilities of transition:
+p_SI <- 1 - exp(-beta * I / N * dt) # S to I
+p_IR <- 1 - exp(-gamma * dt) # I to R
+
+## Draws from binomial distributions for numbers changing between
+## compartments:
+n_SI <- rbinom(S, p_SI)
+n_IR <- rbinom(I, p_IR)
+
+## Total population size
+N <- S + I + R
+
+## Initial states:
+initial(S) <- S_ini
+initial(I) <- I_ini
+initial(R) <- 0
+
+## User defined parameters - default in parentheses:
+S_ini <- user(1000)
+I_ini <- user(10)
+beta <- user(0.2)
+gamma <- user(0.1)
+```
+
+This is converted to a C++ dust model, and compiled into a library in a single step, using [`odin.dust`](https://mrc-ide.github.io/odin.dust/). Save the above code as a file named `sir.R`. File names must not contain special characters.
+
+```{r}
+library(odin.dust)
+gen_sir <- odin_dust("sir.R")
+```
+
+## Adding age structure to the model
+
+Adding age structure to the model consists of the following steps, which turn variables into arrays:
+
+- Define the number of age categories as a user parameter `N_age`.
+- Add age structure to each compartment, by adding square brackets to the lvalues.
+- Modify the rvalues to use quantities from the appropriate compartment, by adding an `i` index to the rvalues. These will automatically be looped over.
+- Where an age compartment needs to be reduced into a single compartment/variable, use `sum` (or another array function from https://mrc-ide.github.io/odin/articles/functions.html as appropriate)
+- Define the dimensions of all arrays, for example by setting `dim(S) <- N_age`.
+
+This would simply give `N_age` independent processes equivalent to the first model, scaled by the size of the population in each age category. To actually make this useful, you likely want to add some interaction or transitions between the compartments. An example of this would be to add an age-specific contact matrix, demonstrated below, which defines a different force of infection $\lambda$ for each age group. This is calculated by $$\lambda_i = \frac{\beta}{N} \cdot \sum_{j=1}^{N_{\mathrm{age}}} I_j m_{ij}$$ In the odin code:
+
+```r
+m[, ] <- user() # age-structured contact matrix
+s_ij[, ] <- m[i, j] * I[i]
+lambda[] <- beta / N * sum(s_ij[i, ])
+```
+
+The probability of infection of a susceptible is then indexed by this force of infection:
+
+```r
+p_SI[] <- 1 - exp(-lambda[i] * dt)
+```
+
+Putting this all together, the age structured SIR model is as follows:
+
+```r
+## Definition of the time-step and output as "time"
+dt <- user(1)
+initial(time) <- 0
+update(time) <- (step + 1) * dt
+
+## Core equations for transitions between compartments:
+update(S[]) <- S[i] - n_SI[i]
+update(I[]) <- I[i] + n_SI[i] - n_IR[i]
+update(R[]) <- R[i] + n_IR[i]
+
+## Individual probabilities of transition:
+p_SI[] <- 1 - exp(-lambda[i] * dt) # S to I
+p_IR <- 1 - exp(-gamma * dt) # I to R
+
+## Force of infection
+m[, ] <- user() # age-structured contact matrix
+s_ij[, ] <- m[i, j] * I[i]
+lambda[] <- beta / N * sum(s_ij[i, ])
+
+## Draws from binomial distributions for numbers changing between
+## compartments:
+n_SI[] <- rbinom(S[i], p_SI[i])
+n_IR[] <- rbinom(I[i], p_IR)
+
+## Total population size
+N <- sum(S) + sum(I) + sum(R)
+
+## Initial states:
+initial(S[]) <- S_ini
+initial(I[]) <- I_ini
+initial(R[]) <- 0
+
+## User defined parameters - default in parentheses:
+S_ini <- user(1000)
+I_ini <- user()
+beta <- user(0.2)
+gamma <- user(0.1)
+
+# dimensions of arrays
+N_age <- user()
+dim(S) <- N_age
+dim(I) <- N_age
+dim(R) <- N_age
+dim(n_SI) <- N_age
+dim(n_IR) <- N_age
+dim(p_SI) <- N_age
+dim(m) <- c(N_age, N_age)
+dim(s_ij) <- c(N_age, N_age)
+dim(lambda) <- N_age
+```
+
+As before, save the file, and use `odin.dust` to compile the model:
+
+```{r}
+gen_age <- odin_dust("sirage.R")
+```
+
+We can generate an age-structured contact matrix based on the [POLYMOD](https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0050074) survey by using the [socialmixr](https://github.com/sbfnk/socialmixr) package:
+
+```{r}
+library(socialmixr)
+data(polymod)
+
+age.limits = seq(0, 70, 10)
+
+## Get the contact matrix from socialmixr
+contact <- socialmixr::contact_matrix(
+  survey = polymod,
+  countries = "United Kingdom",
+  age.limits = age.limits,
+  symmetric = TRUE)
+
+## Transform the matrix to the (symetrical) transmission matrix
+## rather than the contact matrix
+transmission <- contact$matrix /
+  rep(contact$demography$population, each = ncol(contact$matrix))
+transmission
+```
+
+This can be given as a parameter to the model by adding the argument `data = list(m = transmission)` when using the `new()` method on the `gen_age` generator.
+
+## Saving a model into a package
+
+If you want to distribute your model in an R package, rather than building it locally, you will want to use the `odin_dust_package()` function instead. This will write the transpiled C++ dust code into `src` and its R interface in `R/dust.R`. Package users are not required to regenerate the dust code, and their compiler will build the library when they install the package. You may also wish to add a file `R/zzz.R` to your package `mycoolpackage` with the following lines:
+
+```r
+##' @useDynLib mycoolpackage, .registration = TRUE
+NULL
+```
+
+to help automate the compilation of the model.
+
+# Running the SIR model with [`dust`](https://mrc-ide.github.io/dust/)
+
+Now we can use the `new` method on the generator to make `dust` objects. Typically you will work through the `mcstate` package to run the model, but for illustrative purposes we show here that `dust` can be driven directly from R.
+
+[`new()`](https://mrc-ide.github.io/dust/reference/dust.html#method-new) takes the data needed to run the model i.e. a list with any parameters defined as `user` in the odin code above, the value of the initial step $t_0$, and the number of particles, each for now can simply be thought of as an independent stochastic realisation of the model, but in the next step will be used when inferring model parameters.
+
+Additional arguments include the number of threads to parallelise the particles over, and the seed for the random number generator. The seed must be an integer, and using the same seed will ensure reproducible results for all particles. For threads to take effect, `openmp` must be enabled in the compilation step, which you can check by running:
+
+```{r}
+gen_sir$public_methods$has_openmp()
+```
+
+To use this to directly create a new dust object with 10 particles, run using 4 threads:
+
+```{r}
+sir_model <- gen_sir$new(data = list(dt = 1, S_ini = 1000, I_ini = 10, beta = 0.2, gamma = 0.1),
+                         step = 1,
+                         n_particles = 10L,
+                         n_threads = 4L,
+                         seed = 1L)
+```
+
+Check the initial state is ten particles wide, with four states deep ($t$, $S$, $I$, $R$):
+
+```{r}
+sir_model$state()
+```
+
+Run the particles (repeats) forward 10 steps of length $dt$, followed by another 10 steps:
+
+```{r}
+sir_model$run(10)
+sir_model$run(20)
+```
+
+To change the parameters, the model does not need to be recompiled. We simply use the generator object to make a new model. Let's do this and increase the infection rate, and the population size. We will also use a smaller time step to calculate multiple transitions per unit time:
+
+```{r}
+dt = 0.25
+n_particles <- 10L
+sir_model_2 <- gen_sir$new(data = list(dt = 0.25, S_ini = 2000, I_ini = 10, beta = 0.4, gamma = 0.1),
+                           step = 1,
+                           n_particles = n_particles,
+                           n_threads = 4L,
+                           seed = 1L)
+sir_model_2$state()
+```
+
+Let's run this epidemic forward, and plot the trajectories:
+
+```{r fig.height=5, fig.width=7}
+n_steps <- 200
+x <- array(NA, dim = c(sir_model_2$info()$len, n_particles, n_steps))
+
+for (t in seq_len(n_steps)) {
+  x[ , , t] <- sir_model_2$run(t)
+}
+time <- x[1, 1, ]
+x <- x[-1, , ]
+
+par(mar = c(4.1, 5.1, 0.5, 0.5), las = 1)
+matplot(time, t(x[1, , ]), type = "l",
+         xlab = "Time", ylab = "Number of individuals",
+         col = "#8c8cd9", lty = 1, ylim = range(x))
+matlines(time, t(x[2, , ]), col = "#cc0044", lty = 1)
+matlines(time, t(x[3, , ]), col = "#999966", lty = 1)
+legend("left", lwd = 1, col = c("#8c8cd9", "#cc0044", "#999966"), legend = c("S", "I", "R"), bty = "n")
+```
+
+Many other methods are available on the dust object to support inference, but typically you will use the `mcstate` package instead of calling these directly. However, if you wish to simulate state space models with set parameters, this can be done entirely using the commands above from `dust`.
+
+# Inferring parameters with [`mcstate`](https://mrc-ide.github.io/odin.dust/)
+
+Typically these models will be used in conjunction with observed data to infer the most likely parameter values, most likely trajectories up to the present (nowcast), and make forecasts using these parameters. The `mcstate` package implements particle filter and pMCMC methods to make all of this this possible from `dust` models.
+
+A comparison function is needed to define a likelihood, i.e. the probability of observing this trajectory, given the data. This is combined with a prior to generate a posterior distribution for each parameter, which in the SIR model gives the distribution of likely values for $\beta$ and $\gamma$. 
+
+This is straightforward for a deterministic model, but for a stochastic model looking at a single run can easily bias these estimates. `mcstate` therefore implements a particle filter, also known as sequential Monte Carlo (SMC), which runs multiple trajectories, and at each stage where data is available resamples them in proportion to their likelihood. This produces an unbiased estimate of the likelihood for a given set of parameters.
+
+The anatomy of an mcstate particle filter consists of three components:
+
+- A set of observations to fit the model to, generated using `particle_filter_data()`.
+- A model to fit, which must be a dust generator.
+- A comparison function, which is an R function which calculates the likelihood of the state given the data.
+
+## Model data
+
+To demonstrate this, we will attempt to infer the parameters $\beta$ and $\gamma$ using daily case counts. In reality these counts would be measured, but here we generate them from a single run of the model, and adding some constant noise proportional to the epidemic size:
+
+```{r}
+# Set up model
+dt <- 0.25
+inv_dt <- 1/dt
+sir <- gen_sir$new(data = list(dt = dt, S_ini = 1000, I_ini = 10, beta = 0.2, gamma = 0.1),
+                   step = 0,
+                   n_particles = 1L,
+                   n_threads = 1L,
+                   seed = 2L)
+
+# Run model forward 100 days, using 4 steps a day
+# Calculate the number of new cases by counting how many susceptibles have been depleted between updates
+n_steps <- 100
+incidence <- rep(NA, length.out = n_steps)
+true_history <- array(NA_real_, c(sir$info()$len, 1, n_steps + 1))
+true_history[, 1, 1] <- sir$state()
+for (t in seq_len(n_steps)) {
+    state_start <- sir$state()
+    state_end <- sir$run(t * inv_dt)
+    true_history[, 1, t + 1] <- state_end
+    incidence[t] <- state_start[2, 1] - state_end[2, 1]
+}
+
+# Add very simple form of noise
+incidence <- incidence + 
+  round(rnorm(mean = 0, n = length(true_history[3,1,-1]), sd = 0.1*sqrt(true_history[3,1,-1])))
+incidence <- unlist(lapply(incidence, max, 0))
+incidence_data <- data.frame(cases = incidence, day = seq_len(n_steps))
+incidence
+```
+
+This can then be processed with `particle_filter_data()` as follows:
+
+```{r paged.print=TRUE, layout="l-body-outset"}
+library(mcstate)
+sir_data <- particle_filter_data(data = incidence_data,
+                                 time = "day", 
+                                 rate = inv_dt)
+paged_table(sir_data)
+```
+
+More complex models may have additional data streams added as further columns (e.g. deaths, hospital admissions). This will be fed as observed data to the compare function, which will combine and compute the evidence for the current model state.
+
+## Defining the comparison function
+
+The comparison function will typically be a likelihood, the probability of the simulation run given the data. This can be any function in R which takes the current simulated `state`, the state at the previous time step `prev_state`, a `data` row for the current time point and a list of any parameters `pars` the function needs.
+
+For this model the number of cases can be calculated from the change in susceptibles between time steps (as above). In this comparison function, the number of cases within each time interval is modelled as being Poisson distributed. A small amount of noise is added to prevent zero expectations.
+
+```{r}
+case_compare <- function(state, prev_state, observed, pars = NULL) {
+  if (is.na(observed$cases)) {
+    return(NULL)
+  }
+  if (is.null(pars$compare$exp_noise)) {
+    exp_noise <- 1e6
+  } else {
+    exp_noise <- pars$compare$exp_noise
+  }
+  
+  incidence_modelled <-
+     prev_state[2, , drop = TRUE] - state[2, , drop = TRUE]
+  incidence_observed <- observed$cases
+  lambda <- incidence_modelled +
+    rexp(n = length(incidence_modelled), rate = exp_noise)
+  dpois(x = incidence_observed, lambda = lambda, log = TRUE)
+}
+```
+
+## Inferring parameters
+
+Using these pieces, we can set up a particle filter as follows:
+
+```{r}
+n_particles <- 100
+filter <- particle_filter$new(data = sir_data,
+                              model = gen_sir,
+                              n_particles = n_particles,
+                              compare = case_compare,
+                              n_threads = 4L,
+                              seed = 1L)
+```
+
+We can now run the particle filter forward, which will run and resample 100 trajectories, and return the final likelihood. It is important to set the correct time-step $dt$ here, as we are using 0.25, rather than the default value of 1 defined in the odin model.
+
+```{r}
+filter$run(save_history = TRUE, pars = list(dt = dt))
+```
+
+If we plot these along with the data, we can see compared to above that only trajectories consistent with the data are kept, and the variance between particles has been reduced:
+
+```{r fig.height=5, fig.width=7}
+history <- filter$history()
+matplot(incidence_data$day, t(history[2, , -1]), type = "l",
+        xlab = "Time", ylab = "Number of individuals",
+        col = "#999966", lty = 1, ylim = range(history))
+matlines(incidence_data$day, t(history[3, , -1]), col = "#8c8cd9", lty = 1)
+matlines(incidence_data$day, t(history[4, , -1]), col = "#cc0044", lty = 1)
+matpoints(incidence_data$day, t(true_history[2:4, , -1]), pch = 19,
+          col = c("#999966", "#8c8cd9", "#cc0044"))
+legend("left", lwd = 1, col = c("#999966", "#8c8cd9", "#cc0044"), 
+       legend = c("S", "I", "R"), bty = "n")
+```
+
+Doing the same with a $\beta$ and $\gamma$ which are further from the truth yields a lower likelihood:
+
+```{r}
+filter$run(save_history = TRUE, pars = list(dt = dt, beta = 0.4, gamma = 0.2))
+```
+
+
+```{r fig.height=5, fig.width=7}
+history <- filter$history()
+matplot(incidence_data$day, t(history[2, , -1]), type = "l",
+        xlab = "Time", ylab = "Number of individuals",
+        col = "#999966", lty = 1, ylim = range(history))
+matlines(incidence_data$day, t(history[3, , -1]), col = "#8c8cd9", lty = 1)
+matlines(incidence_data$day, t(history[4, , -1]), col = "#cc0044", lty = 1)
+matpoints(incidence_data$day, t(true_history[2:4, , -1]), pch = 19,
+          col = c("#999966", "#8c8cd9", "#cc0044"))
+legend("left", lwd = 1, col = c("#999966", "#8c8cd9", "#cc0044"), 
+       legend = c("S", "I", "R"), bty = "n")
+```
+
+Typically you will not use the `run()` function of the particle filter directly, and instead use the functions below to infer parameters.
+
+### Using MCMC to infer parameters
+
+Using this, we can do a MCMC using the Metropolis-Hastings algorithm to infer the values of $\beta$ and $\gamma$ from daily case counts. Let's first describe the parameters we wish to infer, giving a minimum, maximum. For $\gamma$ we will also apply a gamma prior with shape 1 and rate 0.2: $\Gamma(1, 0.2)$:
+
+```{r}
+beta <- pmcmc_parameter("beta", 0.2, min = 0)
+gamma <- pmcmc_parameter("gamma", 0.1, min = 0, 
+                         prior = function(p) {
+                           dgamma(p, shape = 1, scale = 0.2, log = TRUE)
+                         })
+
+proposal_matrix <- matrix(c(0.04, 0, 0, 0.01), nrow = 2, ncol = 2, byrow = TRUE)
+mcmc_pars <- pmcmc_parameters$new(list(beta = beta, gamma = gamma), proposal_matrix)
+```
+
+The proposals for each MCMC step are also set here. Proposals are drawn from a multi-variate normal distribution, with the variance-covariance matrix set here. In this case we have $\beta_{n+1} \sim N(\beta_{n}, 0.2^2)$ and $\gamma_{n+1} \sim N(\gamma_{n}, 0.1^2)$ i.e. no covariance.
+
+Finally, the sampler can be run using these parameters, and the particle filter defined above. Taking 2000 steps with two independent chains:
+
+```{r pmcmc_combined, cache=TRUE}
+pmcmc_run <- 
+  pmcmc(
+    mcmc_pars,
+    filter,
+    2000,
+    save_state = TRUE,
+    save_trajectories = TRUE,
+    progress = TRUE,
+    n_chains = 2
+  )
+```
+
+We also provide some basic tools for dealing with this output, before running prediction (see below). We can remove burn-in and thin the four chains as follows:
+
+```{r}
+processed_chains <- pmcmc_thin(pmcmc_run, burnin = 500, thin = 2)
+processed_chains
+apply(processed_chains$pars, 2, mean)
+```
+
+### Optimal use of parallelisation
+
+Note that we run four separate chains in serial here. If you have $m$ nodes available, each with $n$ cores, the most efficient way to run this step is to set `nthreads = n` on the filters, and run $m$ independent chains, one on each node setting `n_chains = 1`. These independent results can then be collected using `pmcmc_combine()`:
+
+```{r pmcmc_serial, cache=TRUE}
+pmcmc1 <- 
+  pmcmc(
+    mcmc_pars,
+    filter,
+    2000,
+    save_state = TRUE,
+    save_trajectories = FALSE,
+    progress = TRUE,
+    n_chains = 1
+  )
+pmcmc2 <- 
+  pmcmc(
+    mcmc_pars,
+    filter,
+    2000,
+    save_state = TRUE,
+    save_trajectories = FALSE,
+    progress = TRUE,
+    n_chains = 1
+  )
+pmcmc3 <- 
+  pmcmc(
+    mcmc_pars,
+    filter,
+    2000,
+    save_state = TRUE,
+    save_trajectories = FALSE,
+    progress = TRUE,
+    n_chains = 1
+  )
+pmcmc_distributed_run <- pmcmc_combine(pmcmc1, pmcmc2, pmcmc3)
+```
+
+The resulting objects can also be analysed in a typical MCMC analysis package such as [`coda`](https://cran.r-project.org/web/packages/coda/index.html). 
+
+```{r coda_plots, fig.height=10, fig.width=14}
+library(coda)
+mcmc1 <- as.mcmc(cbind(pmcmc1$probabilities, pmcmc1$pars))
+mcmc2 <- as.mcmc(cbind(pmcmc2$probabilities, pmcmc2$pars))
+mcmc3 <- as.mcmc(cbind(pmcmc3$probabilities, pmcmc3$pars))
+mcmc_sir <- mcmc.list(mcmc1, mcmc2, mcmc3)
+
+# The Rhat statistic may not always be possible to compute
+# gelman.diag(mcmc_sir)
+rejectionRate(mcmc_sir)
+effectiveSize(mcmc_sir)
+
+# Remove burn in and thin
+mcmc_sampled <- lapply(list(pmcmc1, pmcmc2, pmcmc3), pmcmc_thin, burnin = 1000, thin = 2)
+mcmc1 <- as.mcmc(cbind(mcmc_sampled[[1]]$probabilities, mcmc_sampled[[1]]$pars))
+mcmc2 <- as.mcmc(cbind(mcmc_sampled[[2]]$probabilities, mcmc_sampled[[2]]$pars))
+mcmc3 <- as.mcmc(cbind(mcmc_sampled[[3]]$probabilities, mcmc_sampled[[3]]$pars))
+mcmc_sir <- mcmc.list(mcmc1, mcmc2, mcmc3)
+
+summary(mcmc_sir)
+plot(mcmc_sir)
+```
+
+
+## Fitting to multiple datastreams
+
+The set up of the particle filter and observation function makes it easy to fit to multiple datastreams within a Bayesian framework. Let us model a disease where a proportion of infected cases $p_{\mathrm{death}} = 0.05$ die rather than recover by adding the following lines to the odin code:
+
+```r
+update(S) <- S - n_SI
+update(I) <- I + n_SI - n_IR - n_ID
+update(R) <- R + n_IR
+update(D) <- D + n_ID
+
+n_IR <- rbinom(I, p_IR * dt * (1 - p_death))
+n_ID <- rbinom(I, p_IR * dt * p_death)
+n_SI <- rbinom(S, p_SI * dt)
+
+initial(D) <- 0
+p_death <- user(0.05)
+```
+
+```{r}
+gen_death <- odin_dust("deaths.R")
+```
+
+We can simulate some data to fit to, as before. We will also make the case data patchy, making it missing on some days:
+
+```{r layout="l-body-outset", paged.print=TRUE }
+# Set up model
+dt <- 0.25
+inv_dt <- 1/dt
+sir_death <- gen_death$new(data = list(dt = dt, S_ini = 1000, I_ini = 10, beta = 0.2, gamma = 0.1),
+                   step = 0,
+                   n_particles = 1L,
+                   n_threads = 1L,
+                   seed = 2L)
+
+# Run model forward 100 days, using 4 steps a day
+# Calculate the number of new cases by counting how many susceptibles have been depleted between updates
+n_steps <- 100
+incidence <- rep(NA, length.out = n_steps)
+deaths <- rep(NA, length.out = n_steps)
+true_history <- array(NA_real_, c(sir_death$info()$len, 1, n_steps + 1))
+true_history[, 1, 1] <- sir_death$state()
+for (t in seq_len(n_steps)) {
+    state_start <- sir_death$state()
+    state_end <- sir_death$run(t * inv_dt)
+    true_history[, 1, t + 1] <- state_end
+    incidence[t] <- state_start[2, 1] - state_end[2, 1]
+    deaths[t] <- state_end[5, 1] - state_start[5, 1]
+}
+
+# Add very simple form of noise
+missing <- rbinom(n = n_steps, prob = 0.05, size = 1) == 1
+incidence[missing] <- NA
+combined_data <- particle_filter_data(
+  data.frame(cases = incidence, deaths = deaths, day = seq_len(n_steps)),
+  time = "day",
+  rate = inv_dt
+)
+paged_table(combined_data)
+```
+
+We then need to add this into our comparison function, and in doing so we will also demonstrate the use of the `index` parameter for the particle filter. The only model outputs needed from the comparison function are $S$ and $D$. For models with a very large state space returning only those compartments required by the comparison function can be important for efficiency. An index function can be defined, which operates on dust generators `info()`:
+
+```{r}
+index <- function(info) {
+  list(run = c(info$index$S, info$index$D), state = c(info$index$S, info$index$I, info$index$R, info$index$D))
+}
+
+index(sir_death$info())
+```
+
+Which sends the comparison function the indices listed under `run`, in this case the number of susceptibles, and saves any compartments listed under `state` if the history is kept. In the `compare()` function the index of `state` now corresponds to `index$run`. The missing data must be checked for, and contribute 0 to the likelihood if found:
+
+```{r}
+combined_compare <- function(state, prev_state, observed, pars = NULL) {
+  if (is.na(observed$cases) && is.na(observed$deaths)) {
+    return(NULL)
+  }
+  if (is.null(pars$compare$exp_noise)) {
+    exp_noise <- 1e6
+  } else {
+    exp_noise <- pars$compare$exp_noise
+  }
+  
+  ll_pois <- function(obs, model, exp_noise) {
+    if (is.na(obs)) {
+      ll_obs <- numeric(length(model))
+    } else {
+      lambda <- model +
+        rexp(n = length(model), rate = exp_noise)
+      ll_obs <- dpois(x = obs, lambda = lambda, log = TRUE)
+    }
+    ll_obs
+  }
+  
+  ll_cases <- ll_pois(observed$cases, 
+                      prev_state[1, , drop = TRUE] - state[1, , drop = TRUE],
+                      exp_noise)
+  ll_deaths <- ll_pois(observed$deaths, 
+                      state[2, , drop = TRUE] - prev_state[2, , drop = TRUE],
+                      exp_noise)
+  
+  ll_cases + ll_deaths
+}
+```
+
+This can be used to set up a particle filter as before:
+
+```{r}
+n_particles <- 100
+filter <- particle_filter$new(data = combined_data,
+                              model = gen_death,
+                              n_particles = n_particles,
+                              compare = combined_compare,
+                              index = index,
+                              n_threads = 4L,
+                              seed = 1L)
+filter$run(save_history = FALSE, pars = list(dt = dt))
+```
+
+and this can be used to run the `pmcmc()` method, as above.
+
+## Running predictions
+
+Going back to the simple SIR model above, we can easily continue running the fitted model forward in time using the posterior estimated by `pmcmc()` to create a forecast past the end of the data:
+
+```{r fig.height=5, fig.width=7}
+forecast <- predict(processed_chains, 
+                    steps = seq(400, 800, 4), 
+                    n_threads = 4L, 
+                    prepend_trajectories = TRUE,
+                    seed = processed_chains$predict$seed)
+
+# Sample 10 particles
+mini_forecast <- forecast$state[,sample.int(dim(forecast$state)[2], size = 10),]
+time <- mini_forecast[1,1,-1]
+
+matplot(time*dt, t(mini_forecast[2, , -1]), type = "l",
+        xlab = "Time", ylab = "Number of individuals",
+        col = "#999966", lty = 1, ylim = range(mini_forecast))
+matlines(time*dt, t(mini_forecast[3, , -1]), col = "#8c8cd9", lty = 1)
+matlines(time*dt, t(mini_forecast[4, , -1]), col = "#cc0044", lty = 1)
+matpoints(incidence_data$day, t(true_history[2:4, , -1]), pch = 19,
+          col = c("#999966", "#8c8cd9", "#cc0044"))
+legend("left", lwd = 1, col = c("#999966", "#8c8cd9", "#cc0044"), 
+       legend = c("S", "I", "R"), bty = "n")
+```
+
+Up to $t = 100$ is the nowcast, from $t = 100$ to $t = 200$ is the forecast.
