@@ -87,7 +87,7 @@ This is converted to a C++ dust model, and compiled into a library in a single s
 
 ```{r}
 library(odin.dust)
-gen_sir <- odin_dust("sir.R")
+gen_sir <- odin_dust("sir.txt")
 ```
 
 ## Adding age structure to the model
@@ -171,7 +171,7 @@ dim(lambda) <- N_age
 As before, save the file, and use `odin.dust` to compile the model:
 
 ```{r}
-gen_age <- odin_dust("sirage.R")
+gen_age <- odin_dust("sirage.txt")
 ```
 
 We can generate an age-structured contact matrix based on the [POLYMOD](https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0050074) survey by using the [socialmixr](https://github.com/sbfnk/socialmixr) package:
@@ -547,7 +547,7 @@ p_death <- user(0.05)
 ```
 
 ```{r}
-gen_death <- odin_dust("deaths.R")
+gen_death <- odin_dust("deaths.txt")
 ```
 
 We can simulate some data to fit to, as before. We will also make the case data patchy, making it missing on some days:
