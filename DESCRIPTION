@@ -31,7 +31,8 @@ Suggests:
     withr,
     knitr,
     rmarkdown,
-    socialmixr
+    socialmixr,
+    odin.dust (>= 0.0.9)
 RoxygenNote: 7.1.1
 Roxygen: list(markdown = TRUE)
 Remotes:
