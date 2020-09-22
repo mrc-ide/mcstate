@@ -31,6 +31,9 @@ Suggests:
     withr,
     knitr,
     rmarkdown,
+    brio,
+    decor,
+    fs,
     socialmixr,
     odin.dust (>= 0.0.9)
 RoxygenNote: 7.1.1
