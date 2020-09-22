@@ -567,12 +567,12 @@ sir_death <- gen_death$new(data = list(dt = dt, S_ini = 1000, I_ini = 10, beta =
 n_steps <- 100
 incidence <- rep(NA, length.out = n_steps)
 deaths <- rep(NA, length.out = n_steps)
-true_history <- array(NA_real_, c(sir_death$info()$len, 1, n_steps + 1))
-true_history[, 1, 1] <- sir_death$state()
+true_history_deaths <- array(NA_real_, c(sir_death$info()$len, 1, n_steps + 1))
+true_history_deaths[, 1, 1] <- sir_death$state()
 for (t in seq_len(n_steps)) {
     state_start <- sir_death$state()
     state_end <- sir_death$run(t * inv_dt)
-    true_history[, 1, t + 1] <- state_end
+    true_history_deaths[, 1, t + 1] <- state_end
     incidence[t] <- state_start[2, 1] - state_end[2, 1]
     deaths[t] <- state_end[5, 1] - state_start[5, 1]
 }
