@@ -41,7 +41,7 @@ R_{t+1} &= R_t - n_{IR}
 where
 $$\begin{align*} 
 n_{SI} &\sim B(S, 1 - e^{-\beta \frac{I}{N} \cdot dt)} \\
-n_{IR} &\sim B(S, 1 - e^{-\gamma \cdot dt)}
+n_{IR} &\sim B(I, 1 - e^{-\gamma \cdot dt)}
 \end{align*}$$
 
 ## Implementing the SIR model using [`odin.dust`](https://mrc-ide.github.io/odin.dust/)
@@ -391,6 +391,8 @@ If we plot these along with the data, we can see compared to above that only tra
 
 ```{r fig.height=5, fig.width=7}
 history <- filter$history()
+
+par(mar = c(4.1, 5.1, 0.5, 0.5), las = 1)
 matplot(incidence_data$day, t(history[2, , -1]), type = "l",
         xlab = "Time", ylab = "Number of individuals",
         col = "#999966", lty = 1, ylim = range(history))
@@ -435,11 +437,11 @@ gamma <- pmcmc_parameter("gamma", 0.1, min = 0,
                            dgamma(p, shape = 1, scale = 0.2, log = TRUE)
                          })
 
-proposal_matrix <- matrix(c(0.04, 0, 0, 0.01), nrow = 2, ncol = 2, byrow = TRUE)
+proposal_matrix <- matrix(c(0.01^2, 0, 0, 0.01^2), nrow = 2, ncol = 2, byrow = TRUE)
 mcmc_pars <- pmcmc_parameters$new(list(beta = beta, gamma = gamma), proposal_matrix)
 ```
 
-The proposals for each MCMC step are also set here. Proposals are drawn from a multi-variate normal distribution, with the variance-covariance matrix set here. In this case we have $\beta_{n+1} \sim N(\beta_{n}, 0.2^2)$ and $\gamma_{n+1} \sim N(\gamma_{n}, 0.1^2)$ i.e. no covariance.
+The proposals for each MCMC step are also set here. Proposals are drawn from a multi-variate normal distribution, with the variance-covariance matrix set here. In this case we have $\beta_{n+1} \sim N(\beta_{n}, 0.01^2)$ and $\gamma_{n+1} \sim N(\gamma_{n}, 0.01^2)$ i.e. no covariance.
 
 Finally, the sampler can be run using these parameters, and the particle filter defined above. Taking 2000 steps with two independent chains:
 
