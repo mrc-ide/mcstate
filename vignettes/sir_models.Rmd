@@ -14,12 +14,6 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
-library(odin.dust)
-library(mcstate)
-library(rmarkdown)
-```
-
 # Stochastic SIR model definition
 
 A simple definition of the SIR model, as given in the [odin documentation](https://mrc-ide.github.io/odin/articles/discrete.html) is:
@@ -43,242 +37,6 @@ $$\begin{align*}
 n_{SI} &\sim B(S, 1 - e^{-\beta \frac{I}{N} \cdot dt)} \\
 n_{IR} &\sim B(I, 1 - e^{-\gamma \cdot dt)}
 \end{align*}$$
-
-## Implementing the SIR model using [`odin.dust`](https://mrc-ide.github.io/odin.dust/)
-
-The above equations can straightforwardly be written out using the odin DSL:
-
-```r
-## Definition of the time-step and output as "time"
-dt <- user(1)
-initial(time) <- 0
-update(time) <- (step + 1) * dt
-
-## Core equations for transitions between compartments:
-update(S) <- S - n_SI
-update(I) <- I + n_SI - n_IR
-update(R) <- R + n_IR
-
-## Individual probabilities of transition:
-p_SI <- 1 - exp(-beta * I / N * dt) # S to I
-p_IR <- 1 - exp(-gamma * dt) # I to R
-
-## Draws from binomial distributions for numbers changing between
-## compartments:
-n_SI <- rbinom(S, p_SI)
-n_IR <- rbinom(I, p_IR)
-
-## Total population size
-N <- S + I + R
-
-## Initial states:
-initial(S) <- S_ini
-initial(I) <- I_ini
-initial(R) <- 0
-
-## User defined parameters - default in parentheses:
-S_ini <- user(1000)
-I_ini <- user(10)
-beta <- user(0.2)
-gamma <- user(0.1)
-```
-
-This is converted to a C++ dust model, and compiled into a library in a single step, using [`odin.dust`](https://mrc-ide.github.io/odin.dust/). Save the above code as a file named `sir.R`. File names must not contain special characters.
-
-```{r}
-library(odin.dust)
-gen_sir <- odin_dust("sir.R")
-```
-
-## Adding age structure to the model
-
-Adding age structure to the model consists of the following steps, which turn variables into arrays:
-
-- Define the number of age categories as a user parameter `N_age`.
-- Add age structure to each compartment, by adding square brackets to the lvalues.
-- Modify the rvalues to use quantities from the appropriate compartment, by adding an `i` index to the rvalues. These will automatically be looped over.
-- Where an age compartment needs to be reduced into a single compartment/variable, use `sum` (or another array function from https://mrc-ide.github.io/odin/articles/functions.html as appropriate)
-- Define the dimensions of all arrays, for example by setting `dim(S) <- N_age`.
-
-This would simply give `N_age` independent processes equivalent to the first model, scaled by the size of the population in each age category. To actually make this useful, you likely want to add some interaction or transitions between the compartments. An example of this would be to add an age-specific contact matrix, demonstrated below, which defines a different force of infection $\lambda$ for each age group. This is calculated by $$\lambda_i = \frac{\beta}{N} \cdot \sum_{j=1}^{N_{\mathrm{age}}} I_j m_{ij}$$ In the odin code:
-
-```r
-m[, ] <- user() # age-structured contact matrix
-s_ij[, ] <- m[i, j] * I[i]
-lambda[] <- beta / N * sum(s_ij[i, ])
-```
-
-The probability of infection of a susceptible is then indexed by this force of infection:
-
-```r
-p_SI[] <- 1 - exp(-lambda[i] * dt)
-```
-
-Putting this all together, the age structured SIR model is as follows:
-
-```r
-## Definition of the time-step and output as "time"
-dt <- user(1)
-initial(time) <- 0
-update(time) <- (step + 1) * dt
-
-## Core equations for transitions between compartments:
-update(S[]) <- S[i] - n_SI[i]
-update(I[]) <- I[i] + n_SI[i] - n_IR[i]
-update(R[]) <- R[i] + n_IR[i]
-
-## Individual probabilities of transition:
-p_SI[] <- 1 - exp(-lambda[i] * dt) # S to I
-p_IR <- 1 - exp(-gamma * dt) # I to R
-
-## Force of infection
-m[, ] <- user() # age-structured contact matrix
-s_ij[, ] <- m[i, j] * I[i]
-lambda[] <- beta / N * sum(s_ij[i, ])
-
-## Draws from binomial distributions for numbers changing between
-## compartments:
-n_SI[] <- rbinom(S[i], p_SI[i])
-n_IR[] <- rbinom(I[i], p_IR)
-
-## Total population size
-N <- sum(S) + sum(I) + sum(R)
-
-## Initial states:
-initial(S[]) <- S_ini
-initial(I[]) <- I_ini
-initial(R[]) <- 0
-
-## User defined parameters - default in parentheses:
-S_ini <- user(1000)
-I_ini <- user()
-beta <- user(0.2)
-gamma <- user(0.1)
-
-# dimensions of arrays
-N_age <- user()
-dim(S) <- N_age
-dim(I) <- N_age
-dim(R) <- N_age
-dim(n_SI) <- N_age
-dim(n_IR) <- N_age
-dim(p_SI) <- N_age
-dim(m) <- c(N_age, N_age)
-dim(s_ij) <- c(N_age, N_age)
-dim(lambda) <- N_age
-```
-
-As before, save the file, and use `odin.dust` to compile the model:
-
-```{r}
-gen_age <- odin_dust("sirage.R")
-```
-
-We can generate an age-structured contact matrix based on the [POLYMOD](https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0050074) survey by using the [socialmixr](https://github.com/sbfnk/socialmixr) package:
-
-```{r}
-library(socialmixr)
-data(polymod)
-
-age.limits = seq(0, 70, 10)
-
-## Get the contact matrix from socialmixr
-contact <- socialmixr::contact_matrix(
-  survey = polymod,
-  countries = "United Kingdom",
-  age.limits = age.limits,
-  symmetric = TRUE)
-
-## Transform the matrix to the (symetrical) transmission matrix
-## rather than the contact matrix
-transmission <- contact$matrix /
-  rep(contact$demography$population, each = ncol(contact$matrix))
-transmission
-```
-
-This can be given as a parameter to the model by adding the argument `data = list(m = transmission)` when using the `new()` method on the `gen_age` generator.
-
-## Saving a model into a package
-
-If you want to distribute your model in an R package, rather than building it locally, you will want to use the `odin_dust_package()` function instead. This will write the transpiled C++ dust code into `src` and its R interface in `R/dust.R`. Package users are not required to regenerate the dust code, and their compiler will build the library when they install the package. You may also wish to add a file `R/zzz.R` to your package `mycoolpackage` with the following lines:
-
-```r
-##' @useDynLib mycoolpackage, .registration = TRUE
-NULL
-```
-
-to help automate the compilation of the model.
-
-# Running the SIR model with [`dust`](https://mrc-ide.github.io/dust/)
-
-Now we can use the `new` method on the generator to make `dust` objects. Typically you will work through the `mcstate` package to run the model, but for illustrative purposes we show here that `dust` can be driven directly from R.
-
-[`new()`](https://mrc-ide.github.io/dust/reference/dust.html#method-new) takes the data needed to run the model i.e. a list with any parameters defined as `user` in the odin code above, the value of the initial step $t_0$, and the number of particles, each for now can simply be thought of as an independent stochastic realisation of the model, but in the next step will be used when inferring model parameters.
-
-Additional arguments include the number of threads to parallelise the particles over, and the seed for the random number generator. The seed must be an integer, and using the same seed will ensure reproducible results for all particles. For threads to take effect, `openmp` must be enabled in the compilation step, which you can check by running:
-
-```{r}
-gen_sir$public_methods$has_openmp()
-```
-
-To use this to directly create a new dust object with 10 particles, run using 4 threads:
-
-```{r}
-sir_model <- gen_sir$new(data = list(dt = 1, S_ini = 1000, I_ini = 10, beta = 0.2, gamma = 0.1),
-                         step = 1,
-                         n_particles = 10L,
-                         n_threads = 4L,
-                         seed = 1L)
-```
-
-Check the initial state is ten particles wide, with four states deep ($t$, $S$, $I$, $R$):
-
-```{r}
-sir_model$state()
-```
-
-Run the particles (repeats) forward 10 steps of length $dt$, followed by another 10 steps:
-
-```{r}
-sir_model$run(10)
-sir_model$run(20)
-```
-
-To change the parameters, the model does not need to be recompiled. We simply use the generator object to make a new model. Let's do this and increase the infection rate, and the population size. We will also use a smaller time step to calculate multiple transitions per unit time:
-
-```{r}
-dt = 0.25
-n_particles <- 10L
-sir_model_2 <- gen_sir$new(data = list(dt = 0.25, S_ini = 2000, I_ini = 10, beta = 0.4, gamma = 0.1),
-                           step = 1,
-                           n_particles = n_particles,
-                           n_threads = 4L,
-                           seed = 1L)
-sir_model_2$state()
-```
-
-Let's run this epidemic forward, and plot the trajectories:
-
-```{r fig.height=5, fig.width=7}
-n_steps <- 200
-x <- array(NA, dim = c(sir_model_2$info()$len, n_particles, n_steps))
-
-for (t in seq_len(n_steps)) {
-  x[ , , t] <- sir_model_2$run(t)
-}
-time <- x[1, 1, ]
-x <- x[-1, , ]
-
-par(mar = c(4.1, 5.1, 0.5, 0.5), las = 1)
-matplot(time, t(x[1, , ]), type = "l",
-         xlab = "Time", ylab = "Number of individuals",
-         col = "#8c8cd9", lty = 1, ylim = range(x))
-matlines(time, t(x[2, , ]), col = "#cc0044", lty = 1)
-matlines(time, t(x[3, , ]), col = "#999966", lty = 1)
-legend("left", lwd = 1, col = c("#8c8cd9", "#cc0044", "#999966"), legend = c("S", "I", "R"), bty = "n")
-```
-
-Many other methods are available on the dust object to support inference, but typically you will use the `mcstate` package instead of calling these directly. However, if you wish to simulate state space models with set parameters, this can be done entirely using the commands above from `dust`.
 
 # Inferring parameters with [`mcstate`](https://mrc-ide.github.io/odin.dust/)
 
@@ -332,7 +90,6 @@ incidence
 This can then be processed with `particle_filter_data()` as follows:
 
 ```{r paged.print=TRUE, layout="l-body-outset"}
-library(mcstate)
 sir_data <- particle_filter_data(data = incidence_data,
                                  time = "day", 
                                  rate = inv_dt)
@@ -468,7 +225,15 @@ apply(processed_chains$pars, 2, mean)
 
 ### Optimal use of parallelisation
 
-Note that we run four separate chains in serial here. If you have $m$ nodes available, each with $n$ cores, the most efficient way to run this step is to set `nthreads = n` on the filters, and run $m$ independent chains, one on each node setting `n_chains = 1`. These independent results can then be collected using `pmcmc_combine()`:
+Note that we run four separate chains in serial here. If you have $m$ nodes available, each with $n$ cores, the most efficient way to run this step is to set `nthreads = n` on the filters, and run $m$ independent chains, one on each node setting `n_chains = 1`.
+
+For threads to take effect, `openmp` must be enabled in the compilation step, which you can check by running:
+
+```{r}
+gen_sir$public_methods$has_openmp()
+```
+
+These independent results can then be collected using `pmcmc_combine()`:
 
 ```{r pmcmc_serial, cache=TRUE}
 pmcmc1 <- 

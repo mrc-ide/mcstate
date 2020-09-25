@@ -33,7 +33,6 @@ Suggests:
     mvtnorm,
     odin.dust (>= 0.0.9)
     rmarkdown,
-    socialmixr,
     testthat,
     withr,
 RoxygenNote: 7.1.1
