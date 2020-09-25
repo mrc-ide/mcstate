@@ -202,7 +202,7 @@ The proposals for each MCMC step are also set here. Proposals are drawn from a m
 
 Finally, the sampler can be run using these parameters, and the particle filter defined above. Taking 2000 steps with two independent chains:
 
-```{r pmcmc_combined, cache=TRUE}
+```{r pmcmc_combined}
 pmcmc_run <- 
   pmcmc(
     mcmc_pars,
@@ -235,7 +235,7 @@ gen_sir$public_methods$has_openmp()
 
 These independent results can then be collected using `pmcmc_combine()`:
 
-```{r pmcmc_serial, cache=TRUE}
+```{r pmcmc_serial}
 pmcmc1 <- 
   pmcmc(
     mcmc_pars,
