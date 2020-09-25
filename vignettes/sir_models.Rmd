@@ -14,6 +14,15 @@ knitr::opts_chunk$set(
 )
 ```
 
+`mcstate` sits at the top of a stack of packages, which together allow inference of a stochastic model's parameters by fitting to a time-series of observational data. To use `mcstate`, we require the following pieces:
+
+- A generative model for a state-space process, implemented in [`dust`](https://mrc-ide.github.io/dust/). This will generate (stochastic) updates of the state at each time step.
+- A time-series of observed data, which may include from multiple sources (e.g. cases, hospital beds, deaths).
+- A comparison function, which calculates the likelihood of a model state, given the observed data.
+- Optionally an index function, which identifies the indices of the state used to compute the comparison. This is particularly useful when the state space is large, and only a small number of states are used in the comparison function.
+
+Below we describe a typical use case for infectious disease: given daily case counts during an epidemic, how can we estimate key features of the transmission process such as the transmission rate, recovery rate and from these the basic reproductive number $R_0$.
+
 # Stochastic SIR model definition
 
 A simple definition of the SIR model, as given in the [odin documentation](https://mrc-ide.github.io/odin/articles/discrete.html) is:
@@ -38,7 +47,15 @@ n_{SI} &\sim B(S, 1 - e^{-\beta \frac{I}{N} \cdot dt)} \\
 n_{IR} &\sim B(I, 1 - e^{-\gamma \cdot dt)}
 \end{align*}$$
 
-# Inferring parameters with [`mcstate`](https://mrc-ide.github.io/odin.dust/)
+This example is included with the `dust` package, and can be loaded with:
+
+```{r}
+gen_sir <- dust::dust_example("sir")
+```
+
+To learn how to implement this yourself, see the vignette over at [`odin.dust`](https://mrc-ide.github.io/odin.dust/).
+
+# Inferring parameters with mcstate
 
 Typically these models will be used in conjunction with observed data to infer the most likely parameter values, most likely trajectories up to the present (nowcast), and make forecasts using these parameters. The `mcstate` package implements particle filter and pMCMC methods to make all of this this possible from `dust` models.
 
