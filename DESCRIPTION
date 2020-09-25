@@ -24,18 +24,18 @@ Imports:
     dust (>= 0.4.6),
     progress (>= 1.2.0)
 Suggests:
-    coda,
-    mockery,
-    mvtnorm,
-    testthat,
-    withr,
-    knitr,
-    rmarkdown,
     brio,
+    coda,
     decor,
     fs,
-    socialmixr,
+    knitr,
+    mockery,
+    mvtnorm,
     odin.dust (>= 0.0.9)
+    rmarkdown,
+    socialmixr,
+    testthat,
+    withr,
 RoxygenNote: 7.1.1
 Roxygen: list(markdown = TRUE)
 Remotes:
