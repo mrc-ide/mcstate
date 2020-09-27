@@ -71,45 +71,20 @@ The anatomy of an mcstate particle filter, as noted above, consists of three mai
 
 ## Model data
 
-To demonstrate this, we will attempt to infer the parameters $\beta$ and $\gamma$ using daily case counts. In reality these counts would be measured, but here we generate them from a single run of the model, and adding some constant noise proportional to the epidemic size:
+To demonstrate this, we will attempt to infer the parameters $\beta$ and $\gamma$ using daily case counts. In reality these counts would be measured, but here we have generated them from a single run of the model with `seed = 2L`, and added some constant noise proportional to the epidemic size:
 
 ```{r}
 # Set up model
 dt <- 0.25
-inv_dt <- 1/dt
-sir <- gen_sir$new(data = list(dt = dt, S_ini = 1000, I_ini = 10, beta = 0.2, gamma = 0.1),
-                   step = 0,
-                   n_particles = 1L,
-                   n_threads = 1L,
-                   seed = 2L)
-
-# Run model forward 100 days, using 4 steps a day
-# Calculate the number of new cases by counting how many susceptibles have been depleted between updates
-n_steps <- 100
-incidence <- rep(NA, length.out = n_steps)
-true_history <- array(NA_real_, c(sir$info()$len, 1, n_steps + 1))
-true_history[, 1, 1] <- sir$state()
-for (t in seq_len(n_steps)) {
-    state_start <- sir$state()
-    state_end <- sir$run(t * inv_dt)
-    true_history[, 1, t + 1] <- state_end
-    incidence[t] <- state_start[2, 1] - state_end[2, 1]
-}
-
-# Add very simple form of noise
-incidence <- incidence + 
-  round(rnorm(mean = 0, n = length(true_history[3,1,-1]), sd = 0.1*sqrt(true_history[3,1,-1])))
-incidence <- unlist(lapply(incidence, max, 0))
-incidence_data <- data.frame(cases = incidence, day = seq_len(n_steps))
-incidence
+incidence <- t(read.table("vignettes/sir_incidence_data.txt", sep=",", header = F))
 ```
 
-This can then be processed with `particle_filter_data()` as follows:
+This can then be processed with `mcstate::particle_filter_data()` as follows:
 
 ```{r paged.print=TRUE, layout="l-body-outset"}
-sir_data <- particle_filter_data(data = incidence_data,
-                                 time = "day", 
-                                 rate = inv_dt)
+sir_data <- mcstate::particle_filter_data(data = incidence_data[,1],
+                                          time = "day", 
+                                          rate = 1/dt)
 paged_table(sir_data)
 ```
 
