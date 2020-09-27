@@ -63,10 +63,10 @@ A comparison function is needed to define a likelihood, i.e. the probability of 
 
 This is straightforward for a deterministic model, but for a stochastic model looking at a single run can easily bias these estimates. `mcstate` therefore implements a particle filter, also known as sequential Monte Carlo (SMC), which runs multiple trajectories, and at each stage where data is available resamples them in proportion to their likelihood. This produces an unbiased estimate of the likelihood for a given set of parameters.
 
-The anatomy of an mcstate particle filter consists of three components:
+The anatomy of an mcstate particle filter, as noted above, consists of three main components:
 
-- A set of observations to fit the model to, generated using `particle_filter_data()`.
-- A model to fit, which must be a dust generator.
+- A set of observations to fit the model to, generated using `mcstate::particle_filter_data()`.
+- A model to fit, which must be a dust generator, either `dust::dust()` or `odin.dust::odin_dust()`.
 - A comparison function, which is an R function which calculates the likelihood of the state given the data.
 
 ## Model data
