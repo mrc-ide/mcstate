@@ -75,17 +75,17 @@ To demonstrate this, we will attempt to infer the parameters $\beta$ and $\gamma
 
 ```{r}
 # Set up model
-dt <- 0.25
 incidence <- t(read.table("vignettes/sir_incidence_data.txt", sep=",", header = F))
 ```
 
-This can then be processed with `mcstate::particle_filter_data()` as follows:
+This can then be processed with `mcstate::particle_filter_data()` as follows, taking four update steps between every observation (generally decreasing $dt$ will improve resolution, especially if rates of change are high, at the expense of extra computation time):
 
 ```{r paged.print=TRUE, layout="l-body-outset"}
+dt <- 0.25
 sir_data <- mcstate::particle_filter_data(data = incidence_data[,1],
                                           time = "day", 
                                           rate = 1/dt)
-paged_table(sir_data)
+rmarkdown::paged_table(sir_data)
 ```
 
 More complex models may have additional data streams added as further columns (e.g. deaths, hospital admissions). This will be fed as observed data to the compare function, which will combine and compute the evidence for the current model state.
@@ -98,17 +98,10 @@ For this model the number of cases can be calculated from the change in suscepti
 
 ```{r}
 case_compare <- function(state, prev_state, observed, pars = NULL) {
-  if (is.na(observed$cases)) {
-    return(NULL)
-  }
-  if (is.null(pars$compare$exp_noise)) {
-    exp_noise <- 1e6
-  } else {
-    exp_noise <- pars$compare$exp_noise
-  }
+  exp_noise <- 1e6
   
   incidence_modelled <-
-     prev_state[2, , drop = TRUE] - state[2, , drop = TRUE]
+    prev_state[2, , drop = TRUE] - state[2, , drop = TRUE]
   incidence_observed <- observed$cases
   lambda <- incidence_modelled +
     rexp(n = length(incidence_modelled), rate = exp_noise)
