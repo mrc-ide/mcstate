@@ -61,13 +61,13 @@ Typically these models will be used in conjunction with observed data to infer t
 
 A comparison function is needed to define a likelihood, i.e. the probability of observing this trajectory, given the data. This is combined with a prior to generate a posterior distribution for each parameter, which in the SIR model gives the distribution of likely values for $\beta$ and $\gamma$. 
 
-This is straightforward for a deterministic model, but for a stochastic model looking at a single run can easily bias these estimates. `mcstate` therefore implements a particle filter, also known as sequential Monte Carlo (SMC), which runs multiple trajectories, and at each stage where data is available resamples them in proportion to their likelihood. This produces an unbiased estimate of the likelihood for a given set of parameters.
+This is straightforward for a deterministic model, but for a stochastic model over a long time-series, trajectories can quickly become inconsistent with the data, and the massive space of potential outcomes makes downstream sampling highly inefficient. `mcstate` therefore implements a particle filter, also known as sequential Monte Carlo (SMC), which runs multiple trajectories, and at each stage where data is available resamples them in proportion to their likelihood, keeping only those trajectories close to the data, and with likelihoods that are plausibly important parts of the posterior. Importantly, this technique produces an unbiased estimate of the likelihood for a given set of parameters.
 
 The anatomy of an mcstate particle filter, as noted above, consists of three main components:
 
 - A set of observations to fit the model to, generated using `mcstate::particle_filter_data()`.
 - A model to fit, which must be a dust generator, either `dust::dust()` or `odin.dust::odin_dust()`.
-- A comparison function, which is an R function which calculates the likelihood of the state given the data.
+- A comparison function, which is an R function which calculates the likelihood of the state given the data at one time point.
 
 ## Model data
 
