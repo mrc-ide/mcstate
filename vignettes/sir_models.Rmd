@@ -12,6 +12,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+r_output <- function(x) lang_output(x, "r")
 ```
 
 `mcstate` sits at the top of a stack of packages, which together allow inference of a stochastic model's parameters by fitting to a time-series of observational data. To use `mcstate`, we require the following pieces:
@@ -153,39 +154,32 @@ filter$run(save_history = TRUE, pars = list(dt = dt))
 If we plot these along with the data, we can see compared to above that only trajectories consistent with the data are kept, and the variance between particles has been reduced compared to the simulations shown in the `odin.dust` vignette:
 
 ```{r fig.height=5, fig.width=7}
-history <- filter$history()
-true_history <- readRDS("sir_true_history.rds")
+plot_particle_filter <- function(history, true_history, times, obs_end = NULL) {
+  if (is.null(obs_end)) {
+    obs_end = max(times)
+  }
+  
+  par(mar = c(4.1, 5.1, 0.5, 0.5), las = 1)
+  cols <- c(S = "#8c8cd9", I = "#cc0044", R = "#999966")
+  matplot(times, t(history[1, , -1]), type = "l",
+          xlab = "Time", ylab = "Number of individuals",
+          col = cols[["S"]], lty = 1, ylim = range(history))
+  matlines(times, t(history[2, , -1]), col = cols[["I"]], lty = 1)
+  matlines(times, t(history[3, , -1]), col = cols[["R"]], lty = 1)
+  matpoints(times[1:obs_end], t(true_history[1:3, , -1]), pch = 19,
+            col = cols)
+  legend("left", lwd = 1, col = cols, legend = names(cols), bty = "n")
+}
 
-par(mar = c(4.1, 5.1, 0.5, 0.5), las = 1)
-cols <- c(S = "#8c8cd9", I = "#cc0044", R = "#999966")
-matplot(incidence$day, t(history[1, , -1]), type = "l",
-        xlab = "Time", ylab = "Number of individuals",
-        col = cols[["S"]], lty = 1, ylim = range(history))
-matlines(incidence$day, t(history[2, , -1]), col = cols[["I"]], lty = 1)
-matlines(incidence$day, t(history[3, , -1]), col = cols[["R"]], lty = 1)
-matpoints(incidence$day, t(true_history[1:3, , -1]), pch = 19,
-          col = cols)
-legend("left", lwd = 1, col = cols, legend = names(cols), bty = "n")
+true_history <- readRDS("sir_true_history.rds")
+plot_particle_filter(filter$history(), true_history, incidence$day)
 ```
 
 Doing the same with a $\beta$ and $\gamma$ which are further from the truth yields a lower likelihood:
 
-```{r}
-filter$run(save_history = TRUE, pars = list(dt = dt, beta = 0.4, gamma = 0.2))
-```
-
-
 ```{r fig.height=5, fig.width=7}
-history <- filter$history()
-matplot(incidence_data$day, t(history[2, , -1]), type = "l",
-        xlab = "Time", ylab = "Number of individuals",
-        col = "#999966", lty = 1, ylim = range(history))
-matlines(incidence_data$day, t(history[3, , -1]), col = "#8c8cd9", lty = 1)
-matlines(incidence_data$day, t(history[4, , -1]), col = "#cc0044", lty = 1)
-matpoints(incidence_data$day, t(true_history[2:4, , -1]), pch = 19,
-          col = c("#999966", "#8c8cd9", "#cc0044"))
-legend("left", lwd = 1, col = c("#999966", "#8c8cd9", "#cc0044"), 
-       legend = c("S", "I", "R"), bty = "n")
+filter$run(save_history = TRUE, pars = list(dt = dt, beta = 0.4, gamma = 0.2))
+plot_particle_filter(filter$history(), true_history, incidence$day)
 ```
 
 You can use the `run()` function of the particle filter directly, but for parameter inference, or forecasting after parameter inference, you should usually use the functions below to infer parameters.
@@ -195,23 +189,75 @@ You can use the `run()` function of the particle filter directly, but for parame
 Using this, we can do a MCMC using the Metropolis-Hastings algorithm to infer the values of $\beta$ and $\gamma$ from daily case counts. Let's first describe the parameters we wish to infer, giving a minimum, maximum. For $\gamma$ we will also apply a gamma prior with shape 1 and rate 0.2: $\Gamma(1, 0.2)$:
 
 ```{r}
-beta <- pmcmc_parameter("beta", 0.2, min = 0)
-gamma <- pmcmc_parameter("gamma", 0.1, min = 0, 
+beta <- mcstate::pmcmc_parameter("beta", 0.2, min = 0)
+gamma <- mcstate::pmcmc_parameter("gamma", 0.1, min = 0, 
                          prior = function(p) 
                            dgamma(p, shape = 1, scale = 0.2, log = TRUE)
                          )
 
 proposal_matrix <- matrix(c(0.01, 0, 0, 0.01), nrow = 2, ncol = 2, byrow = TRUE)
-mcmc_pars <- pmcmc_parameters$new(list(beta = beta, gamma = gamma), proposal_matrix)
+mcmc_pars <- mcstate::pmcmc_parameters$new(list(beta = beta, gamma = gamma), proposal_matrix)
 ```
 
 The proposals for each MCMC step are also set here. Proposals are drawn from a multi-variate normal distribution, with the variance-covariance matrix set here. In this case we have simply set $\beta_{n+1} \sim N(\beta_{n}, 0.01)$ and $\gamma_{n+1} \sim N(\gamma_{n}, 0.01)$ i.e. no covariance. We show how to improve this below.
 
-The sampler can now be run using these parameters, and the particle filter defined above. Taking 2000 steps with four independent chains:
+The sampler can now be run using these parameters, and the particle filter defined above. Taking 2000 steps on a single chains:
 
 ```{r pmcmc_combined}
 pmcmc_run <- 
-  pmcmc(
+  mcstate::pmcmc(
+    mcmc_pars,
+    filter,
+    2000,
+    save_state = TRUE,
+    save_trajectories = TRUE,
+    progress = TRUE,
+    n_chains = 1
+  )
+pmcmc_run
+plot_particle_filter(pmcmc_run$trajectories$state, true_history, incidence$day)
+```
+
+We also provide some basic tools for dealing with this output, before running prediction (see below). We can remove burn-in and thin the four chains as follows:
+
+```{r}
+processed_chains <- mcstate::pmcmc_thin(pmcmc_run, burnin = 500, thin = 2)
+parameter_mean_hpd <- apply(processed_chains$pars, 2, mean)
+parameter_mean_hpd
+```
+
+The resulting objects can also be analysed in a typical MCMC analysis package such as [`coda`](https://cran.r-project.org/web/packages/coda/index.html). We will need to combine the two parts of the object which contain the probabilities and parameter values across the iterations:
+
+```{r coda_plots, fig.height=10, fig.width=14}
+library(coda)
+mcmc1 <- coda::as.mcmc(cbind(pmcmc_run$probabilities, pmcmc_run$pars))
+
+summary(mcmc1)
+plot(mcmc1)
+```
+
+## Tuning the pMCMC
+
+The MCMC above is not particularly efficient in terms of effective sample size per iteration:
+
+```{r}
+effectiveSize(mcmc1)
+1 - rejectionRate(mcmc1)
+```
+
+Clearly the acceptance rate is too low. Generally a target of 0.5, reducing to 0.234 as the number of parameters increases [is thought to be optimal](https://dx.doi.org/10.1016/j.spa.2007.12.005). The proposal distribution needs to be modified, in this case reducing the variance of the jump sizes. One option to automate this process is to run a chain for a bit, as above, then use the covariance of the state as the proposal matrix:
+
+```{r}
+proposal_matrix <- cov(pmcmc_run$pars)
+mcmc_pars <- mcstate::pmcmc_parameters$new(list(beta = beta, gamma = gamma), proposal_matrix)
+proposal_matrix
+```
+
+Let's now run four independent chains with these proposals:
+
+```{r}
+pmcmc_tuned_run <- 
+  mcstate::pmcmc(
     mcmc_pars,
     filter,
     2000,
@@ -220,107 +266,79 @@ pmcmc_run <-
     progress = TRUE,
     n_chains = 4
   )
+
+mcmc2 <- coda::as.mcmc(cbind(pmcmc_tuned_run$probabilities, pmcmc_tuned_run$pars))
+
+summary(mcmc2)
+plot(mcmc2)
 ```
 
-We also provide some basic tools for dealing with this output, before running prediction (see below). We can remove burn-in and thin the four chains as follows:
+Looking again at the effective sample size and rejection rate, these chains were a lot more efficient, and have a much better effective sample size thanks for the four chains:
 
 ```{r}
-processed_chains <- pmcmc_thin(pmcmc_run, burnin = 500, thin = 2)
-processed_chains
-apply(processed_chains$pars, 2, mean)
+effectiveSize(mcmc2)
+1 - rejectionRate(mcmc2)
 ```
 
-The resulting objects can also be analysed in a typical MCMC analysis package such as [`coda`](https://cran.r-project.org/web/packages/coda/index.html). 
+## Running predictions
 
-```{r coda_plots, fig.height=10, fig.width=14}
-library(coda)
-mcmc1 <- as.mcmc(cbind(pmcmc1$probabilities, pmcmc1$pars))
-mcmc2 <- as.mcmc(cbind(pmcmc2$probabilities, pmcmc2$pars))
-mcmc3 <- as.mcmc(cbind(pmcmc3$probabilities, pmcmc3$pars))
-mcmc_sir <- mcmc.list(mcmc1, mcmc2, mcmc3)
+Going back to the simple SIR model above, we can easily continue running the fitted model forward in time using the posterior estimated by `pmcmc()` to create a forecast past the end of the data:
 
-# The Rhat statistic may not always be possible to compute
-# gelman.diag(mcmc_sir)
-rejectionRate(mcmc_sir)
-effectiveSize(mcmc_sir)
+```{r fig.height=5, fig.width=7}
+forecast <- predict(processed_chains, 
+                    steps = seq(400, 800, 4), 
+                    n_threads = 4L, 
+                    prepend_trajectories = TRUE,
+                    seed = processed_chains$predict$seed)
 
-# Remove burn in and thin
-mcmc_sampled <- lapply(list(pmcmc1, pmcmc2, pmcmc3), pmcmc_thin, burnin = 1000, thin = 2)
-mcmc1 <- as.mcmc(cbind(mcmc_sampled[[1]]$probabilities, mcmc_sampled[[1]]$pars))
-mcmc2 <- as.mcmc(cbind(mcmc_sampled[[2]]$probabilities, mcmc_sampled[[2]]$pars))
-mcmc3 <- as.mcmc(cbind(mcmc_sampled[[3]]$probabilities, mcmc_sampled[[3]]$pars))
-mcmc_sir <- mcmc.list(mcmc1, mcmc2, mcmc3)
+# Sample 10 particles
+mini_forecast <- forecast$state[,sample.int(ncol(forecast$state), size = 10),]
 
-summary(mcmc_sir)
-plot(mcmc_sir)
+plot_particle_filter(mini_forecast, 
+                     true_history, 
+                     seq_len(200), 
+                     obs_end = max(incidence$day))
 ```
 
+Up to $t = 100$ is the nowcast, from $t = 100$ to $t = 200$ is the forecast.
 
 ## Fitting to multiple datastreams
 
 The set up of the particle filter and observation function makes it easy to fit to multiple datastreams within a Bayesian framework. Let us model a disease where a proportion of infected cases $p_{\mathrm{death}} = 0.05$ die rather than recover by adding the following lines to the odin code:
 
-```r
-update(S) <- S - n_SI
-update(I) <- I + n_SI - n_IR - n_ID
-update(R) <- R + n_IR
-update(D) <- D + n_ID
-
-n_IR <- rbinom(I, p_IR * dt * (1 - p_death))
-n_ID <- rbinom(I, p_IR * dt * p_death)
-n_SI <- rbinom(S, p_SI * dt)
-
-initial(D) <- 0
-p_death <- user(0.05)
+```{r pkg_dust_r, echo = FALSE, results = "asis"}
+r_output(readLines(file.path(path, "vignettes/deaths.R")))
 ```
+
 
 ```{r}
-gen_death <- odin_dust("deaths.R")
+gen_death <- odin.dust::odin_dust("deaths.R")
 ```
 
-We can simulate some data to fit to, as before. We will also make the case data patchy, making it missing on some days:
+We can simulate some data to fit to, as before. We have also made the case data patchy, so it is missing on some days:
 
 ```{r layout="l-body-outset", paged.print=TRUE }
 # Set up model
 dt <- 0.25
-inv_dt <- 1/dt
-sir_death <- gen_death$new(data = list(dt = dt, S_ini = 1000, I_ini = 10, beta = 0.2, gamma = 0.1),
-                   step = 0,
-                   n_particles = 1L,
-                   n_threads = 1L,
-                   seed = 2L)
+death_data <- read.table("death_data.csv", header = TRUE, sep = ",")
+true_history_deaths <- readRDS("deaths_true_history.rds")
 
-# Run model forward 100 days, using 4 steps a day
-# Calculate the number of new cases by counting how many susceptibles have been depleted between updates
-n_steps <- 100
-incidence <- rep(NA, length.out = n_steps)
-deaths <- rep(NA, length.out = n_steps)
-true_history_deaths <- array(NA_real_, c(sir_death$info()$len, 1, n_steps + 1))
-true_history_deaths[, 1, 1] <- sir_death$state()
-for (t in seq_len(n_steps)) {
-    state_start <- sir_death$state()
-    state_end <- sir_death$run(t * inv_dt)
-    true_history_deaths[, 1, t + 1] <- state_end
-    incidence[t] <- state_start[2, 1] - state_end[2, 1]
-    deaths[t] <- state_end[5, 1] - state_start[5, 1]
-}
-
-# Add very simple form of noise
-missing <- rbinom(n = n_steps, prob = 0.05, size = 1) == 1
-incidence[missing] <- NA
-combined_data <- particle_filter_data(
-  data.frame(cases = incidence, deaths = deaths, day = seq_len(n_steps)),
+combined_data <- mcstate::particle_filter_data(
+  death_data,
   time = "day",
-  rate = inv_dt
+  rate = 1/dt
 )
-paged_table(combined_data)
+rmarkdown::paged_table(combined_data)
 ```
 
-We then need to add this into our comparison function, and in doing so we will also demonstrate the use of the `index` parameter for the particle filter. The only model outputs needed from the comparison function are $S$ and $D$. For models with a very large state space returning only those compartments required by the comparison function can be important for efficiency. An index function can be defined, which operates on dust generators `info()`:
+We then need to add this into our comparison function, and in doing so we will also demonstrate the use of the `index` parameter for the particle filter. 
+
+For models with a very large state space returning only those compartments required by the comparison function can be important for efficiency. The only model outputs needed from the comparison function are $S$ and $D$. So, an index function to extract just this part of the state can be defined, which operates on dust generators `info()`:
 
 ```{r}
 index <- function(info) {
-  list(run = c(info$index$S, info$index$D), state = c(info$index$S, info$index$I, info$index$R, info$index$D))
+  list(run = c(info$index$S, info$index$D), 
+       state = c(info$index$S, info$index$I, info$index$R, info$index$D))
 }
 
 index(sir_death$info())
@@ -329,27 +347,22 @@ index(sir_death$info())
 Which sends the comparison function the indices listed under `run`, in this case the number of susceptibles, and saves any compartments listed under `state` if the history is kept. In the `compare()` function the index of `state` now corresponds to `index$run`. The missing data must be checked for, and contribute 0 to the likelihood if found:
 
 ```{r}
-combined_compare <- function(state, prev_state, observed, pars = NULL) {
-  if (is.na(observed$cases) && is.na(observed$deaths)) {
-    return(NULL)
-  }
-  if (is.null(pars$compare$exp_noise)) {
-    exp_noise <- 1e6
+# log-likelihood of Poisson count
+ll_pois <- function(obs, model) {
+  exp_noise <- 1e6
+  if (is.na(obs)) {
+    # Creates vector of zeros in ll with same length, if no data
+    ll_obs <- numeric(length(model))
   } else {
-    exp_noise <- pars$compare$exp_noise
+    lambda <- model +
+      rexp(n = length(model), rate = exp_noise)
+    ll_obs <- dpois(x = obs, lambda = lambda, log = TRUE)
   }
-  
-  ll_pois <- function(obs, model, exp_noise) {
-    if (is.na(obs)) {
-      ll_obs <- numeric(length(model))
-    } else {
-      lambda <- model +
-        rexp(n = length(model), rate = exp_noise)
-      ll_obs <- dpois(x = obs, lambda = lambda, log = TRUE)
-    }
-    ll_obs
-  }
-  
+  ll_obs
+}
+
+# Sum log likelihoods from each datastream
+combined_compare <- function(state, prev_state, observed, pars = NULL) {
   ll_cases <- ll_pois(observed$cases, 
                       prev_state[1, , drop = TRUE] - state[1, , drop = TRUE],
                       exp_noise)
@@ -376,31 +389,3 @@ filter$run(save_history = FALSE, pars = list(dt = dt))
 ```
 
 and this can be used to run the `pmcmc()` method, as above.
-
-## Running predictions
-
-Going back to the simple SIR model above, we can easily continue running the fitted model forward in time using the posterior estimated by `pmcmc()` to create a forecast past the end of the data:
-
-```{r fig.height=5, fig.width=7}
-forecast <- predict(processed_chains, 
-                    steps = seq(400, 800, 4), 
-                    n_threads = 4L, 
-                    prepend_trajectories = TRUE,
-                    seed = processed_chains$predict$seed)
-
-# Sample 10 particles
-mini_forecast <- forecast$state[,sample.int(dim(forecast$state)[2], size = 10),]
-time <- mini_forecast[1,1,-1]
-
-matplot(time*dt, t(mini_forecast[2, , -1]), type = "l",
-        xlab = "Time", ylab = "Number of individuals",
-        col = "#999966", lty = 1, ylim = range(mini_forecast))
-matlines(time*dt, t(mini_forecast[3, , -1]), col = "#8c8cd9", lty = 1)
-matlines(time*dt, t(mini_forecast[4, , -1]), col = "#cc0044", lty = 1)
-matpoints(incidence_data$day, t(true_history[2:4, , -1]), pch = 19,
-          col = c("#999966", "#8c8cd9", "#cc0044"))
-legend("left", lwd = 1, col = c("#999966", "#8c8cd9", "#cc0044"), 
-       legend = c("S", "I", "R"), bty = "n")
-```
-
-Up to $t = 100$ is the nowcast, from $t = 100$ to $t = 200$ is the forecast.
