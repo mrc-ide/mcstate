@@ -1,0 +1,180 @@
+---
+title: "Validation of SMC using a Kalman filter"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{sir_models}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+r_output <- function(x) lang_output(x, "r")
+cc_output <- function(x) lang_output(x, "cc")
+```
+
+We can test that the SMC algorithm implemented in `mcstate::particle_filter()`
+gives an unbiased estimate of the likelihood by comparing a simple model where
+the likelihood can be calculated exactly. The volatility model included in the
+dust package fulfils this criteria:
+
+```{r volatility_code, echo = FALSE, results = "asis"}
+path_volatility <- system.file("examples/volatility.cpp", package = "dust",
+                               mustWork = TRUE)
+cc_output(readLines(path_volatility))
+```
+
+This is a [`dust`](https://mrc-ide.github.io/dust) model; refer to the documentation there for details.  This file can be compiled with `dust::dust`, but here we use the version bundled with `dust`
+
+```{r volatility_create}
+volatility <- dust::dust_example("volatility")
+```
+
+We can simulate some data from the model:
+
+```{r volatility_data_create, include = FALSE}
+data <- local({
+  mod <- volatility$new(list(alpha = 0.91, sigma = 1), 0, 1L)
+  mod$set_state(matrix(rnorm(1L, 0, 1L), 1))
+  steps <- seq(0, 100, by = 1)
+  res <- dust::dust_iterate(mod, steps)
+  observed <- res[1, 1, -1] + rnorm(length(steps) - 1, 0, 1)
+  data.frame(step = steps[-1], value = observed)
+})
+```
+
+```{r volatility_data_show}
+head(data)
+plot(value ~ step, data, type = "o", pch = 19, las = 1)
+```
+
+In order to estimate the parameters of the process that might have generated this dataset, we need, in addition to our model, an observation/comparison function.  In this case, given that we observe some `state`:
+
+```{r, volatility_compare}
+volatility_compare <- function(state, prev_state, observed, pars) {
+  dnorm(observed$value, pars$gamma * drop(state), pars$tau, log = TRUE)
+}
+```
+
+We also model the initialisation process:
+
+```{r, volatility_initial}
+volatility_initial <- function(info, n_particles, pars) {
+  list(step = 0,
+       state = matrix(rnorm(n_particles, 0, pars$sd), 1))
+}
+
+pars <- list(
+  # Generation process
+  alpha = 0.91,
+  sigma = 1,
+  # Observation process
+  gamma = 1,
+  tau = 1,
+  # Initial condition
+  sd = 1)
+```
+
+and preprocess the data into the correct format:
+
+```
+volatility_data <- mcstate::particle_filter_data(data, "step", 1)
+head(volatility_data)
+```
+
+With all these pieces we can create our particle filter object, specifying that we will use $10^3$ particles
+
+```{r}
+filter <- mcstate::particle_filter$new(volatility_data, volatility, 1000,
+                                       compare = volatility_compare,
+                                       initial = volatility_initial)
+filter
+```
+
+Running the particle filter simulates the process on all $10^3$ particles and compares at each timestep the simulated data with your observed data using the provided comparison function. It returns the log-likelihood:
+
+```{r}
+filter$run(pars)
+```
+
+This is stochastic and each time you run it, the estimate will differ:
+
+```{r}
+filter$run(pars)
+```
+
+In this case the model is simple enough that we can use a [Kalman Filter](https://en.wikipedia.org/wiki/Kalman_filter) to calculate the likelihood exactly:
+
+```{r volatility_kalman}
+kalman_filter <- function(alpha, sigma, gamma, tau, data) {
+  y <- data$value
+
+  mu <- 0
+  s <- 1
+  log_likelihood <- 0
+
+  for (t in seq_along(y)) {
+    mu <- alpha * mu
+    s <- alpha^2 * s + sigma^2
+    m <- gamma * mu
+
+    S <- gamma^2 * s + tau^2
+    K <- gamma * s / S
+
+    mu <- mu + K * (y[t] - m)
+    s <- s - gamma * K * s
+
+    log_likelihood <- log_likelihood + dnorm(y[t], m, sqrt(S), log = TRUE)
+  }
+
+  log_likelihood
+}
+ll_k <- kalman_filter(pars$alpha, pars$sigma, pars$gamma, pars$tau,
+                      volatility_data)
+ll_k
+```
+
+Unlike the particle filter the Kalman filter is deterministic:
+
+```
+kalman_filter(pars$alpha, pars$sigma, pars$gamma, pars$tau, volatility_data)
+```
+
+However, the particle filter, run multiple times, will create a distribution centred on this likelihood:
+
+```
+ll <- replicate(200, filter$run(pars))
+hist(ll, col = "steelblue3")
+abline(v = ll_k, col = "red", lty = 2, lwd = 2)
+```
+
+As the number of particles used changes, the variance of this estimate will change
+
+```
+filter2 <- mcstate::particle_filter$new(volatility_data, volatility, 100,
+                                       compare = volatility_compare,
+                                       initial = volatility_initial)
+ll2 <- replicate(200, filter2$run(pars))
+hist(ll2, col = "steelblue3")
+abline(v = ll_k, col = "red", lty = 2, lwd = 2)
+abline(v = range(ll), col = "orange", lty = 3, lwd = 2)
+```
+
+If you run a particle filter with `save_history = TRUE`, it will record the (filtered) trajectories:s
+
+```{r}
+filter$run(pars, save_history = TRUE)
+dim(filter$history())
+```
+
+This is a _N_ state (here 1) x _N_ particles (1000) x _N_ time steps (100) 3d array, but we will drop the first rank of this for plotting
+
+```{r}
+matplot(0:100, t(drop(filter$history())), xlab = "Step", ylab = "Value"
+        las = 1, type = "l", lty = 1, col = "#00000002")
+points(value ~ step, data, col = "steelblue3", pch = 19)
+```
+
