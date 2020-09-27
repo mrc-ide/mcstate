@@ -115,12 +115,12 @@ Using these pieces, we can set up a particle filter as follows:
 
 ```{r}
 n_particles <- 100
-filter <- particle_filter$new(data = sir_data,
-                              model = gen_sir,
-                              n_particles = n_particles,
-                              compare = case_compare,
-                              n_threads = 4L,
-                              seed = 1L)
+filter <- mcstate::particle_filter$new(data = sir_data,
+                                       model = gen_sir,
+                                       n_particles = n_particles,
+                                       compare = case_compare,
+                                       n_threads = 4L,
+                                       seed = 1L)
 ```
 
 We can now run the particle filter forward, which will run and resample 100 trajectories, and return the final likelihood. It is important to set the correct time-step $dt$ here, as we are using 0.25, rather than the default value of 1 defined in the odin model.
@@ -166,7 +166,7 @@ legend("left", lwd = 1, col = c("#999966", "#8c8cd9", "#cc0044"),
        legend = c("S", "I", "R"), bty = "n")
 ```
 
-Typically you will not use the `run()` function of the particle filter directly, and instead use the functions below to infer parameters.
+You can use the `run()` function of the particle filter directly, but for parameter inference, or forecasting after parameter inference, you should usually use the functions below to infer parameters.
 
 ### Using MCMC to infer parameters
 
@@ -175,17 +175,17 @@ Using this, we can do a MCMC using the Metropolis-Hastings algorithm to infer th
 ```{r}
 beta <- pmcmc_parameter("beta", 0.2, min = 0)
 gamma <- pmcmc_parameter("gamma", 0.1, min = 0, 
-                         prior = function(p) {
+                         prior = function(p) 
                            dgamma(p, shape = 1, scale = 0.2, log = TRUE)
-                         })
+                         )
 
 proposal_matrix <- matrix(c(0.01, 0, 0, 0.01), nrow = 2, ncol = 2, byrow = TRUE)
 mcmc_pars <- pmcmc_parameters$new(list(beta = beta, gamma = gamma), proposal_matrix)
 ```
 
-The proposals for each MCMC step are also set here. Proposals are drawn from a multi-variate normal distribution, with the variance-covariance matrix set here. In this case we have $\beta_{n+1} \sim N(\beta_{n}, 0.01^2)$ and $\gamma_{n+1} \sim N(\gamma_{n}, 0.01^2)$ i.e. no covariance.
+The proposals for each MCMC step are also set here. Proposals are drawn from a multi-variate normal distribution, with the variance-covariance matrix set here. In this case we have simply set $\beta_{n+1} \sim N(\beta_{n}, 0.01)$ and $\gamma_{n+1} \sim N(\gamma_{n}, 0.01)$ i.e. no covariance. We show how to improve this below.
 
-Finally, the sampler can be run using these parameters, and the particle filter defined above. Taking 2000 steps with two independent chains:
+The sampler can now be run using these parameters, and the particle filter defined above. Taking 2000 steps with four independent chains:
 
 ```{r pmcmc_combined}
 pmcmc_run <- 
@@ -196,7 +196,7 @@ pmcmc_run <-
     save_state = TRUE,
     save_trajectories = TRUE,
     progress = TRUE,
-    n_chains = 2
+    n_chains = 4
   )
 ```
 
