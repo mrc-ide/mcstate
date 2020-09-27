@@ -75,14 +75,15 @@ To demonstrate this, we will attempt to infer the parameters $\beta$ and $\gamma
 
 ```{r}
 # Set up model
-incidence <- t(read.table("vignettes/sir_incidence_data.txt", sep=",", header = F))
+incidence <- t(read.table("sir_incidence_data.txt", sep=",", header = F))
+incidence <- data.frame(cases = incidence[, 1], day = seq_len(100), row.names = NULL)
 ```
 
 This can then be processed with `mcstate::particle_filter_data()` as follows, taking four update steps between every observation (generally decreasing $dt$ will improve resolution, especially if rates of change are high, at the expense of extra computation time):
 
 ```{r paged.print=TRUE, layout="l-body-outset"}
 dt <- 0.25
-sir_data <- mcstate::particle_filter_data(data = incidence_data[,1],
+sir_data <- mcstate::particle_filter_data(data = incidence,
                                           time = "day", 
                                           rate = 1/dt)
 rmarkdown::paged_table(sir_data)
@@ -101,13 +102,33 @@ case_compare <- function(state, prev_state, observed, pars = NULL) {
   exp_noise <- 1e6
   
   incidence_modelled <-
-    prev_state[2, , drop = TRUE] - state[2, , drop = TRUE]
+    prev_state[1, , drop = TRUE] - state[1, , drop = TRUE]
   incidence_observed <- observed$cases
   lambda <- incidence_modelled +
     rexp(n = length(incidence_modelled), rate = exp_noise)
   dpois(x = incidence_observed, lambda = lambda, log = TRUE)
 }
 ```
+
+We can use the `info()` method on a dust model to inspect what order the state variables will come in:
+
+```{r}
+gen_sir$new(data = list(), step = 0, n_particles = 1L)$info()
+```
+
+The SIR example actually outputs incidence directly as part of the state, so the comparison function can be written without needing to recalculate this:
+
+```{r}
+incidence_compare <- function(state, prev_state, observed, pars = NULL) {
+  exp_noise <- 1e6
+  
+  lambda <- state[4, , drop = TRUE] +
+    rexp(n = length(incidence_modelled), rate = exp_noise)
+  dpois(x = observed$cases, lambda = lambda, log = TRUE)
+}
+```
+
+Just some of the state can be extracted for the comparison function, which is demonstrated below.
 
 ## Inferring parameters
 
@@ -123,27 +144,28 @@ filter <- mcstate::particle_filter$new(data = sir_data,
                                        seed = 1L)
 ```
 
-We can now run the particle filter forward, which will run and resample 100 trajectories, and return the final likelihood. It is important to set the correct time-step $dt$ here, as we are using 0.25, rather than the default value of 1 defined in the odin model.
+We can now run the particle filter forward, which will run and resample 100 trajectories, and return the final likelihood. It is important to set the correct time-step $dt$ here, as we are using 0.25, rather than the default value of 1 defined in the odin model. We will also save the history, which allows us to plot the particle trajectories, as well as use the likelihood:
 
 ```{r}
 filter$run(save_history = TRUE, pars = list(dt = dt))
 ```
 
-If we plot these along with the data, we can see compared to above that only trajectories consistent with the data are kept, and the variance between particles has been reduced:
+If we plot these along with the data, we can see compared to above that only trajectories consistent with the data are kept, and the variance between particles has been reduced compared to the simulations shown in the `odin.dust` vignette:
 
 ```{r fig.height=5, fig.width=7}
 history <- filter$history()
+true_history <- readRDS("sir_true_history.rds")
 
 par(mar = c(4.1, 5.1, 0.5, 0.5), las = 1)
-matplot(incidence_data$day, t(history[2, , -1]), type = "l",
+cols <- c(S = "#8c8cd9", I = "#cc0044", R = "#999966")
+matplot(incidence$day, t(history[1, , -1]), type = "l",
         xlab = "Time", ylab = "Number of individuals",
-        col = "#999966", lty = 1, ylim = range(history))
-matlines(incidence_data$day, t(history[3, , -1]), col = "#8c8cd9", lty = 1)
-matlines(incidence_data$day, t(history[4, , -1]), col = "#cc0044", lty = 1)
-matpoints(incidence_data$day, t(true_history[2:4, , -1]), pch = 19,
-          col = c("#999966", "#8c8cd9", "#cc0044"))
-legend("left", lwd = 1, col = c("#999966", "#8c8cd9", "#cc0044"), 
-       legend = c("S", "I", "R"), bty = "n")
+        col = cols[["S"]], lty = 1, ylim = range(history))
+matlines(incidence$day, t(history[2, , -1]), col = cols[["I"]], lty = 1)
+matlines(incidence$day, t(history[3, , -1]), col = cols[["R"]], lty = 1)
+matpoints(incidence$day, t(true_history[1:3, , -1]), pch = 19,
+          col = cols)
+legend("left", lwd = 1, col = cols, legend = names(cols), bty = "n")
 ```
 
 Doing the same with a $\beta$ and $\gamma$ which are further from the truth yields a lower likelihood:
