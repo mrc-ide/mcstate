@@ -203,7 +203,7 @@ The proposals for each MCMC step are also set here. Proposals are drawn from a m
 
 The sampler can now be run using these parameters, and the particle filter defined above. Taking 2000 steps on a single chains:
 
-```{r pmcmc_combined}
+```{r pmcmc_combined, fig.height=5, fig.width=7}
 pmcmc_run <- 
   mcstate::pmcmc(
     mcmc_pars,
@@ -255,7 +255,7 @@ proposal_matrix
 
 Let's now run four independent chains with these proposals:
 
-```{r}
+```{r, fig.height=10, fig.width=14}
 pmcmc_tuned_run <- 
   mcstate::pmcmc(
     mcmc_pars,
