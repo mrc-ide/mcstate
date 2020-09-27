@@ -57,7 +57,7 @@ To learn how to implement this yourself, see the vignette over at [`odin.dust`](
 
 # Inferring parameters with mcstate
 
-Typically these models will be used in conjunction with observed data to infer the most likely parameter values, most likely trajectories up to the present (nowcast), and make forecasts using these parameters. The `mcstate` package implements particle filter and pMCMC methods to make all of this this possible from `dust` models.
+Typically these models will be used in conjunction with observed data to infer the highest posterior density values for model parameters, most likely trajectories up to the present (nowcast), and make forecasts using these parameters. The `mcstate` package implements particle filter and [pMCMC](https://dx.doi.org/10.1016/j.epidem.2019.100363) methods to make all of this this possible from `dust` models.
 
 A comparison function is needed to define a likelihood, i.e. the probability of observing this trajectory, given the data. This is combined with a prior to generate a posterior distribution for each parameter, which in the SIR model gives the distribution of likely values for $\beta$ and $\gamma$. 
 
