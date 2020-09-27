@@ -208,52 +208,6 @@ processed_chains
 apply(processed_chains$pars, 2, mean)
 ```
 
-### Optimal use of parallelisation
-
-Note that we run four separate chains in serial here. If you have $m$ nodes available, each with $n$ cores, the most efficient way to run this step is to set `nthreads = n` on the filters, and run $m$ independent chains, one on each node setting `n_chains = 1`.
-
-For threads to take effect, `openmp` must be enabled in the compilation step, which you can check by running:
-
-```{r}
-gen_sir$public_methods$has_openmp()
-```
-
-These independent results can then be collected using `pmcmc_combine()`:
-
-```{r pmcmc_serial}
-pmcmc1 <- 
-  pmcmc(
-    mcmc_pars,
-    filter,
-    2000,
-    save_state = TRUE,
-    save_trajectories = FALSE,
-    progress = TRUE,
-    n_chains = 1
-  )
-pmcmc2 <- 
-  pmcmc(
-    mcmc_pars,
-    filter,
-    2000,
-    save_state = TRUE,
-    save_trajectories = FALSE,
-    progress = TRUE,
-    n_chains = 1
-  )
-pmcmc3 <- 
-  pmcmc(
-    mcmc_pars,
-    filter,
-    2000,
-    save_state = TRUE,
-    save_trajectories = FALSE,
-    progress = TRUE,
-    n_chains = 1
-  )
-pmcmc_distributed_run <- pmcmc_combine(pmcmc1, pmcmc2, pmcmc3)
-```
-
 The resulting objects can also be analysed in a typical MCMC analysis package such as [`coda`](https://cran.r-project.org/web/packages/coda/index.html). 
 
 ```{r coda_plots, fig.height=10, fig.width=14}
