@@ -31,10 +31,10 @@ Suggests:
     knitr,
     mockery,
     mvtnorm,
-    odin.dust (>= 0.0.9)
+    odin.dust (>= 0.0.9),
     rmarkdown,
     testthat,
-    withr,
+    withr
 RoxygenNote: 7.1.1
 Roxygen: list(markdown = TRUE)
 Remotes:
