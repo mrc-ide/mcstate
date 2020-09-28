@@ -85,13 +85,14 @@ incidence <- data.frame(cases = incidence[, 1], day = seq_len(100), row.names = 
 
 This can then be processed with `mcstate::particle_filter_data()` as follows, taking four update steps between every observation (generally decreasing $dt$ will improve resolution, especially if rates of change are high, at the expense of extra computation time):
 
-```{r paged.print=TRUE, layout="l-body-outset"}
+```{r paged.print=TRUE, layout="l-body-outset", fig.height=5, fig.width=7}
 dt <- 0.25
 sir_data <- mcstate::particle_filter_data(data = incidence,
                                           time = "day",
                                           rate = 1/dt)
 rmarkdown::paged_table(sir_data)
-plot(incidence$day, incidence$cases, type = "l")
+plot(incidence$day, incidence$cases, 
+     type = "l", xlab = "Day", ylab = "New cases")
 ```
 
 More complex models may have additional data streams added as further columns (e.g. deaths, hospital admissions). This will be fed as observed data to the compare function, which will combine and compute the evidence for the current model state.
