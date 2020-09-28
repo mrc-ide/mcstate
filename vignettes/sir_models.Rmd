@@ -47,8 +47,8 @@ R_{t+1} &= R_t - n_{IR}
 
 where
 $$\begin{align*} 
-n_{SI} &\sim B(S, 1 - e^{-\beta \frac{I}{N} \cdot dt)} \\
-n_{IR} &\sim B(I, 1 - e^{-\gamma \cdot dt)}
+n_{SI} &\sim B(S, 1 - e^{-\beta \frac{I}{N} \cdot dt}) \\
+n_{IR} &\sim B(I, 1 - e^{-\gamma \cdot dt})
 \end{align*}$$
 
 This example is included with the `dust` package, and can be loaded with:
@@ -91,6 +91,7 @@ sir_data <- mcstate::particle_filter_data(data = incidence,
                                           time = "day", 
                                           rate = 1/dt)
 rmarkdown::paged_table(sir_data)
+plot(incidence$day, incidence$cases, type = "l")
 ```
 
 More complex models may have additional data streams added as further columns (e.g. deaths, hospital admissions). This will be fed as observed data to the compare function, which will combine and compute the evidence for the current model state.
@@ -202,7 +203,7 @@ proposal_matrix <- matrix(c(0.01, 0, 0, 0.01), nrow = 2, ncol = 2, byrow = TRUE)
 mcmc_pars <- mcstate::pmcmc_parameters$new(list(beta = beta, gamma = gamma), proposal_matrix)
 ```
 
-The proposals for each MCMC step are also set here. Proposals are drawn from a multi-variate normal distribution, with the variance-covariance matrix set here. In this case we have simply set $\beta_{n+1} \sim N(\beta_{n}, 0.01)$ and $\gamma_{n+1} \sim N(\gamma_{n}, 0.01)$ i.e. no covariance. We show how to improve this below.
+The proposals for each MCMC step are also set here. Proposals are drawn from a multi-variate normal distribution, with the variance-covariance matrix set here. In this case we have simply set $\beta_{n+1} \sim N(\beta_{n}, 0.01)$ and $\gamma_{n+1} \sim N(\gamma_{n}, 0.01)$ so there is no covariance. We show how to improve this below.
 
 The sampler can now be run using these parameters, and the particle filter defined above. Taking 2000 steps on a single chains:
 
@@ -248,7 +249,7 @@ effectiveSize(mcmc1)
 1 - rejectionRate(mcmc1)
 ```
 
-Clearly the acceptance rate is too low. Generally a target of 0.5, reducing to 0.234 as the number of parameters increases [is thought to be optimal](https://dx.doi.org/10.1016/j.spa.2007.12.005). The proposal distribution needs to be modified, in this case reducing the variance of the jump sizes. One option to automate this process is to run a chain for a bit, as above, then use the covariance of the state as the proposal matrix:
+Clearly the acceptance rate is too low. Generally a target of 0.5, reducing to 0.234 as the number of parameters increases, [is thought to be optimal](https://dx.doi.org/10.1016/j.spa.2007.12.005). The proposal distribution needs to be modified, in this case reducing the variance of the jump sizes. One option to automate this process is to run a chain for a bit, as above, then use the covariance of the state as the proposal matrix:
 
 ```{r}
 proposal_matrix <- cov(pmcmc_run$pars)
@@ -310,7 +311,7 @@ Up to $t = 100$ is the nowcast, from $t = 100$ to $t = 200$ is the forecast.
 The set up of the particle filter and observation function makes it easy to fit to multiple datastreams within a Bayesian framework. Let us model a disease where a proportion of infected cases $p_{\mathrm{death}} = 0.05$ die rather than recover by adding the following lines to the odin code:
 
 ```{r pkg_dust_r, echo = FALSE, results = "asis"}
-r_output(readLines(file.path(path, "vignettes/deaths.R")))
+r_output(readLines(file.path("deaths.R")))
 ```
 
 
@@ -340,11 +341,16 @@ For models with a very large state space returning only those compartments requi
 
 ```{r}
 index <- function(info) {
-  list(run = c(info$index$S, info$index$D), 
-       state = c(info$index$S, info$index$I, info$index$R, info$index$D))
+  list(run = c(info$index$S,
+               info$index$D), 
+       state = c(info$index$S,
+                 info$index$I,
+                 info$index$R,
+                 info$index$D))
 }
 
-index(sir_death$info())
+death_model <- gen_death$new(data = list(), step = 0, n_particles = 1L)
+index(death_model$info())
 ```
 
 Which sends the comparison function the indices listed under `run`, in this case the number of susceptibles, and saves any compartments listed under `state` if the history is kept. In the `compare()` function the index of `state` now corresponds to `index$run`. The missing data must be checked for, and contribute 0 to the likelihood if found:
@@ -367,11 +373,9 @@ ll_pois <- function(obs, model) {
 # Sum log likelihoods from each datastream
 combined_compare <- function(state, prev_state, observed, pars = NULL) {
   ll_cases <- ll_pois(observed$cases, 
-                      prev_state[1, , drop = TRUE] - state[1, , drop = TRUE],
-                      exp_noise)
+                      prev_state[1, , drop = TRUE] - state[1, , drop = TRUE])
   ll_deaths <- ll_pois(observed$deaths, 
-                      state[2, , drop = TRUE] - prev_state[2, , drop = TRUE],
-                      exp_noise)
+                      state[2, , drop = TRUE] - prev_state[2, , drop = TRUE])
   
   ll_cases + ll_deaths
 }
@@ -380,14 +384,14 @@ combined_compare <- function(state, prev_state, observed, pars = NULL) {
 This can be used to set up a particle filter as before:
 
 ```{r}
-n_particles <- 100
-filter <- particle_filter$new(data = combined_data,
-                              model = gen_death,
-                              n_particles = n_particles,
-                              compare = combined_compare,
-                              index = index,
-                              n_threads = 4L,
-                              seed = 1L)
+n_particles <- 100L
+filter <- mcstate::particle_filter$new(data = combined_data,
+                                       model = gen_death,
+                                       n_particles = n_particles,
+                                       compare = combined_compare,
+                                       index = index,
+                                       n_threads = 4L,
+                                       seed = 1L)
 filter$run(save_history = FALSE, pars = list(dt = dt))
 ```
 
