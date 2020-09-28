@@ -2,7 +2,7 @@
 title: "Validation of SMC using a Kalman filter"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{sir_models}
+  %\VignetteIndexEntry{kalman}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

@@ -30,7 +30,7 @@ Below we describe a typical use case for infectious disease: given daily case co
 # Stochastic SIR model definition
 
 A simple definition of the SIR model, as given in the [odin documentation](https://mrc-ide.github.io/odin/articles/discrete.html) is:
-$$\begin{align*} 
+$$\begin{align*}
 \frac{dS}{dt} &= -\beta \frac{SI}{N} \\
 \frac{dI}{dt} &= \beta \frac{SI}{N} - \gamma I \\
 \frac{dR}{dt} &= \gamma I \\
@@ -39,14 +39,14 @@ $S$ is the number of susceptibles, $I$ is the number of infected and $R$ is the 
 
 Discretising this model in time steps of width $dt$ gives the following update equations for each time step:
 
-$$\begin{align*} 
+$$\begin{align*}
 S_{t+1} &= S_t - n_{SI} \\
 I_{t+1} &= I_t + n_{SI} - n_{IR} \\
 R_{t+1} &= R_t - n_{IR}
 \end{align*}$$
 
 where
-$$\begin{align*} 
+$$\begin{align*}
 n_{SI} &\sim B(S, 1 - e^{-\beta \frac{I}{N} \cdot dt}) \\
 n_{IR} &\sim B(I, 1 - e^{-\gamma \cdot dt})
 \end{align*}$$
@@ -63,7 +63,7 @@ To learn how to implement this yourself, see the vignette over at [`odin.dust`](
 
 Typically these models will be used in conjunction with observed data to infer the highest posterior density values for model parameters, most likely trajectories up to the present (nowcast), and make forecasts using these parameters. The `mcstate` package implements particle filter and [pMCMC](https://dx.doi.org/10.1016/j.epidem.2019.100363) methods to make all of this this possible from `dust` models.
 
-A comparison function is needed to define a likelihood, i.e. the probability of observing this trajectory, given the data. This is combined with a prior to generate a posterior distribution for each parameter, which in the SIR model gives the distribution of likely values for $\beta$ and $\gamma$. 
+A comparison function is needed to define a likelihood, i.e. the probability of observing this trajectory, given the data. This is combined with a prior to generate a posterior distribution for each parameter, which in the SIR model gives the distribution of likely values for $\beta$ and $\gamma$.
 
 This is straightforward for a deterministic model, but for a stochastic model over a long time-series, trajectories can quickly become inconsistent with the data, and the massive space of potential outcomes makes downstream sampling highly inefficient. `mcstate` therefore implements a particle filter, also known as sequential Monte Carlo (SMC), which runs multiple trajectories, and at each stage where data is available resamples them in proportion to their likelihood, keeping only those trajectories close to the data, and with likelihoods that are plausibly important parts of the posterior. Importantly, this technique produces an unbiased estimate of the likelihood for a given set of parameters.
 
@@ -88,7 +88,7 @@ This can then be processed with `mcstate::particle_filter_data()` as follows, ta
 ```{r paged.print=TRUE, layout="l-body-outset"}
 dt <- 0.25
 sir_data <- mcstate::particle_filter_data(data = incidence,
-                                          time = "day", 
+                                          time = "day",
                                           rate = 1/dt)
 rmarkdown::paged_table(sir_data)
 plot(incidence$day, incidence$cases, type = "l")
@@ -105,7 +105,7 @@ For this model the number of cases can be calculated from the change in suscepti
 ```{r}
 case_compare <- function(state, prev_state, observed, pars = NULL) {
   exp_noise <- 1e6
-  
+
   incidence_modelled <-
     prev_state[1, , drop = TRUE] - state[1, , drop = TRUE]
   incidence_observed <- observed$cases
@@ -126,7 +126,7 @@ The SIR example actually outputs incidence directly as part of the state, so the
 ```{r}
 incidence_compare <- function(state, prev_state, observed, pars = NULL) {
   exp_noise <- 1e6
-  
+
   lambda <- state[4, , drop = TRUE] +
     rexp(n = length(incidence_modelled), rate = exp_noise)
   dpois(x = observed$cases, lambda = lambda, log = TRUE)
@@ -162,7 +162,7 @@ plot_particle_filter <- function(history, true_history, times, obs_end = NULL) {
   if (is.null(obs_end)) {
     obs_end = max(times)
   }
-  
+
   par(mar = c(4.1, 5.1, 0.5, 0.5), las = 1)
   cols <- c(S = "#8c8cd9", I = "#cc0044", R = "#999966")
   matplot(times, t(history[1, , -1]), type = "l",
@@ -194,8 +194,8 @@ Using this, we can do a MCMC using the Metropolis-Hastings algorithm to infer th
 
 ```{r}
 beta <- mcstate::pmcmc_parameter("beta", 0.2, min = 0)
-gamma <- mcstate::pmcmc_parameter("gamma", 0.1, min = 0, 
-                         prior = function(p) 
+gamma <- mcstate::pmcmc_parameter("gamma", 0.1, min = 0,
+                         prior = function(p)
                            dgamma(p, shape = 1, scale = 0.2, log = TRUE)
                          )
 
@@ -208,7 +208,7 @@ The proposals for each MCMC step are also set here. Proposals are drawn from a m
 The sampler can now be run using these parameters, and the particle filter defined above. Taking 2000 steps on a single chains:
 
 ```{r pmcmc_combined, fig.height=5, fig.width=7}
-pmcmc_run <- 
+pmcmc_run <-
   mcstate::pmcmc(
     mcmc_pars,
     filter,
@@ -260,7 +260,7 @@ proposal_matrix
 Let's now run four independent chains with these proposals:
 
 ```{r, fig.height=10, fig.width=14}
-pmcmc_tuned_run <- 
+pmcmc_tuned_run <-
   mcstate::pmcmc(
     mcmc_pars,
     filter,
@@ -289,18 +289,18 @@ effectiveSize(mcmc2)
 Going back to the simple SIR model above, we can easily continue running the fitted model forward in time using the posterior estimated by `pmcmc()` to create a forecast past the end of the data:
 
 ```{r fig.height=5, fig.width=7}
-forecast <- predict(processed_chains, 
-                    steps = seq(400, 800, 4), 
-                    n_threads = 4L, 
+forecast <- predict(processed_chains,
+                    steps = seq(400, 800, 4),
+                    n_threads = 4L,
                     prepend_trajectories = TRUE,
                     seed = processed_chains$predict$seed)
 
 # Sample 10 particles
 mini_forecast <- forecast$state[,sample.int(ncol(forecast$state), size = 10),]
 
-plot_particle_filter(mini_forecast, 
-                     true_history, 
-                     seq_len(200), 
+plot_particle_filter(mini_forecast,
+                     true_history,
+                     seq_len(200),
                      obs_end = max(incidence$day))
 ```
 
@@ -335,14 +335,14 @@ combined_data <- mcstate::particle_filter_data(
 rmarkdown::paged_table(combined_data)
 ```
 
-We then need to add this into our comparison function, and in doing so we will also demonstrate the use of the `index` parameter for the particle filter. 
+We then need to add this into our comparison function, and in doing so we will also demonstrate the use of the `index` parameter for the particle filter.
 
 For models with a very large state space returning only those compartments required by the comparison function can be important for efficiency. The only model outputs needed from the comparison function are $S$ and $D$. So, an index function to extract just this part of the state can be defined, which operates on dust generators `info()`:
 
 ```{r}
 index <- function(info) {
   list(run = c(info$index$S,
-               info$index$D), 
+               info$index$D),
        state = c(info$index$S,
                  info$index$I,
                  info$index$R,
@@ -372,11 +372,11 @@ ll_pois <- function(obs, model) {
 
 # Sum log likelihoods from each datastream
 combined_compare <- function(state, prev_state, observed, pars = NULL) {
-  ll_cases <- ll_pois(observed$cases, 
+  ll_cases <- ll_pois(observed$cases,
                       prev_state[1, , drop = TRUE] - state[1, , drop = TRUE])
-  ll_deaths <- ll_pois(observed$deaths, 
+  ll_deaths <- ll_pois(observed$deaths,
                       state[2, , drop = TRUE] - prev_state[2, , drop = TRUE])
-  
+
   ll_cases + ll_deaths
 }
 ```
