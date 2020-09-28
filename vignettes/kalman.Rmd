@@ -12,6 +12,9 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+lang_output <- function(x, lang) {
+  cat(c(sprintf("```%s", lang), x, "```"), sep = "\n")
+}
 r_output <- function(x) lang_output(x, "r")
 cc_output <- function(x) lang_output(x, "cc")
 ```
@@ -46,7 +49,7 @@ data <- local({
 })
 ```
 
-```{r volatility_data_show}
+```{r volatility_data_show, fig.height=5, fig.width=7}
 head(data)
 plot(value ~ step, data, type = "o", pch = 19, las = 1)
 ```
@@ -80,7 +83,7 @@ pars <- list(
 
 and preprocess the data into the correct format:
 
-```
+```{r}
 volatility_data <- mcstate::particle_filter_data(data, "step", 1)
 head(volatility_data)
 ```
@@ -139,13 +142,13 @@ ll_k
 
 Unlike the particle filter the Kalman filter is deterministic:
 
-```
+```{r}
 kalman_filter(pars$alpha, pars$sigma, pars$gamma, pars$tau, volatility_data)
 ```
 
 However, the particle filter, run multiple times, will create a distribution centred on this likelihood:
 
-```
+```{r fig.height=5, fig.width=7}
 ll <- replicate(200, filter$run(pars))
 hist(ll, col = "steelblue3")
 abline(v = ll_k, col = "red", lty = 2, lwd = 2)
@@ -153,7 +156,7 @@ abline(v = ll_k, col = "red", lty = 2, lwd = 2)
 
 As the number of particles used changes, the variance of this estimate will change
 
-```
+```{r fig.height=5, fig.width=7}
 filter2 <- mcstate::particle_filter$new(volatility_data, volatility, 100,
                                        compare = volatility_compare,
                                        initial = volatility_initial)
@@ -172,8 +175,8 @@ dim(filter$history())
 
 This is a _N_ state (here 1) x _N_ particles (1000) x _N_ time steps (100) 3d array, but we will drop the first rank of this for plotting
 
-```{r}
-matplot(0:100, t(drop(filter$history())), xlab = "Step", ylab = "Value"
+```{r fig.height=5, fig.width=7}
+matplot(0:100, t(drop(filter$history())), xlab = "Step", ylab = "Value",
         las = 1, type = "l", lty = 1, col = "#00000002")
 points(value ~ step, data, col = "steelblue3", pch = 19)
 ```
