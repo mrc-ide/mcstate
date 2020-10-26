@@ -24,12 +24,20 @@ Imports:
     dust (>= 0.4.6),
     progress (>= 1.2.0)
 Suggests:
+    brio,
     coda,
+    decor,
+    fs,
+    knitr,
     mockery,
     mvtnorm,
+    odin.dust (>= 0.0.9),
+    rmarkdown,
     testthat,
     withr
 RoxygenNote: 7.1.1
 Roxygen: list(markdown = TRUE)
 Remotes:
-    mrc-ide/dust
+    mrc-ide/dust,
+    mrc-ide/odin.dust
+VignetteBuilder: knitr

@@ -1,0 +1,50 @@
+---
+title: "Parallelisation of inference"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{parallelisation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+In the SIR model vignette we ran four separate MCMC chains in serial. For more computationally intensive models you can speed this up if you have many CPU cores available. If you have $m$ nodes available, each with $n$ cores, the most efficient way to run this step is to set `nthreads = n` on the filters, and run $m$ independent chains, one on each node setting `n_chains = 1`.
+
+Conversely, if your model is quick to run, like the SIR example, it will likely be more efficient to use cores first two run parallel chains instead of parallel particles.
+
+For threads to take effect when running particles, `openmp` must be enabled in the compilation step, which you can check by running:
+
+```{r}
+gen_sir <- dust::dust_example("sir")
+gen_sir$public_methods$has_openmp()
+```
+
+Independent chain results can then be collected using `pmcmc_combine()`:
+
+```{r pmcmc_parallel, eval = FALSE}
+n_chains <- 3
+cl <- doParallel::makeCluster(n_chains)
+doParallel::registerDoParallel(cl)
+
+pmcmc_list <- rep(NA, n_chains)
+foreach(i = 1:n_chains) %dopar% {
+  pmcmc_list[i] <-
+    pmcmc(
+      mcmc_pars,
+      filter,
+      2000,
+      save_state = TRUE,
+      save_trajectories = FALSE,
+      progress = TRUE,
+      n_chains = 1
+    )
+}
+
+pmcmc_distributed_run <- pmcmc_combine(pmcmc_list)
+```
