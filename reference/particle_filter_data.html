@@ -100,6 +100,24 @@ into model steps." />
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Articles
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/kalman.html">Validation of SMC using a Kalman filter</a>
+    </li>
+    <li>
+      <a href="../articles/parallelisation.html">Parallelisation of inference</a>
+    </li>
+    <li>
+      <a href="../articles/sir_models.html">SIR models with odin, dust and mcstate</a>
+    </li>
+  </ul>
+</li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
@@ -135,7 +153,7 @@ including some measure of "time".  We need to convert this time
 into model steps.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>particle_filter_data</span>(<span class='no'>data</span>, <span class='no'>time</span>, <span class='no'>rate</span>, <span class='kw'>initial_time</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</pre>
+    <pre class="usage"><span class='fu'>particle_filter_data</span><span class='op'>(</span><span class='va'>data</span>, <span class='va'>time</span>, <span class='va'>rate</span>, initial_time <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -183,8 +201,9 @@ the data in the first column is recorded at the end of a period of
 10 and at that period the data has value 100.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='no'>d</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></span>(<span class='kw'>day</span> <span class='kw'>=</span> <span class='fl'>5</span>:<span class='fl'>20</span>, <span class='kw'>y</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/stats/Uniform.html'>runif</a></span>(<span class='fl'>16</span>))
-<span class='kw pkg'>mcstate</span><span class='kw ns'>::</span><span class='fu'>particle_filter_data</span>(<span class='no'>d</span>, <span class='st'>"day"</span>, <span class='fl'>4</span>)</div><div class='output co'>#&gt;    day_start day_end step_start step_end          y
+    <pre class="examples"><div class='input'><span class='va'>d</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></span><span class='op'>(</span>day <span class='op'>=</span> <span class='fl'>5</span><span class='op'>:</span><span class='fl'>20</span>, y <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/stats/Uniform.html'>runif</a></span><span class='op'>(</span><span class='fl'>16</span><span class='op'>)</span><span class='op'>)</span>
+<span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'>particle_filter_data</span><span class='op'>(</span><span class='va'>d</span>, <span class='st'>"day"</span>, <span class='fl'>4</span><span class='op'>)</span>
+</div><div class='output co'>#&gt;    day_start day_end step_start step_end          y
 #&gt; 1          4       5         16       20 0.18674532
 #&gt; 2          5       6         20       24 0.28470412
 #&gt; 3          6       7         24       28 0.15976352
@@ -203,7 +222,8 @@ the data in the first column is recorded at the end of a period of
 #&gt; 16        19      20         76       80 0.50469140</div><div class='input'>
 <span class='co'># If providing an initial day, then the first epoch of simulation</span>
 <span class='co'># will be longer (see the first row)</span>
-<span class='kw pkg'>mcstate</span><span class='kw ns'>::</span><span class='fu'>particle_filter_data</span>(<span class='no'>d</span>, <span class='st'>"day"</span>, <span class='fl'>4</span>, <span class='fl'>0</span>)</div><div class='output co'>#&gt;    day_start day_end step_start step_end          y
+<span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'>particle_filter_data</span><span class='op'>(</span><span class='va'>d</span>, <span class='st'>"day"</span>, <span class='fl'>4</span>, <span class='fl'>0</span><span class='op'>)</span>
+</div><div class='output co'>#&gt;    day_start day_end step_start step_end          y
 #&gt; 1          0       5          0       20 0.18674532
 #&gt; 2          5       6         20       24 0.28470412
 #&gt; 3          6       7         24       28 0.15976352
@@ -235,7 +255,7 @@ the data in the first column is recorded at the end of a period of
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

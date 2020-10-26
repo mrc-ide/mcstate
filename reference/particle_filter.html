@@ -97,6 +97,24 @@ interface will be implemented later." />
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Articles
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/kalman.html">Validation of SMC using a Kalman filter</a>
+    </li>
+    <li>
+      <a href="../articles/parallelisation.html">Parallelisation of inference</a>
+    </li>
+    <li>
+      <a href="../articles/sir_models.html">SIR models with odin, dust and mcstate</a>
+    </li>
+  </ul>
+</li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
@@ -133,7 +151,7 @@ interface will be implemented later.</p>
 
     <h2 class="hasAnchor" id="public-fields"><a class="anchor" href="#public-fields"></a>Public fields</h2>
 
-    <p><div class="r6-fields"></p><dl'>
+    <p><div class="r6-fields"></p><dl>
 <dt><code>model</code></dt><dd><p>The dust model generator being simulated (cannot be
 re-bound)</p></dd>
 
@@ -146,7 +164,7 @@ at each step that has been run</p></dd>
     <h2 class="hasAnchor" id="methods"><a class="anchor" href="#methods"></a>Methods</h2>
 
     
-<h3>Public methods</h3>
+<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Public methods</h3>
 
 <ul>
 <li><p><a href='#method-new'><code>particle_filter$new()</code></a></p></li>
@@ -156,21 +174,21 @@ at each step that has been run</p></dd>
 <li><p><a href='#method-inputs'><code>particle_filter$inputs()</code></a></p></li>
 </ul>
 <p><hr>
-<a id="method-new"></a></p><h3>Method <code>new()</code></h3>
-<p>Create the particle filter</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>particle_filter</span>$<span class='fu'>new</span>(
-  <span class='no'>data</span>,
-  <span class='no'>model</span>,
-  <span class='no'>n_particles</span>,
-  <span class='no'>compare</span>,
-  <span class='kw'>index</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>initial</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>n_threads</span> <span class='kw'>=</span> <span class='fl'>1L</span>,
-  <span class='kw'>seed</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
-)</pre><p></div></p>
+<a id="method-new"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>new()</code></h3>
+<p>Create the particle filter</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>particle_filter</span><span class='op'>$</span><span class='fu'>new</span><span class='op'>(</span>
+  <span class='va'>data</span>,
+  <span class='va'>model</span>,
+  <span class='va'>n_particles</span>,
+  <span class='va'>compare</span>,
+  index <span class='op'>=</span> <span class='cn'>NULL</span>,
+  initial <span class='op'>=</span> <span class='cn'>NULL</span>,
+  n_threads <span class='op'>=</span> <span class='fl'>1L</span>,
+  seed <span class='op'>=</span> <span class='cn'>NULL</span>
+<span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
 <dt><code>data</code></dt><dd><p>The data set to be used for the particle filter,
 created by <code><a href='particle_filter_data.html'>particle_filter_data()</a></code>. This is essentially
 a <code><a href='https://rdrr.io/r/base/data.frame.html'>data.frame()</a></code> with at least columns <code>step_start</code>
@@ -240,13 +258,13 @@ Run the particle filter</p></dd>
 
 </dl><p></div></p>
 <p><hr>
-<a id="method-run"></a></p><h3>Method <code>run()</code></h3>
+<a id="method-run"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>run()</code></h3>
 
-<h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>particle_filter</span>$<span class='fu'>run</span>(<span class='kw'>pars</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(), <span class='kw'>save_history</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre><p></div></p>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>particle_filter</span><span class='op'>$</span><span class='fu'>run</span><span class='op'>(</span>pars <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='op'>)</span>, save_history <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
 <dt><code>pars</code></dt><dd><p>A list representing parameters. This will be passed as
 the <code>pars</code> argument to your model, to your <code>compare</code>
 function, and (if using) to your <code>initial</code> function. It must
@@ -262,100 +280,105 @@ particles should be saved. If saving history, then it can be
 queried later with the <code>$history</code> method on the object.</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A single numeric value representing the log-likelihood
 (<code>-Inf</code> if the model is impossible)</p>
 <p><hr>
-<a id="method-state"></a></p><h3>Method <code><a href='https://rdrr.io/r/datasets/state.html'>state()</a></code></h3>
+<a id="method-state"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code><a href='https://rdrr.io/r/datasets/state.html'>state()</a></code></h3>
 <p>Extract the current model state, optionally filtering.
 If the model has not yet been run, then this method will throw an
 error. Returns a matrix with the number of rows being the number of
 model states, and the number of columns being the number of
-particles.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>particle_filter</span>$<span class='fu'><a href='https://rdrr.io/r/datasets/state.html'>state</a></span>(<span class='kw'>index_state</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</pre><p></div></p>
+particles.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>particle_filter</span><span class='op'>$</span><span class='fu'>state</span><span class='op'>(</span>index_state <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
 <dt><code>index_state</code></dt><dd><p>Optional vector of states to extract</p></dd>
 
 </dl><p></div></p>
 <p><hr>
-<a id="method-history"></a></p><h3>Method <code><a href='https://rdrr.io/r/utils/savehistory.html'>history()</a></code></h3>
+<a id="method-history"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code><a href='https://rdrr.io/r/utils/savehistory.html'>history()</a></code></h3>
 <p>Extract the particle trajectories. Requires that
 the model was run with <code>save_history = TRUE</code>, which does
 incur a performance cost. This method will throw an error if
 the model has not run, or was run without <code>save_history = TRUE</code>. Returns a 3d array with dimensions corresponding to (1)
 model state, filtered by <code>index$run</code> if provided, (2)
 particle (following <code>index_particle</code> if provided), (3)
-time point.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>particle_filter</span>$<span class='fu'><a href='https://rdrr.io/r/utils/savehistory.html'>history</a></span>(<span class='kw'>index_particle</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</pre><p></div></p>
+time point.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>particle_filter</span><span class='op'>$</span><span class='fu'>history</span><span class='op'>(</span>index_particle <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
 <dt><code>index_particle</code></dt><dd><p>Optional vector of particle indices to return.
 If <code>NULL</code> we return all particles' histories.</p></dd>
 
 </dl><p></div></p>
 <p><hr>
-<a id="method-inputs"></a></p><h3>Method <code>inputs()</code></h3>
+<a id="method-inputs"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>inputs()</code></h3>
 <p>Return a list of inputs used to configure the particle
 filter. These correspond directly to the argument names for the
 particle filter constructor and are the same as the input
 argument with the exception of <code>seed</code>, which is the state of
 the rng if it has been used (this can be used as a seed to
-restart the model).</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>particle_filter</span>$<span class='fu'>inputs</span>()</pre><p></div></p>
+restart the model).</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>particle_filter</span><span class='op'>$</span><span class='fu'>inputs</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
 
 
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='co'># A basic SIR model included in the dust package</span>
-<span class='no'>gen</span> <span class='kw'>&lt;-</span> <span class='kw pkg'>dust</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/dust/man/dust_example.html'>dust_example</a></span>(<span class='st'>"sir"</span>)
+<span class='va'>gen</span> <span class='op'>&lt;-</span> <span class='fu'>dust</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/dust/man/dust_example.html'>dust_example</a></span><span class='op'>(</span><span class='st'>"sir"</span><span class='op'>)</span>
 
 <span class='co'># Some data that we will fit to, using 1 particle:</span>
-<span class='no'>sir</span> <span class='kw'>&lt;-</span> <span class='no'>gen</span>$<span class='fu'>new</span>(<span class='kw'>data</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(), <span class='kw'>step</span> <span class='kw'>=</span> <span class='fl'>0</span>, <span class='kw'>n_particles</span> <span class='kw'>=</span> <span class='fl'>1</span>)
-<span class='no'>dt</span> <span class='kw'>&lt;-</span> <span class='fl'>1</span>/<span class='fl'>4</span>
-<span class='no'>day</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span>(<span class='fl'>1</span>, <span class='fl'>100</span>)
-<span class='no'>incidence</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/rep.html'>rep</a></span>(<span class='fl'>NA</span>, <span class='fu'><a href='https://rdrr.io/r/base/length.html'>length</a></span>(<span class='no'>day</span>))
-<span class='no'>true_history</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/array.html'>array</a></span>(<span class='fl'>NA_real_</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>4</span>, <span class='fl'>1</span>, <span class='fl'>101</span>))
-<span class='no'>true_history</span>[, <span class='fl'>1</span>, <span class='fl'>1</span>] <span class='kw'>&lt;-</span> <span class='no'>sir</span>$<span class='fu'><a href='https://rdrr.io/r/datasets/state.html'>state</a></span>()
-<span class='kw'>for</span> (<span class='no'>i</span> <span class='kw'>in</span> <span class='no'>day</span>) {
-  <span class='no'>state_start</span> <span class='kw'>&lt;-</span> <span class='no'>sir</span>$<span class='fu'><a href='https://rdrr.io/r/datasets/state.html'>state</a></span>()
-  <span class='no'>sir</span>$<span class='fu'>run</span>(<span class='no'>i</span> / <span class='no'>dt</span>)
-  <span class='no'>state_end</span> <span class='kw'>&lt;-</span> <span class='no'>sir</span>$<span class='fu'><a href='https://rdrr.io/r/datasets/state.html'>state</a></span>()
-  <span class='no'>true_history</span>[, <span class='fl'>1</span>, <span class='no'>i</span> + <span class='fl'>1</span>] <span class='kw'>&lt;-</span> <span class='no'>state_end</span>
+<span class='va'>sir</span> <span class='op'>&lt;-</span> <span class='va'>gen</span><span class='op'>$</span><span class='fu'>new</span><span class='op'>(</span>data <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='op'>)</span>, step <span class='op'>=</span> <span class='fl'>0</span>, n_particles <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span>
+<span class='va'>dt</span> <span class='op'>&lt;-</span> <span class='fl'>1</span><span class='op'>/</span><span class='fl'>4</span>
+<span class='va'>day</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>100</span><span class='op'>)</span>
+<span class='va'>incidence</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/rep.html'>rep</a></span><span class='op'>(</span><span class='cn'>NA</span>, <span class='fu'><a href='https://rdrr.io/r/base/length.html'>length</a></span><span class='op'>(</span><span class='va'>day</span><span class='op'>)</span><span class='op'>)</span>
+<span class='va'>true_history</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/array.html'>array</a></span><span class='op'>(</span><span class='cn'>NA_real_</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>4</span>, <span class='fl'>1</span>, <span class='fl'>101</span><span class='op'>)</span><span class='op'>)</span>
+<span class='va'>true_history</span><span class='op'>[</span>, <span class='fl'>1</span>, <span class='fl'>1</span><span class='op'>]</span> <span class='op'>&lt;-</span> <span class='va'>sir</span><span class='op'>$</span><span class='fu'>state</span><span class='op'>(</span><span class='op'>)</span>
+<span class='kw'>for</span> <span class='op'>(</span><span class='va'>i</span> <span class='kw'>in</span> <span class='va'>day</span><span class='op'>)</span> <span class='op'>{</span>
+  <span class='va'>state_start</span> <span class='op'>&lt;-</span> <span class='va'>sir</span><span class='op'>$</span><span class='fu'>state</span><span class='op'>(</span><span class='op'>)</span>
+  <span class='va'>sir</span><span class='op'>$</span><span class='fu'>run</span><span class='op'>(</span><span class='va'>i</span> <span class='op'>/</span> <span class='va'>dt</span><span class='op'>)</span>
+  <span class='va'>state_end</span> <span class='op'>&lt;-</span> <span class='va'>sir</span><span class='op'>$</span><span class='fu'>state</span><span class='op'>(</span><span class='op'>)</span>
+  <span class='va'>true_history</span><span class='op'>[</span>, <span class='fl'>1</span>, <span class='va'>i</span> <span class='op'>+</span> <span class='fl'>1</span><span class='op'>]</span> <span class='op'>&lt;-</span> <span class='va'>state_end</span>
   <span class='co'># Reduction in S</span>
-  <span class='no'>incidence</span>[<span class='no'>i</span>] <span class='kw'>&lt;-</span> <span class='no'>state_start</span>[<span class='fl'>1</span>, <span class='fl'>1</span>] - <span class='no'>state_end</span>[<span class='fl'>1</span>, <span class='fl'>1</span>]
-}
+  <span class='va'>incidence</span><span class='op'>[</span><span class='va'>i</span><span class='op'>]</span> <span class='op'>&lt;-</span> <span class='va'>state_start</span><span class='op'>[</span><span class='fl'>1</span>, <span class='fl'>1</span><span class='op'>]</span> <span class='op'>-</span> <span class='va'>state_end</span><span class='op'>[</span><span class='fl'>1</span>, <span class='fl'>1</span><span class='op'>]</span>
+<span class='op'>}</span>
 
 <span class='co'># Convert this into our required format:</span>
-<span class='no'>data_raw</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></span>(<span class='kw'>day</span> <span class='kw'>=</span> <span class='no'>day</span>, <span class='kw'>incidence</span> <span class='kw'>=</span> <span class='no'>incidence</span>)
-<span class='no'>data</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='particle_filter_data.html'>particle_filter_data</a></span>(<span class='no'>data_raw</span>, <span class='st'>"day"</span>, <span class='fl'>4</span>)
+<span class='va'>data_raw</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></span><span class='op'>(</span>day <span class='op'>=</span> <span class='va'>day</span>, incidence <span class='op'>=</span> <span class='va'>incidence</span><span class='op'>)</span>
+<span class='va'>data</span> <span class='op'>&lt;-</span> <span class='fu'><a href='particle_filter_data.html'>particle_filter_data</a></span><span class='op'>(</span><span class='va'>data_raw</span>, <span class='st'>"day"</span>, <span class='fl'>4</span><span class='op'>)</span>
 
 <span class='co'># A comparison function</span>
-<span class='no'>compare</span> <span class='kw'>&lt;-</span> <span class='kw'>function</span>(<span class='no'>state</span>, <span class='no'>prev_state</span>, <span class='no'>observed</span>, <span class='no'>pars</span> <span class='kw'>=</span> <span class='kw'>NULL</span>) {
-  <span class='kw'>if</span> (<span class='fu'><a href='https://rdrr.io/r/base/NULL.html'>is.null</a></span>(<span class='no'>pars</span>$<span class='no'>exp_noise</span>)) {
-    <span class='no'>exp_noise</span> <span class='kw'>&lt;-</span> <span class='fl'>1e6</span>
-  } <span class='kw'>else</span> {
-    <span class='no'>exp_noise</span> <span class='kw'>&lt;-</span> <span class='no'>pars</span>$<span class='no'>exp_noise</span>
-  }
-  <span class='no'>incidence_modelled</span> <span class='kw'>&lt;-</span> <span class='no'>prev_state</span>[<span class='fl'>1</span>,] - <span class='no'>state</span>[<span class='fl'>1</span>,]
-  <span class='no'>incidence_observed</span> <span class='kw'>&lt;-</span> <span class='no'>observed</span>$<span class='no'>incidence</span>
-  <span class='no'>lambda</span> <span class='kw'>&lt;-</span> <span class='no'>incidence_modelled</span> +
-    <span class='fu'><a href='https://rdrr.io/r/stats/Exponential.html'>rexp</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/length.html'>length</a></span>(<span class='no'>incidence_modelled</span>), <span class='no'>exp_noise</span>)
-  <span class='fu'><a href='https://rdrr.io/r/stats/Poisson.html'>dpois</a></span>(<span class='no'>incidence_observed</span>, <span class='no'>lambda</span>, <span class='kw'>log</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
-}
+<span class='va'>compare</span> <span class='op'>&lt;-</span> <span class='kw'>function</span><span class='op'>(</span><span class='va'>state</span>, <span class='va'>prev_state</span>, <span class='va'>observed</span>, <span class='va'>pars</span> <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span> <span class='op'>{</span>
+  <span class='kw'>if</span> <span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/NULL.html'>is.null</a></span><span class='op'>(</span><span class='va'>pars</span><span class='op'>$</span><span class='va'>exp_noise</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>{</span>
+    <span class='va'>exp_noise</span> <span class='op'>&lt;-</span> <span class='fl'>1e6</span>
+  <span class='op'>}</span> <span class='kw'>else</span> <span class='op'>{</span>
+    <span class='va'>exp_noise</span> <span class='op'>&lt;-</span> <span class='va'>pars</span><span class='op'>$</span><span class='va'>exp_noise</span>
+  <span class='op'>}</span>
+  <span class='va'>incidence_modelled</span> <span class='op'>&lt;-</span> <span class='va'>prev_state</span><span class='op'>[</span><span class='fl'>1</span>,<span class='op'>]</span> <span class='op'>-</span> <span class='va'>state</span><span class='op'>[</span><span class='fl'>1</span>,<span class='op'>]</span>
+  <span class='va'>incidence_observed</span> <span class='op'>&lt;-</span> <span class='va'>observed</span><span class='op'>$</span><span class='va'>incidence</span>
+  <span class='va'>lambda</span> <span class='op'>&lt;-</span> <span class='va'>incidence_modelled</span> <span class='op'>+</span>
+    <span class='fu'><a href='https://rdrr.io/r/stats/Exponential.html'>rexp</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/length.html'>length</a></span><span class='op'>(</span><span class='va'>incidence_modelled</span><span class='op'>)</span>, <span class='va'>exp_noise</span><span class='op'>)</span>
+  <span class='fu'><a href='https://rdrr.io/r/stats/Poisson.html'>dpois</a></span><span class='op'>(</span><span class='va'>incidence_observed</span>, <span class='va'>lambda</span>, log <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span>
+<span class='op'>}</span>
 
 <span class='co'># Construct the particle_filter object with 100 particles</span>
-<span class='no'>p</span> <span class='kw'>&lt;-</span> <span class='no'>particle_filter</span>$<span class='fu'>new</span>(<span class='no'>data</span>, <span class='no'>gen</span>, <span class='fl'>100</span>, <span class='no'>compare</span>)
-<span class='no'>p</span>$<span class='fu'>run</span>(<span class='kw'>save_history</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div><div class='output co'>#&gt; [1] -239.7084</div><div class='input'>
+<span class='va'>p</span> <span class='op'>&lt;-</span> <span class='va'>particle_filter</span><span class='op'>$</span><span class='fu'>new</span><span class='op'>(</span><span class='va'>data</span>, <span class='va'>gen</span>, <span class='fl'>100</span>, <span class='va'>compare</span><span class='op'>)</span>
+<span class='va'>p</span><span class='op'>$</span><span class='fu'>run</span><span class='op'>(</span>save_history <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; [1] -239.7084</div><div class='input'>
 <span class='co'># Our simulated trajectories, with the "real" data superimposed</span>
-<span class='no'>history</span> <span class='kw'>&lt;-</span> <span class='no'>p</span>$<span class='fu'><a href='https://rdrr.io/r/utils/savehistory.html'>history</a></span>()
-<span class='fu'><a href='https://rdrr.io/r/graphics/matplot.html'>matplot</a></span>(<span class='no'>data_raw</span>$<span class='no'>day</span>, <span class='fu'><a href='https://rdrr.io/r/base/t.html'>t</a></span>(<span class='no'>history</span>[<span class='fl'>1</span>, , -<span class='fl'>1</span>]), <span class='kw'>type</span> <span class='kw'>=</span> <span class='st'>"l"</span>,
-        <span class='kw'>xlab</span> <span class='kw'>=</span> <span class='st'>"Time"</span>, <span class='kw'>ylab</span> <span class='kw'>=</span> <span class='st'>"State"</span>,
-        <span class='kw'>col</span> <span class='kw'>=</span> <span class='st'>"#ff000022"</span>, <span class='kw'>lty</span> <span class='kw'>=</span> <span class='fl'>1</span>, <span class='kw'>ylim</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/range.html'>range</a></span>(<span class='no'>history</span>))</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/graphics/matplot.html'>matlines</a></span>(<span class='no'>data_raw</span>$<span class='no'>day</span>, <span class='fu'><a href='https://rdrr.io/r/base/t.html'>t</a></span>(<span class='no'>history</span>[<span class='fl'>2</span>, , -<span class='fl'>1</span>]), <span class='kw'>col</span> <span class='kw'>=</span> <span class='st'>"#ffff0022"</span>, <span class='kw'>lty</span> <span class='kw'>=</span> <span class='fl'>1</span>)</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/graphics/matplot.html'>matlines</a></span>(<span class='no'>data_raw</span>$<span class='no'>day</span>, <span class='fu'><a href='https://rdrr.io/r/base/t.html'>t</a></span>(<span class='no'>history</span>[<span class='fl'>3</span>, , -<span class='fl'>1</span>]), <span class='kw'>col</span> <span class='kw'>=</span> <span class='st'>"#0000ff22"</span>, <span class='kw'>lty</span> <span class='kw'>=</span> <span class='fl'>1</span>)</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/graphics/matplot.html'>matpoints</a></span>(<span class='no'>data_raw</span>$<span class='no'>day</span>, <span class='fu'><a href='https://rdrr.io/r/base/t.html'>t</a></span>(<span class='no'>true_history</span>[<span class='fl'>1</span>:<span class='fl'>3</span>, , -<span class='fl'>1</span>]), <span class='kw'>pch</span> <span class='kw'>=</span> <span class='fl'>19</span>,
-          <span class='kw'>col</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"red"</span>, <span class='st'>"yellow"</span>, <span class='st'>"blue"</span>))</div><div class='img'><img src='particle_filter-1.png' alt='' width='700' height='433' /></div></pre>
+<span class='va'>history</span> <span class='op'>&lt;-</span> <span class='va'>p</span><span class='op'>$</span><span class='fu'>history</span><span class='op'>(</span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/r/graphics/matplot.html'>matplot</a></span><span class='op'>(</span><span class='va'>data_raw</span><span class='op'>$</span><span class='va'>day</span>, <span class='fu'><a href='https://rdrr.io/r/base/t.html'>t</a></span><span class='op'>(</span><span class='va'>history</span><span class='op'>[</span><span class='fl'>1</span>, , <span class='op'>-</span><span class='fl'>1</span><span class='op'>]</span><span class='op'>)</span>, type <span class='op'>=</span> <span class='st'>"l"</span>,
+        xlab <span class='op'>=</span> <span class='st'>"Time"</span>, ylab <span class='op'>=</span> <span class='st'>"State"</span>,
+        col <span class='op'>=</span> <span class='st'>"#ff000022"</span>, lty <span class='op'>=</span> <span class='fl'>1</span>, ylim <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/range.html'>range</a></span><span class='op'>(</span><span class='va'>history</span><span class='op'>)</span><span class='op'>)</span>
+</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/graphics/matplot.html'>matlines</a></span><span class='op'>(</span><span class='va'>data_raw</span><span class='op'>$</span><span class='va'>day</span>, <span class='fu'><a href='https://rdrr.io/r/base/t.html'>t</a></span><span class='op'>(</span><span class='va'>history</span><span class='op'>[</span><span class='fl'>2</span>, , <span class='op'>-</span><span class='fl'>1</span><span class='op'>]</span><span class='op'>)</span>, col <span class='op'>=</span> <span class='st'>"#ffff0022"</span>, lty <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span>
+</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/graphics/matplot.html'>matlines</a></span><span class='op'>(</span><span class='va'>data_raw</span><span class='op'>$</span><span class='va'>day</span>, <span class='fu'><a href='https://rdrr.io/r/base/t.html'>t</a></span><span class='op'>(</span><span class='va'>history</span><span class='op'>[</span><span class='fl'>3</span>, , <span class='op'>-</span><span class='fl'>1</span><span class='op'>]</span><span class='op'>)</span>, col <span class='op'>=</span> <span class='st'>"#0000ff22"</span>, lty <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span>
+</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/graphics/matplot.html'>matpoints</a></span><span class='op'>(</span><span class='va'>data_raw</span><span class='op'>$</span><span class='va'>day</span>, <span class='fu'><a href='https://rdrr.io/r/base/t.html'>t</a></span><span class='op'>(</span><span class='va'>true_history</span><span class='op'>[</span><span class='fl'>1</span><span class='op'>:</span><span class='fl'>3</span>, , <span class='op'>-</span><span class='fl'>1</span><span class='op'>]</span><span class='op'>)</span>, pch <span class='op'>=</span> <span class='fl'>19</span>,
+          col <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"red"</span>, <span class='st'>"yellow"</span>, <span class='st'>"blue"</span><span class='op'>)</span><span class='op'>)</span>
+</div><div class='img'><img src='particle_filter-1.png' alt='' width='700' height='433' /></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -371,7 +394,7 @@ restart the model).</p><h3>Usage</h3>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>
