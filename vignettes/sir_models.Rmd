@@ -79,8 +79,7 @@ To demonstrate this, we will attempt to infer the parameters $\beta$ and $\gamma
 
 ```{r}
 # Set up model
-incidence <- t(read.table("sir_incidence_data.txt", sep=",", header = F))
-incidence <- data.frame(cases = incidence[, 1], day = seq_len(100), row.names = NULL)
+incidence <- read.table("sir_incidence_data.csv", header = TRUE, sep = ",")
 ```
 
 This can then be processed with `mcstate::particle_filter_data()` as follows, taking four update steps between every observation (generally decreasing $dt$ will improve resolution, especially if rates of change are high, at the expense of extra computation time):
