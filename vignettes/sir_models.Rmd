@@ -82,7 +82,7 @@ To demonstrate this, we will attempt to infer the parameters $\beta$ and $\gamma
 incidence <- read.table("sir_incidence_data.csv", header = TRUE, sep = ",")
 ```
 
-This can then be processed with `mcstate::particle_filter_data()` as follows, taking four update steps between every observation (generally decreasing $dt$ will improve resolution, especially if rates of change are high, at the expense of extra computation time):
+This can then be processed with `mcstate::particle_filter_data()` as follows, taking four update steps between every observation so that `rate = 4`. Generally increasing the rate will improve resolution, especially if rates of change between partitions are high, though at the expense of extra computation time. We also define a time interval between each update $dt = \frac{1}{\mathrm(rate)}$:
 
 ```{r paged.print=TRUE, layout="l-body-outset", fig.height=5, fig.width=7}
 dt <- 0.25
@@ -145,11 +145,10 @@ filter <- mcstate::particle_filter$new(data = sir_data,
                                        model = gen_sir,
                                        n_particles = n_particles,
                                        compare = case_compare,
-                                       n_threads = 4L,
                                        seed = 1L)
 ```
 
-We can now run the particle filter forward, which will run and resample 100 trajectories, and return the final likelihood. It is important to set the correct time-step $dt$ here, as we are using 0.25, rather than the default value of 1 defined in the odin model. We will also save the history, which allows us to plot the particle trajectories, as well as use the likelihood:
+We can now run the particle filter forward, which will run and resample 100 trajectories, and return the final likelihood. It is important to set the correct time-step `dt` here, as we are using 0.25, rather than the default value of 1 defined in the odin model. We will also save the history, which allows us to plot the particle trajectories, as well as use the likelihood:
 
 ```{r}
 filter$run(save_history = TRUE, pars = list(dt = dt))
@@ -291,7 +290,6 @@ Going back to the simple SIR model above, we can easily continue running the fit
 ```{r fig.height=5, fig.width=7}
 forecast <- predict(processed_chains,
                     steps = seq(400, 800, 4),
-                    n_threads = 4L,
                     prepend_trajectories = TRUE,
                     seed = processed_chains$predict$seed)
 
@@ -390,7 +388,6 @@ filter <- mcstate::particle_filter$new(data = combined_data,
                                        n_particles = n_particles,
                                        compare = combined_compare,
                                        index = index,
-                                       n_threads = 4L,
                                        seed = 1L)
 filter$run(save_history = FALSE, pars = list(dt = dt))
 ```
