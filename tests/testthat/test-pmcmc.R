@@ -230,14 +230,15 @@ test_that("All arguments forwarded to multiple chains", {
 
   mockery::expect_called(mock_pmcmc_single_chain, 4)
   args <- mockery::mock_args(mock_pmcmc_single_chain)
+  ic <- c(a = 0.5, b = 0.5)
   expect_equal(args[[1]],
-               list(dat$pars, dat$filter, 1000, FALSE, FALSE, FALSE))
+               list(dat$pars, ic, dat$filter, 1000, FALSE, FALSE, FALSE))
   expect_equal(args[[2]],
-               list(dat$pars, dat$filter, 1000, FALSE, FALSE, FALSE))
+               list(dat$pars, ic, dat$filter, 1000, FALSE, FALSE, FALSE))
   expect_equal(args[[3]],
-               list(dat$pars, dat$filter, 1000, FALSE, FALSE, FALSE))
+               list(dat$pars, ic, dat$filter, 1000, FALSE, FALSE, FALSE))
   expect_equal(args[[4]],
-               list(dat$pars, dat$filter, 1000, FALSE, FALSE, FALSE))
+               list(dat$pars, ic, dat$filter, 1000, FALSE, FALSE, FALSE))
 
   expect_equal(ans1, res[[1]])
   expect_equal(ans2, pmcmc_combine(samples = res))
