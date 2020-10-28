@@ -143,14 +143,19 @@ parameters until they lie within \code{min}:\code{max}.}
 \if{latex}{\out{\hypertarget{method-propose}{}}}
 \subsection{Method \code{propose()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters$propose(theta)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters$propose(theta, scale = 1)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{theta}}{a parameter vector in the same order as your
-parameters were defined in (see \verb{$names()} for that order.
+parameters were defined in (see \verb{$names()} for that order.}
+
+\item{\code{scale}}{an optional scaling factor to apply to the
+proposal distribution. This may be useful in sampling starting
+points. The parameter is equivalent to a multiplicative factor
+applied to the variance covariance matrix.
 Apply the model transformation function to a parameter vector.}
 }
 \if{html}{\out{</div>}}

@@ -52,6 +52,14 @@
 ##'   merge them with [pmcmc_combine()]. Chains are run in series,
 ##'   with the same filter.
 ##'
+##' @param initial Optional initial starting point. If given, it must
+##'   be compatible with the parameters given in `pars`, and must be
+##'   valid against your prior. You can use this to override the
+##'   initial conditions saved in your `pars` object. You can provide
+##'   either a vector of initial conditions, or a matrix with
+##'   `n_chains` columns to use a different starting point for each
+##'   chain.
+##'
 ##' @return A `mcstate_pmcmc` object containing `pars`
 ##'   (sampled parameters) and `probabilities` (log prior, log
 ##'   likelihood and log posterior values for these
@@ -67,7 +75,7 @@
 ##' @export
 pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
                   save_trajectories = FALSE, progress = FALSE,
-                  n_chains = 1) {
+                  n_chains = 1, initial = NULL) {
   assert_is(pars, "pmcmc_parameters")
   assert_is(filter, "particle_filter")
   assert_scalar_positive_integer(n_steps)
@@ -75,8 +83,10 @@ pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
   assert_scalar_logical(save_trajectories)
   assert_scalar_positive_integer(n_chains)
 
+  initial <- pmcmc_check_initial(initial, pars, n_chains)
+
   if (n_chains == 1) {
-    pmcmc_single_chain(pars, filter, n_steps,
+    pmcmc_single_chain(pars, initial[, 1], filter, n_steps,
                        save_state, save_trajectories, progress)
   } else {
     samples <- vector("list", n_chains)
@@ -84,7 +94,7 @@ pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
       if (progress) {
         message(sprintf("Running chain %d / %d", i, n_chains))
       }
-      samples[[i]] <- pmcmc_single_chain(pars, filter, n_steps,
+      samples[[i]] <- pmcmc_single_chain(pars, initial[, i], filter, n_steps,
                                          save_state, save_trajectories,
                                          progress)
     }
@@ -92,7 +102,7 @@ pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
   }
 }
 
-pmcmc_single_chain <- function(pars, filter, n_steps,
+pmcmc_single_chain <- function(pars, initial, filter, n_steps,
                                save_state, save_trajectories,
                                progress) {
   n_particles <- filter$n_particles
@@ -102,7 +112,7 @@ pmcmc_single_chain <- function(pars, filter, n_steps,
   history_state <- history_collector(n_steps)
   history_trajectories <- history_collector(n_steps)
 
-  curr_pars <- pars$initial()
+  curr_pars <- initial
   curr_lprior <- pars$prior(curr_pars)
   curr_llik <- filter$run(pars$model(curr_pars), save_trajectories)
   curr_lpost <- curr_lprior + curr_llik
@@ -225,4 +235,47 @@ history_collector <- function(n) {
   }
 
   list(add = add, get = get)
+}
+
+
+## TODO: This does not check that the parameters are in range, or that
+## they are appropriately discrete. We should add that in too at some
+## point, though this overlaps with some outstanding validation in the
+## smc2 branch.
+pmcmc_check_initial <- function(initial, pars, n_chains) {
+  nms <- pars$names()
+  n_pars <- length(nms)
+  if (is.null(initial)) {
+    initial <- pars$initial()
+  }
+  if (is.matrix(initial)) {
+    if (nrow(initial) != n_pars) {
+      stop(sprintf("Expected a matrix with %d rows for 'initial'", n_pars))
+    }
+    if (ncol(initial) != n_chains) {
+      stop(sprintf("Expected a matrix with %d columns for 'initial'", n_chains))
+    }
+    if (!is.null(rownames(initial)) && !identical(rownames(initial), nms)) {
+      stop("If 'initial' has rownames, they must match pars$names()")
+    }
+    ok <- apply(initial, 2, function(p) is.finite(pars$prior(p)))
+    if (any(!ok)) {
+      stop(sprintf(
+        "Starting point does not have finite prior probability (%s)",
+        paste(which(!ok), collapse = ", ")))
+    }
+  } else {
+    if (length(initial) != n_pars) {
+      stop(sprintf("Expected a vector of length %d for 'initial'", n_pars))
+    }
+    if (!is.null(names(initial)) && !identical(names(initial), nms)) {
+      stop("If 'initial' has names, they must match pars$names()")
+    }
+    if (!is.finite(pars$prior(initial))) {
+      stop("Starting point does not have finite prior probability")
+    }
+    initial <- matrix(initial, n_pars, n_chains)
+  }
+  dimnames(initial) <- list(nms, NULL)
+  initial
 }

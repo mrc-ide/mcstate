@@ -42,7 +42,7 @@ test_that("initial value must satify prior and not fail", {
 })
 
 
-test_that("parameters", {
+test_that("can scale proposal kernels", {
   proposal_kernel <- diag(2) * 1e-4
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("beta", "gamma")
 
@@ -62,7 +62,12 @@ test_that("parameters", {
   p0 <- p$initial()
   p1 <- p$propose(p0)
   set.seed(1)
+  p2 <- p$propose(p0, 10)
+
+  set.seed(1)
   expect_equal(p1, rmvnorm_generator(proposal_kernel)(p0))
+
+  expect_equal(p2 - p0, (p1 - p0) * sqrt(10))
 })
 
 

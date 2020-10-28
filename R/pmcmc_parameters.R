@@ -224,8 +224,13 @@ pmcmc_parameters <- R6::R6Class(
     ##'
     ##' @param theta a parameter vector in the same order as your
     ##' parameters were defined in (see `$names()` for that order.
-    propose = function(theta) {
-      theta <- private$proposal(theta)
+    ##'
+    ##' @param scale an optional scaling factor to apply to the
+    ##' proposal distribution. This may be useful in sampling starting
+    ##' points. The parameter is equivalent to a multiplicative factor
+    ##' applied to the variance covariance matrix.
+    propose = function(theta, scale = 1) {
+      theta <- private$proposal(theta, scale)
       theta[private$discrete] <- round(theta[private$discrete])
       reflect_proposal(theta, private$min, private$max)
     },

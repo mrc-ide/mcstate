@@ -53,8 +53,8 @@ rmvnorm_generator <- function(vcv) {
   n <- nrow(vcv)
   res <- t(ev$vectors %*% (t(ev$vectors) * sqrt(pmax(ev$values, 0))))
 
-  function(mean) {
-    mean + drop(rnorm(ncol(vcv)) %*% res)
+  function(mean, scale = 1.0) {
+    mean + drop(rnorm(ncol(vcv)) %*% (res * sqrt(scale)))
   }
 }
 
