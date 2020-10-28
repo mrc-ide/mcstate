@@ -11,7 +11,8 @@ pmcmc(
   save_state = TRUE,
   save_trajectories = FALSE,
   progress = FALSE,
-  n_chains = 1
+  n_chains = 1,
+  initial = NULL
 )
 }
 \arguments{
@@ -52,6 +53,14 @@ displayed, using \code{\link[progress:progress_bar]{progress::progress_bar}}.}
 to run. If more than one then we run a series of chains and
 merge them with \code{\link[=pmcmc_combine]{pmcmc_combine()}}. Chains are run in series,
 with the same filter.}
+
+\item{initial}{Optional initial starting point. If given, it must
+be compatible with the parameters given in \code{pars}, and must be
+valid against your prior. You can use this to override the
+initial conditions saved in your \code{pars} object. You can provide
+either a vector of initial conditions, or a matrix with
+\code{n_chains} columns to use a different starting point for each
+chain.}
 }
 \value{
 A \code{mcstate_pmcmc} object containing \code{pars}
