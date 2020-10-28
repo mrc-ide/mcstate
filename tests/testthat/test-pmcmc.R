@@ -275,21 +275,23 @@ test_that("return names on pmcmc output", {
 
 test_that("can use default initial conditions", {
   dat <- example_sir()
+  dn <- list(dat$pars$names(), NULL)
   expect_equal(pmcmc_check_initial(NULL, dat$pars, 1),
-               matrix(c(0.2, 0.1), 2, 1))
+               matrix(c(0.2, 0.1), 2, 1, dimnames = dn))
   expect_equal(pmcmc_check_initial(NULL, dat$pars, 5),
-               matrix(c(0.2, 0.1), 2, 5))
+               matrix(c(0.2, 0.1), 2, 5, dimnames = dn))
 })
 
 
 test_that("can use a vector initial conditions and expand it out", {
   dat <- example_uniform()
+  dn <- list(dat$pars$names(), NULL)
   expect_equal(pmcmc_check_initial(c(0.1, 0.2), dat$pars, 1),
-               matrix(c(0.1, 0.2), 2, 1))
+               matrix(c(0.1, 0.2), 2, 1, dimnames = dn))
   expect_equal(pmcmc_check_initial(c(0.1, 0.2), dat$pars, 5),
-               matrix(c(0.1, 0.2), 2, 5))
+               matrix(c(0.1, 0.2), 2, 5, dimnames = dn))
   expect_equal(pmcmc_check_initial(c(a = 0.1, b = 0.2), dat$pars, 5),
-               matrix(c(0.1, 0.2), 2, 5))
+               matrix(c(0.1, 0.2), 2, 5, dimnames = dn))
 })
 
 
@@ -308,12 +310,12 @@ test_that("can validate a vector of initial conditions", {
 
 test_that("can use a matrix initial conditions", {
   dat <- example_uniform()
+  dn <- list(dat$pars$names(), NULL)
   expect_equal(pmcmc_check_initial(cbind(c(0.1, 0.2)), dat$pars, 1),
-               matrix(c(0.1, 0.2), 2, 1))
-  m <- matrix(runif(10), 2, 5)
+               matrix(c(0.1, 0.2), 2, 1, dimnames = dn))
+  m <- matrix(runif(10), 2, 5, dimnames = dn)
+  expect_equal(pmcmc_check_initial(unname(m), dat$pars, 5), m)
   expect_equal(pmcmc_check_initial(m, dat$pars, 5), m)
-  rownames(m) <- c("a", "b")
-  expect_equal(pmcmc_check_initial(m, dat$pars, 5), unname(m))
 })
 
 
@@ -344,7 +346,7 @@ test_that("can validate a matrix initial conditions", {
 
 test_that("can start a pmcmc from a matrix of starting points", {
   dat <- example_uniform()
-  initial <- matrix(runif(6), 2, 3)
+  initial <- matrix(runif(6), 2, 3, dimnames = list(c("a", "b"), NULL))
   res <- pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE,
                n_chains = 3, initial = initial)
   expect_equal(res$pars[res$iteration == 0, ], t(initial))
