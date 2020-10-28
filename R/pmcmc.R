@@ -258,7 +258,6 @@ pmcmc_check_initial <- function(initial, pars, n_chains) {
     if (!is.null(rownames(initial)) && !identical(rownames(initial), nms)) {
       stop("If 'initial' has rownames, they must match pars$names()")
     }
-    dimnames(initial) <- NULL
     ok <- apply(initial, 2, function(p) is.finite(pars$prior(p)))
     if (any(!ok)) {
       stop(sprintf(
@@ -277,5 +276,6 @@ pmcmc_check_initial <- function(initial, pars, n_chains) {
     }
     initial <- matrix(initial, n_pars, n_chains)
   }
+  dimnames(initial) <- list(nms, NULL)
   initial
 }
