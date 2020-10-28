@@ -84,7 +84,7 @@ used." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.14</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.15</span>
       </span>
     </div>
 
@@ -235,12 +235,17 @@ parameters until they lie within <code>min</code>:<code>max</code>.</p></dd>
 <a id="method-propose"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>propose()</code></h3>
 
 <h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
-<p><div class="r"></p><pre><span class='va'>pmcmc_parameters</span><span class='op'>$</span><span class='fu'>propose</span><span class='op'>(</span><span class='va'>theta</span><span class='op'>)</span></pre><p></div></p>
+<p><div class="r"></p><pre><span class='va'>pmcmc_parameters</span><span class='op'>$</span><span class='fu'>propose</span><span class='op'>(</span><span class='va'>theta</span>, scale <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span></pre><p></div></p>
 
 <h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>theta</code></dt><dd><p>a parameter vector in the same order as your
-parameters were defined in (see <code>$names()</code> for that order.
+parameters were defined in (see <code>$names()</code> for that order.</p></dd>
+
+<dt><code>scale</code></dt><dd><p>an optional scaling factor to apply to the
+proposal distribution. This may be useful in sampling starting
+points. The parameter is equivalent to a multiplicative factor
+applied to the variance covariance matrix.
 Apply the model transformation function to a parameter vector.</p></dd>
 
 </dl><p></div></p>

@@ -80,7 +80,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.14</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.15</span>
       </span>
     </div>
 
@@ -150,7 +150,8 @@
   save_state <span class='op'>=</span> <span class='cn'>TRUE</span>,
   save_trajectories <span class='op'>=</span> <span class='cn'>FALSE</span>,
   progress <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  n_chains <span class='op'>=</span> <span class='fl'>1</span>
+  n_chains <span class='op'>=</span> <span class='fl'>1</span>,
+  initial <span class='op'>=</span> <span class='cn'>NULL</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -207,6 +208,16 @@ displayed, using <code><a href='https://rdrr.io/pkg/progress/man/progress_bar.ht
 to run. If more than one then we run a series of chains and
 merge them with <code><a href='pmcmc_combine.html'>pmcmc_combine()</a></code>. Chains are run in series,
 with the same filter.</p></td>
+    </tr>
+    <tr>
+      <th>initial</th>
+      <td><p>Optional initial starting point. If given, it must
+be compatible with the parameters given in <code>pars</code>, and must be
+valid against your prior. You can use this to override the
+initial conditions saved in your <code>pars</code> object. You can provide
+either a vector of initial conditions, or a matrix with
+<code>n_chains</code> columns to use a different starting point for each
+chain.</p></td>
     </tr>
     </table>
 
