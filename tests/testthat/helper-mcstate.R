@@ -75,8 +75,10 @@ example_uniform <- function(proposal_kernel = NULL) {
   }
 
   pars <- pmcmc_parameters$new(
-    list(pmcmc_parameter("a", 0.5, min = 0, max = 1),
-         pmcmc_parameter("b", 0.5, min = 0, max = 1)),
+    list(pmcmc_parameter("a", 0.5, min = 0, max = 1,
+                         prior = function(p) dunif(p, log = TRUE)),
+         pmcmc_parameter("b", 0.5, min = 0, max = 1,
+                         prior = function(p) dunif(p, log = TRUE))),
     proposal = proposal_kernel)
 
   list(target = target, filter = filter, pars = pars)
