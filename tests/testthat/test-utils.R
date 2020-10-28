@@ -37,3 +37,18 @@ test_that("rmvnorm_generator requires positive definite", {
     rmvnorm_generator(matrix(c(1, 2, 2, 1), 2, 2)),
     "vcv must be positive definite")
 })
+
+
+test_that("rmvnorm_generator can created scaled samples", {
+  vcv <- matrix(c(4, 2, 2, 3), ncol = 2)
+  theta <- runif(2)
+  set.seed(1)
+  y1 <- rmvnorm_generator(vcv)(theta)
+  set.seed(1)
+  y2 <- rmvnorm_generator(vcv)(theta, 2)
+  set.seed(1)
+  y3 <- rmvnorm_generator(vcv * 2)(theta)
+
+  expect_equal((y1 - theta) * sqrt(2), y2 - theta)
+  expect_equal(y2, y3)
+})
