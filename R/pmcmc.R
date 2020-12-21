@@ -146,15 +146,15 @@ pmcmc_single_chain <- function(pars, initial, filter, n_steps, rerun_every,
   for (i in seq_len(n_steps)) {
     tick()
 
-    prop_pars <- pars$propose(curr_pars)
-    prop_lprior <- pars$prior(prop_pars)
-    prop_llik <- filter$run(pars$model(prop_pars), save_trajectories)
-    prop_lpost <- prop_lprior + prop_llik
-
     if (i %% rerun_every == 0) {
       curr_llik <- filter$run(pars$model(curr_pars), save_trajectories)
       curr_lpost <- curr_lprior + curr_llik
     }
+
+    prop_pars <- pars$propose(curr_pars)
+    prop_lprior <- pars$prior(prop_pars)
+    prop_llik <- filter$run(pars$model(prop_pars), save_trajectories)
+    prop_lpost <- prop_lprior + prop_llik
 
     if (runif(1) < exp(prop_lpost - curr_lpost)) {
       curr_pars <- prop_pars

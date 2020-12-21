@@ -397,6 +397,6 @@ test_that("rerunning the particle filter triggers the filter run method", {
   call_curr <- quote(filter$run(pars$model(curr_pars), save_trajectories))
   call_prop <- quote(filter$run(pars$model(prop_pars), save_trajectories))
   expected <- rep(list(call_prop), 16)
-  expected[c(1, seq(4, 16, by = 3))] <- list(call_curr)
+  expected[c(1, seq(3, 16, by = 3))] <- list(call_curr)
   expect_equal(mockery::mock_calls(dat$filter$run), expected)
 })
