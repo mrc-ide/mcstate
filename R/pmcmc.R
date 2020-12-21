@@ -60,6 +60,14 @@
 ##'   `n_chains` columns to use a different starting point for each
 ##'   chain.
 ##'
+##' @param rerun_every Optional integer giving the frequency at which
+##'   we should rerun the particle filter on the current "accepted"
+##'   state.  The default for this (`Inf`) will never rerun this
+##'   point, but if you set to 100, then every 100 steps we run the
+##'   particle filter on both the proposed *and* previously accepted
+##'   point before doing the comparison.  This may help "unstick"
+##'   chains, at the cost of some bias in the results.
+##'
 ##' @return A `mcstate_pmcmc` object containing `pars`
 ##'   (sampled parameters) and `probabilities` (log prior, log
 ##'   likelihood and log posterior values for these
@@ -75,7 +83,7 @@
 ##' @export
 pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
                   save_trajectories = FALSE, progress = FALSE,
-                  n_chains = 1, initial = NULL) {
+                  n_chains = 1, initial = NULL, rerun_every = Inf) {
   assert_is(pars, "pmcmc_parameters")
   assert_is(filter, "particle_filter")
   assert_scalar_positive_integer(n_steps)
@@ -86,7 +94,7 @@ pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
   initial <- pmcmc_check_initial(initial, pars, n_chains)
 
   if (n_chains == 1) {
-    pmcmc_single_chain(pars, initial[, 1], filter, n_steps,
+    pmcmc_single_chain(pars, initial[, 1], filter, n_steps, rerun_every,
                        save_state, save_trajectories, progress)
   } else {
     samples <- vector("list", n_chains)
@@ -95,6 +103,7 @@ pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
         message(sprintf("Running chain %d / %d", i, n_chains))
       }
       samples[[i]] <- pmcmc_single_chain(pars, initial[, i], filter, n_steps,
+                                         rerun_every,
                                          save_state, save_trajectories,
                                          progress)
     }
@@ -102,7 +111,7 @@ pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
   }
 }
 
-pmcmc_single_chain <- function(pars, initial, filter, n_steps,
+pmcmc_single_chain <- function(pars, initial, filter, n_steps, rerun_every,
                                save_state, save_trajectories,
                                progress) {
   n_particles <- filter$n_particles
@@ -141,6 +150,11 @@ pmcmc_single_chain <- function(pars, initial, filter, n_steps,
     prop_lprior <- pars$prior(prop_pars)
     prop_llik <- filter$run(pars$model(prop_pars), save_trajectories)
     prop_lpost <- prop_lprior + prop_llik
+
+    if (i %% rerun_every == 0) {
+      curr_llik <- filter$run(pars$model(curr_pars), save_trajectories)
+      curr_lpost <- curr_lprior + curr_llik
+    }
 
     if (runif(1) < exp(prop_lpost - curr_lpost)) {
       curr_pars <- prop_pars

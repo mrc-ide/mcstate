@@ -232,13 +232,13 @@ test_that("All arguments forwarded to multiple chains", {
   args <- mockery::mock_args(mock_pmcmc_single_chain)
   ic <- c(a = 0.5, b = 0.5)
   expect_equal(args[[1]],
-               list(dat$pars, ic, dat$filter, 1000, FALSE, FALSE, FALSE))
+               list(dat$pars, ic, dat$filter, 1000, Inf, FALSE, FALSE, FALSE))
   expect_equal(args[[2]],
-               list(dat$pars, ic, dat$filter, 1000, FALSE, FALSE, FALSE))
+               list(dat$pars, ic, dat$filter, 1000, Inf, FALSE, FALSE, FALSE))
   expect_equal(args[[3]],
-               list(dat$pars, ic, dat$filter, 1000, FALSE, FALSE, FALSE))
+               list(dat$pars, ic, dat$filter, 1000, Inf, FALSE, FALSE, FALSE))
   expect_equal(args[[4]],
-               list(dat$pars, ic, dat$filter, 1000, FALSE, FALSE, FALSE))
+               list(dat$pars, ic, dat$filter, 1000, Inf, FALSE, FALSE, FALSE))
 
   expect_equal(ans1, res[[1]])
   expect_equal(ans2, pmcmc_combine(samples = res))
@@ -351,4 +351,32 @@ test_that("can start a pmcmc from a matrix of starting points", {
   res <- pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE,
                n_chains = 3, initial = initial)
   expect_equal(res$pars[res$iteration == 0, ], t(initial))
+})
+
+
+test_that("can trigger rerunning particle filter", {
+  proposal_kernel <- diag(2) * 1e-4
+  row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("beta", "gamma")
+
+  pars <- pmcmc_parameters$new(
+    list(pmcmc_parameter("beta", 0.2, min = 0, max = 1,
+                         prior = function(p) log(1e-10)),
+         pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
+                         prior = function(p) log(1e-10))),
+    proposal = proposal_kernel * 50)
+
+  dat <- example_sir()
+  n_particles <- 100
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index)
+  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index)
+
+  set.seed(1)
+  res1 <- pmcmc(pars, p1, 30, TRUE, TRUE, rerun_every = 2)
+  expect_lte(max(rle(res1$probabilities[, "log_likelihood"])$lengths), 2)
+
+  set.seed(1)
+  res2 <- pmcmc(pars, p1, 30, TRUE, TRUE, rerun_every = Inf)
+  expect_gt(max(rle(res2$probabilities[, "log_likelihood"])$lengths), 5)
 })

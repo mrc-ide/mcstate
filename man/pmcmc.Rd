@@ -12,7 +12,8 @@ pmcmc(
   save_trajectories = FALSE,
   progress = FALSE,
   n_chains = 1,
-  initial = NULL
+  initial = NULL,
+  rerun_every = Inf
 )
 }
 \arguments{
@@ -61,6 +62,14 @@ initial conditions saved in your \code{pars} object. You can provide
 either a vector of initial conditions, or a matrix with
 \code{n_chains} columns to use a different starting point for each
 chain.}
+
+\item{rerun_every}{Optional integer giving the frequency at which
+we should rerun the particle filter on the current "accepted"
+state.  The default for this (\code{Inf}) will never rerun this
+point, but if you set to 100, then every 100 steps we run the
+particle filter on both the proposed \emph{and} previously accepted
+point before doing the comparison.  This may help "unstick"
+chains, at the cost of some bias in the results.}
 }
 \value{
 A \code{mcstate_pmcmc} object containing \code{pars}
