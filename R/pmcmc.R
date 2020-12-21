@@ -143,18 +143,23 @@ pmcmc_single_chain <- function(pars, initial, filter, n_steps, rerun_every,
 
   tick <- pmcmc_progress(n_steps, progress)
 
+  update_history <- function() {
+    particle_idx <- sample.int(n_particles, 1)
+    if (save_trajectories) {
+      curr_trajectories <<- sample_trajectory(filter$history(particle_idx))
+    }
+    if (save_state) {
+      curr_state <<- filter$state()[, particle_idx, drop = TRUE]
+    }
+  }
+
   for (i in seq_len(n_steps)) {
     tick()
 
     if (i %% rerun_every == 0) {
       curr_llik <- filter$run(pars$model(curr_pars), save_trajectories)
       curr_lpost <- curr_lprior + curr_llik
-      if (save_trajectories) {
-        curr_trajectories <- sample_trajectory(filter$history(particle_idx))
-      }
-      if (save_state) {
-        curr_state <- filter$state()[, particle_idx, drop = TRUE]
-      }
+      update_history()
     }
 
     prop_pars <- pars$propose(curr_pars)
@@ -167,14 +172,7 @@ pmcmc_single_chain <- function(pars, initial, filter, n_steps, rerun_every,
       curr_lprior <- prop_lprior
       curr_llik <- prop_llik
       curr_lpost <- prop_lpost
-
-      particle_idx <- sample.int(n_particles, 1)
-      if (save_trajectories) {
-        curr_trajectories <- sample_trajectory(filter$history(particle_idx))
-      }
-      if (save_state) {
-        curr_state <- filter$state()[, particle_idx, drop = TRUE]
-      }
+      update_history()
     }
 
     history_pars$add(curr_pars)
