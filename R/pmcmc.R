@@ -149,6 +149,12 @@ pmcmc_single_chain <- function(pars, initial, filter, n_steps, rerun_every,
     if (i %% rerun_every == 0) {
       curr_llik <- filter$run(pars$model(curr_pars), save_trajectories)
       curr_lpost <- curr_lprior + curr_llik
+      if (save_trajectories) {
+        curr_trajectories <- sample_trajectory(filter$history(particle_idx))
+      }
+      if (save_state) {
+        curr_state <- filter$state()[, particle_idx, drop = TRUE]
+      }
     }
 
     prop_pars <- pars$propose(curr_pars)
