@@ -1,3 +1,7 @@
+# mcstate 0.3.1
+
+* The particle filter can now return the entire model state at points during the run, with argument `save_restart` to `$run()` and method `$restart_state()` (#86)
+
 # mcstate 0.3.0
 
 * `pmcmc` is now controllable via a new `mcstate::pmcmc_control` object
