@@ -510,3 +510,99 @@ test_that("can change the number of threads (null model)", {
   p$run()
   expect_equal(r6_private(p)$last_model$n_threads(), 1)
 })
+
+
+test_that("Can extract state from the model", {
+  dat <- example_sir()
+  n_particles <- 42
+  seed <- 100
+  index <- function(info) {
+    list(run = 4L, state = 1:3)
+  }
+  set.seed(1)
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = index, seed = seed)
+  end <- c(20, 40, 60)
+  res <- p$run(save_restart = end)
+  s <- p$restart_state()
+  expect_equal(dim(s), c(4, n_particles, length(end)))
+
+  f <- function(n) {
+    set.seed(1)
+    d <- dat$data[dat$data$day_end <= n, ]
+    p <- particle_filter$new(d, dat$model, n_particles, dat$compare,
+                             index = index, seed = seed)
+    p$run()
+    p$state()
+  }
+
+  cmp <- lapply(end, f)
+  expect_equal(s[, , 1], cmp[[1]])
+  expect_equal(s[, , 2], cmp[[2]])
+  expect_equal(s[, , 3], cmp[[3]])
+
+  expect_equal(p$restart_state(1), s[, 1, , drop = FALSE])
+  expect_equal(p$restart_state(c(10, 3, 3, 6)), s[, c(10, 3, 3, 6), ])
+})
+
+
+test_that("can extract just one restart state", {
+  dat <- example_sir()
+  n_particles <- 42
+  seed <- 100
+  index <- function(info) {
+    list(run = 4L, state = 1:3)
+  }
+  set.seed(1)
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = index, seed = seed)
+  end <- 40
+  res <- p$run(save_restart = end)
+  s <- p$restart_state()
+  s1 <- p$restart_state(1)
+  expect_equal(dim(s), c(4, n_particles, 1))
+  expect_equal(dim(s1), c(4, 1, 1))
+
+  set.seed(1)
+  d <- dat$data[dat$data$day_end <= end, ]
+  p <- particle_filter$new(d, dat$model, n_particles, dat$compare,
+                           index = index, seed = seed)
+  p$run()
+  cmp <- p$state()
+  expect_equal(drop(s), cmp)
+  expect_equal(drop(s1), cmp[, 1])
+})
+
+
+test_that("Can't get restart state without saving it", {
+  dat <- example_sir()
+  index <- function(info) {
+    list(run = 4L, state = 1:3)
+  }
+  set.seed(1)
+  p <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
+                           index = index, seed = 100)
+  res <- p$run()
+  expect_error(p$restart_state(),
+               "Can't get history as model was run with save_restart = NULL")
+})
+
+
+test_that("Dates must exist to save restart state", {
+  dat <- example_sir()
+  index <- function(info) {
+    list(run = 4L, state = 1:3)
+  }
+  set.seed(1)
+  p <- particle_filter$new(dat$data[1:20, ], dat$model, 42, dat$compare,
+                           index = index, seed = 100)
+  expect_error(
+    p$run(save_restart = 30),
+    "'save_restart' contains times not in 'day': 30")
+  expect_error(
+    p$run(save_restart = c(30, 50)),
+    "'save_restart' contains times not in 'day': 30, 50")
+  expect_error(
+    p$run(save_restart = c(10, 30, 50)),
+    "'save_restart' contains times not in 'day': 30, 50")
+})
