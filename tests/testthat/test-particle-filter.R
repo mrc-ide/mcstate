@@ -417,6 +417,9 @@ test_that("can't get state or history until model is run", {
   expect_error(
     p$history(),
     "Model has not yet been run")
+  expect_error(
+    p$restart_state(),
+    "Model has not yet been run")
 })
 
 
