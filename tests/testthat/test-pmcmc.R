@@ -388,15 +388,9 @@ test_that("rerunning the particle filter triggers the filter run method", {
   dat$filter$run <- mockery::mock(1, cycle = TRUE)
   dat$inputs <- function() NULL
 
-  ## with the dummy version we can['t return history
+  ## with the dummy version we can't return history
   ans <- pmcmc(dat$pars, dat$filter, 10, rerun_every = 2,
                save_trajectories = FALSE, save_state = FALSE)
 
   mockery::expect_called(dat$filter$run, 16)
-
-  call_curr <- quote(filter$run(pars$model(curr_pars), save_trajectories))
-  call_prop <- quote(filter$run(pars$model(prop_pars), save_trajectories))
-  expected <- rep(list(call_prop), 16)
-  expected[c(1, seq(3, 16, by = 3))] <- list(call_curr)
-  expect_equal(mockery::mock_calls(dat$filter$run), expected)
 })
