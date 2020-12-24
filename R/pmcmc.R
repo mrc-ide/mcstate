@@ -116,7 +116,7 @@ pmcmc_single_chain <- function(pars, initial, filter, n_steps, rerun_every,
                                progress) {
   obj <- pmcmc_state$new(pars, initial, filter, n_steps, rerun_every,
                          save_state, save_trajectories, progress)
-  obj$run()
+  obj$run(n_steps)
   obj$finish()
 }
 

@@ -84,11 +84,9 @@ pmcmc_state <- R6::R6Class(
 
     ## This needs to become easier to run partially
     run = function(to = NULL) {
-      if (is.null(to)) {
-        to <- private$n_steps
-      }
       if (to <= private$curr_step) {
-        stop("nope")
+        stop(sprintf("'to' must be greater than %s (but was given %d)",
+                     private$curr_step, to))
       }
       for (i in seq(private$curr_step + 1L, to)) {
         private$tick()
