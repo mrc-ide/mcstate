@@ -15,6 +15,7 @@ pmcmc_state <- R6::R6Class(
     history_state = NULL,
     history_trajectories = NULL,
 
+    curr_step = NULL,
     curr_pars = NULL,
     curr_lprior = NULL,
     curr_llik = NULL,
@@ -57,6 +58,7 @@ pmcmc_state <- R6::R6Class(
       private$history_state <- history_collector(n_steps)
       private$history_trajectories <- history_collector(n_steps)
 
+      private$curr_step <- 0L
       private$curr_pars <- initial
       private$curr_lprior <- private$pars$prior(private$curr_pars)
       private$curr_llik <- filter$run(private$pars$model(private$curr_pars),
@@ -81,8 +83,14 @@ pmcmc_state <- R6::R6Class(
     },
 
     ## This needs to become easier to run partially
-    run = function() {
-      for (i in seq_len(private$n_steps)) {
+    run = function(to = NULL) {
+      if (is.null(to)) {
+        to <- private$n_steps
+      }
+      if (to <= private$curr_step) {
+        stop("nope")
+      }
+      for (i in seq(private$curr_step + 1L, to)) {
         private$tick()
 
         if (i %% private$rerun_every == 0) {
@@ -114,7 +122,10 @@ pmcmc_state <- R6::R6Class(
           private$history_state$add(private$curr_state)
         }
       }
+      private$curr_step <- to
+    },
 
+    finish = function() {
       pars_matrix <- set_colnames(list_to_matrix(private$history_pars$get()),
                                   names(private$curr_pars))
       probabilities <- set_colnames(
