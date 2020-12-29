@@ -85,6 +85,10 @@ pmcmc_state <- R6::R6Class(
       }
     },
 
+    set_n_threads = function(n_threads) {
+      private$filter$set_n_threads(n_threads)
+    },
+
     run = function() {
       to <- min(private$curr_step + private$n_steps_each, private$n_steps)
       steps <- seq(from = private$curr_step + 1L,

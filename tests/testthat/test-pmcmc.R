@@ -431,3 +431,33 @@ test_that("can partially run the pmcmc", {
 
   expect_equal(results2, results1)
 })
+
+
+test_that("can change the number of threads mid-run", {
+  skip_on_cran()
+  dat <- example_sir()
+  n_particles <- 20
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index)
+  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index)
+
+  set.seed(1)
+  results1 <- pmcmc(dat$pars, p1, 30, TRUE, TRUE)
+
+  ## This is quite manual here:
+  set.seed(1)
+  initial <- pmcmc_check_initial(NULL, dat$pars, 1)[, 1]
+  obj <- pmcmc_state$new(dat$pars, initial, p2, 30, 10, Inf, TRUE, TRUE, FALSE)
+  expect_equal(obj$run(), list(step = 10, finished = FALSE))
+  expect_equal(obj$set_n_threads(2), 1)
+  expect_equal(obj$run(), list(step = 20, finished = FALSE))
+  expect_equal(r6_private(r6_private(obj)$filter)$n_threads, 2)
+  expect_equal(obj$set_n_threads(1), 2)
+  expect_equal(obj$run(), list(step = 30, finished = TRUE))
+  expect_equal(r6_private(r6_private(obj)$filter)$n_threads, 1)
+  expect_equal(obj$run(), list(step = 30, finished = TRUE))
+  results2 <- obj$finish()
+
+  expect_equal(results2, results1)
+})
