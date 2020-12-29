@@ -420,33 +420,14 @@ test_that("can partially run the pmcmc", {
   ## This is quite manual here:
   set.seed(1)
   initial <- pmcmc_check_initial(NULL, pars, 1)[, 1]
-  obj <- pmcmc_state$new(pars, initial, p2, 30, Inf, TRUE, TRUE, FALSE)
-  obj$run(10)
+  obj <- pmcmc_state$new(pars, initial, p2, 30, 10, Inf, TRUE, TRUE, FALSE)
+  expect_equal(obj$run(), list(step = 10, finished = FALSE))
   tmp <- r6_private(obj)$history_pars$get()
   expect_equal(lengths(tmp), rep(c(2, 0), c(11, 20)))
-  obj$run(20)
-  obj$run(30)
+  expect_equal(obj$run(), list(step = 20, finished = FALSE))
+  expect_equal(obj$run(), list(step = 30, finished = TRUE))
+  expect_equal(obj$run(), list(step = 30, finished = TRUE))
   results2 <- obj$finish()
 
   expect_equal(results2, results1)
-})
-
-
-test_that("partially run pmcmc requires increase in step", {
-  dat <- example_sir()
-  n_particles <- 100
-  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index)
-
-  initial <- pmcmc_check_initial(NULL, dat$pars, 1)[, 1]
-  obj <- pmcmc_state$new(dat$pars, initial, p, 30, Inf, TRUE, TRUE, FALSE)
-  obj$run(10)
-  expect_error(
-    obj$run(10),
-    "'to' must be greater than 10 (but was given 10)",
-    fixed = TRUE)
-  expect_error(
-    obj$run(5),
-    "'to' must be greater than 10 (but was given 5)",
-    fixed = TRUE)
 })

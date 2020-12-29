@@ -6,7 +6,7 @@ pmcmc_state <- R6::R6Class(
     pars = NULL,
     rerun_every = NULL,
     n_steps = NULL,
-    n_particles = NULL,
+    n_steps_each = NULL,
     save_state = NULL,
     save_trajectories = NULL,
 
@@ -26,7 +26,7 @@ pmcmc_state <- R6::R6Class(
     tick = NULL,
 
     update_history = function() {
-      i <- sample.int(private$n_particles, 1)
+      i <- sample.int(private$filter$n_particles, 1)
       if (private$save_trajectories) {
         private$curr_trajectories <-
           sample_trajectory(private$filter$history(i))
@@ -42,13 +42,16 @@ pmcmc_state <- R6::R6Class(
   ),
 
   public = list(
-    initialize = function(pars, initial, filter, n_steps, rerun_every,
-                          save_state, save_trajectories, progress) {
+    initialize = function(pars, initial, filter, n_steps, n_steps_each,
+                          rerun_every, save_state, save_trajectories,
+                          progress) {
       private$filter <- filter
       private$pars <- pars
 
+      ## We might move these all into some control object as it's
+      ## getting a bit tedious
       private$n_steps <- n_steps
-      private$n_particles <- filter$n_particles
+      private$n_steps_each <- n_steps_each
       private$rerun_every <- rerun_every
       private$save_state <- save_state
       private$save_trajectories <- save_trajectories
@@ -82,13 +85,11 @@ pmcmc_state <- R6::R6Class(
       }
     },
 
-    ## This needs to become easier to run partially
-    run = function(to = NULL) {
-      if (to <= private$curr_step) {
-        stop(sprintf("'to' must be greater than %s (but was given %d)",
-                     private$curr_step, to))
-      }
-      for (i in seq(private$curr_step + 1L, to)) {
+    run = function() {
+      to <- min(private$curr_step + private$n_steps_each, private$n_steps)
+      steps <- seq(from = private$curr_step + 1L,
+                   length.out = to - private$curr_step)
+      for (i in steps) {
         private$tick()
 
         if (i %% private$rerun_every == 0) {
@@ -121,6 +122,7 @@ pmcmc_state <- R6::R6Class(
         }
       }
       private$curr_step <- to
+      list(step = to, finished = to == private$n_steps)
     },
 
     finish = function() {
