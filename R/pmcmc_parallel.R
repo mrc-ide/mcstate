@@ -186,7 +186,12 @@ remote <- R6::R6Class(
     read = function() {
       data <- self$session$read()
       if (!is.null(data$error)) {
-        stop("Error in underlying process - write me")
+        ## NOTE: We have to use this non-exported function to get the
+        ## same nice error handling as Gabor has set up in the
+        ## package, and depending on any of the details of the
+        ## returned objects will likely be even more fragile than
+        ## grabbing this function from within the package.
+        callr:::throw(data$error)
       }
       list(index = self$index, result = data$result)
     },

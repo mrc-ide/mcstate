@@ -150,3 +150,31 @@ test_that("add and remove from a thread pool", {
     mockery::mock_args(mock_remote$set_n_threads),
     list(list(7), list(7), list(6)))
 })
+
+
+test_that("throw from callr operation", {
+  skip_on_cran()
+  dat <- example_sir()
+  n_particles <- 42
+  n_steps <- 30
+  n_chains <- 3
+  p0 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  inputs <- p0$inputs()
+  control <- list(n_steps = 30, n_steps_each = 5, rerun_every = Inf,
+                  save_state = FALSE, save_trajectories = FALSE)
+  initial <- pmcmc_check_initial(NULL, dat$pars, n_chains)
+  seed <- make_seeds(n_chains, NULL)
+  inputs$n_threads <- "one"
+  r <- remote$new(dat$pars, initial, inputs, control, seed)
+  r$wait_session_ready()
+  r$init(1L)
+  for (i in 1:20) {
+    if (r$session$poll_process(1000) == "ready") {
+      break
+    } else {
+      Sys.sleep(0.1)
+    }
+  }
+  expect_error(r$read(), "'n_threads' must be an integer")
+})
