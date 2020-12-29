@@ -134,7 +134,7 @@ test_that("add and remove from a thread pool", {
 
   p$add(mock_remote)
   expect_equal(p$free, 5)
-  expect_equal(p$target, 7) # 7 * 3 == 21
+  expect_equal(p$target, 7) # > 7 * 3 == 21
 
   p$remove(mock_remote)
   expect_equal(p$free, 3)
