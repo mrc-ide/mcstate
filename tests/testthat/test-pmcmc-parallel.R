@@ -64,3 +64,40 @@ test_that("Don't run with fewer chains than workers", {
     "'n_chains' (2) is less than 'n_workers' (5)",
     fixed = TRUE)
 })
+
+
+test_that("Don't run with invalid n_threads", {
+  dat <- example_sir()
+  n_particles <- 42
+  n_steps <- 30
+  p0 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  expect_error(
+    obj <- orchestrator$new(dat$pars, p0, n_steps, n_chains = 5,
+                            n_workers = 5, n_steps_each = 20, n_threads = 3),
+    "'n_threads' (3) is less than 'n_workers' (5)",
+    fixed = TRUE)
+  expect_error(
+    obj <- orchestrator$new(dat$pars, p0, n_steps, n_chains = 5,
+                            n_workers = 5, n_steps_each = 20, n_threads = 8),
+    "'n_threads' (8) is not a multiple of 'n_workers' (5)",
+    fixed = TRUE)
+})
+
+
+test_that("Share out cores", {
+  skip_on_cran()
+  dat <- example_sir()
+  n_particles <- 42
+  n_steps <- 30
+  n_chains <- 3
+
+  p0 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  obj <- orchestrator$new(dat$pars, p0, n_steps, n_chains = n_chains,
+                          n_workers = 2, n_steps_each = 15, n_threads = 4)
+  while (!obj$step()) {
+  }
+
+  ans <- obj$get_results()
+})

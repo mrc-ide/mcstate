@@ -7,6 +7,7 @@ orchestrator <- R6::R6Class(
     sessions = NULL,
     status = NULL,
     results = NULL,
+    n_threads = NULL,
 
     show_progress = function() {
       i <- lengths(private$status) > 0
@@ -25,18 +26,13 @@ orchestrator <- R6::R6Class(
     ## TODO: some coordination will be required here to make sure that
     ## this aligns with the list in pmcmc() - at test at
     ## least.
-    ##
-    ## TODO: the number of cores here needs choosing carefully too, as
-    ## if we drive things based on the filter we should take their
-    ## number of cores and divide carefully.
-    ##
-    ## TODO: core management not yet supported!
     initialize = function(pars, filter, n_steps, save_state = TRUE,
                           save_trajectories = FALSE, progress = FALSE,
                           n_chains = 1, initial = NULL,
                           rerun_every = Inf,
                           ## Orchestrator arguments
-                          n_workers = NULL, n_steps_each = NULL) {
+                          n_workers = NULL, n_steps_each = NULL,
+                          n_threads = NULL) {
       assert_is(pars, "pmcmc_parameters")
       assert_is(filter, "particle_filter")
       assert_scalar_positive_integer(n_steps)
@@ -58,6 +54,26 @@ orchestrator <- R6::R6Class(
       inputs <- filter$inputs()
       seed <- make_seeds(n_chains, inputs$seed)
       initial <- pmcmc_check_initial(initial, pars, n_chains)
+
+      if (is.null(n_threads)) {
+        inputs$n_threads <- 1L
+      } else {
+        assert_scalar_positive_integer(n_threads)
+        if (n_threads < n_workers) {
+          stop(sprintf("'n_threads' (%d) is less than 'n_workers' (%d)",
+                       n_threads, n_workers))
+        }
+        if (n_threads %% n_workers != 0) {
+          stop(sprintf(
+            "'n_threads' (%d) is not a multiple of 'n_workers' (%d)",
+            n_threads, n_workers))
+        }
+        inputs$n_threads <- n_threads / n_workers
+        private$n_threads <- list(n_threads = n_threads,
+                                  n_workers = n_workers,
+                                  free = 0L,
+                                  target = n_threads / n_workers)
+      }
 
       private$remote <- vector("list", n_workers)
       private$sessions <- vector("list", n_workers)
@@ -93,23 +109,26 @@ orchestrator <- R6::R6Class(
         private$status[index] <- result
         finished <- vlapply(result, function(x) x$finished)
         for (r in private$remote[i][!finished]) {
+          private$n_threads <- update_threads_remove_from_pool(
+            r, private$n_threads)
           r$continue()
         }
         if (any(finished)) {
-          ## Here, we should:
-          ## 1. collect the final result of the mcmc (synchronous)
-          ## 2. see what the next index available is (NULL status)
-          ## 3. if there is a new index key up as many as possible
-          ## 4. if there is not a new index, start draining workers
+          ## It might be preferable to close out sessions *first* as
+          ## if we close out 2 sessions here simultaneously we
+          ## underallocate cores for one time-chunk. That does
+          ## complicate the book-keeping though.
           remaining <- which(lengths(private$status) == 0)
           for (r in private$remote[i][finished]) {
             res <- r$finish()
             private$results[res$index] <- list(res$data)
             if (length(remaining) == 0L) {
-              ## At this point we could surrender the cores here, and
-              ## put them in the pool
               r$session$close()
+              private$n_threads <- update_threads_add_to_pool(
+                r$n_threads, private$n_threads)
             } else {
+              private$n_threads <- update_threads_remove_from_pool(
+                r, private$n_threads)
               j <- remaining[[1]]
               remaining <- remaining[-1]
               private$status[[j]] <- r$init(j)
@@ -134,13 +153,13 @@ remote <- R6::R6Class(
     inputs = NULL,
     control = NULL,
     seed = NULL,
-    step = NULL,
-    n_threads = NULL
+    step = NULL
   ),
 
   public = list(
     session = NULL,
     index = NULL,
+    n_threads = NULL,
 
     initialize = function(pars, initial, inputs, control, seed) {
       self$session <- callr::r_session$new(wait = FALSE)
@@ -182,6 +201,7 @@ remote <- R6::R6Class(
         .GlobalEnv$obj$run()
       }, args, package = "mcstate")
       self$index <- index
+      self$n_threads <- private$inputs$n_threads
       list(step = 0L, finished = FALSE)
     },
 
@@ -195,14 +215,10 @@ remote <- R6::R6Class(
     },
 
     set_n_threads = function(n_threads) {
-      ## We keep a local copy of the number of threads here as it will
-      ## be a bunch faster than going via the remote process if we
-      ## don't have to.
-      if (private$n_threads != n_threads) {
-        self$session$run(function(n) .GlobalEnv$obj$set_n_threads(n),
-                         list(n))
-        private$n_threads <- n_threads
-      }
+      message(sprintf("Setting to use %d threads", n_threads))
+      self$session$run(function(n) .GlobalEnv$obj$set_n_threads(n),
+                       list(n_threads))
+      self$n_threads <- n_threads
     },
 
     ## This one is synchronous
@@ -236,4 +252,32 @@ make_seeds <- function(n, seed) {
     rng$long_jump()
   }
   ret
+}
+
+
+## This is the part when we drop workers off and return threads to the
+## pool:
+update_threads_add_to_pool <- function(n, dat) {
+  if (is.null(dat)) {
+    return(NULL)
+  }
+  dat$free <- dat$free + n
+  dat$n_workers <- dat$n_workers - 1L
+  dat$target <- ceiling(dat$n_threads / dat$n_workers)
+  dat
+}
+
+
+update_threads_remove_from_pool <- function(r, dat) {
+  if (is.null(dat) || dat$free == 0) {
+    return(dat)
+  }
+  n <- min(r$n_threads + dat$free, dat$target)
+  d <- n - r$n_threads
+  if (d > 0) {
+    r$set_n_threads(n)
+    dat$free <- dat$free - d
+  }
+
+  dat
 }
