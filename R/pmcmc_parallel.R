@@ -7,7 +7,7 @@ orchestrator <- R6::R6Class(
     sessions = NULL,
     status = NULL,
     results = NULL,
-    n_threads = NULL,
+    thread_pool = NULL,
 
     show_progress = function() {
       i <- lengths(private$status) > 0
@@ -45,35 +45,12 @@ orchestrator <- R6::R6Class(
         stop(sprintf("'n_chains' (%d) is less than 'n_workers' (%d)",
                      n_chains, n_workers))
       }
-
-      ## Neither of these situations make any sense really, should we fail?
-      ## if (n_chains < 2 || n_workers < 2) {
-      ##   stop("What are you up to?")
-      ## }
+      private$thread_pool <- thread_pool$new(n_threads, n_workers)
 
       inputs <- filter$inputs()
       seed <- make_seeds(n_chains, inputs$seed)
       initial <- pmcmc_check_initial(initial, pars, n_chains)
-
-      if (is.null(n_threads)) {
-        inputs$n_threads <- 1L
-      } else {
-        assert_scalar_positive_integer(n_threads)
-        if (n_threads < n_workers) {
-          stop(sprintf("'n_threads' (%d) is less than 'n_workers' (%d)",
-                       n_threads, n_workers))
-        }
-        if (n_threads %% n_workers != 0) {
-          stop(sprintf(
-            "'n_threads' (%d) is not a multiple of 'n_workers' (%d)",
-            n_threads, n_workers))
-        }
-        inputs$n_threads <- n_threads / n_workers
-        private$n_threads <- list(n_threads = n_threads,
-                                  n_workers = n_workers,
-                                  free = 0L,
-                                  target = n_threads / n_workers)
-      }
+      inputs$n_threads <- private$thread_pool$target
 
       private$remote <- vector("list", n_workers)
       private$sessions <- vector("list", n_workers)
@@ -105,12 +82,11 @@ orchestrator <- R6::R6Class(
       if (any(i)) {
         dat <- lapply(private$remote[i], function(x) x$read())
         index <- vnapply(dat, "[[", "index")
-        result <- lapply(dat, function(x) x$data$result)
+        result <- lapply(dat, "[[", "result")
         private$status[index] <- result
         finished <- vlapply(result, function(x) x$finished)
         for (r in private$remote[i][!finished]) {
-          private$n_threads <- update_threads_remove_from_pool(
-            r, private$n_threads)
+          private$thread_pool$remove(r)
           r$continue()
         }
         if (any(finished)) {
@@ -124,11 +100,9 @@ orchestrator <- R6::R6Class(
             private$results[res$index] <- list(res$data)
             if (length(remaining) == 0L) {
               r$session$close()
-              private$n_threads <- update_threads_add_to_pool(
-                r$n_threads, private$n_threads)
+              private$thread_pool$add(r)
             } else {
-              private$n_threads <- update_threads_remove_from_pool(
-                r, private$n_threads)
+              private$thread_pool$remove(r)
               j <- remaining[[1]]
               remaining <- remaining[-1]
               private$status[[j]] <- r$init(j)
@@ -210,8 +184,11 @@ remote <- R6::R6Class(
     },
 
     read = function() {
-      list(index = self$index,
-           data = self$session$read())
+      data <- self$session$read()
+      if (!is.null(data$error)) {
+        stop("Error in underlying process - write me")
+      }
+      list(index = self$index, result = data$result)
     },
 
     set_n_threads = function(n_threads) {
@@ -255,29 +232,57 @@ make_seeds <- function(n, seed) {
 }
 
 
-## This is the part when we drop workers off and return threads to the
-## pool:
-update_threads_add_to_pool <- function(n, dat) {
-  if (is.null(dat)) {
-    return(NULL)
-  }
-  dat$free <- dat$free + n
-  dat$n_workers <- dat$n_workers - 1L
-  dat$target <- ceiling(dat$n_threads / dat$n_workers)
-  dat
-}
+## Utility class to help with the thread book-keeping above.
+thread_pool <- R6::R6Class(
+  class = FALSE,
+  public = list(
+    n_threads = NULL,
+    n_workers = NULL,
+    free = 0L,
+    target = NULL,
+    active = NULL,
 
+    initialize = function(n_threads, n_workers) {
+      self$active <- !is.null(n_threads)
+      self$n_threads <- n_threads
+      self$n_workers <- n_workers
+      self$free <- 0L
 
-update_threads_remove_from_pool <- function(r, dat) {
-  if (is.null(dat) || dat$free == 0) {
-    return(dat)
-  }
-  n <- min(r$n_threads + dat$free, dat$target)
-  d <- n - r$n_threads
-  if (d > 0) {
-    r$set_n_threads(n)
-    dat$free <- dat$free - d
-  }
+      if (self$active) {
+        assert_scalar_positive_integer(n_threads)
+        if (n_threads < n_workers) {
+          stop(sprintf("'n_threads' (%d) is less than 'n_workers' (%d)",
+                       n_threads, n_workers))
+        }
+        if (n_threads %% n_workers != 0) {
+          stop(sprintf(
+            "'n_threads' (%d) is not a multiple of 'n_workers' (%d)",
+            n_threads, n_workers))
+        }
+        self$target <- ceiling(n_threads / n_workers)
+      } else {
+        self$target <- 1L
+      }
+    },
 
-  dat
-}
+    add = function(remote) {
+      if (!self$active) {
+        return()
+      }
+      self$n_workers <- self$n_workers - 1L
+      self$free <- self$free + remote$n_threads
+      self$target <- ceiling(self$n_threads / self$n_workers)
+    },
+
+    remove = function(remote) {
+      if (!self$active || self$free == 0L) {
+        return()
+      }
+      n <- min(remote$n_threads + self$free, self$target)
+      d <- n - remote$n_threads
+      if (d > 0) {
+        remote$set_n_threads(n)
+        self$free <- self$free - d
+      }
+    }
+  ))

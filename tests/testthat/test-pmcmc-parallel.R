@@ -101,3 +101,52 @@ test_that("Share out cores", {
 
   ans <- obj$get_results()
 })
+
+
+test_that("noop operations with a null thread pool", {
+  mock_remote <- list2env(
+    list(n_threads = 5,
+         set_n_threads = mockery::mock()))
+
+  p <- thread_pool$new(NULL, 2)
+  expect_false(p$active)
+  expect_equal(p$target, 1L)
+  expect_null(p$add(10))
+  expect_identical(p$free, 0L)
+  expect_null(p$remove(mock_remote))
+  expect_identical(p$free, 0L)
+  mockery::expect_called(mock_remote$set_n_threads, 0L)
+})
+
+
+test_that("add and remove from a thread pool", {
+  skip_if_not_installed("mockery")
+  p <- thread_pool$new(20, 4)
+  expect_true(p$active)
+  expect_equal(p$n_workers, 4)
+  expect_equal(p$n_threads, 20)
+  expect_equal(p$free, 0)
+  expect_equal(p$target, 5)
+
+  mock_remote <- list2env(
+    list(n_threads = 5,
+         set_n_threads = mockery::mock()))
+
+  p$add(mock_remote)
+  expect_equal(p$free, 5)
+  expect_equal(p$target, 7) # 7 * 3 == 21
+
+  p$remove(mock_remote)
+  expect_equal(p$free, 3)
+  p$remove(mock_remote)
+  expect_equal(p$free, 1)
+  p$remove(mock_remote)
+  expect_equal(p$free, 0)
+  p$remove(mock_remote)
+  expect_equal(p$free, 0)
+
+  mockery::expect_called(mock_remote$set_n_threads, 3L)
+  expect_equal(
+    mockery::mock_args(mock_remote$set_n_threads),
+    list(list(7), list(7), list(6)))
+})
