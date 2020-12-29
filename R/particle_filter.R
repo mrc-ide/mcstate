@@ -422,6 +422,20 @@ particle_resample <- function(weights) {
 }
 
 
+## Private helper for reconstituting a particle filter from its
+## `$inputs()` data, but possibly changing the seed
+particle_filter_from_inputs <- function(inputs, seed = NULL) {
+  particle_filter$new(data = inputs$data,
+                      model = inputs$model,
+                      n_particles = inputs$n_particles,
+                      compare = inputs$compare,
+                      index = inputs$index,
+                      initial = inputs$initial,
+                      n_threads = inputs$n_threads,
+                      seed = seed %||% inputs$seed)
+}
+
+
 scale_log_weights <- function(log_weights) {
   log_weights[is.nan(log_weights)] <- -Inf
   max_log_weights <- max(log_weights)
