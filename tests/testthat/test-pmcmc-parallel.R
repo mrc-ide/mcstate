@@ -38,21 +38,13 @@ test_that("Share out cores", {
 
   p0 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index, seed = 1L)
-  control <- pmcmc_control(n_steps, n_chains = n_chains, n_workers = 2L,
-                           n_steps_each = 15, n_threads_total = 4)
-  ans <- pmcmc(dat$pars, p0, control = control)
+  control1 <- pmcmc_control(n_steps, n_chains = n_chains, n_workers = 2L,
+                            n_steps_each = 15, n_threads_total = 4)
+  ans <- pmcmc(dat$pars, p0, control = control1)
 
-  s <- make_seeds(n_chains, 1L)
-  f <- function(idx) {
-    set.seed(s[[idx]]$r)
-    p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                              index = dat$index, seed = s[[idx]]$dust)
-    pmcmc(dat$pars, p, control = pmcmc_control(n_steps))
-  }
-
-  samples <- lapply(seq_along(s), f)
-  cmp <- pmcmc_combine(samples = samples)
-
+  control2 <- pmcmc_control(n_steps, n_chains = n_chains, n_workers = 1L,
+                            n_steps_each = 15, use_parallel_seed = TRUE)
+  cmp <- pmcmc(dat$pars, p0, control = control2)
   expect_equal(cmp$pars, ans$pars)
 })
 

@@ -49,6 +49,12 @@
 ##'   point before doing the comparison.  This may help "unstick"
 ##'   chains, at the cost of some bias in the results.
 ##'
+##' @param use_parallel_seed Logical, indicating if seeds should be
+##'   configured in the same way as when running workers in parallel
+##'   (with `n_workers > 1`).  Set this to `TRUE` to ensure
+##'   reproducibility if you use this option sometimes (but not
+##'   always). This option only has an effect if `n_workers` is 1.
+##'
 ##' @param save_state Logical, indicating if the state should be saved
 ##'   at the end of the simulation. If `TRUE`, then a single
 ##'   randomly selected particle's state will be collected at the end
@@ -82,8 +88,9 @@
 ##' mcstate::pmcmc_control(10)
 pmcmc_control <- function(n_steps, n_chains = 1L, n_workers = 1L,
                           n_steps_each = NULL, n_threads_total = NULL,
-                          rerun_every = Inf, save_state = TRUE,
-                          save_trajectories = FALSE, progress = FALSE) {
+                          rerun_every = Inf, use_parallel_seed = FALSE,
+                          save_state = TRUE, save_trajectories = FALSE,
+                          progress = FALSE) {
   assert_scalar_positive_integer(n_steps)
   assert_scalar_positive_integer(n_chains)
   assert_scalar_positive_integer(n_workers)
@@ -110,6 +117,7 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_workers = 1L,
 
   }
 
+  assert_scalar_logical(use_parallel_seed)
   assert_scalar_logical(save_state)
   assert_scalar_logical(save_trajectories)
   assert_scalar_logical(progress)
@@ -125,6 +133,7 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_workers = 1L,
               n_steps_each = n_steps_each,
               n_threads_total = n_threads_total,
               rerun_every = rerun_every,
+              use_parallel_seed = use_parallel_seed,
               save_state = save_state,
               save_trajectories = save_trajectories,
               progress = progress)

@@ -113,9 +113,7 @@ pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
 
   initial <- pmcmc_check_initial(initial, pars, control$n_chains)
 
-  if (control$n_chains == 1) {
-    pmcmc_single_chain(pars, initial[, 1], filter, control)
-  } else if (control$n_workers == 1) {
+  if (control$n_workers == 1) {
     pmcmc_multiple_series(pars, initial, filter, control)
   } else {
     pmcmc_multiple_parallel(pars, initial, filter, control)
@@ -123,7 +121,12 @@ pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
 }
 
 
-pmcmc_single_chain <- function(pars, initial, filter, control) {
+pmcmc_single_chain <- function(pars, initial, filter, control, seed = NULL) {
+  if (!is.null(seed)) {
+    ## This will be triggered where control$use_parallel_seed is TRUE
+    set.seed(seed$r)
+    filter <- particle_filter_from_inputs(filter$inputs(), seed$dust)
+  }
   obj <- pmcmc_state$new(pars, initial, filter, control)
   obj$run()
   obj$finish()
@@ -131,14 +134,24 @@ pmcmc_single_chain <- function(pars, initial, filter, control) {
 
 
 pmcmc_multiple_series <- function(pars, initial, filter, control) {
+  if (control$use_parallel_seed) {
+    seed <- make_seeds(control$n_chains, filter$inputs()$seed)
+  } else {
+    seed <- NULL
+  }
   samples <- vector("list", control$n_chains)
   for (i in seq_along(samples)) {
     if (control$progress) {
       message(sprintf("Running chain %d / %d", i, control$n_chains))
     }
-    samples[[i]] <- pmcmc_single_chain(pars, initial[, i], filter, control)
+    samples[[i]] <- pmcmc_single_chain(pars, initial[, i], filter, control,
+                                       seed[[i]])
   }
-  pmcmc_combine(samples = samples)
+  if (length(samples) == 1) {
+    samples[[1L]]
+  } else {
+    pmcmc_combine(samples = samples)
+  }
 }
 
 

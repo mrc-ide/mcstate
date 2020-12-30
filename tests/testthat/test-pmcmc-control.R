@@ -22,5 +22,7 @@ test_that("Don't run with invalid n_threads", {
 
 
 test_that("If not using workers, n_run_each has no effect", {
-  pmcmc_control(100, n_chains = 5, n_workers = 5, n_threads_total = 3)
+  expect_equal(
+    pmcmc_control(100, n_workers = 1, n_steps_each = 10)$n_steps_each,
+    100)
 })

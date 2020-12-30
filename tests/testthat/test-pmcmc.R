@@ -436,16 +436,15 @@ test_that("can change the number of threads mid-run", {
                             index = dat$index)
 
 
-  control1 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE)
+  control <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE)
 
   set.seed(1)
-  results1 <- pmcmc(dat$pars, p1, control = control1)
+  results1 <- pmcmc(dat$pars, p1, control = control)
 
-  control2 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE,
-                            n_steps_each = 10)
+  control$n_steps_each <- 10
   set.seed(1)
   initial <- pmcmc_check_initial(NULL, dat$pars, 1)[, 1]
-  obj <- pmcmc_state$new(dat$pars, initial, p2, control2)
+  obj <- pmcmc_state$new(dat$pars, initial, p2, control)
   expect_equal(obj$run(), list(step = 10, finished = FALSE))
   expect_equal(obj$set_n_threads(2), 1)
   expect_equal(obj$run(), list(step = 20, finished = FALSE))

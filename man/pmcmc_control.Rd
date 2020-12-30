@@ -11,6 +11,7 @@ pmcmc_control(
   n_steps_each = NULL,
   n_threads_total = NULL,
   rerun_every = Inf,
+  use_parallel_seed = FALSE,
   save_state = TRUE,
   save_trajectories = FALSE,
   progress = FALSE
@@ -59,6 +60,12 @@ point, but if you set to 100, then every 100 steps we run the
 particle filter on both the proposed \emph{and} previously accepted
 point before doing the comparison.  This may help "unstick"
 chains, at the cost of some bias in the results.}
+
+\item{use_parallel_seed}{Logical, indicating if seeds should be
+configured in the same way as when running workers in parallel
+(with \code{n_workers > 1}).  Set this to \code{TRUE} to ensure
+reproducibility if you use this option sometimes (but not
+always). This option only has an effect if \code{n_workers} is 1.}
 
 \item{save_state}{Logical, indicating if the state should be saved
 at the end of the simulation. If \code{TRUE}, then a single
