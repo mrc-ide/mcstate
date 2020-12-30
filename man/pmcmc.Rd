@@ -24,37 +24,15 @@ translation functions for use with the particle filter).}
 
 \item{filter}{A \code{\link{particle_filter}} object}
 
-\item{n_steps}{Number of MCMC steps to run}
+\item{n_steps}{Deprecated: use \link{pmcmc_control} instead}
 
-\item{save_state}{Logical, indicating if the state should be saved
-at the end of the simulation. If \code{TRUE}, then a single
-randomly selected particle's state will be collected at the end
-of each MCMC step. This is the full state (i.e., unaffected by
-and \code{index} used in the particle filter) so that the
-process may be restarted from this point for projections.  If
-\code{save_trajectories} is \code{TRUE} the same particle will
-be selected for each. The default is \code{TRUE}, which will
-cause \code{n_state} * \code{n_steps} of data to be output
-alongside your results. Set this argument to \code{FALSE} to
-save space, or use \code{\link[=pmcmc_thin]{pmcmc_thin()}} after running the
-MCMC.}
+\item{save_state}{Deprecated: use \link{pmcmc_control} instead}
 
-\item{save_trajectories}{Logical, indicating if the particle
-trajectories should be saved during the simulation. If
-\code{TRUE}, then a single randomly selected particle's
-trajectory will be collected at the end of each MCMC step.  This
-is the filtered state (i.e., using the \code{state} component of
-\code{index} provided to the particle filter).  If
-\code{save_state} is \code{TRUE} the same particle will
-be selected for each.}
+\item{save_trajectories}{Deprecated: use \link{pmcmc_control} instead}
 
-\item{progress}{Logical, indicating if a progress bar should be
-displayed, using \code{\link[progress:progress_bar]{progress::progress_bar}}.}
+\item{progress}{Deprecated: use \link{pmcmc_control} instead}
 
-\item{n_chains}{Optional integer, indicating the number of chains
-to run. If more than one then we run a series of chains and
-merge them with \code{\link[=pmcmc_combine]{pmcmc_combine()}}. Chains are run in series,
-with the same filter.}
+\item{n_chains}{Deprecated: use \link{pmcmc_control} instead}
 
 \item{initial}{Optional initial starting point. If given, it must
 be compatible with the parameters given in \code{pars}, and must be
@@ -64,13 +42,7 @@ either a vector of initial conditions, or a matrix with
 \code{n_chains} columns to use a different starting point for each
 chain.}
 
-\item{rerun_every}{Optional integer giving the frequency at which
-we should rerun the particle filter on the current "accepted"
-state.  The default for this (\code{Inf}) will never rerun this
-point, but if you set to 100, then every 100 steps we run the
-particle filter on both the proposed \emph{and} previously accepted
-point before doing the comparison.  This may help "unstick"
-chains, at the cost of some bias in the results.}
+\item{rerun_every}{Deprecated: use \link{pmcmc_control} instead}
 
 \item{control}{A \link{pmcmc_control} object which will set
 parameters above (how will we resolve differences here?)}

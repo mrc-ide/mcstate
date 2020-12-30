@@ -20,37 +20,15 @@
 ##'
 ##' @param filter A [`particle_filter`] object
 ##'
-##' @param n_steps Number of MCMC steps to run
+##' @param n_steps Deprecated: use [mcstate::pmcmc_control] instead
 ##'
-##' @param save_state Logical, indicating if the state should be saved
-##'   at the end of the simulation. If `TRUE`, then a single
-##'   randomly selected particle's state will be collected at the end
-##'   of each MCMC step. This is the full state (i.e., unaffected by
-##'   and `index` used in the particle filter) so that the
-##'   process may be restarted from this point for projections.  If
-##'   `save_trajectories` is `TRUE` the same particle will
-##'   be selected for each. The default is `TRUE`, which will
-##'   cause `n_state` * `n_steps` of data to be output
-##'   alongside your results. Set this argument to `FALSE` to
-##'   save space, or use [pmcmc_thin()] after running the
-##'   MCMC.
+##' @param save_state Deprecated: use [mcstate::pmcmc_control] instead
 ##'
-##' @param save_trajectories Logical, indicating if the particle
-##'   trajectories should be saved during the simulation. If
-##'   `TRUE`, then a single randomly selected particle's
-##'   trajectory will be collected at the end of each MCMC step.  This
-##'   is the filtered state (i.e., using the `state` component of
-##'   `index` provided to the particle filter).  If
-##'   `save_state` is `TRUE` the same particle will
-##'   be selected for each.
+##' @param save_trajectories Deprecated: use [mcstate::pmcmc_control] instead
 ##'
-##' @param progress Logical, indicating if a progress bar should be
-##'   displayed, using [`progress::progress_bar`].
+##' @param progress Deprecated: use [mcstate::pmcmc_control] instead
 ##'
-##' @param n_chains Optional integer, indicating the number of chains
-##'   to run. If more than one then we run a series of chains and
-##'   merge them with [pmcmc_combine()]. Chains are run in series,
-##'   with the same filter.
+##' @param n_chains Deprecated: use [mcstate::pmcmc_control] instead
 ##'
 ##' @param initial Optional initial starting point. If given, it must
 ##'   be compatible with the parameters given in `pars`, and must be
@@ -60,13 +38,7 @@
 ##'   `n_chains` columns to use a different starting point for each
 ##'   chain.
 ##'
-##' @param rerun_every Optional integer giving the frequency at which
-##'   we should rerun the particle filter on the current "accepted"
-##'   state.  The default for this (`Inf`) will never rerun this
-##'   point, but if you set to 100, then every 100 steps we run the
-##'   particle filter on both the proposed *and* previously accepted
-##'   point before doing the comparison.  This may help "unstick"
-##'   chains, at the cost of some bias in the results.
+##' @param rerun_every Deprecated: use [mcstate::pmcmc_control] instead
 ##'
 ##' @param control A [mcstate::pmcmc_control] object which will set
 ##'   parameters above (how will we resolve differences here?)
