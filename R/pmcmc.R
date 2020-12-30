@@ -101,8 +101,6 @@ pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
                              progress = progress)
   } else {
     assert_is(control, "pmcmc_control")
-    ## TODO: consider throwing here if values are used? Hard to detect
-    ## though.
     ok <- missing(n_steps) && missing(save_state) &&
       missing(save_trajectories) && missing(progress) && missing(n_chains) &&
       missing(rerun_every)

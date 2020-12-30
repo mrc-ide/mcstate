@@ -29,9 +29,6 @@ pmcmc_orchestrator <- R6::R6Class(
       private$thread_pool <- thread_pool$new(control$n_threads_total,
                                              control$n_workers)
 
-      ## TODO: I wonder about doing the seeding this way normally? At
-      ## least as an option. Otherwise we will always have a
-      ## difference between the parallel and non-parallel versions.
       inputs <- filter$inputs()
       seed <- make_seeds(control$n_chains, inputs$seed)
       inputs$n_threads <- private$thread_pool$target
