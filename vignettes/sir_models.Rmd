@@ -88,7 +88,7 @@ This can then be processed with `mcstate::particle_filter_data()` as follows, ta
 dt <- 0.25
 sir_data <- mcstate::particle_filter_data(data = incidence,
                                           time = "day",
-                                          rate = 1/dt)
+                                          rate = 1 / dt)
 rmarkdown::paged_table(sir_data)
 plot(incidence$day, incidence$cases, 
      type = "l", xlab = "Day", ylab = "New cases")
@@ -206,18 +206,13 @@ The proposals for each MCMC step are also set here. Proposals are drawn from a m
 
 The sampler can now be run using these parameters, and the particle filter defined above. Taking 2000 steps on a single chains:
 
-```{r pmcmc_combined, fig.height=5, fig.width=7}
-pmcmc_run <-
-  mcstate::pmcmc(
-    mcmc_pars,
-    filter,
+```{r pmcmc_combined, fig.height = 5, fig.width = 7}
+control <- mcstate::pmcmc_control(
     2000,
     save_state = TRUE,
     save_trajectories = TRUE,
-    progress = TRUE,
-    n_chains = 1
-  )
-pmcmc_run
+    progress = TRUE)
+pmcmc_run <- mcstate::pmcmc(mcmc_pars, filter, control = control)
 plot_particle_filter(pmcmc_run$trajectories$state, true_history, incidence$day)
 ```
 
@@ -259,18 +254,16 @@ proposal_matrix
 Let's now run four independent chains with these proposals:
 
 ```{r, fig.height=10, fig.width=14}
-pmcmc_tuned_run <-
-  mcstate::pmcmc(
-    mcmc_pars,
-    filter,
+control <- mcstate::pmcmc_control(
     2000,
     save_state = TRUE,
     save_trajectories = TRUE,
     progress = TRUE,
-    n_chains = 4
-  )
+    n_chains = 4)
+pmcmc_tuned_run <- mcstate::pmcmc(mcmc_pars, filter, control = control)
 
-mcmc2 <- coda::as.mcmc(cbind(pmcmc_tuned_run$probabilities, pmcmc_tuned_run$pars))
+mcmc2 <- coda::as.mcmc(cbind(
+  pmcmc_tuned_run$probabilities, pmcmc_tuned_run$pars))
 
 summary(mcmc2)
 plot(mcmc2)
@@ -328,7 +321,7 @@ true_history_deaths <- readRDS("deaths_true_history.rds")
 combined_data <- mcstate::particle_filter_data(
   death_data,
   time = "day",
-  rate = 1/dt
+  rate = 1 / dt
 )
 rmarkdown::paged_table(combined_data)
 ```
