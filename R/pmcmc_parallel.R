@@ -230,16 +230,6 @@ thread_pool <- R6::R6Class(
       self$free <- 0L
 
       if (self$active) {
-        assert_scalar_positive_integer(n_threads)
-        if (n_threads < n_workers) {
-          stop(sprintf("'n_threads' (%d) is less than 'n_workers' (%d)",
-                       n_threads, n_workers))
-        }
-        if (n_threads %% n_workers != 0) {
-          stop(sprintf(
-            "'n_threads' (%d) is not a multiple of 'n_workers' (%d)",
-            n_threads, n_workers))
-        }
         self$target <- ceiling(n_threads / n_workers)
       } else {
         self$target <- 1L
