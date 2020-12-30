@@ -19,3 +19,8 @@ test_that("Don't run with invalid n_threads", {
     "'n_threads_total' (8) is not a multiple of 'n_workers' (5)",
     fixed = TRUE)
 })
+
+
+test_that("If not using workers, n_run_each has no effect", {
+  pmcmc_control(100, n_chains = 5, n_workers = 5, n_threads_total = 3)
+})

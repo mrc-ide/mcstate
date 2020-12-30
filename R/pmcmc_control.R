@@ -87,7 +87,7 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_workers = 1L,
   assert_scalar_positive_integer(n_steps)
   assert_scalar_positive_integer(n_chains)
   assert_scalar_positive_integer(n_workers)
-  if (is.null(n_steps_each)) {
+  if (is.null(n_steps_each) || n_workers == 1L) {
     n_steps_each <- n_steps
   } else {
     assert_scalar_positive_integer(n_steps_each)
