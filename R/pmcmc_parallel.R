@@ -8,19 +8,7 @@ pmcmc_orchestrator <- R6::R6Class(
     status = NULL,
     results = NULL,
     thread_pool = NULL,
-
-    show_progress = function() {
-      i <- lengths(private$status) > 0
-      finished <- vlapply(private$status[i], "[[", "finished")
-      n <- vnapply(private$status[i][!finished], "[[", "step")
-      n_steps <- private$control$n_steps
-      frac <- paste(sprintf("%d%%", round(n / n_steps * 100)),
-                    collapse = " ")
-      ## This is hard to read! needs fixing!
-      message(sprintf("F %s R %s W %s | %s",
-                      sum(finished), sum(!finished), sum(!i), frac))
-      invisible(all(finished) && length(finished) == length(i))
-    }
+    progress = NULL
   ),
 
   public = list(
@@ -28,6 +16,7 @@ pmcmc_orchestrator <- R6::R6Class(
       private$control <- control
       private$thread_pool <- thread_pool$new(control$n_threads_total,
                                              control$n_workers)
+      private$progress <- pmcmc_parallel_progress(control)
 
       inputs <- filter$inputs()
       seed <- make_seeds(control$n_chains, inputs$seed)
@@ -85,7 +74,7 @@ pmcmc_orchestrator <- R6::R6Class(
           }
         }
       }
-      private$show_progress()
+      private$progress(private$status)
     },
 
     run = function() {
@@ -170,7 +159,6 @@ pmcmc_remote <- R6::R6Class(
     },
 
     set_n_threads = function(n_threads) {
-      message(sprintf("Setting to use %d threads", n_threads))
       self$session$run(function(n) .GlobalEnv$obj$set_n_threads(n),
                        list(n_threads))
       self$n_threads <- n_threads
@@ -254,3 +242,54 @@ thread_pool <- R6::R6Class(
       }
     }
   ))
+
+
+pmcmc_parallel_progress_data <- function(status, n_steps) {
+  started <- lengths(status) > 0
+  finished <- vlapply(status[started], "[[", "finished")
+
+  n_finished <- sum(finished)
+  n_started <- sum(started)
+  n_running <- n_started - n_finished
+  n_waiting <- length(status) - n_started
+
+  n <- vnapply(status[started], "[[", "step")
+
+  ## Could use cli::symbol$full_block and crayon here to make this nicer
+  bar_overall <- paste0(strrep("#", n_finished),
+                        strrep("+", n_running),
+                        strrep(" ", n_waiting))
+  p_running <- paste(sprintf("%d%%", round(n[!finished] / n_steps * 100)),
+                     collapse = " ")
+
+  tokens <- list(bar_overall = bar_overall, p_running = p_running)
+  result <- n_finished == length(status)
+  list(n = sum(n), tokens = tokens, result = result)
+}
+
+
+pmcmc_parallel_progress <- function(control, force = FALSE) {
+  n_steps <- control$n_steps
+  if (control$progress) {
+    n <- n_steps * control$n_chains
+    fmt <- "[:spin] [:bar_overall] ETA :eta | :elapsedfull so far (:p_running)"
+    t0 <- Sys.time()
+    callback <- function(p) {
+      message(sprintf("Finished %d steps in %s",
+                      n, format(Sys.time() - t0, digits = 0)))
+    }
+    p <- progress::progress_bar$new(fmt, n, callback = callback, force = force)
+    ## Progress likes to be started right away:
+    d <- pmcmc_parallel_progress_data(vector("list", control$n_chains), n_steps)
+    p$update(d$n, d$tokens)
+    function(status) {
+      d <- pmcmc_parallel_progress_data(status, n_steps)
+      p$update(d$n / n, d$tokens)
+      d$result
+    }
+  } else {
+    function(status) {
+      pmcmc_parallel_progress_data(status, n_steps)$result
+    }
+  }
+}

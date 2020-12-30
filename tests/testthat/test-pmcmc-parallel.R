@@ -80,6 +80,17 @@ test_that("throw from callr operation", {
 })
 
 
+test_that("running pmcmc with progress = TRUE prints messages", {
+  dat <- example_sir()
+  p <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
+                            index = dat$index, seed = 1L)
+  control <- pmcmc_control(10, n_chains = 2, n_workers = 2L, progress = TRUE)
+  expect_message(
+    pmcmc(dat$pars, p, control = control),
+    "Finished 20 steps in ")
+})
+
+
 test_that("make seeds with integer returns length-32 raws", {
   s <- make_seeds(2, 1)
   expect_length(s, 2L)
@@ -147,4 +158,78 @@ test_that("add and remove from a thread pool", {
   expect_equal(
     mockery::mock_args(mock_remote$set_n_threads),
     list(list(7), list(7), list(6)))
+})
+
+
+test_that("construct parallel filter data", {
+  expect_equal(
+    pmcmc_parallel_progress_data(list(NULL, NULL), 100),
+    list(n = 0,
+         tokens = list(bar_overall = "  ", p_running = ""),
+         result = FALSE))
+  expect_equal(
+    pmcmc_parallel_progress_data(list(NULL, NULL, NULL, NULL), 100),
+    list(n = 0,
+         tokens = list(bar_overall = "    ", p_running = ""),
+         result = FALSE))
+  expect_equal(
+    pmcmc_parallel_progress_data(list(list(step = 50, finished = FALSE),
+                                      NULL, NULL, NULL), 100),
+    list(n = 50,
+         tokens = list(bar_overall = "+   ", p_running = "50%"),
+         result = FALSE))
+  expect_equal(
+    pmcmc_parallel_progress_data(list(list(step = 100, finished = TRUE),
+                                      list(step = 12, finished = FALSE),
+                                      list(step = 67, finished = FALSE),
+                                      NULL, NULL), 100),
+    list(n = 179,
+         tokens = list(bar_overall = "#++  ", p_running = "12% 67%"),
+         result = FALSE))
+  expect_equal(
+    pmcmc_parallel_progress_data(list(list(step = 100, finished = TRUE),
+                                      list(step = 100, finished = TRUE),
+                                      list(step = 95, finished = FALSE)),
+                                 100),
+    list(n = 295,
+         tokens = list(bar_overall = "##+", p_running = "95%"),
+         result = FALSE))
+  expect_equal(
+    pmcmc_parallel_progress_data(list(list(step = 100, finished = TRUE),
+                                      list(step = 100, finished = TRUE),
+                                      list(step = 100, finished = TRUE)),
+                                 100),
+    list(n = 300,
+         tokens = list(bar_overall = "###", p_running = ""),
+         result = TRUE))
+})
+
+
+test_that("progress bar is a noop when progress = FALSE", {
+  control <- pmcmc_control(100, n_workers = 2, n_chains = 3, progress = FALSE)
+  p <- pmcmc_parallel_progress(control, force = TRUE)
+  expect_silent(p(list(NULL, NULL, NULL)))
+  expect_false(p(list(NULL, NULL, NULL)))
+  expect_false(p(list(list(step = 100, finished = TRUE), NULL, NULL)))
+  expect_silent(p(rep(list(list(step = 100, finished = TRUE)), 3)))
+  expect_true(p(rep(list(list(step = 100, finished = TRUE)), 3)))
+})
+
+
+test_that("progress bar creates progress_bar when progress = TRUE", {
+  control <- pmcmc_control(100, n_workers = 2, n_chains = 2, progress = TRUE)
+  p <- pmcmc_parallel_progress(control, force = TRUE)
+
+  Sys.sleep(0.2)
+  expect_message(
+    p(list(list(step = 50, finished = FALSE), NULL)),
+    "\\[.\\] \\[\\+ \\] ETA .* \\| 00:00:[0-9]{2} so far \\(50%\\)")
+  expect_message(
+    p(list(list(step = 90, finished = FALSE),
+           list(step = 10, finished = FALSE))),
+    "\\[.\\] \\[\\+\\+\\] ETA .* \\| 00:00:[0-9]{2} so far \\(90% 10%\\)")
+  expect_message(
+    p(list(list(step = 100, finished = TRUE),
+           list(step = 33, finished = FALSE))),
+    "\\[.\\] \\[\\#\\+\\] ETA .* \\| 00:00:[0-9]{2} so far \\(33%\\)")
 })
