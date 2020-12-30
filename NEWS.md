@@ -1,3 +1,8 @@
+# mcstate 0.3.0
+
+* `pmcmc` is now controllable via a new `mcstate::pmcmc_control` object
+* `pmcmc` can run chains in parallel using `callr`, by specifying `n_workers = n` for `n` greater than 1.
+
 # mcstate 0.2.16
 
 * `pmcmc` adds new `rerun_every` argument to rerun the particle filter unconditionally.
