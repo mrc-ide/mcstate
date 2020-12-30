@@ -18,7 +18,7 @@ test_that("basic parallel operation", {
     set.seed(s[[idx]]$r)
     p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                               index = dat$index, seed = s[[idx]]$dust)
-    pmcmc(dat$pars, p, n_steps)
+    pmcmc(dat$pars, p, control = pmcmc_control(n_steps))
   }
 
   samples <- lapply(seq_along(s), f)
@@ -47,7 +47,7 @@ test_that("Share out cores", {
     set.seed(s[[idx]]$r)
     p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                               index = dat$index, seed = s[[idx]]$dust)
-    pmcmc(dat$pars, p, n_steps)
+    pmcmc(dat$pars, p, control = pmcmc_control(n_steps))
   }
 
   samples <- lapply(seq_along(s), f)

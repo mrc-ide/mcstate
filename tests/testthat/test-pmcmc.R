@@ -6,10 +6,11 @@ context("pmcmc")
 ## long to be annoying in tests.
 test_that("mcmc works for uniform distribution on unit square", {
   dat <- example_uniform()
+  control <- pmcmc_control(1000, save_state = FALSE, save_trajectories = FALSE)
 
   set.seed(1)
   testthat::try_again(5, {
-    res <- pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE)
+    res <- pmcmc(dat$pars, dat$filter, control = control)
     expect_s3_class(res, "mcstate_pmcmc")
     expect_true(all(acceptance_rate(res$pars) == 1))
     expect_true(abs(mean(res$pars[, "a"]) - 0.5) < 0.05)
@@ -20,10 +21,11 @@ test_that("mcmc works for uniform distribution on unit square", {
 
 test_that("mcmc works for multivariate gaussian", {
   dat <- example_mvnorm()
+  control <- pmcmc_control(1000, save_state = FALSE, save_trajectories = FALSE)
 
   set.seed(1)
   testthat::try_again(5, {
-    res <- pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE)
+    res <- pmcmc(dat$pars, dat$filter, control = control)
     i <- seq(1, 1000, by = 20)
     expect_s3_class(res, "mcstate_pmcmc")
     expect_gt(ks.test(res$pars[i, "a"], "pnorm")$p.value, 0.05)
@@ -72,7 +74,8 @@ test_that("reflect parameters: upper", {
 
 test_that("proposal uses provided covariance structure", {
   dat <- example_uniform(proposal_kernel = matrix(0.1, 2, 2))
-  res <- pmcmc(dat$pars, dat$filter, 100, FALSE, FALSE)
+  control <- pmcmc_control(100, save_state = FALSE, save_trajectories = FALSE)
+  res <- pmcmc(dat$pars, dat$filter, control = control)
 
   expect_true(all(acceptance_rate(res$pars) == 1))
   expect_equal(res$pars[, 1], res$pars[, 2])
@@ -97,10 +100,13 @@ test_that("run pmcmc with the particle filter and retain history", {
   p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index)
 
+  control1 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE)
+  control2 <- pmcmc_control(30, save_trajectories = FALSE, save_state = FALSE)
+
   set.seed(1)
-  results1 <- pmcmc(pars, p1, 30, TRUE, TRUE)
+  results1 <- pmcmc(pars, p1, control = control1)
   set.seed(1)
-  results2 <- pmcmc(pars, p2, 30, FALSE, FALSE)
+  results2 <- pmcmc(pars, p2, control = control2)
 
   expect_setequal(
     names(results1),
@@ -162,11 +168,14 @@ test_that("collecting state from model yields an RNG state", {
                             index = dat$index, seed = 2L)
 
   set.seed(1)
-  results1 <- pmcmc(dat$pars, p1, 5, FALSE, FALSE)
+  results1 <- pmcmc(dat$pars, p1,
+                    control = pmcmc_control(5, save_state = FALSE))
   set.seed(1)
-  results2 <- pmcmc(dat$pars, p2, 5, TRUE, FALSE)
+  results2 <- pmcmc(dat$pars, p2,
+                    control = pmcmc_control(5, save_state = TRUE))
   set.seed(1)
-  results3 <- pmcmc(dat$pars, p3, 5, TRUE, FALSE)
+  results3 <- pmcmc(dat$pars, p3,
+                    control = pmcmc_control(5, save_state = TRUE))
 
   expect_identical(
     r6_private(p1)$last_model$rng_state(),
@@ -181,8 +190,10 @@ test_that("collecting state from model yields an RNG state", {
 
 test_that("running pmcmc with progress = TRUE prints messages", {
   dat <- example_uniform()
+  control <- pmcmc_control(1000, save_state = FALSE, save_trajectories = FALSE,
+                           progress = TRUE)
   expect_message(
-    pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE, progress = TRUE),
+    pmcmc(dat$pars, dat$filter, control = control),
     "Finished 1000 steps in ")
 })
 
@@ -190,13 +201,16 @@ test_that("running pmcmc with progress = TRUE prints messages", {
 test_that("run multiple chains", {
   dat <- example_uniform()
 
+  control1 <- pmcmc_control(100, save_state = FALSE, n_chains = 1)
+  control2 <- pmcmc_control(100, save_state = FALSE, n_chains = 3)
+
   set.seed(1)
-  res1 <- pmcmc(dat$pars, dat$filter, 100, FALSE, FALSE, n_chains = 1)
+  res1 <- pmcmc(dat$pars, dat$filter, control = control1)
   expect_s3_class(res1, "mcstate_pmcmc")
   expect_null(res1$chain)
 
   set.seed(1)
-  res3 <- pmcmc(dat$pars, dat$filter, 100, FALSE, FALSE, n_chains = 3)
+  res3 <- pmcmc(dat$pars, dat$filter, control = control2)
   expect_s3_class(res3, "mcstate_pmcmc")
   expect_equal(res3$chain, rep(1:3, each = 101))
 
@@ -206,9 +220,10 @@ test_that("run multiple chains", {
 
 test_that("progress in multiple chains", {
   dat <- example_uniform()
+  control <- pmcmc_control(100, save_state = FALSE, n_chains = 3,
+                           progress = TRUE)
   expect_message(
-    pmcmc(dat$pars, dat$filter, 100, FALSE, FALSE, progress = TRUE,
-          n_chains = 3),
+    pmcmc(dat$pars, dat$filter, control = control),
     "Running chain 2 / 3")
 })
 
@@ -232,10 +247,12 @@ test_that("return names on pmcmc output", {
   p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = index2)
 
+  control <- pmcmc_control(5, save_state = TRUE, save_trajectories = TRUE)
+
   set.seed(1)
-  results1 <- pmcmc(pars, p1, 5, TRUE, TRUE)
+  results1 <- pmcmc(pars, p1, control = control)
   set.seed(1)
-  results2 <- pmcmc(pars, p2, 5, TRUE, TRUE)
+  results2 <- pmcmc(pars, p2, control = control)
 
   expect_null(rownames(results1$trajectories$state))
   expect_equal(rownames(results2$trajectories$state), c("a", "b", "c"))
@@ -316,8 +333,8 @@ test_that("can validate a matrix initial conditions", {
 test_that("can start a pmcmc from a matrix of starting points", {
   dat <- example_uniform()
   initial <- matrix(runif(6), 2, 3, dimnames = list(c("a", "b"), NULL))
-  res <- pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE,
-               n_chains = 3, initial = initial)
+  control <- pmcmc_control(1000, save_state = FALSE, n_chains = 3)
+  res <- pmcmc(dat$pars, dat$filter, control = control, initial = initial)
   expect_equal(res$pars[res$iteration == 0, ], t(initial))
 })
 
@@ -340,12 +357,17 @@ test_that("can trigger rerunning particle filter", {
   p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index)
 
+  control1 <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE,
+                            rerun_every = 2)
+  control2 <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE,
+                            rerun_every = Inf)
+
   set.seed(1)
-  res1 <- pmcmc(pars, p1, 30, TRUE, TRUE, rerun_every = 2)
+  res1 <- pmcmc(pars, p1, control = control1)
   expect_lte(max(rle(res1$probabilities[, "log_likelihood"])$lengths), 2)
 
   set.seed(1)
-  res2 <- pmcmc(pars, p1, 30, TRUE, TRUE, rerun_every = Inf)
+  res2 <- pmcmc(pars, p1, control = control2)
   expect_gt(max(rle(res2$probabilities[, "log_likelihood"])$lengths), 5)
 })
 
@@ -357,8 +379,9 @@ test_that("rerunning the particle filter triggers the filter run method", {
   dat$inputs <- function() NULL
 
   ## with the dummy version we can't return history
-  ans <- pmcmc(dat$pars, dat$filter, 10, rerun_every = 2,
-               save_trajectories = FALSE, save_state = FALSE)
+  control <- pmcmc_control(10, rerun_every = 2, save_trajectories = FALSE,
+                           save_state = FALSE)
+  ans <- pmcmc(dat$pars, dat$filter, control = control)
 
   mockery::expect_called(dat$filter$run, 16)
 })

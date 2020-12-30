@@ -8,7 +8,8 @@ test_that("can run a prediction from a mcmc run", {
                            index = dat$index)
 
   set.seed(1)
-  results <- pmcmc(dat$pars, p, 30, TRUE, TRUE)
+  control <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE)
+  results <- pmcmc(dat$pars, p, control = control)
 
   steps <- seq(tail(dat$data$step_end, 1), by = 4, length.out = 26)
   y <- pmcmc_predict(results, steps)
@@ -57,7 +58,8 @@ test_that("Can combine runs with predictions", {
 
 test_that("Do not run a predict with no state", {
   dat <- example_uniform()
-  res <- pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE)
+  control <- pmcmc_control(1000, save_state = FALSE)
+  res <- pmcmc(dat$pars, dat$filter, control = control)
   expect_error(
     pmcmc_predict(res, 0:10),
     "mcmc was run with return_state = FALSE, can't predict")
