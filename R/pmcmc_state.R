@@ -4,11 +4,7 @@ pmcmc_state <- R6::R6Class(
   private = list(
     filter = NULL,
     pars = NULL,
-    rerun_every = NULL,
-    n_steps = NULL,
-    n_steps_each = NULL,
-    save_state = NULL,
-    save_trajectories = NULL,
+    control = NULL,
 
     history_pars = NULL,
     history_probabilities = NULL,
@@ -27,45 +23,36 @@ pmcmc_state <- R6::R6Class(
 
     update_history = function() {
       i <- sample.int(private$filter$n_particles, 1)
-      if (private$save_trajectories) {
+      if (private$control$save_trajectories) {
         private$curr_trajectories <-
           sample_trajectory(private$filter$history(i))
       }
-      if (private$save_state) {
+      if (private$control$save_state) {
         private$curr_state <- private$filter$state()[, i, drop = TRUE]
       }
     },
 
     run_filter = function(p) {
-      private$filter$run(private$pars$model(p), private$save_trajectories)
+      private$filter$run(private$pars$model(p),
+                         private$control$save_trajectories)
     }
   ),
 
   public = list(
-    initialize = function(pars, initial, filter, n_steps, n_steps_each,
-                          rerun_every, save_state, save_trajectories,
-                          progress) {
+    initialize = function(pars, initial, filter, control) {
       private$filter <- filter
       private$pars <- pars
+      private$control <- control
 
-      ## We might move these all into some control object as it's
-      ## getting a bit tedious
-      private$n_steps <- n_steps
-      private$n_steps_each <- n_steps_each
-      private$rerun_every <- rerun_every
-      private$save_state <- save_state
-      private$save_trajectories <- save_trajectories
-
-      private$history_pars <- history_collector(n_steps)
-      private$history_probabilities <- history_collector(n_steps)
-      private$history_state <- history_collector(n_steps)
-      private$history_trajectories <- history_collector(n_steps)
+      private$history_pars <- history_collector(control$n_steps)
+      private$history_probabilities <- history_collector(control$n_steps)
+      private$history_state <- history_collector(control$n_steps)
+      private$history_trajectories <- history_collector(control$n_steps)
 
       private$curr_step <- 0L
       private$curr_pars <- initial
       private$curr_lprior <- private$pars$prior(private$curr_pars)
-      private$curr_llik <- filter$run(private$pars$model(private$curr_pars),
-                                      private$save_trajectories)
+      private$curr_llik <- private$run_filter(private$curr_pars)
       private$curr_lpost <- private$curr_lprior + private$curr_llik
 
       private$history_pars$add(private$curr_pars)
@@ -73,14 +60,14 @@ pmcmc_state <- R6::R6Class(
                                           private$curr_llik,
                                           private$curr_lpost))
 
-      private$tick <- pmcmc_progress(n_steps, progress)
+      private$tick <- pmcmc_progress(control$n_steps, control$progress)
 
       ## Initial version of the history
       private$update_history()
-      if (private$save_trajectories) {
+      if (private$control$save_trajectories) {
         private$history_trajectories$add(private$curr_trajectories)
       }
-      if (private$save_state) {
+      if (private$control$save_state) {
         private$history_state$add(private$curr_state)
       }
     },
@@ -90,13 +77,14 @@ pmcmc_state <- R6::R6Class(
     },
 
     run = function() {
-      to <- min(private$curr_step + private$n_steps_each, private$n_steps)
+      to <- min(private$curr_step + private$control$n_steps_each,
+                private$control$n_steps)
       steps <- seq(from = private$curr_step + 1L,
                    length.out = to - private$curr_step)
       for (i in steps) {
         private$tick()
 
-        if (i %% private$rerun_every == 0) {
+        if (i %% private$control$rerun_every == 0) {
           private$curr_llik <- private$run_filter(private$curr_pars)
           private$curr_lpost <- private$curr_lprior + private$curr_llik
           private$update_history()
@@ -118,15 +106,15 @@ pmcmc_state <- R6::R6Class(
         private$history_pars$add(private$curr_pars)
         private$history_probabilities$add(
           c(private$curr_lprior, private$curr_llik, private$curr_lpost))
-        if (private$save_trajectories) {
+        if (private$control$save_trajectories) {
           private$history_trajectories$add(private$curr_trajectories)
         }
-        if (private$save_state) {
+        if (private$control$save_state) {
           private$history_state$add(private$curr_state)
         }
       }
       private$curr_step <- to
-      list(step = to, finished = to == private$n_steps)
+      list(step = to, finished = to == private$control$n_steps)
     },
 
     finish = function() {
@@ -138,7 +126,7 @@ pmcmc_state <- R6::R6Class(
 
       predict <- state <- trajectories <- NULL
 
-      if (private$save_state || private$save_trajectories) {
+      if (private$control$save_state || private$control$save_trajectories) {
         ## Do we *definitely* need step and rate here?
         data <- private$filter$inputs()$data
         predict <- list(transform = r6_private(private$pars)$transform,
@@ -148,11 +136,11 @@ pmcmc_state <- R6::R6Class(
                         filter = private$filter$inputs())
       }
 
-      if (private$save_state) {
+      if (private$control$save_state) {
         state <- t(list_to_matrix(private$history_state$get()))
       }
 
-      if (private$save_trajectories) {
+      if (private$control$save_trajectories) {
         ## Permute trajectories from [state x mcmc x particle] to
         ## [state x particle x mcmc] so that they match the ones that we
         ## will generate with predict
@@ -168,3 +156,36 @@ pmcmc_state <- R6::R6Class(
       mcstate_pmcmc(pars_matrix, probabilities, state, trajectories, predict)
     }
   ))
+
+
+## A utility function for sampling a trajectory and safely dropping
+## the dimensionality even if there is only one state vector
+sample_trajectory <- function(history, index) {
+  ret <- history[, index, , drop = TRUE]
+  if (is.null(dim(ret))) {
+    dim(ret) <- dim(history)[c(1, 3)]
+  }
+  ret
+}
+
+
+## Generic history collector, collects anything at all into a list
+##
+## This would be more nicely done as a simple R6 class but it's a bit
+## slow in testing; this version speeds up the total mcmc runtime by a
+## factor of ~3x (0.4s/1000 iterations to 0.13s/1000) mostly by
+## reducing the number of garbage collections considerably.
+history_collector <- function(n) {
+  data <- vector("list", n + 1L)
+  i <- 0L
+  add <- function(value) {
+    i <<- i + 1L
+    data[[i]] <<- value
+  }
+
+  get <- function() {
+    data
+  }
+
+  list(add = add, get = get)
+}

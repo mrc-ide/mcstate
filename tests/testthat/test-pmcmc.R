@@ -213,38 +213,6 @@ test_that("progress in multiple chains", {
 })
 
 
-test_that("All arguments forwarded to multiple chains", {
-  skip_if_not_installed("mockery")
-  dat <- example_uniform()
-  res <- list(
-    pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE),
-    pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE),
-    pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE))
-
-  mock_pmcmc_single_chain <- mockery::mock(
-    res[[1]], res[[1]], res[[2]], res[[3]])
-  with_mock("mcstate::pmcmc_single_chain" = mock_pmcmc_single_chain, {
-    ans1 <- pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE, FALSE)
-    ans2 <- pmcmc(dat$pars, dat$filter, 1000, FALSE, FALSE, FALSE, n_chains = 3)
-  })
-
-  mockery::expect_called(mock_pmcmc_single_chain, 4)
-  args <- mockery::mock_args(mock_pmcmc_single_chain)
-  ic <- c(a = 0.5, b = 0.5)
-  expect_equal(args[[1]],
-               list(dat$pars, ic, dat$filter, 1000, Inf, FALSE, FALSE, FALSE))
-  expect_equal(args[[2]],
-               list(dat$pars, ic, dat$filter, 1000, Inf, FALSE, FALSE, FALSE))
-  expect_equal(args[[3]],
-               list(dat$pars, ic, dat$filter, 1000, Inf, FALSE, FALSE, FALSE))
-  expect_equal(args[[4]],
-               list(dat$pars, ic, dat$filter, 1000, Inf, FALSE, FALSE, FALSE))
-
-  expect_equal(ans1, res[[1]])
-  expect_equal(ans2, pmcmc_combine(samples = res))
-})
-
-
 test_that("return names on pmcmc output", {
   proposal_kernel <- diag(2) * 1e-4
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("beta", "gamma")
@@ -407,20 +375,22 @@ test_that("can partially run the pmcmc", {
                          prior = function(p) log(1e-10))),
     proposal = proposal_kernel)
 
+  control <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE)
+
   dat <- example_sir()
-  n_particles <- 100
+  n_particles <- 42
   p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index)
   p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index)
 
   set.seed(1)
-  results1 <- pmcmc(pars, p1, 30, TRUE, TRUE)
+  results1 <- pmcmc(pars, p1, control = control)
 
-  ## This is quite manual here:
+  control$n_steps_each <- 10
   set.seed(1)
   initial <- pmcmc_check_initial(NULL, pars, 1)[, 1]
-  obj <- pmcmc_state$new(pars, initial, p2, 30, 10, Inf, TRUE, TRUE, FALSE)
+  obj <- pmcmc_state$new(pars, initial, p2, control)
   expect_equal(obj$run(), list(step = 10, finished = FALSE))
   tmp <- r6_private(obj)$history_pars$get()
   expect_equal(lengths(tmp), rep(c(2, 0), c(11, 20)))
@@ -442,13 +412,17 @@ test_that("can change the number of threads mid-run", {
   p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index)
 
-  set.seed(1)
-  results1 <- pmcmc(dat$pars, p1, 30, TRUE, TRUE)
 
-  ## This is quite manual here:
+  control1 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE)
+
+  set.seed(1)
+  results1 <- pmcmc(dat$pars, p1, control = control1)
+
+  control2 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE,
+                            n_steps_each = 10)
   set.seed(1)
   initial <- pmcmc_check_initial(NULL, dat$pars, 1)[, 1]
-  obj <- pmcmc_state$new(dat$pars, initial, p2, 30, 10, Inf, TRUE, TRUE, FALSE)
+  obj <- pmcmc_state$new(dat$pars, initial, p2, control2)
   expect_equal(obj$run(), list(step = 10, finished = FALSE))
   expect_equal(obj$set_n_threads(2), 1)
   expect_equal(obj$run(), list(step = 20, finished = FALSE))

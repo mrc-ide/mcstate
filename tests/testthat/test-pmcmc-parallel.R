@@ -8,11 +8,9 @@ test_that("basic parallel operation", {
 
   p0 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index, seed = 1L)
-  obj <- orchestrator$new(dat$pars, p0, n_steps, n_chains = n_chains,
-                          n_workers = 2, n_steps_each = 20)
-  while (!obj$step()) {
-  }
-  ans <- obj$get_results()
+  control <- pmcmc_control(n_steps, n_chains = n_chains, n_workers = 2L,
+                           n_steps_each = 20L)
+  ans <- pmcmc(dat$pars, p0, control = control)
 
   ## Run two chains manually with a given pair of seeds:
   s <- make_seeds(n_chains, 1L)
@@ -28,6 +26,65 @@ test_that("basic parallel operation", {
 
   expect_equal(cmp$pars, ans$pars)
   expect_equal(cmp, ans)
+})
+
+
+test_that("Share out cores", {
+  skip_on_cran()
+  dat <- example_sir()
+  n_particles <- 42
+  n_steps <- 30
+  n_chains <- 3
+
+  p0 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  control <- pmcmc_control(n_steps, n_chains = n_chains, n_workers = 2L,
+                           n_steps_each = 15, n_threads_total = 4)
+  ans <- pmcmc(dat$pars, p0, control = control)
+
+  s <- make_seeds(n_chains, 1L)
+  f <- function(idx) {
+    set.seed(s[[idx]]$r)
+    p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                              index = dat$index, seed = s[[idx]]$dust)
+    pmcmc(dat$pars, p, n_steps)
+  }
+
+  samples <- lapply(seq_along(s), f)
+  cmp <- pmcmc_combine(samples = samples)
+
+  expect_equal(cmp$pars, ans$pars)
+})
+
+
+test_that("throw from callr operation", {
+  skip_on_cran()
+  dat <- example_sir()
+  n_particles <- 42
+  n_steps <- 30
+  n_chains <- 3
+  p0 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  control <- pmcmc_control(n_steps, n_chains = 3, n_workers = 2,
+                           n_steps_each = 5)
+
+  ## Manual set up, as done by pmcmc_orchestrator
+  initial <- pmcmc_check_initial(NULL, dat$pars, n_chains)
+  seed <- make_seeds(n_chains, NULL)
+
+  inputs <- p0$inputs()
+  inputs$n_threads <- "one"
+  r <- pmcmc_remote$new(dat$pars, initial, inputs, control, seed)
+  r$wait_session_ready()
+  r$init(1L)
+  for (i in 1:20) {
+    if (r$session$poll_process(1000) == "ready") {
+      break
+    } else {
+      Sys.sleep(0.1)
+    }
+  }
+  expect_error(r$read(), "'n_threads' must be an integer")
 })
 
 
@@ -49,57 +106,6 @@ test_that("make seeds with long raw retains size", {
   expect_setequal(names(s[[1]]), c("dust", "r"))
   expect_identical(s[[1]]$dust, seed)
   expect_length(s[[2]]$dust, length(seed))
-})
-
-
-test_that("Don't run with fewer chains than workers", {
-  dat <- example_sir()
-  n_particles <- 42
-  n_steps <- 30
-  p0 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index, seed = 1L)
-  expect_error(
-    obj <- orchestrator$new(dat$pars, p0, n_steps, n_chains = 2,
-                            n_workers = 5, n_steps_each = 20),
-    "'n_chains' (2) is less than 'n_workers' (5)",
-    fixed = TRUE)
-})
-
-
-test_that("Don't run with invalid n_threads", {
-  dat <- example_sir()
-  n_particles <- 42
-  n_steps <- 30
-  p0 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index, seed = 1L)
-  expect_error(
-    obj <- orchestrator$new(dat$pars, p0, n_steps, n_chains = 5,
-                            n_workers = 5, n_steps_each = 20, n_threads = 3),
-    "'n_threads' (3) is less than 'n_workers' (5)",
-    fixed = TRUE)
-  expect_error(
-    obj <- orchestrator$new(dat$pars, p0, n_steps, n_chains = 5,
-                            n_workers = 5, n_steps_each = 20, n_threads = 8),
-    "'n_threads' (8) is not a multiple of 'n_workers' (5)",
-    fixed = TRUE)
-})
-
-
-test_that("Share out cores", {
-  skip_on_cran()
-  dat <- example_sir()
-  n_particles <- 42
-  n_steps <- 30
-  n_chains <- 3
-
-  p0 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index, seed = 1L)
-  obj <- orchestrator$new(dat$pars, p0, n_steps, n_chains = n_chains,
-                          n_workers = 2, n_steps_each = 15, n_threads = 4)
-  while (!obj$step()) {
-  }
-
-  ans <- obj$get_results()
 })
 
 
@@ -149,32 +155,4 @@ test_that("add and remove from a thread pool", {
   expect_equal(
     mockery::mock_args(mock_remote$set_n_threads),
     list(list(7), list(7), list(6)))
-})
-
-
-test_that("throw from callr operation", {
-  skip_on_cran()
-  dat <- example_sir()
-  n_particles <- 42
-  n_steps <- 30
-  n_chains <- 3
-  p0 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index, seed = 1L)
-  inputs <- p0$inputs()
-  control <- list(n_steps = 30, n_steps_each = 5, rerun_every = Inf,
-                  save_state = FALSE, save_trajectories = FALSE)
-  initial <- pmcmc_check_initial(NULL, dat$pars, n_chains)
-  seed <- make_seeds(n_chains, NULL)
-  inputs$n_threads <- "one"
-  r <- remote$new(dat$pars, initial, inputs, control, seed)
-  r$wait_session_ready()
-  r$init(1L)
-  for (i in 1:20) {
-    if (r$session$poll_process(1000) == "ready") {
-      break
-    } else {
-      Sys.sleep(0.1)
-    }
-  }
-  expect_error(r$read(), "'n_threads' must be an integer")
 })

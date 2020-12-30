@@ -13,7 +13,8 @@ pmcmc(
   progress = FALSE,
   n_chains = 1,
   initial = NULL,
-  rerun_every = Inf
+  rerun_every = Inf,
+  control = NULL
 )
 }
 \arguments{
@@ -70,6 +71,9 @@ point, but if you set to 100, then every 100 steps we run the
 particle filter on both the proposed \emph{and} previously accepted
 point before doing the comparison.  This may help "unstick"
 chains, at the cost of some bias in the results.}
+
+\item{control}{A \link{pmcmc_control} object which will set
+parameters above (how will we resolve differences here?)}
 }
 \value{
 A \code{mcstate_pmcmc} object containing \code{pars}

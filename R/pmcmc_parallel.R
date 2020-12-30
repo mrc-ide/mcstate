@@ -1,9 +1,9 @@
-orchestrator <- R6::R6Class(
-  "orchestrator",
+pmcmc_orchestrator <- R6::R6Class(
+  "pmcmc_orchestrator",
 
   private = list(
-    n_steps = NULL,
-    remote = NULL,
+    control = NULL,
+    remotes = NULL,
     sessions = NULL,
     status = NULL,
     results = NULL,
@@ -13,9 +13,10 @@ orchestrator <- R6::R6Class(
       i <- lengths(private$status) > 0
       finished <- vlapply(private$status[i], "[[", "finished")
       n <- vnapply(private$status[i][!finished], "[[", "step")
-      frac <- paste(sprintf("%d%%", round(n / private$n_steps * 100)),
+      n_steps <- private$control$n_steps
+      frac <- paste(sprintf("%d%%", round(n / n_steps * 100)),
                     collapse = " ")
-      ## This is hard to read!
+      ## This is hard to read! needs fixing!
       message(sprintf("F %s R %s W %s | %s",
                       sum(finished), sum(!finished), sum(!i), frac))
       invisible(all(finished) && length(finished) == length(i))
@@ -23,56 +24,33 @@ orchestrator <- R6::R6Class(
   ),
 
   public = list(
-    ## TODO: some coordination will be required here to make sure that
-    ## this aligns with the list in pmcmc() - at test at
-    ## least.
-    initialize = function(pars, filter, n_steps, save_state = TRUE,
-                          save_trajectories = FALSE, progress = FALSE,
-                          n_chains = 1, initial = NULL,
-                          rerun_every = Inf,
-                          ## Orchestrator arguments
-                          n_workers = NULL, n_steps_each = NULL,
-                          n_threads = NULL) {
-      assert_is(pars, "pmcmc_parameters")
-      assert_is(filter, "particle_filter")
-      assert_scalar_positive_integer(n_steps)
-      assert_scalar_positive_integer(n_steps_each)
-      assert_scalar_logical(save_state)
-      assert_scalar_logical(save_trajectories)
-      assert_scalar_positive_integer(n_chains)
+    initialize = function(pars, initial, filter, control) {
+      private$control <- control
+      private$thread_pool <- thread_pool$new(control$n_threads_total,
+                                             control$n_workers)
 
-      if (n_chains < n_workers) {
-        stop(sprintf("'n_chains' (%d) is less than 'n_workers' (%d)",
-                     n_chains, n_workers))
-      }
-      private$thread_pool <- thread_pool$new(n_threads, n_workers)
-
+      ## TODO: I wonder about doing the seeding this way normally? At
+      ## least as an option. Otherwise we will always have a
+      ## difference between the parallel and non-parallel versions.
       inputs <- filter$inputs()
-      seed <- make_seeds(n_chains, inputs$seed)
-      initial <- pmcmc_check_initial(initial, pars, n_chains)
+      seed <- make_seeds(control$n_chains, inputs$seed)
       inputs$n_threads <- private$thread_pool$target
 
-      private$remote <- vector("list", n_workers)
-      private$sessions <- vector("list", n_workers)
-      private$status <- vector("list", n_chains)
-      private$results <- vector("list", n_chains)
-      control <- list(n_steps = n_steps,
-                      n_steps_each = n_steps_each,
-                      rerun_every = rerun_every,
-                      save_state = save_state,
-                      save_trajectories = save_trajectories)
-
-      private$n_steps <- n_steps
+      private$remotes <- vector("list", control$n_workers)
+      private$sessions <- vector("list", control$n_workers)
+      private$status <- vector("list", control$n_chains)
+      private$results <- vector("list", control$n_chains)
 
       ## First stage starts the process, but this is async...
-      for (i in seq_len(n_workers)) {
-        private$remote[[i]] <- remote$new(pars, initial, inputs, control, seed)
-        private$sessions[[i]] <- private$remote[[i]]$session
+      for (i in seq_len(control$n_workers)) {
+        private$remotes[[i]] <- pmcmc_remote$new(
+          pars, initial, inputs, control, seed)
+        private$sessions[[i]] <- private$remotes[[i]]$session
       }
       ## ...so once the sessions start coming up we start them working
-      for (i in seq_len(n_workers)) {
-        private$remote[[i]]$wait_session_ready()
-        private$status[[i]] <- private$remote[[i]]$init(i)
+      for (i in seq_len(control$n_workers)) {
+        private$remotes[[i]]$wait_session_ready()
+        private$status[[i]] <- private$remotes[[i]]$init(i)
       }
     },
 
@@ -80,12 +58,12 @@ orchestrator <- R6::R6Class(
       res <- processx::poll(private$sessions, 1000)
       i <- vcapply(res, "[[", "process") == "ready"
       if (any(i)) {
-        dat <- lapply(private$remote[i], function(x) x$read())
+        dat <- lapply(private$remotes[i], function(x) x$read())
         index <- vnapply(dat, "[[", "index")
         result <- lapply(dat, "[[", "result")
         private$status[index] <- result
         finished <- vlapply(result, function(x) x$finished)
-        for (r in private$remote[i][!finished]) {
+        for (r in private$remotes[i][!finished]) {
           private$thread_pool$remove(r)
           r$continue()
         }
@@ -95,7 +73,7 @@ orchestrator <- R6::R6Class(
           ## underallocate cores for one time-chunk. That does
           ## complicate the book-keeping though.
           remaining <- which(lengths(private$status) == 0)
-          for (r in private$remote[i][finished]) {
+          for (r in private$remotes[i][finished]) {
             res <- r$finish()
             private$results[res$index] <- list(res$data)
             if (length(remaining) == 0L) {
@@ -113,14 +91,19 @@ orchestrator <- R6::R6Class(
       private$show_progress()
     },
 
-    get_results = function() {
+    run = function() {
+      while (!self$step()) {
+      }
+    },
+
+    finish = function() {
       pmcmc_combine(samples = private$results)
     }
   ))
 
 
-remote <- R6::R6Class(
-  "remote",
+pmcmc_remote <- R6::R6Class(
+  "pmcmc_remote",
   private = list(
     pars = NULL,
     initial = NULL,
@@ -163,15 +146,8 @@ remote <- R6::R6Class(
       self$session$call(function(pars, initial, inputs, control, seed) {
         set.seed(seed$r)
         filter <- particle_filter_from_inputs(inputs, seed$dust)
-        n_steps <- control$n_steps
-        n_steps_each <- control$n_steps_each
-        rerun_every <- control$rerun_every
-        save_state <- control$save_state
-        save_trajectories <- control$save_trajectories
-        progress <- FALSE
-        .GlobalEnv$obj <- pmcmc_state$new(
-          pars, initial, filter, n_steps, n_steps_each, rerun_every,
-          save_state, save_trajectories, progress)
+        control$progress <- FALSE
+        .GlobalEnv$obj <- pmcmc_state$new(pars, initial, filter, control)
         .GlobalEnv$obj$run()
       }, args, package = "mcstate")
       self$index <- index

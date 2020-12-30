@@ -68,6 +68,9 @@
 ##'   point before doing the comparison.  This may help "unstick"
 ##'   chains, at the cost of some bias in the results.
 ##'
+##' @param control A [mcstate::pmcmc_control] object which will set
+##'   parameters above (how will we resolve differences here?)
+##'
 ##' @return A `mcstate_pmcmc` object containing `pars`
 ##'   (sampled parameters) and `probabilities` (log prior, log
 ##'   likelihood and log posterior values for these
@@ -83,74 +86,66 @@
 ##' @export
 pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
                   save_trajectories = FALSE, progress = FALSE,
-                  n_chains = 1, initial = NULL, rerun_every = Inf) {
+                  n_chains = 1, initial = NULL, rerun_every = Inf,
+                  control = NULL) {
   assert_is(pars, "pmcmc_parameters")
   assert_is(filter, "particle_filter")
-  assert_scalar_positive_integer(n_steps)
-  assert_scalar_logical(save_state)
-  assert_scalar_logical(save_trajectories)
-  assert_scalar_positive_integer(n_chains)
-
-  initial <- pmcmc_check_initial(initial, pars, n_chains)
-
-  if (n_chains == 1) {
-    pmcmc_single_chain(pars, initial[, 1], filter, n_steps, rerun_every,
-                       save_state, save_trajectories, progress)
+  if (is.null(control)) {
+    warning("Please update your code to use pmcmc::pmcmc_control()",
+            immediate. = TRUE)
+    control <- pmcmc_control(n_steps,
+                             n_chains = n_chains,
+                             rerun_every = rerun_every,
+                             save_state = save_state,
+                             save_trajectories = save_trajectories,
+                             progress = progress)
   } else {
-    samples <- vector("list", n_chains)
-    for (i in seq_along(samples)) {
-      if (progress) {
-        message(sprintf("Running chain %d / %d", i, n_chains))
-      }
-      samples[[i]] <- pmcmc_single_chain(pars, initial[, i], filter, n_steps,
-                                         rerun_every,
-                                         save_state, save_trajectories,
-                                         progress)
+    assert_is(control, "pmcmc_control")
+    ## TODO: consider throwing here if values are used? Hard to detect
+    ## though.
+    ok <- missing(n_steps) && missing(save_state) &&
+      missing(save_trajectories) && missing(progress) && missing(n_chains) &&
+      missing(rerun_every)
+    if (!ok) {
+      stop("Do not use deprecated arguments duplicated in pmcmc_control")
     }
-    pmcmc_combine(samples = samples)
+  }
+
+  initial <- pmcmc_check_initial(initial, pars, control$n_chains)
+
+  if (control$n_chains == 1) {
+    pmcmc_single_chain(pars, initial[, 1], filter, control)
+  } else if (control$n_workers == 1) {
+    pmcmc_multiple_series(pars, initial, filter, control)
+  } else {
+    pmcmc_multiple_parallel(pars, initial, filter, control)
   }
 }
 
-pmcmc_single_chain <- function(pars, initial, filter, n_steps, rerun_every,
-                               save_state, save_trajectories,
-                               progress) {
-  obj <- pmcmc_state$new(pars, initial, filter, n_steps, n_steps, rerun_every,
-                         save_state, save_trajectories, progress)
+
+pmcmc_single_chain <- function(pars, initial, filter, control) {
+  obj <- pmcmc_state$new(pars, initial, filter, control)
   obj$run()
   obj$finish()
 }
 
 
-## A utility function for sampling a trajectory and safely dropping
-## the dimensionality even if there is only one state vector
-sample_trajectory <- function(history, index) {
-  ret <- history[, index, , drop = TRUE]
-  if (is.null(dim(ret))) {
-    dim(ret) <- dim(history)[c(1, 3)]
+pmcmc_multiple_series <- function(pars, initial, filter, control) {
+  samples <- vector("list", control$n_chains)
+  for (i in seq_along(samples)) {
+    if (control$progress) {
+      message(sprintf("Running chain %d / %d", i, control$n_chains))
+    }
+    samples[[i]] <- pmcmc_single_chain(pars, initial[, i], filter, control)
   }
-  ret
+  pmcmc_combine(samples = samples)
 }
 
 
-## Generic history collector, collects anything at all into a list
-##
-## This would be more nicely done as a simple R6 class but it's a bit
-## slow in testing; this version speeds up the total mcmc runtime by a
-## factor of ~3x (0.4s/1000 iterations to 0.13s/1000) mostly by
-## reducing the number of garbage collections considerably.
-history_collector <- function(n) {
-  data <- vector("list", n + 1L)
-  i <- 0L
-  add <- function(value) {
-    i <<- i + 1L
-    data[[i]] <<- value
-  }
-
-  get <- function() {
-    data
-  }
-
-  list(add = add, get = get)
+pmcmc_multiple_parallel <- function(pars, initial, filter, control) {
+  obj <- pmcmc_orchestrator$new(pars, initial, filter, control)
+  obj$run()
+  obj$finish()
 }
 
 
