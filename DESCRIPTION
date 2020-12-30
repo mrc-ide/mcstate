@@ -23,6 +23,7 @@ Imports:
     R6,
     callr,
     dust (>= 0.5.7),
+    processx,
     progress (>= 1.2.0)
 Suggests:
     brio,
