@@ -27,19 +27,24 @@ merge them with \code{\link[=pmcmc_combine]{pmcmc_combine()}}. Chains are run in
 with the same filter if \code{n_workers} is 1, or run in parallel
 otherwise.}
 
-\item{n_threads_total}{If using workers (i.e., \code{n_workers > 1}),
-the total number of threads/cores to use. These threads will be
-divided evenly across your workers at first and so
-\code{n_threads_total} must be an even multiple of \code{n_workers}. If
-chains finish at different times (including if \code{n_chains} is not
-a multiple of \code{n_workers}) then these threads/cores will be
-reallocated across workers, provided that \code{n_steps_each} is
-given.}
+\item{n_threads_total}{The total number of threads (i.e., cores)
+the total number of threads/cores to use. If \code{n_workers} is
+greater than 1 then these threads will be divided evenly across
+your workers at first and so \code{n_threads_total} must be an even
+multiple of \code{n_workers}. If chains finish at different times
+(including if \code{n_chains} is not a multiple of \code{n_workers}) then
+these threads/cores will be reallocated across workers that are
+still going. If \code{n_workers} is 1 (i.e., running in parallel) and
+\code{n_threads_total} is not given (i.e., \code{NULL}) we will use the
+number of threads specified in the particle filter
+creation. Otherwise this value overrides the value in the
+particle filter.}
 
 \item{n_workers}{Number of "worker" processes to use to run chains
 in parallel. This must be at most \code{n_chains} and is recommended
 to be a divisor of \code{n_chains}. If \code{n_workers} is 1, then chains
-are run in series (i.e., one chain after the other).}
+are run in series (i.e., one chain after the other). See the
+parallel vignette (\code{vignette("parallelisation", package = "mcstate")}) for more details about this approach.}
 
 \item{n_steps_each}{If using workers (i.e., \code{n_workers > 1}), the
 number of steps to run in each "chunk" on each worker before

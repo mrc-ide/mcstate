@@ -30,19 +30,25 @@
 ##'   finishing. The default, if not given and if `n_workers > 1` is
 ##'   to use 10% of `n_steps`.
 ##'
-##' @param n_threads_total If using workers (i.e., `n_workers > 1`),
-##'   the total number of threads/cores to use. These threads will be
-##'   divided evenly across your workers at first and so
-##'   `n_threads_total` must be an even multiple of `n_workers`. If
-##'   chains finish at different times (including if `n_chains` is not
-##'   a multiple of `n_workers`) then these threads/cores will be
-##'   reallocated across workers, provided that `n_steps_each` is
-##'   given.
+##' @param n_threads_total The total number of threads (i.e., cores)
+##'   the total number of threads/cores to use. If `n_workers` is
+##'   greater than 1 then these threads will be divided evenly across
+##'   your workers at first and so `n_threads_total` must be an even
+##'   multiple of `n_workers`. If chains finish at different times
+##'   (including if `n_chains` is not a multiple of `n_workers`) then
+##'   these threads/cores will be reallocated across workers that are
+##'   still going. If `n_workers` is 1 (i.e., running in parallel) and
+##'   `n_threads_total` is not given (i.e., `NULL`) we will use the
+##'   number of threads specified in the particle filter
+##'   creation. Otherwise this value overrides the value in the
+##'   particle filter.
 ##'
 ##' @param n_workers Number of "worker" processes to use to run chains
 ##'   in parallel. This must be at most `n_chains` and is recommended
 ##'   to be a divisor of `n_chains`. If `n_workers` is 1, then chains
-##'   are run in series (i.e., one chain after the other).
+##'   are run in series (i.e., one chain after the other). See the
+##'   parallel vignette (`vignette("parallelisation", package =
+##'   "mcstate")`) for more details about this approach.
 ##'
 ##' @param rerun_every Optional integer giving the frequency at which
 ##'   we should rerun the particle filter on the current "accepted"

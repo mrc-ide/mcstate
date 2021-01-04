@@ -111,6 +111,9 @@ pmcmc_multiple_series <- function(pars, initial, filter, control) {
   } else {
     seed <- NULL
   }
+  if (!is.null(control$n_threads_total)) {
+    filter$set_n_threads(control$n_threads_total)
+  }
   samples <- vector("list", control$n_chains)
   for (i in seq_along(samples)) {
     if (control$progress) {
