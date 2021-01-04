@@ -80,7 +80,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.16</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.0</span>
       </span>
     </div>
 
@@ -155,7 +155,8 @@
   progress <span class='op'>=</span> <span class='cn'>FALSE</span>,
   n_chains <span class='op'>=</span> <span class='fl'>1</span>,
   initial <span class='op'>=</span> <span class='cn'>NULL</span>,
-  rerun_every <span class='op'>=</span> <span class='cn'>Inf</span>
+  rerun_every <span class='op'>=</span> <span class='cn'>Inf</span>,
+  control <span class='op'>=</span> <span class='cn'>NULL</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -173,45 +174,23 @@ translation functions for use with the particle filter).</p></td>
     </tr>
     <tr>
       <th>n_steps</th>
-      <td><p>Number of MCMC steps to run</p></td>
+      <td><p>Deprecated: use <a href='pmcmc_control.html'>pmcmc_control</a> instead</p></td>
     </tr>
     <tr>
       <th>save_state</th>
-      <td><p>Logical, indicating if the state should be saved
-at the end of the simulation. If <code>TRUE</code>, then a single
-randomly selected particle's state will be collected at the end
-of each MCMC step. This is the full state (i.e., unaffected by
-and <code>index</code> used in the particle filter) so that the
-process may be restarted from this point for projections.  If
-<code>save_trajectories</code> is <code>TRUE</code> the same particle will
-be selected for each. The default is <code>TRUE</code>, which will
-cause <code>n_state</code> * <code>n_steps</code> of data to be output
-alongside your results. Set this argument to <code>FALSE</code> to
-save space, or use <code><a href='pmcmc_thin.html'>pmcmc_thin()</a></code> after running the
-MCMC.</p></td>
+      <td><p>Deprecated: use <a href='pmcmc_control.html'>pmcmc_control</a> instead</p></td>
     </tr>
     <tr>
       <th>save_trajectories</th>
-      <td><p>Logical, indicating if the particle
-trajectories should be saved during the simulation. If
-<code>TRUE</code>, then a single randomly selected particle's
-trajectory will be collected at the end of each MCMC step.  This
-is the filtered state (i.e., using the <code>state</code> component of
-<code>index</code> provided to the particle filter).  If
-<code>save_state</code> is <code>TRUE</code> the same particle will
-be selected for each.</p></td>
+      <td><p>Deprecated: use <a href='pmcmc_control.html'>pmcmc_control</a> instead</p></td>
     </tr>
     <tr>
       <th>progress</th>
-      <td><p>Logical, indicating if a progress bar should be
-displayed, using <code><a href='https://rdrr.io/pkg/progress/man/progress_bar.html'>progress::progress_bar</a></code>.</p></td>
+      <td><p>Deprecated: use <a href='pmcmc_control.html'>pmcmc_control</a> instead</p></td>
     </tr>
     <tr>
       <th>n_chains</th>
-      <td><p>Optional integer, indicating the number of chains
-to run. If more than one then we run a series of chains and
-merge them with <code><a href='pmcmc_combine.html'>pmcmc_combine()</a></code>. Chains are run in series,
-with the same filter.</p></td>
+      <td><p>Deprecated: use <a href='pmcmc_control.html'>pmcmc_control</a> instead</p></td>
     </tr>
     <tr>
       <th>initial</th>
@@ -225,13 +204,14 @@ chain.</p></td>
     </tr>
     <tr>
       <th>rerun_every</th>
-      <td><p>Optional integer giving the frequency at which
-we should rerun the particle filter on the current "accepted"
-state.  The default for this (<code>Inf</code>) will never rerun this
-point, but if you set to 100, then every 100 steps we run the
-particle filter on both the proposed <em>and</em> previously accepted
-point before doing the comparison.  This may help "unstick"
-chains, at the cost of some bias in the results.</p></td>
+      <td><p>Deprecated: use <a href='pmcmc_control.html'>pmcmc_control</a> instead</p></td>
+    </tr>
+    <tr>
+      <th>control</th>
+      <td><p>A <a href='pmcmc_control.html'>pmcmc_control</a> object which will set
+parameters. This will become the primary way of specifying
+options very soon and it is an error if you use both <code>control</code>
+and any of the parameters above aside from <code>pars</code> and <code>filter</code>.</p></td>
     </tr>
     </table>
 

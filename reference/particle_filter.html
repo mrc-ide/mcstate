@@ -82,7 +82,7 @@ interface will be implemented later." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.16</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.0</span>
       </span>
     </div>
 
@@ -175,6 +175,7 @@ at each step that has been run</p></dd>
 <li><p><a href='#method-state'><code>particle_filter$state()</code></a></p></li>
 <li><p><a href='#method-history'><code>particle_filter$history()</code></a></p></li>
 <li><p><a href='#method-inputs'><code>particle_filter$inputs()</code></a></p></li>
+<li><p><a href='#method-set_n_threads'><code>particle_filter$set_n_threads()</code></a></p></li>
 </ul>
 <p><hr>
 <a id="method-new"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>new()</code></h3>
@@ -327,6 +328,22 @@ the rng if it has been used (this can be used as a seed to
 restart the model).</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
 <p><div class="r"></p><pre><span class='va'>particle_filter</span><span class='op'>$</span><span class='fu'>inputs</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
+<p><hr>
+<a id="method-set_n_threads"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>set_n_threads()</code></h3>
+<p>Set the number of threads used by the particle filter (and dust
+model) after creation. This can be used to allocate additional
+(or subtract excess) computing power from a particle filter.
+Returns (invisibly) the previous value.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>particle_filter</span><span class='op'>$</span><span class='fu'>set_n_threads</span><span class='op'>(</span><span class='va'>n_threads</span><span class='op'>)</span></pre><p></div></p>
+
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
+<dt><code>n_threads</code></dt><dd><p>The new number of threads to use. You may want to
+wrap this argument in <code><a href='https://rdrr.io/pkg/dust/man/dust_openmp_threads.html'>dust::dust_openmp_threads()</a></code> in order to
+verify that you can actually use the number of threads
+requested (based on environment variables and OpenMP support).</p></dd>
+
+</dl><p></div></p>
 
 
 
