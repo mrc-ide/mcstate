@@ -28,8 +28,7 @@
 ##'   process reporting and if `n_threads_total` is given will allow
 ##'   for more rapid re-allocation of unused cores once chains start
 ##'   finishing. The default, if not given and if `n_workers > 1` is
-##'   to use `n_steps` which gives *no* within-chain feedback and no
-##'   option to reallocate cores.
+##'   to use 10% of `n_steps`.
 ##'
 ##' @param n_threads_total If using workers (i.e., `n_workers > 1`),
 ##'   the total number of threads/cores to use. These threads will be
@@ -110,8 +109,11 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
   assert_scalar_positive_integer(n_steps)
   assert_scalar_positive_integer(n_chains)
   assert_scalar_positive_integer(n_workers)
-  if (is.null(n_steps_each) || n_workers == 1L) {
+  if (n_workers == 1L) {
+    ## Never use this in a non-parallel-worker situation
     n_steps_each <- n_steps
+  } else if (is.null(n_steps_each)) {
+    n_steps_each <- ceiling(n_steps / 10)
   } else {
     assert_scalar_positive_integer(n_steps_each)
   }

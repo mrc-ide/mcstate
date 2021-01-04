@@ -26,3 +26,13 @@ test_that("If not using workers, n_run_each has no effect", {
     pmcmc_control(100, n_workers = 1, n_steps_each = 10)$n_steps_each,
     100)
 })
+
+
+test_that("If not given, n_run_each is 10% of n_steps", {
+  expect_equal(
+    pmcmc_control(100, n_chains = 2, n_workers = 2)$n_steps_each,
+    10)
+  expect_equal(
+    pmcmc_control(105, n_chains = 2, n_workers = 2)$n_steps_each,
+    11)
+})

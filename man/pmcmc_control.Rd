@@ -50,8 +50,7 @@ real application). Decreasing this will give more frequent
 process reporting and if \code{n_threads_total} is given will allow
 for more rapid re-allocation of unused cores once chains start
 finishing. The default, if not given and if \code{n_workers > 1} is
-to use \code{n_steps} which gives \emph{no} within-chain feedback and no
-option to reallocate cores.}
+to use 10\% of \code{n_steps}.}
 
 \item{rerun_every}{Optional integer giving the frequency at which
 we should rerun the particle filter on the current "accepted"
