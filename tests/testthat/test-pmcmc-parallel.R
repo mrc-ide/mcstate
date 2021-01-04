@@ -1,4 +1,4 @@
-context("pmmc (parallel)")
+context("pmcmc (parallel)")
 
 test_that("basic parallel operation", {
   dat <- example_sir()
