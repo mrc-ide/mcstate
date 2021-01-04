@@ -14,37 +14,82 @@ knitr::opts_chunk$set(
 )
 ```
 
-In the SIR model vignette we ran four separate MCMC chains in serial. For more computationally intensive models you can speed this up if you have many CPU cores available. If you have $m$ nodes available, each with $n$ cores, the most efficient way to run this step is to set `nthreads = n` on the filters, and run $m$ independent chains, one on each node setting `n_chains = 1`.
+```{r, include = FALSE}
+incidence <- read.table("sir_incidence_data.csv", header = TRUE, sep = ",")
+dt <- 0.25
+data <- mcstate::particle_filter_data(data = incidence,
+                                      time = "day",
+                                      rate = 1 / dt)
+model <- dust::dust_example("sir")
+compare <- function(state, prev_state, observed, pars = NULL) {
+  incidence_modelled <-
+    prev_state[1, , drop = TRUE] - state[1, , drop = TRUE]
+  incidence_observed <- observed$cases
+  lambda <- incidence_modelled +
+    rexp(n = length(incidence_modelled), rate = 1e6)
+  dpois(x = incidence_observed, lambda = lambda, log = TRUE)
+}
+```
 
-Conversely, if your model is quick to run, like the SIR example, it will likely be more efficient to use cores first two run parallel chains instead of parallel particles.
+In the SIR model vignette we ran four separate MCMC chains in serial. For more computationally intensive models you can speed this up if you have many CPU cores available.
 
-For threads to take effect when running particles, `openmp` must be enabled in the compilation step, which you can check by running:
+## Within-model parallelism
+
+Because `mcstate` uses `dust`, it can run each particle in parallel, between the timesteps that you have data for.  For this to be possible, `openmp` must be enabled in the compilation step, which you can check by using the `has_openmp()` method on your model:
 
 ```{r}
-gen_sir <- dust::dust_example("sir")
-gen_sir$public_methods$has_openmp()
+model$public_methods$has_openmp()
 ```
 
-Independent chain results can then be collected using `pmcmc_combine()`:
+When constructing the particle filter object, you must specify the `n_threads` argument, for example to use 4 threads:
 
-```{r pmcmc_parallel, eval = FALSE}
-n_chains <- 3
-cl <- doParallel::makeCluster(n_chains)
-doParallel::registerDoParallel(cl)
-
-pmcmc_list <- rep(NA, n_chains)
-foreach(i = 1:n_chains) %dopar% {
-  pmcmc_list[i] <-
-    pmcmc(
-      mcmc_pars,
-      filter,
-      2000,
-      save_state = TRUE,
-      save_trajectories = FALSE,
-      progress = TRUE,
-      n_chains = 1
-    )
-}
-
-pmcmc_distributed_run <- pmcmc_combine(pmcmc_list)
+```{r}
+filter <- mcstate::particle_filter$new(data = data,
+                                       model = model,
+                                       n_particles = 100,
+                                       compare = compare,
+                                       n_threads = 4)
 ```
+
+
+
+When you pass this filter object through to `mcstate::mcmc`, the particle filter will then run using 4 threads.
+
+You can wrap this `n_threads` argument with `dust::dust_openmp_threads`, for example
+
+```{r}
+dust::dust_openmp_threads(100, action = "fix")
+```
+
+which will adjust the number of threads used (alternative actions include "message" or "error").
+
+## Between-chain parallelism
+
+If your model is quick to run, like the SIR example, it may be more efficient to use cores to run parallel *chains* instead of parallel particles. This is because relatively little time is spent in the parallelised fraction of the code, and more in the serial parts (the mcmc bookkeeping, your compare functions in the particle filter, copying data between the R and C++ interface; basically anything other than the number crunching in the core of the model).
+
+We can do this by passing the `n_workers` argument to `mcstate::pmcmc_control`; this will create separate worker processes and share chains out across them.  You can have fewer workers than chains, and each worker can use more than one core if needed (subject to a few constraints documented in the help page).
+
+In this case, the number of threads used to create the particle filter is _ignored_ (because the particle filter will be created on each process) and the total number of threads to use should be provided by the `n_threads_total` argument to `mcstate::pmcmc_control`.
+
+For example, if you had 16 cores available, running 4 chains over 2 workers, each using 8 cores you might write:
+
+```{r}
+control <- mcstate::pmcmc_control(1000, n_chains = 4, n_workers = 2,
+                                  n_threads_total = 16)
+```
+
+or, if your system does not support OpenMP you could use 4 workers for these chains:
+
+```{r}
+control <- mcstate::pmcmc_control(1000, n_chains = 4, n_workers = 4)
+```
+
+If your system _does_ support OpenMP, then once chains start finishing their threads will be allocated to the ongoing chains.
+
+The random numbers are configured in such a way that the final result will be dependent only on the seed to create your `filter` object and not the number of worker processes or threads used. However, the algorithm does differ slightly by default to that used without workers. To use this parallel behaviour even when `n_workers` is 1, set `use_parallel_seed = TRUE` within `mcstate::pmcmc_control`.
+
+## Considerations
+
+Parallelism at the level of particles (increasing the number of threads available to the particle filter) has very low overhead and is potentially very efficient as the "serial" part of the calculation here is just the comparison functions. On Linux we see linear scaling of performance with cores; i.e., that if you double the number of cores you halve the running time.
+
+However, on Windows we do not realise this level of efficiency (for reasons under investigation). In that case you will want to use multiple worker processes; these are essentially isolated from each other and on windows can lead to higher efficiencies. You should only need 2-4 worker processes in order to use 100% of your CPU, with the total number of threads set to the number of cores you have available. This approach may take a few seconds longer over the whole run than a perfectly efficient run, but potentially significantly less time than the realised efficiency we see on windows.

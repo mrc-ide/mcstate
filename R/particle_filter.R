@@ -390,6 +390,25 @@ particle_filter <- R6::R6Class(
            compare = private$compare,
            n_threads = private$n_threads,
            seed = seed)
+    },
+
+    ##' @description
+    ##' Set the number of threads used by the particle filter (and dust
+    ##'   model) after creation. This can be used to allocate additional
+    ##'   (or subtract excess) computing power from a particle filter.
+    ##'   Returns (invisibly) the previous value.
+    ##'
+    ##' @param n_threads The new number of threads to use. You may want to
+    ##'   wrap this argument in [dust::dust_openmp_threads()] in order to
+    ##'   verify that you can actually use the number of threads
+    ##'   requested (based on environment variables and OpenMP support).
+    set_n_threads = function(n_threads) {
+      prev <- private$n_threads
+      private$n_threads <- n_threads
+      if (!is.null(private$last_model)) {
+        private$last_model$set_n_threads(n_threads)
+      }
+      invisible(prev)
     }
   ))
 
@@ -400,6 +419,20 @@ particle_resample <- function(weights) {
   u <- runif(1, 0, 1 / n) + seq(0, by = 1 / n, length.out = n)
   cum_weights <- cumsum(weights / sum(weights))
   findInterval(u, cum_weights) + 1L
+}
+
+
+## Private helper for reconstituting a particle filter from its
+## `$inputs()` data, but possibly changing the seed
+particle_filter_from_inputs <- function(inputs, seed = NULL) {
+  particle_filter$new(data = inputs$data,
+                      model = inputs$model,
+                      n_particles = inputs$n_particles,
+                      compare = inputs$compare,
+                      index = inputs$index,
+                      initial = inputs$initial,
+                      n_threads = inputs$n_threads,
+                      seed = seed %||% inputs$seed)
 }
 
 

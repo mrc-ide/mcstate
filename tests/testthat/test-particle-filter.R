@@ -488,3 +488,25 @@ test_that("no names on history, if absent", {
   res <- p$history()
   expect_null(rownames(res))
 })
+
+
+test_that("can change the number of threads (null model)", {
+  skip_on_cran()
+  dat <- example_sir()
+  n_particles <- 42
+  index <- function(info) {
+    list(run = 4L, state = 1:3)
+  }
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = index, seed = 100, n_threads = 1L)
+  expect_equal(p$set_n_threads(2), 1)
+  expect_equal(r6_private(p)$n_threads, 2)
+  p$run()
+  expect_equal(r6_private(p)$last_model$n_threads(), 2)
+
+  expect_equal(p$set_n_threads(1), 2)
+  expect_equal(r6_private(p)$n_threads, 1)
+  expect_equal(r6_private(p)$last_model$n_threads(), 1)
+  p$run()
+  expect_equal(r6_private(p)$last_model$n_threads(), 1)
+})

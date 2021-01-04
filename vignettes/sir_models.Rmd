@@ -78,7 +78,6 @@ The anatomy of an mcstate particle filter, as noted above, consists of three mai
 To demonstrate this, we will attempt to infer the parameters $\beta$ and $\gamma$ using daily case counts. In reality these counts would be measured, but here we have generated them from a single run of the model with `seed = 2L`, and added some constant noise proportional to the epidemic size:
 
 ```{r}
-# Set up model
 incidence <- read.table("sir_incidence_data.csv", header = TRUE, sep = ",")
 ```
 
@@ -88,9 +87,9 @@ This can then be processed with `mcstate::particle_filter_data()` as follows, ta
 dt <- 0.25
 sir_data <- mcstate::particle_filter_data(data = incidence,
                                           time = "day",
-                                          rate = 1/dt)
+                                          rate = 1 / dt)
 rmarkdown::paged_table(sir_data)
-plot(incidence$day, incidence$cases, 
+plot(incidence$day, incidence$cases,
      type = "l", xlab = "Day", ylab = "New cases")
 ```
 
@@ -204,27 +203,22 @@ mcmc_pars <- mcstate::pmcmc_parameters$new(list(beta = beta, gamma = gamma), pro
 
 The proposals for each MCMC step are also set here. Proposals are drawn from a multi-variate normal distribution, with the variance-covariance matrix set here. In this case we have simply set $\beta_{n+1} \sim N(\beta_{n}, 0.01)$ and $\gamma_{n+1} \sim N(\gamma_{n}, 0.01)$ so there is no covariance. We show how to improve this below.
 
-The sampler can now be run using these parameters, and the particle filter defined above. Taking 2000 steps on a single chains:
+The sampler can now be run using these parameters, and the particle filter defined above. Taking 500 steps on a single chains:
 
-```{r pmcmc_combined, fig.height=5, fig.width=7}
-pmcmc_run <-
-  mcstate::pmcmc(
-    mcmc_pars,
-    filter,
-    2000,
+```{r pmcmc_combined, fig.height = 5, fig.width = 7}
+control <- mcstate::pmcmc_control(
+    500,
     save_state = TRUE,
     save_trajectories = TRUE,
-    progress = TRUE,
-    n_chains = 1
-  )
-pmcmc_run
+    progress = TRUE)
+pmcmc_run <- mcstate::pmcmc(mcmc_pars, filter, control = control)
 plot_particle_filter(pmcmc_run$trajectories$state, true_history, incidence$day)
 ```
 
 We also provide some basic tools for dealing with this output, before running prediction (see below). We can remove burn-in and thin the four chains as follows:
 
 ```{r}
-processed_chains <- mcstate::pmcmc_thin(pmcmc_run, burnin = 500, thin = 2)
+processed_chains <- mcstate::pmcmc_thin(pmcmc_run, burnin = 200, thin = 2)
 parameter_mean_hpd <- apply(processed_chains$pars, 2, mean)
 parameter_mean_hpd
 ```
@@ -232,7 +226,6 @@ parameter_mean_hpd
 The resulting objects can also be analysed in a typical MCMC analysis package such as [`coda`](https://cran.r-project.org/web/packages/coda/index.html). We will need to combine the two parts of the object which contain the probabilities and parameter values across the iterations:
 
 ```{r coda_plots, fig.height=10, fig.width=14}
-library(coda)
 mcmc1 <- coda::as.mcmc(cbind(pmcmc_run$probabilities, pmcmc_run$pars))
 
 summary(mcmc1)
@@ -244,33 +237,33 @@ plot(mcmc1)
 The MCMC above is not particularly efficient in terms of effective sample size per iteration:
 
 ```{r}
-effectiveSize(mcmc1)
-1 - rejectionRate(mcmc1)
+coda::effectiveSize(mcmc1)
+1 - coda::rejectionRate(mcmc1)
 ```
 
 Clearly the acceptance rate is too low. Generally a target of 0.5, reducing to 0.234 as the number of parameters increases, [is thought to be optimal](https://dx.doi.org/10.1016/j.spa.2007.12.005). The proposal distribution needs to be modified, in this case reducing the variance of the jump sizes. One option to automate this process is to run a chain for a bit, as above, then use the covariance of the state as the proposal matrix:
 
 ```{r}
 proposal_matrix <- cov(pmcmc_run$pars)
-mcmc_pars <- mcstate::pmcmc_parameters$new(list(beta = beta, gamma = gamma), proposal_matrix)
+mcmc_pars <- mcstate::pmcmc_parameters$new(
+  list(beta = beta, gamma = gamma),
+  proposal_matrix)
 proposal_matrix
 ```
 
 Let's now run four independent chains with these proposals:
 
 ```{r, fig.height=10, fig.width=14}
-pmcmc_tuned_run <-
-  mcstate::pmcmc(
-    mcmc_pars,
-    filter,
-    2000,
+control <- mcstate::pmcmc_control(
+    500,
     save_state = TRUE,
     save_trajectories = TRUE,
     progress = TRUE,
-    n_chains = 4
-  )
+    n_chains = 4)
+pmcmc_tuned_run <- mcstate::pmcmc(mcmc_pars, filter, control = control)
 
-mcmc2 <- coda::as.mcmc(cbind(pmcmc_tuned_run$probabilities, pmcmc_tuned_run$pars))
+mcmc2 <- coda::as.mcmc(cbind(
+  pmcmc_tuned_run$probabilities, pmcmc_tuned_run$pars))
 
 summary(mcmc2)
 plot(mcmc2)
@@ -279,13 +272,13 @@ plot(mcmc2)
 Looking again at the effective sample size and rejection rate, these chains were a lot more efficient, and have a much better effective sample size thanks for the four chains:
 
 ```{r}
-effectiveSize(mcmc2)
-1 - rejectionRate(mcmc2)
+coda::effectiveSize(mcmc2)
+1 - coda::rejectionRate(mcmc2)
 ```
 
 ## Running predictions
 
-Going back to the simple SIR model above, we can easily continue running the fitted model forward in time using the posterior estimated by `pmcmc()` to create a forecast past the end of the data:
+Going back to the simple SIR model above, we can easily continue running the fitted model forward in time using the posterior estimated by `pmcmc()` to create a forecast past the end of the data, sampling 10 particles:
 
 ```{r fig.height=5, fig.width=7}
 forecast <- predict(processed_chains,
@@ -293,7 +286,6 @@ forecast <- predict(processed_chains,
                     prepend_trajectories = TRUE,
                     seed = processed_chains$predict$seed)
 
-# Sample 10 particles
 mini_forecast <- forecast$state[,sample.int(ncol(forecast$state), size = 10),]
 
 plot_particle_filter(mini_forecast,
@@ -312,15 +304,15 @@ The set up of the particle filter and observation function makes it easy to fit 
 r_output(readLines(file.path("deaths.R")))
 ```
 
+Creating a model from this code:
 
 ```{r}
-gen_death <- odin.dust::odin_dust("deaths.R")
+gen_death <- odin.dust::odin_dust("deaths.R", verbose = FALSE)
 ```
 
 We can simulate some data to fit to, as before. We have also made the case data patchy, so it is missing on some days:
 
 ```{r layout="l-body-outset", paged.print=TRUE }
-# Set up model
 dt <- 0.25
 death_data <- read.table("death_data.csv", header = TRUE, sep = ",")
 true_history_deaths <- readRDS("deaths_true_history.rds")
@@ -328,7 +320,7 @@ true_history_deaths <- readRDS("deaths_true_history.rds")
 combined_data <- mcstate::particle_filter_data(
   death_data,
   time = "day",
-  rate = 1/dt
+  rate = 1 / dt
 )
 rmarkdown::paged_table(combined_data)
 ```
