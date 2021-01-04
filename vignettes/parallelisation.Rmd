@@ -71,7 +71,7 @@ We can do this by passing the `n_workers` argument to `mcstate::pmcmc_control`; 
 
 In this case, the number of threads used to create the particle filter is _ignored_ (because the particle filter will be created on each process) and the total number of threads to use should be provided by the `n_threads_total` argument to `mcstate::pmcmc_control`.
 
-For example, to run 4 chains over 2 workers, each using 8 cores you might write:
+For example, if you had 16 cores available, running 4 chains over 2 workers, each using 8 cores you might write:
 
 ```{r}
 control <- mcstate::pmcmc_control(1000, n_chains = 4, n_workers = 2,
