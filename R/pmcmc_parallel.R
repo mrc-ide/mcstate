@@ -1,3 +1,6 @@
+## In the case where we run different chains on different workers,
+## this pair of classes takes care of the communication and scheduling
+## details.
 pmcmc_orchestrator <- R6::R6Class(
   "pmcmc_orchestrator",
 
@@ -41,6 +44,11 @@ pmcmc_orchestrator <- R6::R6Class(
     },
 
     step = function() {
+      ## processx::poll will poll, with a timeout, our
+      ## processes. There's not much downside to a long poll because
+      ## if they *are* ready they will return instantly. However, the
+      ## process will only be interruptable each time the timeout
+      ## triggers, so use 1000 here (1s).
       res <- processx::poll(private$sessions, 1000)
       i <- vcapply(res, "[[", "process") == "ready"
       if (any(i)) {
@@ -88,6 +96,9 @@ pmcmc_orchestrator <- R6::R6Class(
   ))
 
 
+## This class takes care of the details if a partially run chain
+## running in a remote process, wrapping around callr's "r_session"
+## objects.
 pmcmc_remote <- R6::R6Class(
   "pmcmc_remote",
   private = list(
@@ -116,6 +127,9 @@ pmcmc_remote <- R6::R6Class(
       lockBinding("session", self)
     },
 
+    ## 3000ms is the timeout for the session to come alive; an error
+    ## will be thrown if it is not alive by then (this number is used
+    ## by callr internally)
     wait_session_ready = function(timeout = 3000) {
       self$session$poll_process(timeout)
       self$session$read()
@@ -172,10 +186,11 @@ pmcmc_remote <- R6::R6Class(
   ))
 
 
-## We will, *before* starting anything, fully create a set of
-## seeds. We use the dust rng to take a series of long_jumps (one per
-## independent realisation), and from this also generate a single
-## integer to use as the R seed.
+## We will, *before* starting anything, fully create a set of seeds,
+## one per chain regardless of how many workers are being used. We use
+## the dust rng to take a series of long_jumps (one per independent
+## realisation), and from this also generate a single integer to use
+## as the R seed.
 ##
 ## This means that the entire process is deterministic based on the
 ## single seed, which is itself sensibly chosen. Whether or not this
@@ -268,6 +283,7 @@ pmcmc_parallel_progress_data <- function(status, n_steps) {
 }
 
 
+## Create a callback to create a progress bar
 pmcmc_parallel_progress <- function(control, force = FALSE) {
   n_steps <- control$n_steps
   if (control$progress) {

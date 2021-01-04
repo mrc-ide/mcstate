@@ -75,7 +75,7 @@ For example, if you had 16 cores available, running 4 chains over 2 workers, eac
 
 ```{r}
 control <- mcstate::pmcmc_control(1000, n_chains = 4, n_workers = 2,
-                                  n_threads_total = 8)
+                                  n_threads_total = 16)
 ```
 
 or, if your system does not support OpenMP you could use 4 workers for these chains:
@@ -87,3 +87,9 @@ control <- mcstate::pmcmc_control(1000, n_chains = 4, n_workers = 4)
 If your system _does_ support OpenMP, then once chains start finishing their threads will be allocated to the ongoing chains.
 
 The random numbers are configured in such a way that the final result will be dependent only on the seed to create your `filter` object and not the number of worker processes or threads used. However, the algorithm does differ slightly by default to that used without workers. To use this parallel behaviour even when `n_workers` is 1, set `use_parallel_seed = TRUE` within `mcstate::pmcmc_control`.
+
+## Considerations
+
+Parallelism at the level of particles (increasing the number of threads available to the particle filter) has very low overhead and is potentially very efficient as the "serial" part of the calculation here is just the comparison functions. On Linux we see linear scaling of performance with cores; i.e., that if you double the number of cores you halve the running time.
+
+However, on Windows we do not realise this level of efficiency (for reasons under investigation). In that case you will want to use multiple worker processes; these are essentially isolated from each other and on windows can lead to higher efficiencies. You should only need 2-4 worker processes in order to use 100% of your CPU, with the total number of threads set to the number of cores you have available. This approach may take a few seconds longer over the whole run than a perfectly efficient run, but potentially significantly less time than the realised efficiency we see on windows.

@@ -45,7 +45,9 @@ chain.}
 \item{rerun_every}{Deprecated: use \link{pmcmc_control} instead}
 
 \item{control}{A \link{pmcmc_control} object which will set
-parameters above (how will we resolve differences here?)}
+parameters. This will become the primary way of specifying
+options very soon and it is an error if you use both \code{control}
+and any of the parameters above aside from \code{pars} and \code{filter}.}
 }
 \value{
 A \code{mcstate_pmcmc} object containing \code{pars}

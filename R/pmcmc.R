@@ -41,7 +41,9 @@
 ##' @param rerun_every Deprecated: use [mcstate::pmcmc_control] instead
 ##'
 ##' @param control A [mcstate::pmcmc_control] object which will set
-##'   parameters above (how will we resolve differences here?)
+##'   parameters. This will become the primary way of specifying
+##'   options very soon and it is an error if you use both `control`
+##'   and any of the parameters above aside from `pars` and `filter`.
 ##'
 ##' @return A `mcstate_pmcmc` object containing `pars`
 ##'   (sampled parameters) and `probabilities` (log prior, log

@@ -4,6 +4,10 @@
 ##' object. Do not refer to any argument except `n_steps` by position
 ##' as the order of the arguments may change in future.
 ##'
+##' pMCMC is slow and you will want to parallelise it if you possibly
+##' can. There are two ways of doing this which are discussed in some
+##' detail in `vignette("parallelisation", package = "mcstate")`.
+##'
 ##' @title Control for the pmcmc
 ##'
 ##' @param n_steps Number of MCMC steps to run. This is the only
@@ -14,11 +18,6 @@
 ##'   merge them with [pmcmc_combine()]. Chains are run in series,
 ##'   with the same filter if `n_workers` is 1, or run in parallel
 ##'   otherwise.
-##'
-##' @param n_workers Number of "worker" processes to use to run chains
-##'   in parallel. This must be greater than `n_chains` and is
-##'   recommended to be a divisor of `n_chains`. If `n_workers` is 1,
-##'   then chains are run in series (i.e., one chain after the other).
 ##'
 ##' @param n_steps_each If using workers (i.e., `n_workers > 1`), the
 ##'   number of steps to run in each "chunk" on each worker before
@@ -40,6 +39,11 @@
 ##'   a multiple of `n_workers`) then these threads/cores will be
 ##'   reallocated across workers, provided that `n_steps_each` is
 ##'   given.
+##'
+##' @param n_workers Number of "worker" processes to use to run chains
+##'   in parallel. This must be at most `n_chains` and is recommended
+##'   to be a divisor of `n_chains`. If `n_workers` is 1, then chains
+##'   are run in series (i.e., one chain after the other).
 ##'
 ##' @param rerun_every Optional integer giving the frequency at which
 ##'   we should rerun the particle filter on the current "accepted"
@@ -85,9 +89,21 @@
 ##' @export
 ##'
 ##' @examples
-##' mcstate::pmcmc_control(10)
-pmcmc_control <- function(n_steps, n_chains = 1L, n_workers = 1L,
-                          n_steps_each = NULL, n_threads_total = NULL,
+##' mcstate::pmcmc_control(1000)
+##'
+##' # Suppose we have a fairly large node with 16 cores and we want to
+##' # run 8 chains. We can use all cores for a single chain and run
+##' # the chains sequentially like this:
+##' mcstate::pmcmc_control(1000, n_chains = 8, n_threads_total = 16)
+##'
+##' # However, on some platforms (e.g., Windows) this may only realise
+##' # a 50% total CPU use, in which case you might benefit from
+##' # splitting these chains over different worker processes (2-4
+##' # workers is likely the largest useful number).
+##' mcstate::pmcmc_control(1000, n_chains = 8, n_threads_total = 16,
+##'                        n_workers = 4)
+pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
+                          n_workers = 1L, n_steps_each = NULL,
                           rerun_every = Inf, use_parallel_seed = FALSE,
                           save_state = TRUE, save_trajectories = FALSE,
                           progress = FALSE) {
