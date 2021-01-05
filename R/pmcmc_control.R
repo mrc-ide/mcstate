@@ -77,6 +77,17 @@
 ##'   save space, or use [pmcmc_thin()] after running the
 ##'   MCMC.
 ##'
+##' @param save_restart An integer vector of time points to save
+##'   restart information for; this is in addition to `save_state`
+##'   (which saves the final model state) and saves the full model
+##'   state.  It will use the same trajectory as `save_state` and
+##'   `save_trajectories`. Note that if you use this option you will
+##'   end up with lots of model states and will need to process them
+##'   in order to actually restart the pmcmc or the particle filter
+##'   from this state. The integers correspond to the *time* variable
+##'   in your filter (see [mcstate::particle_filter] for more
+##'   information).
+##'
 ##' @param save_trajectories Logical, indicating if the particle
 ##'   trajectories should be saved during the simulation. If `TRUE`,
 ##'   then a single randomly selected particle's trajectory will be
@@ -110,8 +121,8 @@
 pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
                           n_workers = 1L, n_steps_each = NULL,
                           rerun_every = Inf, use_parallel_seed = FALSE,
-                          save_state = TRUE, save_trajectories = FALSE,
-                          progress = FALSE) {
+                          save_state = TRUE, save_restart = NULL,
+                          save_trajectories = FALSE, progress = FALSE) {
   assert_scalar_positive_integer(n_steps)
   assert_scalar_positive_integer(n_chains)
   assert_scalar_positive_integer(n_workers)
@@ -151,6 +162,11 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
                  n_chains, n_workers))
   }
 
+  if (!is.null(save_restart)) {
+    ## possibly assert_integer(save_restart)?
+    assert_strictly_increasing(save_restart)
+  }
+
   ret <- list(n_steps = n_steps,
               n_chains = n_chains,
               n_workers = n_workers,
@@ -159,6 +175,7 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
               rerun_every = rerun_every,
               use_parallel_seed = use_parallel_seed,
               save_state = save_state,
+              save_restart = save_restart,
               save_trajectories = save_trajectories,
               progress = progress)
   class(ret) <- "pmcmc_control"

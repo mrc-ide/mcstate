@@ -1,11 +1,12 @@
-mcstate_pmcmc <- function(pars, probabilities, state, trajectories, predict,
-                          chain = NULL, iteration = NULL) {
+mcstate_pmcmc <- function(pars, probabilities, state, trajectories, restart,
+                          predict, chain = NULL, iteration = NULL) {
   ret <- list(chain = chain,
               iteration = iteration %||% seq.int(0, length.out = nrow(pars)),
               pars = pars,
               probabilities = probabilities,
               state = state,
               trajectories = trajectories,
+              restart = restart,
               predict = predict)
   class(ret) <- "mcstate_pmcmc"
   ret

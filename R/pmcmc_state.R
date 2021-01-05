@@ -9,6 +9,7 @@ pmcmc_state <- R6::R6Class(
     history_pars = NULL,
     history_probabilities = NULL,
     history_state = NULL,
+    history_restart = NULL,
     history_trajectories = NULL,
 
     curr_step = NULL,
@@ -18,6 +19,7 @@ pmcmc_state <- R6::R6Class(
     curr_lpost = NULL,
     curr_trajectories = NULL,
     curr_state = NULL,
+    curr_restart = NULL,
 
     tick = NULL,
 
@@ -30,11 +32,16 @@ pmcmc_state <- R6::R6Class(
       if (private$control$save_state) {
         private$curr_state <- private$filter$state()[, i, drop = TRUE]
       }
+      if (length(private$control$save_restart) > 0) {
+        private$curr_restart <- private$filter$restart_state(i)
+        dim(private$curr_restart) <- dim(private$curr_restart)[-2L]
+      }
     },
 
     run_filter = function(p) {
       private$filter$run(private$pars$model(p),
-                         private$control$save_trajectories)
+                         private$control$save_trajectories,
+                         private$control$save_restart)
     }
   ),
 
@@ -47,6 +54,7 @@ pmcmc_state <- R6::R6Class(
       private$history_pars <- history_collector(control$n_steps)
       private$history_probabilities <- history_collector(control$n_steps)
       private$history_state <- history_collector(control$n_steps)
+      private$history_restart <- history_collector(control$n_steps)
       private$history_trajectories <- history_collector(control$n_steps)
 
       private$curr_step <- 0L
@@ -69,6 +77,9 @@ pmcmc_state <- R6::R6Class(
       }
       if (private$control$save_state) {
         private$history_state$add(private$curr_state)
+      }
+      if (length(private$control$save_restart) > 0) {
+        private$history_restart$add(private$curr_restart)
       }
     },
 
@@ -112,6 +123,9 @@ pmcmc_state <- R6::R6Class(
         if (private$control$save_state) {
           private$history_state$add(private$curr_state)
         }
+        if (length(private$control$save_restart) > 0) {
+          private$history_restart$add(private$curr_restart)
+        }
       }
       private$curr_step <- to
       list(step = to, finished = to == private$control$n_steps)
@@ -124,7 +138,7 @@ pmcmc_state <- R6::R6Class(
         list_to_matrix(private$history_probabilities$get()),
         c("log_prior", "log_likelihood", "log_posterior"))
 
-      predict <- state <- trajectories <- NULL
+      predict <- state <- restart <- trajectories <- NULL
 
       if (private$control$save_state || private$control$save_trajectories) {
         ## Do we *definitely* need step and rate here?
@@ -140,6 +154,15 @@ pmcmc_state <- R6::R6Class(
         state <- t(list_to_matrix(private$history_state$get()))
       }
 
+      if (length(private$control$save_restart) > 0) {
+        ## Permute state from [state x save point x mcmc_sample]
+        ## to [state x mcmc_sample x save point] to match the predicted state)
+        restart_state  <-
+          aperm(list_to_array(private$history_restart$get()), c(1, 3, 2))
+        restart <- list(time = private$control$save_restart,
+                        state = restart_state)
+      }
+
       if (private$control$save_trajectories) {
         ## Permute trajectories from [state x mcmc x particle] to
         ## [state x particle x mcmc] so that they match the ones that we
@@ -153,7 +176,8 @@ pmcmc_state <- R6::R6Class(
                                              trajectories_state, FALSE)
       }
 
-      mcstate_pmcmc(pars_matrix, probabilities, state, trajectories, predict)
+      mcstate_pmcmc(pars_matrix, probabilities, state, trajectories, restart,
+                    predict)
     }
   ))
 

@@ -36,3 +36,14 @@ test_that("If not given, n_run_each is 10% of n_steps", {
     pmcmc_control(105, n_chains = 2, n_workers = 2)$n_steps_each,
     11)
 })
+
+
+test_that("specify save_restart", {
+  expect_null(pmcmc_control(100, save_restart = NULL)$save_restart)
+  expect_equal(pmcmc_control(100, save_restart = 1)$save_restart, 1)
+  expect_equal(pmcmc_control(100, save_restart = c(10, 20))$save_restart,
+               c(10, 20))
+  expect_error(
+    pmcmc_control(100, save_restart = c(20, 10)),
+    "'save_restart' must be strictly increasing")
+})

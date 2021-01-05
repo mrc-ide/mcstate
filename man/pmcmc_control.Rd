@@ -13,6 +13,7 @@ pmcmc_control(
   rerun_every = Inf,
   use_parallel_seed = FALSE,
   save_state = TRUE,
+  save_restart = NULL,
   save_trajectories = FALSE,
   progress = FALSE
 )
@@ -83,6 +84,17 @@ cause \code{n_state} * \code{n_steps} of data to be output
 alongside your results. Set this argument to \code{FALSE} to
 save space, or use \code{\link[=pmcmc_thin]{pmcmc_thin()}} after running the
 MCMC.}
+
+\item{save_restart}{An integer vector of time points to save
+restart information for; this is in addition to \code{save_state}
+(which saves the final model state) and saves the full model
+state.  It will use the same trajectory as \code{save_state} and
+\code{save_trajectories}. Note that if you use this option you will
+end up with lots of model states and will need to process them
+in order to actually restart the pmcmc or the particle filter
+from this state. The integers correspond to the \emph{time} variable
+in your filter (see \link{particle_filter} for more
+information).}
 
 \item{save_trajectories}{Logical, indicating if the particle
 trajectories should be saved during the simulation. If \code{TRUE},
