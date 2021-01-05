@@ -4,7 +4,7 @@ test_that("format and print the simplest object", {
   pars <- matrix(NA_real_, 10, 4,
                  dimnames = list(NULL, c("a", "b", "c", "d")))
   probs <- matrix(NA_real_, 10, 3, dimnames = list(NULL, c("x", "y", "z")))
-  x <- mcstate_pmcmc(pars, probs, NULL, NULL, NULL)
+  x <- mcstate_pmcmc(pars, probs, NULL, NULL, NULL, NULL)
 
   expected <- c(
     "<mcstate_pmcmc> (10 samples)",
@@ -27,8 +27,9 @@ test_that("format and print with state", {
   state <- matrix(NA_real_, 4, 10)
   trajectories <- list(state = array(NA_real_, c(4, 10, 20)))
   predict <- NULL
+  restart <- NULL
 
-  x <- mcstate_pmcmc(pars, probs, state, trajectories, predict)
+  x <- mcstate_pmcmc(pars, probs, state, trajectories, predict, restart)
 
   expected <- c(
     "<mcstate_pmcmc> (10 samples)",
@@ -67,7 +68,7 @@ test_that("wrap long variable names nicely", {
   probs <- matrix(NA_real_, 10, 3, dimnames = list(NULL, c("x", "y", "z")))
   x <- withr::with_options(
     list(width = 80),
-    format(mcstate_pmcmc(pars, probs, NULL, NULL, NULL)))
+    format(mcstate_pmcmc(pars, probs, NULL, NULL, NULL, NULL)))
   expect_equal(
     x[[3]],
     "    aaaaaaaaaa, bbbbbbbbbbbbbbbbbbbb, cccccccccccccccccccccccccccccc,")

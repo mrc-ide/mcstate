@@ -134,14 +134,27 @@ pmcmc_combine <- function(..., samples = list(...)) {
     trajectories <- combine_trajectories(trajectories)
   }
 
+  restart <- lapply(samples, "[[", "restart")
+  if (!all_or_none(vlapply(restart, is.null))) {
+    stop("If 'restart' is present for any samples, it must be present for all")
+  }
+  if (is.null(restart[[1]])) {
+    restart <- NULL
+  } else {
+    browser()
+    stop("WRITEME")
+    restart <- do.call(cbind, lapply(restart, "[[", "restart"))
+    restart <- combine_trajectories(restart)
+  }
+
   ## Use the last state for predict as that will probably have most
   ## advanced seed.
   ##
   ## We might check index, rate and step here though.
   predict <- last(samples)$predict
 
-  mcstate_pmcmc(pars, probabilities, state, trajectories, predict,
-                chain, iteration)
+  mcstate_pmcmc(pars, probabilities, state, trajectories, restart,
+                predict, chain, iteration)
 }
 
 
