@@ -131,7 +131,7 @@ pmcmc_combine <- function(..., samples = list(...)) {
   if (is.null(trajectories[[1]])) {
     trajectories <- NULL
   } else {
-    trajectories <- combine_trajectories(trajectories)
+    trajectories <- combine_state(trajectories)
   }
 
   restart <- lapply(samples, "[[", "restart")
@@ -141,10 +141,7 @@ pmcmc_combine <- function(..., samples = list(...)) {
   if (is.null(restart[[1]])) {
     restart <- NULL
   } else {
-    browser()
-    stop("WRITEME")
-    restart <- do.call(cbind, lapply(restart, "[[", "restart"))
-    restart <- combine_trajectories(restart)
+    restart <- combine_state(restart)
   }
 
   ## Use the last state for predict as that will probably have most
@@ -158,22 +155,20 @@ pmcmc_combine <- function(..., samples = list(...)) {
 }
 
 
-combine_trajectories <- function(trajectories) {
-  base <- lapply(trajectories, function(x) x[names(x) != "state"])
+combine_state <- function(x) {
+  base <- lapply(x, function(el) el[names(el) != "state"])
   if (length(unique(base)) != 1L) {
-    stop("trajectories data is inconsistent")
+    stop(sprintf("%s data is inconsistent", deparse(substitute(x))))
   }
 
-  ## This is nasty:
-  trajectories_state <- lapply(trajectories, function(x)
-    aperm(x$state, c(1, 3, 2)))
-  trajectories_state <- array(
-    unlist(trajectories_state),
-    dim(trajectories_state[[1]]) * c(1, 1, length(trajectories)))
-  state <- aperm(trajectories_state, c(1, 3, 2))
-  rownames(state) <- rownames(trajectories[[1]]$state)
+  state <- lapply(x, function(el) aperm(el$state, c(1, 3, 2)))
+  state <- array(
+    unlist(state),
+    dim(state[[1]]) * c(1, 1, length(x)))
+  state <- aperm(state, c(1, 3, 2))
+  rownames(state) <- rownames(x[[1]]$state)
 
-  ret <- trajectories[[1]]
+  ret <- x[[1]]
   ret$state <- state
   ret
 }

@@ -76,19 +76,23 @@ test_that("can combine chains", {
   n_particles <- nrow(results1$state)
   n_index <- nrow(results1$trajectories$state)
   n_time <- dim(results1$trajectories$state)[[3]]
+  n_restart <- dim(results1$restart$state)[[3]]
+  n_state <- nrow(results1$state)
 
   n_mcmc3 <- n_mcmc * 3
 
   expect_equal(dim(res$pars), c(n_mcmc3, n_par))
   expect_equal(dim(res$probabilities), c(n_mcmc3, 3))
-  expect_equal(dim(res$state), c(nrow(results1$state), n_mcmc3))
+  expect_equal(dim(res$state), c(n_state, n_mcmc3))
   expect_equal(dim(res$trajectories$state), c(n_index, n_mcmc3, n_time))
+  expect_equal(dim(res$restart$state), c(n_state, n_mcmc3, n_restart))
 
   i <- seq_len(n_mcmc) + n_mcmc
   expect_equal(res$pars[i, ], results2$pars)
   expect_equal(res$probabilities[i, ], results2$probabilities)
   expect_equal(res$state[, i], results2$state)
   expect_equal(res$trajectories$state[, i, ], results2$trajectories$state)
+  expect_equal(res$restart$state[, i, , drop = FALSE], results2$restart$state)
 })
 
 

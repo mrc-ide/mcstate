@@ -147,7 +147,8 @@ example_sir_pmcmc2 <- function() {
                              index = dat$index)
     set.seed(1)
 
-    control <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE)
+    control <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE,
+                             save_restart = 40)
 
     dat$results <- list(
       pmcmc(dat$pars, p, control = control),
