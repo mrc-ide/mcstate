@@ -39,7 +39,7 @@ example_sir <- function() {
     list(run = 4L, state = 1:3)
   }
 
-  proposal_kernel <- diag(2) * 1e-4
+  proposal_kernel <- rbind(c(0.00057, 0.00034), c(0.00034, 0.00026))
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("beta", "gamma")
 
   pars <- pmcmc_parameters$new(
