@@ -69,6 +69,9 @@ pmcmc_filter <- function(object, i) {
   if (!is.null(object$trajectories)) {
     object$trajectories$state <- object$trajectories$state[, i, , drop = FALSE]
   }
+  if (!is.null(object$restart)) {
+    object$restart$state <- object$restart$state[, i, , drop = FALSE]
+  }
   object
 }
 

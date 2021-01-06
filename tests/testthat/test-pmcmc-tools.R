@@ -14,6 +14,8 @@ test_that("discarding burnin drops beginnings of chain", {
   expect_identical(res$probabilities, results$probabilities[i, ])
   expect_identical(res$state, results$state[, i])
   expect_identical(res$trajectories$state, results$trajectories$state[, i, ])
+  expect_identical(res$restart$state,
+                   results$restart$state[, i, , drop = FALSE])
 })
 
 
@@ -25,6 +27,8 @@ test_that("thinning drops all over chain", {
   expect_identical(res$probabilities, results$probabilities[i, ])
   expect_identical(res$state, results$state[, i])
   expect_identical(res$trajectories$state, results$trajectories$state[, i, ])
+  expect_identical(res$restart$state,
+                   results$restart$state[, i, , drop = FALSE])
 })
 
 
@@ -36,6 +40,8 @@ test_that("burnin and thin can be used together", {
   expect_identical(res$probabilities, results$probabilities[i, ])
   expect_identical(res$state, results$state[, i])
   expect_identical(res$trajectories$state, results$trajectories$state[, i, ])
+  expect_identical(res$restart$state,
+                   results$restart$state[, i, , drop = FALSE])
 })
 
 

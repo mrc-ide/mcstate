@@ -130,7 +130,8 @@ example_sir_pmcmc <- function() {
     p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                              index = dat$index)
     set.seed(1)
-    control <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE)
+    control <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE,
+                             save_restart = 40)
     dat$pmcmc <- pmcmc(dat$pars, p, control = control)
     test_cache$example_sir_pmcmc <- dat
   }
