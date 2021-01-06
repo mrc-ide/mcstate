@@ -242,6 +242,16 @@ test_that("Can't combine chains that differ in if they have trajectories", {
 })
 
 
+test_that("Can't combine chains that differ in if they have restart", {
+  results <- example_sir_pmcmc2()$results
+  a <- results[[1]]
+  a$restart <- NULL
+  expect_error(
+    pmcmc_combine(a, results[[2]]),
+    "If 'restart' is present for any samples, it must be present for all")
+})
+
+
 test_that("Can't combine inconsistent trajectories", {
   results <- example_sir_pmcmc2()$results
   a <- results[[1]]
