@@ -82,7 +82,7 @@ interface will be implemented later." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.1</span>
       </span>
     </div>
 
@@ -109,6 +109,9 @@ interface will be implemented later." />
     </li>
     <li>
       <a href="../articles/parallelisation.html">Parallelisation of inference</a>
+    </li>
+    <li>
+      <a href="../articles/restart.html">Restarting pMCMC</a>
     </li>
     <li>
       <a href="../articles/sir_models.html">SIR models with odin, dust and mcstate</a>
@@ -174,6 +177,7 @@ at each step that has been run</p></dd>
 <li><p><a href='#method-run'><code>particle_filter$run()</code></a></p></li>
 <li><p><a href='#method-state'><code>particle_filter$state()</code></a></p></li>
 <li><p><a href='#method-history'><code>particle_filter$history()</code></a></p></li>
+<li><p><a href='#method-restart_state'><code>particle_filter$restart_state()</code></a></p></li>
 <li><p><a href='#method-inputs'><code>particle_filter$inputs()</code></a></p></li>
 <li><p><a href='#method-set_n_threads'><code>particle_filter$set_n_threads()</code></a></p></li>
 </ul>
@@ -265,7 +269,7 @@ Run the particle filter</p></dd>
 <a id="method-run"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>run()</code></h3>
 
 <h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
-<p><div class="r"></p><pre><span class='va'>particle_filter</span><span class='op'>$</span><span class='fu'>run</span><span class='op'>(</span>pars <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='op'>)</span>, save_history <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span></pre><p></div></p>
+<p><div class="r"></p><pre><span class='va'>particle_filter</span><span class='op'>$</span><span class='fu'>run</span><span class='op'>(</span>pars <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='op'>)</span>, save_history <span class='op'>=</span> <span class='cn'>FALSE</span>, save_restart <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre><p></div></p>
 
 <h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
@@ -282,6 +286,12 @@ are silently ignored by dust models.</p></dd>
 <dt><code>save_history</code></dt><dd><p>Logical, indicating if the history of all
 particles should be saved. If saving history, then it can be
 queried later with the <code>$history</code> method on the object.</p></dd>
+
+<dt><code>save_restart</code></dt><dd><p>An integer vector of time points to save
+restart infomation for. These are in terms of your underlying time
+variable (the <code>time</code> column in <code><a href='particle_filter_data.html'>particle_filter_data()</a></code>) not in
+terms of steps. The state will be saved after the particle
+filtering operation (i.e., at the end of the step).</p></dd>
 
 </dl><p></div></p>
 <h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
@@ -316,6 +326,30 @@ time point.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arg
 <p><div class="arguments"></p><dl>
 <dt><code>index_particle</code></dt><dd><p>Optional vector of particle indices to return.
 If <code>NULL</code> we return all particles' histories.</p></dd>
+
+</dl><p></div></p>
+<p><hr>
+<a id="method-restart_state"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>restart_state()</code></h3>
+<p>Return the full particle filter state at points back in time
+that were saved with the <code>save_restart</code> argument to
+<code>$run()</code>. If available, this will return a 3d array, with
+dimensions representing (1) particle state, (2) particle index,
+(3) time point. This could be quite large, especially if you
+are using the <code>index</code> argument to create the particle filter
+and return a subset of all state generally. It is also
+different to the saved trajectories returned by <code>$history()</code>
+because earlier saved state is not filtered by later filtering
+(in the history we return the tree of history representing the
+histories of the <em>final</em> particles, here we are returning all
+particles at the requested point, regardless if they appear in
+the set of particles that make it to the end of the
+simulation).</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>particle_filter</span><span class='op'>$</span><span class='fu'>restart_state</span><span class='op'>(</span>index_particle <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre><p></div></p>
+
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
+<dt><code>index_particle</code></dt><dd><p>Optional vector of particle indices to return.
+If <code>NULL</code> we return all particles' states.</p></dd>
 
 </dl><p></div></p>
 <p><hr>

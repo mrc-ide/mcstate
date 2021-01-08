@@ -84,7 +84,7 @@ as the order of the arguments may change in future." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.1</span>
       </span>
     </div>
 
@@ -111,6 +111,9 @@ as the order of the arguments may change in future." />
     </li>
     <li>
       <a href="../articles/parallelisation.html">Parallelisation of inference</a>
+    </li>
+    <li>
+      <a href="../articles/restart.html">Restarting pMCMC</a>
     </li>
     <li>
       <a href="../articles/sir_models.html">SIR models with odin, dust and mcstate</a>
@@ -163,6 +166,7 @@ as the order of the arguments may change in future.</p>
   rerun_every <span class='op'>=</span> <span class='cn'>Inf</span>,
   use_parallel_seed <span class='op'>=</span> <span class='cn'>FALSE</span>,
   save_state <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  save_restart <span class='op'>=</span> <span class='cn'>NULL</span>,
   save_trajectories <span class='op'>=</span> <span class='cn'>FALSE</span>,
   progress <span class='op'>=</span> <span class='cn'>FALSE</span>
 <span class='op'>)</span></pre>
@@ -253,6 +257,19 @@ save space, or use <code><a href='pmcmc_thin.html'>pmcmc_thin()</a></code> after
 MCMC.</p></td>
     </tr>
     <tr>
+      <th>save_restart</th>
+      <td><p>An integer vector of time points to save
+restart information for; this is in addition to <code>save_state</code>
+(which saves the final model state) and saves the full model
+state.  It will use the same trajectory as <code>save_state</code> and
+<code>save_trajectories</code>. Note that if you use this option you will
+end up with lots of model states and will need to process them
+in order to actually restart the pmcmc or the particle filter
+from this state. The integers correspond to the <em>time</em> variable
+in your filter (see <a href='particle_filter.html'>particle_filter</a> for more
+information).</p></td>
+    </tr>
+    <tr>
       <th>save_trajectories</th>
       <td><p>Logical, indicating if the particle
 trajectories should be saved during the simulation. If <code>TRUE</code>,
@@ -305,6 +322,9 @@ detail in <code><a href='../articles/parallelisation.html'>vignette("parallelisa
 #&gt; $save_state
 #&gt; [1] TRUE
 #&gt; 
+#&gt; $save_restart
+#&gt; NULL
+#&gt; 
 #&gt; $save_trajectories
 #&gt; [1] FALSE
 #&gt; 
@@ -340,6 +360,9 @@ detail in <code><a href='../articles/parallelisation.html'>vignette("parallelisa
 #&gt; 
 #&gt; $save_state
 #&gt; [1] TRUE
+#&gt; 
+#&gt; $save_restart
+#&gt; NULL
 #&gt; 
 #&gt; $save_trajectories
 #&gt; [1] FALSE
@@ -378,6 +401,9 @@ detail in <code><a href='../articles/parallelisation.html'>vignette("parallelisa
 #&gt; 
 #&gt; $save_state
 #&gt; [1] TRUE
+#&gt; 
+#&gt; $save_restart
+#&gt; NULL
 #&gt; 
 #&gt; $save_trajectories
 #&gt; [1] FALSE

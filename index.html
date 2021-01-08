@@ -41,7 +41,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.1</span>
       </span>
     </div>
 
@@ -68,6 +68,9 @@
     </li>
     <li>
       <a href="articles/parallelisation.html">Parallelisation of inference</a>
+    </li>
+    <li>
+      <a href="articles/restart.html">Restarting pMCMC</a>
     </li>
     <li>
       <a href="articles/sir_models.html">SIR models with odin, dust and mcstate</a>
@@ -110,7 +113,7 @@
 <a href="#installation" class="anchor"></a>Installation</h2>
 <p>Install from drat with</p>
 <pre><code># install.packages("drat") # -- if you don't have drat installed
-drat:::add("mrc-ide")
+drat:::add("ncov-ic")
 install.packages("mcstate")</code></pre>
 <p>You will need a compiler to install dependencies for the package, and to build any models. Use <code><a href="https://rdrr.io/pkg/pkgbuild/man/has_build_tools.html">pkgbuild::check_build_tools()</a></code> to see if your system is ok to use.</p>
 <p>The development version of the package can be installed directly from GitHub if you prefer with:</p>
