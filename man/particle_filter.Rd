@@ -80,6 +80,7 @@ at each step that has been run}
 \item \href{#method-run}{\code{particle_filter$run()}}
 \item \href{#method-state}{\code{particle_filter$state()}}
 \item \href{#method-history}{\code{particle_filter$history()}}
+\item \href{#method-restart_state}{\code{particle_filter$restart_state()}}
 \item \href{#method-inputs}{\code{particle_filter$inputs()}}
 \item \href{#method-set_n_threads}{\code{particle_filter$set_n_threads()}}
 }
@@ -180,7 +181,7 @@ Run the particle filter}
 \if{latex}{\out{\hypertarget{method-run}{}}}
 \subsection{Method \code{run()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_filter$run(pars = list(), save_history = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter$run(pars = list(), save_history = FALSE, save_restart = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -199,6 +200,12 @@ are silently ignored by dust models.}
 \item{\code{save_history}}{Logical, indicating if the history of all
 particles should be saved. If saving history, then it can be
 queried later with the \verb{$history} method on the object.}
+
+\item{\code{save_restart}}{An integer vector of time points to save
+restart infomation for. These are in terms of your underlying time
+variable (the \code{time} column in \code{\link[=particle_filter_data]{particle_filter_data()}}) not in
+terms of steps. The state will be saved after the particle
+filtering operation (i.e., at the end of the step).}
 }
 \if{html}{\out{</div>}}
 }
@@ -248,6 +255,37 @@ time point.
 \describe{
 \item{\code{index_particle}}{Optional vector of particle indices to return.
 If \code{NULL} we return all particles' histories.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-restart_state"></a>}}
+\if{latex}{\out{\hypertarget{method-restart_state}{}}}
+\subsection{Method \code{restart_state()}}{
+Return the full particle filter state at points back in time
+that were saved with the \code{save_restart} argument to
+\verb{$run()}. If available, this will return a 3d array, with
+dimensions representing (1) particle state, (2) particle index,
+(3) time point. This could be quite large, especially if you
+are using the \code{index} argument to create the particle filter
+and return a subset of all state generally. It is also
+different to the saved trajectories returned by \verb{$history()}
+because earlier saved state is not filtered by later filtering
+(in the history we return the tree of history representing the
+histories of the \emph{final} particles, here we are returning all
+particles at the requested point, regardless if they appear in
+the set of particles that make it to the end of the
+simulation).
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter$restart_state(index_particle = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{index_particle}}{Optional vector of particle indices to return.
+If \code{NULL} we return all particles' states.}
 }
 \if{html}{\out{</div>}}
 }

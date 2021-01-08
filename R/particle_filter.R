@@ -77,7 +77,8 @@ particle_filter <- R6::R6Class(
     last_model = NULL,
     last_history_value = NULL,
     last_history_order = NULL,
-    last_index_state = NULL
+    last_index_state = NULL,
+    last_restart_state = NULL
   ),
 
   public = list(
@@ -205,9 +206,15 @@ particle_filter <- R6::R6Class(
     ##' particles should be saved. If saving history, then it can be
     ##' queried later with the `$history` method on the object.
     ##'
+    ##' @param save_restart An integer vector of time points to save
+    ##' restart infomation for. These are in terms of your underlying time
+    ##' variable (the `time` column in [particle_filter_data()]) not in
+    ##' terms of steps. The state will be saved after the particle
+    ##' filtering operation (i.e., at the end of the step).
+    ##'
     ##' @return A single numeric value representing the log-likelihood
     ##' (`-Inf` if the model is impossible)
-    run = function(pars = list(), save_history = FALSE) {
+    run = function(pars = list(), save_history = FALSE, save_restart = NULL) {
       compare <- private$compare
       steps <- private$steps
       np <- self$n_particles
@@ -268,9 +275,17 @@ particle_filter <- R6::R6Class(
         history_order <- NULL
       }
 
+      save_restart_step <- check_save_restart(save_restart, private$data)
+      if (length(save_restart_step) > 0) {
+        restart_state <- history_collector(length(save_restart_step) - 1L)
+      } else {
+        restart_state <- NULL
+      }
+
       log_likelihood <- 0
       for (t in seq_len(n_steps)) {
-        res <- model$run(steps[t, 2])
+        step_end <- steps[t, 2]
+        res <- model$run(step_end)
         if (save_history) {
           history_value[, , t + 1L] <- model$state(index_state)
         }
@@ -299,6 +314,10 @@ particle_filter <- R6::R6Class(
           if (save_history) {
             history_order[, t + 1L] <- kappa
           }
+
+          if (step_end %in% save_restart_step) {
+            restart_state$add(model$state())
+          }
         }
       }
 
@@ -307,6 +326,11 @@ particle_filter <- R6::R6Class(
       self$unique_particles <- unique_particles
       private$last_model <- model
       private$last_index_state <- index_state
+      if (length(save_restart_step) > 0) {
+        private$last_restart_state <- list_to_array(restart_state$get())
+      } else {
+        private$last_restart_state <- NULL
+      }
 
       log_likelihood
     },
@@ -367,6 +391,38 @@ particle_filter <- R6::R6Class(
       ret <- array(history_value[cidx], c(ny, np, nt))
       rownames(ret) <- names(private$last_index_state)
       ret
+    },
+
+    ##' @description
+    ##' Return the full particle filter state at points back in time
+    ##' that were saved with the `save_restart` argument to
+    ##' `$run()`. If available, this will return a 3d array, with
+    ##' dimensions representing (1) particle state, (2) particle index,
+    ##' (3) time point. This could be quite large, especially if you
+    ##' are using the `index` argument to create the particle filter
+    ##' and return a subset of all state generally. It is also
+    ##' different to the saved trajectories returned by `$history()`
+    ##' because earlier saved state is not filtered by later filtering
+    ##' (in the history we return the tree of history representing the
+    ##' histories of the _final_ particles, here we are returning all
+    ##' particles at the requested point, regardless if they appear in
+    ##' the set of particles that make it to the end of the
+    ##' simulation).
+    ##'
+    ##' @param index_particle Optional vector of particle indices to return.
+    ##' If `NULL` we return all particles' states.
+    restart_state = function(index_particle = NULL) {
+      if (is.null(private$last_model)) {
+        stop("Model has not yet been run")
+      }
+      restart_state <- private$last_restart_state
+      if (is.null(restart_state)) {
+        stop("Can't get history as model was run with save_restart = NULL")
+      }
+      if (!is.null(index_particle)) {
+        restart_state <- restart_state[, index_particle, , drop = FALSE]
+      }
+      restart_state
     },
 
     ##' @description
@@ -478,4 +534,22 @@ particle_steps <- function(steps, step_start) {
 is_dust_generator <- function(x) {
   inherits(x, "R6ClassGenerator") &&
     identical(attr(x, which = "name", exact = TRUE), "dust_generator")
+}
+
+
+check_save_restart <- function(save_restart, data) {
+  if (is.null(save_restart)) {
+    return(integer(0))
+  }
+  assert_strictly_increasing(save_restart)
+  assert_is(data, "particle_filter_data")
+  nm <- attr(data, "time")
+  i <- match(save_restart, data[[paste0(nm, "_end")]])
+  err <- is.na(i)
+  if (any(err)) {
+    stop(sprintf("'save_restart' contains times not in '%s': %s",
+                 nm, paste(save_restart[err], collapse = ", ")))
+  }
+
+  data$step_end[i]
 }

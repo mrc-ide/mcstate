@@ -1,11 +1,12 @@
-mcstate_pmcmc <- function(pars, probabilities, state, trajectories, predict,
-                          chain = NULL, iteration = NULL) {
+mcstate_pmcmc <- function(pars, probabilities, state, trajectories, restart,
+                          predict, chain = NULL, iteration = NULL) {
   ret <- list(chain = chain,
               iteration = iteration %||% seq.int(0, length.out = nrow(pars)),
               pars = pars,
               probabilities = probabilities,
               state = state,
               trajectories = trajectories,
+              restart = restart,
               predict = predict)
   class(ret) <- "mcstate_pmcmc"
   ret
@@ -29,6 +30,15 @@ format.mcstate_pmcmc <- function(x, ...) {
       nrow(trajectories), ncol(trajectories), dim(trajectories)[[3]])
   }
 
+  if (is.null(x$restart)) {
+    str_restart <- sprintf("  restart: (not included)")
+  } else {
+    restart <- x$restart$state
+    str_restart <- sprintf(
+      "  restart: %d x %d x %d array of particle restart state",
+      nrow(restart), ncol(restart), dim(restart)[[3]])
+  }
+
   if (is.null(x$chain)) {
     header <- sprintf("<mcstate_pmcmc> (%d samples)", nrow(x$pars))
   } else {
@@ -46,7 +56,8 @@ format.mcstate_pmcmc <- function(x, ...) {
     strwrap(paste(colnames(x$probabilities), collapse = ", "),
             indent = indent, exdent = indent),
     str_state,
-    str_trajectories)
+    str_trajectories,
+    str_restart)
 }
 
 

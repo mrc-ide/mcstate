@@ -39,7 +39,7 @@ example_sir <- function() {
     list(run = 4L, state = 1:3)
   }
 
-  proposal_kernel <- diag(2) * 1e-4
+  proposal_kernel <- rbind(c(0.00057, 0.00034), c(0.00034, 0.00026))
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("beta", "gamma")
 
   pars <- pmcmc_parameters$new(
@@ -130,7 +130,8 @@ example_sir_pmcmc <- function() {
     p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                              index = dat$index)
     set.seed(1)
-    control <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE)
+    control <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE,
+                             save_restart = 40)
     dat$pmcmc <- pmcmc(dat$pars, p, control = control)
     test_cache$example_sir_pmcmc <- dat
   }
@@ -147,7 +148,8 @@ example_sir_pmcmc2 <- function() {
                              index = dat$index)
     set.seed(1)
 
-    control <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE)
+    control <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE,
+                             save_restart = 40)
 
     dat$results <- list(
       pmcmc(dat$pars, p, control = control),

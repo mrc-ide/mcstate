@@ -111,7 +111,7 @@ test_that("run pmcmc with the particle filter and retain history", {
   expect_setequal(
     names(results1),
     c("chain", "iteration",
-      "pars", "probabilities", "state", "trajectories", "predict"))
+      "pars", "probabilities", "state", "trajectories", "restart", "predict"))
 
   expect_null(results1$chain)
   expect_equal(results1$iteration, 0:30)
@@ -485,4 +485,77 @@ test_that("Can override thread count via control", {
   res <- pmcmc(dat$pars, p,
                    control = pmcmc_control(5, n_threads_total = NULL))
   expect_equal(res$predict$filter$n_threads, 4)
+})
+
+
+test_that("Can save intermediate state to restart", {
+  dat <- example_sir()
+  n_particles <- 42
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
+  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
+  p3 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
+  control1 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE)
+  control2 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE,
+                            save_restart = 20)
+  control3 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE,
+                            save_restart = c(20, 30))
+  set.seed(1)
+  res1 <- pmcmc(dat$pars, p1, control = control1)
+  set.seed(1)
+  res2 <- pmcmc(dat$pars, p2, control = control2)
+  set.seed(1)
+  res3 <- pmcmc(dat$pars, p3, control = control3)
+
+  ## Same actual run
+  expect_identical(res1$trajectories, res2$trajectories)
+  expect_identical(res1$trajectories, res3$trajectories)
+
+  expect_null(res1$restart)
+
+  expect_is(res2$restart, "list")
+  expect_equal(res2$restart$time, 20)
+  expect_equal(dim(res2$restart$state), c(4, 31, 1))
+
+  expect_is(res3$restart, "list")
+  expect_equal(res3$restart$time, c(20, 30))
+  expect_equal(dim(res3$restart$state), c(4, 31, 2))
+
+  expect_equal(res3$restart$state[, , 1], res2$restart$state[, , 1])
+})
+
+
+test_that("can restart the mcmc using saved state", {
+  ## This is mostly a test of "can we" start the pmcmc again, rather
+  ## than "should we", and "does it mean anything statistically" as
+  ## these are harder questions.
+  dat <- example_sir()
+  n_particles <- 100
+
+  set.seed(1)
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index)
+  control1 <- pmcmc_control(50, save_trajectories = TRUE, save_state = TRUE,
+                            progress = FALSE, save_restart = 40)
+  res1 <- pmcmc(dat$pars, p1, control = control1)
+
+  ## Our new restart state, which includes a range of possible S
+  ## values
+  expect_equal(dim(res1$restart$state), c(4, 51, 1))
+  s <- res1$restart$state[, , 1]
+  d2 <- dat$data[dat$data$day_start >= 40, ]
+  ## This is probably something that we can automate
+  initial2 <- function(info, n_particles, pars) {
+    list(state = s[, sample.int(ncol(s), n_particles, replace = TRUE)])
+  }
+  p2 <- particle_filter$new(d2, dat$model, n_particles, dat$compare,
+                            index = dat$index, initial = initial2)
+  control2 <- pmcmc_control(50, save_trajectories = TRUE, save_state = TRUE,
+                            progress = FALSE)
+  res2 <- pmcmc(dat$pars, p2, control = control2)
+
+  expect_equal(res2$trajectories$step, (40:100) * 4)
+  expect_equal(dim(res2$trajectories$state), c(3, 51, 61))
 })

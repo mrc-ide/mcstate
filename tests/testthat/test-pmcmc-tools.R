@@ -14,6 +14,8 @@ test_that("discarding burnin drops beginnings of chain", {
   expect_identical(res$probabilities, results$probabilities[i, ])
   expect_identical(res$state, results$state[, i])
   expect_identical(res$trajectories$state, results$trajectories$state[, i, ])
+  expect_identical(res$restart$state,
+                   results$restart$state[, i, , drop = FALSE])
 })
 
 
@@ -25,6 +27,8 @@ test_that("thinning drops all over chain", {
   expect_identical(res$probabilities, results$probabilities[i, ])
   expect_identical(res$state, results$state[, i])
   expect_identical(res$trajectories$state, results$trajectories$state[, i, ])
+  expect_identical(res$restart$state,
+                   results$restart$state[, i, , drop = FALSE])
 })
 
 
@@ -36,6 +40,8 @@ test_that("burnin and thin can be used together", {
   expect_identical(res$probabilities, results$probabilities[i, ])
   expect_identical(res$state, results$state[, i])
   expect_identical(res$trajectories$state, results$trajectories$state[, i, ])
+  expect_identical(res$restart$state,
+                   results$restart$state[, i, , drop = FALSE])
 })
 
 
@@ -76,19 +82,23 @@ test_that("can combine chains", {
   n_particles <- nrow(results1$state)
   n_index <- nrow(results1$trajectories$state)
   n_time <- dim(results1$trajectories$state)[[3]]
+  n_restart <- dim(results1$restart$state)[[3]]
+  n_state <- nrow(results1$state)
 
   n_mcmc3 <- n_mcmc * 3
 
   expect_equal(dim(res$pars), c(n_mcmc3, n_par))
   expect_equal(dim(res$probabilities), c(n_mcmc3, 3))
-  expect_equal(dim(res$state), c(nrow(results1$state), n_mcmc3))
+  expect_equal(dim(res$state), c(n_state, n_mcmc3))
   expect_equal(dim(res$trajectories$state), c(n_index, n_mcmc3, n_time))
+  expect_equal(dim(res$restart$state), c(n_state, n_mcmc3, n_restart))
 
   i <- seq_len(n_mcmc) + n_mcmc
   expect_equal(res$pars[i, ], results2$pars)
   expect_equal(res$probabilities[i, ], results2$probabilities)
   expect_equal(res$state[, i], results2$state)
   expect_equal(res$trajectories$state[, i, ], results2$trajectories$state)
+  expect_equal(res$restart$state[, i, , drop = FALSE], results2$restart$state)
 })
 
 
@@ -229,6 +239,16 @@ test_that("Can't combine chains that differ in if they have trajectories", {
   expect_error(
     pmcmc_combine(a, results[[2]]),
     "If 'trajectories' is present for any samples, it must be present for all")
+})
+
+
+test_that("Can't combine chains that differ in if they have restart", {
+  results <- example_sir_pmcmc2()$results
+  a <- results[[1]]
+  a$restart <- NULL
+  expect_error(
+    pmcmc_combine(a, results[[2]]),
+    "If 'restart' is present for any samples, it must be present for all")
 })
 
 

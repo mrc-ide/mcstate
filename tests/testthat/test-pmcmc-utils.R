@@ -4,7 +4,7 @@ test_that("format and print the simplest object", {
   pars <- matrix(NA_real_, 10, 4,
                  dimnames = list(NULL, c("a", "b", "c", "d")))
   probs <- matrix(NA_real_, 10, 3, dimnames = list(NULL, c("x", "y", "z")))
-  x <- mcstate_pmcmc(pars, probs, NULL, NULL, NULL)
+  x <- mcstate_pmcmc(pars, probs, NULL, NULL, NULL, NULL)
 
   expected <- c(
     "<mcstate_pmcmc> (10 samples)",
@@ -13,7 +13,8 @@ test_that("format and print the simplest object", {
     "  probabilities: 10 x 3 matrix of log-probabilities",
     "    x, y, z",
     "  state: (not included)",
-    "  trajectories: (not included)")
+    "  trajectories: (not included)",
+    "  restart: (not included)")
 
   expect_equal(format(x), expected)
   expect_output(print(x), paste(expected, collapse = "\n"), fixed = TRUE)
@@ -27,8 +28,9 @@ test_that("format and print with state", {
   state <- matrix(NA_real_, 4, 10)
   trajectories <- list(state = array(NA_real_, c(4, 10, 20)))
   predict <- NULL
+  restart <- list(date = 1, state = array(NA_real_, c(4, 10, 1)))
 
-  x <- mcstate_pmcmc(pars, probs, state, trajectories, predict)
+  x <- mcstate_pmcmc(pars, probs, state, trajectories, restart, predict)
 
   expected <- c(
     "<mcstate_pmcmc> (10 samples)",
@@ -37,7 +39,8 @@ test_that("format and print with state", {
     "  probabilities: 10 x 3 matrix of log-probabilities",
     "    x, y, z",
     "  state: 4 x 10 matrix of final states",
-    "  trajectories: 4 x 10 x 20 array of particle trajectories")
+    "  trajectories: 4 x 10 x 20 array of particle trajectories",
+    "  restart: 4 x 10 x 1 array of particle restart state")
 
   expect_equal(format(x), expected)
   expect_output(print(x), paste(expected, collapse = "\n"), fixed = TRUE)
@@ -54,7 +57,8 @@ test_that("print multichain object", {
     "  probabilities: 93 x 3 matrix of log-probabilities",
     "    log_prior, log_likelihood, log_posterior",
     "  state: 4 x 93 matrix of final states",
-    "  trajectories: 3 x 93 x 101 array of particle trajectories")
+    "  trajectories: 3 x 93 x 101 array of particle trajectories",
+    "  restart: 4 x 93 x 1 array of particle restart state")
 
   expect_equal(format(x), expected)
   expect_output(print(x), paste(expected, collapse = "\n"), fixed = TRUE)
@@ -67,7 +71,7 @@ test_that("wrap long variable names nicely", {
   probs <- matrix(NA_real_, 10, 3, dimnames = list(NULL, c("x", "y", "z")))
   x <- withr::with_options(
     list(width = 80),
-    format(mcstate_pmcmc(pars, probs, NULL, NULL, NULL)))
+    format(mcstate_pmcmc(pars, probs, NULL, NULL, NULL, NULL)))
   expect_equal(
     x[[3]],
     "    aaaaaaaaaa, bbbbbbbbbbbbbbbbbbbb, cccccccccccccccccccccccccccccc,")
