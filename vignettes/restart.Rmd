@@ -127,7 +127,8 @@ dim(res1$restart$state)
 This sample includes variablility over the pmcmc run:
 
 ```{r}
-hist(res1$restart$state[2, , ], xlab = "Number infected")
+hist(res1$restart$state[2, , ], xlab = "Number infected",
+     main = "Distribution of number infected over mcmc samples")
 ```
 
 This matrix includes all information to restart the stochastic process and we can use this to run a pmcmc that starts the particle filter that runs over data starting from day 40. Note that this is *not* the same model as it does fit to the first 40 days of the epidemic so we expect parameters to differ (it's a bit like allowing a break in parameters at day = 40 except our initial parameter sets here *do* include both parts.
