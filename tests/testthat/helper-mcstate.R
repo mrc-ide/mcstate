@@ -1,6 +1,6 @@
 example_sir <- function() {
   model <- dust::dust_example("sir")
-  sir <- model$new(data = list(), step = 0, n_particles = 1)
+  sir <- model$new(pars = list(), step = 0, n_particles = 1)
   y0 <- sir$state()
 
   compare <- function(state, prev_state, observed, pars = NULL) {

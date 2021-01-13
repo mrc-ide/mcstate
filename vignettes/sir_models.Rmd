@@ -117,7 +117,7 @@ case_compare <- function(state, prev_state, observed, pars = NULL) {
 We can use the `info()` method on a dust model to inspect what order the state variables will come in:
 
 ```{r}
-gen_sir$new(data = list(), step = 0, n_particles = 1L)$info()
+gen_sir$new(pars = list(), step = 0, n_particles = 1L)$info()
 ```
 
 The SIR example actually outputs incidence directly as part of the state, so the comparison function can be written without needing to recalculate this:
@@ -339,7 +339,7 @@ index <- function(info) {
                  info$index$D))
 }
 
-death_model <- gen_death$new(data = list(), step = 0, n_particles = 1L)
+death_model <- gen_death$new(pars = list(), step = 0, n_particles = 1L)
 index(death_model$info())
 ```
 
