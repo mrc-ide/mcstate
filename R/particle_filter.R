@@ -11,7 +11,7 @@
 ##' gen <- dust::dust_example("sir")
 ##'
 ##' # Some data that we will fit to, using 1 particle:
-##' sir <- gen$new(data = list(), step = 0, n_particles = 1)
+##' sir <- gen$new(pars = list(), step = 0, n_particles = 1)
 ##' dt <- 1/4
 ##' day <- seq(1, 100)
 ##' incidence <- rep(NA, length(day))
@@ -221,7 +221,7 @@ particle_filter <- R6::R6Class(
       n_steps <- nrow(steps)
 
       if (is.null(private$last_model)) {
-        model <- self$model$new(data = pars, step = steps[[1L]],
+        model <- self$model$new(pars = pars, step = steps[[1L]],
                                 n_particles = np,
                                 n_threads = private$n_threads,
                                 seed = private$seed)
