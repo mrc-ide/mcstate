@@ -119,17 +119,20 @@ steps relate to time.}
 \item{\code{n_particles}}{The number of particles to simulate}
 
 \item{\code{compare}}{A comparison function.  Must take arguments
-\code{state}, \code{output}, \code{data} and \code{pars} as arguments
+\code{state}, \code{prev_state}, \code{observed} and \code{pars} as arguments
 (though the arguments may have different names).
 \code{state} is the simulated model state (a matrix with as
 many rows as there are state variables and as many columns as
-there are particles.  \code{output} is the output variables, if
-the model produces them (\code{NULL} otherwise) and \code{data}
+there are particles.  \code{prev_state} is the state from previous
+timestep (deprecated and will be removed shortly), \code{data}
 is a \code{list} of observed data corresponding to the current
 time's row in the \code{data} object provided here in the
 constructor.  \code{pars} is any additional parameters passed
 through to the comparison function (via the \code{pars}
-argument to \verb{$run}).}
+argument to \verb{$run}). Alternatively, \code{compare} can be \code{NULL}
+if your model provides a built-in compile compare function
+(if \code{model$public_methods$has_compare()} is \code{TRUE}), which may
+be faster.}
 
 \item{\code{index}}{An index function. This is used to compute the
 "interesting" indexes of your model. It must be a function of
