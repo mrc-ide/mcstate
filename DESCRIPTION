@@ -33,7 +33,7 @@ Suggests:
     knitr,
     mockery,
     mvtnorm,
-    odin.dust (>= 0.1.10),
+    odin.dust (>= 0.1.11),
     rmarkdown,
     testthat,
     withr
