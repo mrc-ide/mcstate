@@ -1,3 +1,7 @@
+# mcstate 0.3.4
+
+* Support for "compiled compare functions", introduced in `dust` 0.6.1 (#92)
+
 # mcstate 0.3.1
 
 * The particle filter can now return the entire model state at points during the run, with argument `save_restart` to `$run()` and method `$restart_state()` (#86)

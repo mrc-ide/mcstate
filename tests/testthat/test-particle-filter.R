@@ -609,3 +609,36 @@ test_that("Dates must exist to save restart state", {
     p$run(save_restart = c(10, 30, 50)),
     "'save_restart' contains times not in 'day': 30, 50")
 })
+
+
+test_that("use compiled compare function", {
+  dat <- example_sir()
+  n_particles <- 100
+  set.seed(1)
+
+  model <- dust::dust(system.file("examples/sir2.cpp", package = "dust"),
+                      quiet = TRUE)
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index)
+  p2 <- particle_filter$new(dat$data, model, n_particles, NULL,
+                            index = dat$index)
+
+  ## Proving these are the same is tricky to do in a sensible amount
+  ## of time but if we run 1000 replicates with 400 particles it's
+  ## easy to see that these are the same (this just takes the best
+  ## part of a minute and replicates the unit tests available
+  ## elsewhere)
+  y1 <- replicate(50, p1$run())
+  y2 <- replicate(50, p2$run())
+  expect_equal(mean(y1), mean(y2), tolerance = 0.01)
+})
+
+
+test_that("prevent using compiled compare where model does not support it", {
+  dat <- example_sir()
+  n_particles <- 100
+  model <- dust::dust_example("volatility")
+  expect_error(
+    particle_filter$new(dat$data, dat$model, n_particles, NULL),
+    "Your model does not have a built-in 'compare' function")
+})

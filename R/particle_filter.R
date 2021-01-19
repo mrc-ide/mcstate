@@ -108,17 +108,20 @@ particle_filter <- R6::R6Class(
     ##' @param n_particles The number of particles to simulate
     ##'
     ##' @param compare A comparison function.  Must take arguments
-    ##' `state`, `output`, `data` and `pars` as arguments
+    ##' `state`, `prev_state`, `observed` and `pars` as arguments
     ##' (though the arguments may have different names).
     ##' `state` is the simulated model state (a matrix with as
     ##' many rows as there are state variables and as many columns as
-    ##' there are particles.  `output` is the output variables, if
-    ##' the model produces them (`NULL` otherwise) and `data`
+    ##' there are particles.  `prev_state` is the state from previous
+    ##' timestep (deprecated and will be removed shortly), `data`
     ##' is a `list` of observed data corresponding to the current
     ##' time's row in the `data` object provided here in the
     ##' constructor.  `pars` is any additional parameters passed
     ##' through to the comparison function (via the `pars`
-    ##' argument to `$run`).
+    ##' argument to `$run`). Alternatively, `compare` can be `NULL`
+    ##' if your model provides a built-in compile compare function
+    ##' (if `model$public_methods$has_compare()` is `TRUE`), which may
+    ##' be faster.
     ##'
     ##' @param index An index function. This is used to compute the
     ##' "interesting" indexes of your model. It must be a function of
@@ -176,8 +179,15 @@ particle_filter <- R6::R6Class(
 
       self$model <- model
       private$data <- data
-      private$data_split <- df_to_list_of_lists(data)
+      if (is.null(compare)) {
+        private$data_split <- dust::dust_data(private$data, "step_end")
+      } else {
+        private$data_split <- df_to_list_of_lists(data)
+      }
       private$steps <- unname(as.matrix(data[c("step_start", "step_end")]))
+      if (is.null(compare) && !model$public_methods$has_compare()) {
+        stop("Your model does not have a built-in 'compare' function")
+      }
       private$compare <- compare
       private$index <- index
       private$initial <- initial
@@ -225,6 +235,10 @@ particle_filter <- R6::R6Class(
                                 n_particles = np,
                                 n_threads = private$n_threads,
                                 seed = private$seed)
+        if (is.null(private$compare)) {
+          model$set_index(integer(0))
+          model$set_data(private$data_split)
+        }
       } else {
         model <- private$last_model
         model$reset(pars, steps[[1L]])
@@ -239,12 +253,11 @@ particle_filter <- R6::R6Class(
           model$set_state(initial)
         }
       }
-
       if (is.null(private$index)) {
         index_state <- NULL
       } else {
         index <- private$index(model$info())
-        if (!is.null(index$run)) {
+        if (!is.null(private$compare) && !is.null(index$run)) {
           model$set_index(index$run)
         }
         index_state <- index$state
@@ -290,7 +303,11 @@ particle_filter <- R6::R6Class(
           history_value[, , t + 1L] <- model$state(index_state)
         }
 
-        log_weights <- compare(res, prev_res, private$data_split[[t]], pars)
+        if (is.null(compare)) {
+          log_weights <- model$compare_data()
+        } else {
+          log_weights <- compare(res, prev_res, private$data_split[[t]], pars)
+        }
         if (is.null(log_weights)) {
           prev_res <- res
           if (save_history) {
