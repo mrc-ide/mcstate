@@ -22,7 +22,7 @@ BugReports: https://github.com/mrc-ide/mcstate/issues
 Imports:
     R6,
     callr (>= 3.5.1),
-    dust (>= 0.6.1),
+    dust (>= 0.6.2),
     processx,
     progress (>= 1.2.0)
 Suggests:
@@ -40,6 +40,6 @@ Suggests:
 RoxygenNote: 7.1.1
 Roxygen: list(markdown = TRUE)
 Remotes:
-    mrc-ide/dust@i129-compile-compare,
-    mrc-ide/odin.dust@i51-compare
+    mrc-ide/dust,
+    mrc-ide/odin.dust
 VignetteBuilder: knitr
