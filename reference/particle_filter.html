@@ -82,7 +82,7 @@ interface will be implemented later." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.4</span>
       </span>
     </div>
 
@@ -210,17 +210,20 @@ steps relate to time.</p></dd>
 <dt><code>n_particles</code></dt><dd><p>The number of particles to simulate</p></dd>
 
 <dt><code>compare</code></dt><dd><p>A comparison function.  Must take arguments
-<code>state</code>, <code>output</code>, <code>data</code> and <code>pars</code> as arguments
+<code>state</code>, <code>prev_state</code>, <code>observed</code> and <code>pars</code> as arguments
 (though the arguments may have different names).
 <code>state</code> is the simulated model state (a matrix with as
 many rows as there are state variables and as many columns as
-there are particles.  <code>output</code> is the output variables, if
-the model produces them (<code>NULL</code> otherwise) and <code>data</code>
+there are particles.  <code>prev_state</code> is the state from previous
+timestep (deprecated and will be removed shortly), <code>data</code>
 is a <code>list</code> of observed data corresponding to the current
 time's row in the <code>data</code> object provided here in the
 constructor.  <code>pars</code> is any additional parameters passed
 through to the comparison function (via the <code>pars</code>
-argument to <code>$run</code>).</p></dd>
+argument to <code>$run</code>). Alternatively, <code>compare</code> can be <code>NULL</code>
+if your model provides a built-in compile compare function
+(if <code>model$public_methods$has_compare()</code> is <code>TRUE</code>), which may
+be faster.</p></dd>
 
 <dt><code>index</code></dt><dd><p>An index function. This is used to compute the
 "interesting" indexes of your model. It must be a function of
