@@ -12,10 +12,10 @@
 ##'
 ##' # Some data that we will fit to, using 1 particle:
 ##' sir <- gen$new(pars = list(), step = 0, n_particles = 1)
-##' dt <- 1/4
+##' dt <- 1 / 4
 ##' day <- seq(1, 100)
 ##' incidence <- rep(NA, length(day))
-##' true_history <- array(NA_real_, c(4, 1, 101))
+##' true_history <- array(NA_real_, c(5, 1, 101))
 ##' true_history[, 1, 1] <- sir$state()
 ##' for (i in day) {
 ##'   state_start <- sir$state()
@@ -31,13 +31,13 @@
 ##' data <- particle_filter_data(data_raw, "day", 4)
 ##'
 ##' # A comparison function
-##' compare <- function(state, prev_state, observed, pars = NULL) {
+##' compare <- function(state, observed, pars = NULL) {
 ##'   if (is.null(pars$exp_noise)) {
 ##'     exp_noise <- 1e6
 ##'   } else {
 ##'     exp_noise <- pars$exp_noise
 ##'   }
-##'   incidence_modelled <- prev_state[1,] - state[1,]
+##'   incidence_modelled <- state[1,]
 ##'   incidence_observed <- observed$incidence
 ##'   lambda <- incidence_modelled +
 ##'     rexp(length(incidence_modelled), exp_noise)
@@ -108,12 +108,10 @@ particle_filter <- R6::R6Class(
     ##' @param n_particles The number of particles to simulate
     ##'
     ##' @param compare A comparison function.  Must take arguments
-    ##' `state`, `prev_state`, `observed` and `pars` as arguments
-    ##' (though the arguments may have different names).
-    ##' `state` is the simulated model state (a matrix with as
-    ##' many rows as there are state variables and as many columns as
-    ##' there are particles.  `prev_state` is the state from previous
-    ##' timestep (deprecated and will be removed shortly), `data`
+    ##' `state`, `observed` and `pars` as arguments (though the arguments
+    ##' may have different names). `state` is the simulated model state
+    ##' (a matrix with as many rows as there are state variables and as
+    ##' many columns as there are particles, `data`
     ##' is a `list` of observed data corresponding to the current
     ##' time's row in the `data` object provided here in the
     ##' constructor.  `pars` is any additional parameters passed
@@ -263,20 +261,9 @@ particle_filter <- R6::R6Class(
         index_state <- index$state
       }
 
-      ## Baseline
-      ##
-      ## TODO(#22): This needs dealing with in the vignette (documenting
-      ## that we need a dummy step here most likely if the user
-      ## changes the initial location *and* if they need the history -
-      ##
-      ## TODO(dust#47): It would be nicer to have a better way of
-      ## controlling this, especially to deal with irregular data.
-      ##
       ## TODO: We might want to save the history on the particle
       ## filter somewhere where we can just allocate the space and
       ## query from it using the tree structure more directly.
-      prev_res <- model$run(steps[[1]])
-
       unique_particles <- rep(np, n_steps + 1)
       if (save_history) {
         state <- model$state(index_state)
@@ -306,10 +293,9 @@ particle_filter <- R6::R6Class(
         if (is.null(compare)) {
           log_weights <- model$compare_data()
         } else {
-          log_weights <- compare(res, prev_res, private$data_split[[t]], pars)
+          log_weights <- compare(res, private$data_split[[t]], pars)
         }
         if (is.null(log_weights)) {
-          prev_res <- res
           if (save_history) {
             history_order[, t + 1L] <- seq_len(np)
           }
@@ -327,7 +313,6 @@ particle_filter <- R6::R6Class(
           ## Because we will use the values from "run" a second time
           ## in the compare function, we need to reorder them as
           ## well.
-          prev_res <- res[, kappa, drop = FALSE]
           if (save_history) {
             history_order[, t + 1L] <- kappa
           }

@@ -97,16 +97,15 @@ More complex models may have additional data streams added as further columns (e
 
 ## Defining the comparison function
 
-The comparison function will typically be a likelihood, the probability of the simulation run given the data. This can be any function in R which takes the current simulated `state`, the state at the previous time step `prev_state`, a `data` row for the current time point and a list of any parameters `pars` the function needs.
+The comparison function will typically be a likelihood, the probability of the simulation run given the data. This can be any function in R which takes the current simulated `state`, a `data` row for the current time point and a list of any parameters `pars` the function needs.
 
-For this model the number of cases can be calculated from the change in susceptibles between time steps (as above). In this comparison function, the number of cases within each time interval is modelled as being Poisson distributed. A small amount of noise is added to prevent zero expectations.
+For this model the daily number of cases is calculated within update function and returned as the 5th state element. In this comparison function, the number of cases within each time interval is modelled as being Poisson distributed. A small amount of noise is added to prevent zero expectations.
 
 ```{r}
-case_compare <- function(state, prev_state, observed, pars = NULL) {
+case_compare <- function(state, observed, pars = NULL) {
   exp_noise <- 1e6
 
-  incidence_modelled <-
-    prev_state[1, , drop = TRUE] - state[1, , drop = TRUE]
+  incidence_modelled <- state[5, , drop = TRUE]
   incidence_observed <- observed$cases
   lambda <- incidence_modelled +
     rexp(n = length(incidence_modelled), rate = exp_noise)
@@ -331,8 +330,8 @@ For models with a very large state space returning only those compartments requi
 
 ```{r}
 index <- function(info) {
-  list(run = c(info$index$S,
-               info$index$D),
+  list(run = c(info$index$S_inc,
+               info$index$D_inc),
        state = c(info$index$S,
                  info$index$I,
                  info$index$R,
@@ -361,12 +360,9 @@ ll_pois <- function(obs, model) {
 }
 
 # Sum log likelihoods from each datastream
-combined_compare <- function(state, prev_state, observed, pars = NULL) {
-  ll_cases <- ll_pois(observed$cases,
-                      prev_state[1, , drop = TRUE] - state[1, , drop = TRUE])
-  ll_deaths <- ll_pois(observed$deaths,
-                      state[2, , drop = TRUE] - prev_state[2, , drop = TRUE])
-
+combined_compare <- function(state, observed, pars = NULL) {
+  ll_cases <- ll_pois(observed$cases, state[1, , drop = TRUE])
+  ll_deaths <- ll_pois(observed$deaths, state[2, , drop = TRUE])
   ll_cases + ll_deaths
 }
 ```

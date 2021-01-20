@@ -133,7 +133,7 @@ test_that("run pmcmc with the particle filter and retain history", {
                c("log_prior", "log_likelihood", "log_posterior"))
 
   ## History, if returned, has the correct shape
-  expect_equal(dim(results1$state), c(4, 31)) # state, mcmc
+  expect_equal(dim(results1$state), c(5, 31)) # state, mcmc
 
   ## Trajectories, if returned, have the same shape
   expect_s3_class(results1$trajectories, "mcstate_trajectories")
@@ -517,11 +517,11 @@ test_that("Can save intermediate state to restart", {
 
   expect_is(res2$restart, "list")
   expect_equal(res2$restart$time, 20)
-  expect_equal(dim(res2$restart$state), c(4, 31, 1))
+  expect_equal(dim(res2$restart$state), c(5, 31, 1))
 
   expect_is(res3$restart, "list")
   expect_equal(res3$restart$time, c(20, 30))
-  expect_equal(dim(res3$restart$state), c(4, 31, 2))
+  expect_equal(dim(res3$restart$state), c(5, 31, 2))
 
   expect_equal(res3$restart$state[, , 1], res2$restart$state[, , 1])
 })
@@ -543,7 +543,7 @@ test_that("can restart the mcmc using saved state", {
 
   ## Our new restart state, which includes a range of possible S
   ## values
-  expect_equal(dim(res1$restart$state), c(4, 51, 1))
+  expect_equal(dim(res1$restart$state), c(5, 51, 1))
   s <- res1$restart$state[, , 1]
   d2 <- dat$data[dat$data$day_start >= 40, ]
   ## This is probably something that we can automate

@@ -21,7 +21,7 @@ data <- mcstate::particle_filter_data(data = incidence,
                                       time = "day",
                                       rate = 1 / dt)
 model <- dust::dust_example("sir")
-compare <- function(state, prev_state, observed, pars = NULL) {
+compare <- function(state, observed, pars = NULL) {
   incidence_modelled <-
     prev_state[1, , drop = TRUE] - state[1, , drop = TRUE]
   incidence_observed <- observed$cases

@@ -56,9 +56,9 @@ test_that("print multichain object", {
     "    beta, gamma",
     "  probabilities: 93 x 3 matrix of log-probabilities",
     "    log_prior, log_likelihood, log_posterior",
-    "  state: 4 x 93 matrix of final states",
+    "  state: 5 x 93 matrix of final states",
     "  trajectories: 3 x 93 x 101 array of particle trajectories",
-    "  restart: 4 x 93 x 1 array of particle restart state")
+    "  restart: 5 x 93 x 1 array of particle restart state")
 
   expect_equal(format(x), expected)
   expect_output(print(x), paste(expected, collapse = "\n"), fixed = TRUE)

@@ -3,7 +3,7 @@ example_sir <- function() {
   sir <- model$new(pars = list(), step = 0, n_particles = 1)
   y0 <- sir$state()
 
-  compare <- function(state, prev_state, observed, pars = NULL) {
+  compare <- function(state, observed, pars = NULL) {
     if (is.na(observed$incidence)) {
       return(NULL)
     }
@@ -13,8 +13,7 @@ example_sir <- function() {
       exp_noise <- pars$compare$exp_noise
     }
     ## This is on the *filtered* state (i.e., returned by run())
-    incidence_modelled <-
-      state[1, , drop = TRUE] - prev_state[1, , drop = TRUE]
+    incidence_modelled <- state[1, , drop = TRUE]
     incidence_observed <- observed$incidence
     lambda <- incidence_modelled +
       rexp(n = length(incidence_modelled), rate = exp_noise)
@@ -23,20 +22,20 @@ example_sir <- function() {
   inv_dt <- 4
   day <- seq(1, 100)
   incidence <- rep(NA, length(day))
-  history <- array(NA_real_, c(4, 1, length(day) + 1))
+  history <- array(NA_real_, c(5, 1, length(day) + 1))
   history[, , 1] <- sir$state()
 
   for (i in day) {
     state_start <- sir$state()
     state_end <- sir$run(i * inv_dt)
     history[, , i + 1] <- state_end
-    incidence[i] <- state_end[4, 1] - state_start[4, 1]
+    incidence[i] <- state_end[5, 1]
   }
 
   data_raw <- data.frame(day = day, incidence = incidence)
   data <- particle_filter_data(data_raw, "day", 4)
   index <- function(info) {
-    list(run = 4L, state = 1:3)
+    list(run = 5L, state = 1:3)
   }
 
   proposal_kernel <- rbind(c(0.00057, 0.00034), c(0.00034, 0.00026))

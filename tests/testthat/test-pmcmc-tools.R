@@ -303,7 +303,7 @@ test_that("combining chains keeps rownames", {
   results <- example_sir_pmcmc2()$results
 
   nms_t <- c("S", "I", "R")
-  nms_s <- c("S", "I", "R", "inc")
+  nms_s <- c("S", "I", "R", "cum", "inc")
   for (i in seq_along(results)) {
     rownames(results[[i]]$trajectories$state) <- nms_t
     rownames(results[[i]]$state) <- nms_s
