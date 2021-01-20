@@ -82,7 +82,7 @@ interface will be implemented later." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.4.0</span>
       </span>
     </div>
 
@@ -210,12 +210,10 @@ steps relate to time.</p></dd>
 <dt><code>n_particles</code></dt><dd><p>The number of particles to simulate</p></dd>
 
 <dt><code>compare</code></dt><dd><p>A comparison function.  Must take arguments
-<code>state</code>, <code>prev_state</code>, <code>observed</code> and <code>pars</code> as arguments
-(though the arguments may have different names).
-<code>state</code> is the simulated model state (a matrix with as
-many rows as there are state variables and as many columns as
-there are particles.  <code>prev_state</code> is the state from previous
-timestep (deprecated and will be removed shortly), <code>data</code>
+<code>state</code>, <code>observed</code> and <code>pars</code> as arguments (though the arguments
+may have different names). <code>state</code> is the simulated model state
+(a matrix with as many rows as there are state variables and as
+many columns as there are particles, <code>data</code>
 is a <code>list</code> of observed data corresponding to the current
 time's row in the <code>data</code> object provided here in the
 constructor.  <code>pars</code> is any additional parameters passed
@@ -390,10 +388,10 @@ requested (based on environment variables and OpenMP support).</p></dd>
 
 <span class='co'># Some data that we will fit to, using 1 particle:</span>
 <span class='va'>sir</span> <span class='op'>&lt;-</span> <span class='va'>gen</span><span class='op'>$</span><span class='fu'>new</span><span class='op'>(</span>pars <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='op'>)</span>, step <span class='op'>=</span> <span class='fl'>0</span>, n_particles <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span>
-<span class='va'>dt</span> <span class='op'>&lt;-</span> <span class='fl'>1</span><span class='op'>/</span><span class='fl'>4</span>
+<span class='va'>dt</span> <span class='op'>&lt;-</span> <span class='fl'>1</span> <span class='op'>/</span> <span class='fl'>4</span>
 <span class='va'>day</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>100</span><span class='op'>)</span>
 <span class='va'>incidence</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/rep.html'>rep</a></span><span class='op'>(</span><span class='cn'>NA</span>, <span class='fu'><a href='https://rdrr.io/r/base/length.html'>length</a></span><span class='op'>(</span><span class='va'>day</span><span class='op'>)</span><span class='op'>)</span>
-<span class='va'>true_history</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/array.html'>array</a></span><span class='op'>(</span><span class='cn'>NA_real_</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>4</span>, <span class='fl'>1</span>, <span class='fl'>101</span><span class='op'>)</span><span class='op'>)</span>
+<span class='va'>true_history</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/array.html'>array</a></span><span class='op'>(</span><span class='cn'>NA_real_</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>5</span>, <span class='fl'>1</span>, <span class='fl'>101</span><span class='op'>)</span><span class='op'>)</span>
 <span class='va'>true_history</span><span class='op'>[</span>, <span class='fl'>1</span>, <span class='fl'>1</span><span class='op'>]</span> <span class='op'>&lt;-</span> <span class='va'>sir</span><span class='op'>$</span><span class='fu'>state</span><span class='op'>(</span><span class='op'>)</span>
 <span class='kw'>for</span> <span class='op'>(</span><span class='va'>i</span> <span class='kw'>in</span> <span class='va'>day</span><span class='op'>)</span> <span class='op'>{</span>
   <span class='va'>state_start</span> <span class='op'>&lt;-</span> <span class='va'>sir</span><span class='op'>$</span><span class='fu'>state</span><span class='op'>(</span><span class='op'>)</span>
@@ -409,13 +407,13 @@ requested (based on environment variables and OpenMP support).</p></dd>
 <span class='va'>data</span> <span class='op'>&lt;-</span> <span class='fu'><a href='particle_filter_data.html'>particle_filter_data</a></span><span class='op'>(</span><span class='va'>data_raw</span>, <span class='st'>"day"</span>, <span class='fl'>4</span><span class='op'>)</span>
 
 <span class='co'># A comparison function</span>
-<span class='va'>compare</span> <span class='op'>&lt;-</span> <span class='kw'>function</span><span class='op'>(</span><span class='va'>state</span>, <span class='va'>prev_state</span>, <span class='va'>observed</span>, <span class='va'>pars</span> <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span> <span class='op'>{</span>
+<span class='va'>compare</span> <span class='op'>&lt;-</span> <span class='kw'>function</span><span class='op'>(</span><span class='va'>state</span>, <span class='va'>observed</span>, <span class='va'>pars</span> <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span> <span class='op'>{</span>
   <span class='kw'>if</span> <span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/NULL.html'>is.null</a></span><span class='op'>(</span><span class='va'>pars</span><span class='op'>$</span><span class='va'>exp_noise</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>{</span>
     <span class='va'>exp_noise</span> <span class='op'>&lt;-</span> <span class='fl'>1e6</span>
   <span class='op'>}</span> <span class='kw'>else</span> <span class='op'>{</span>
     <span class='va'>exp_noise</span> <span class='op'>&lt;-</span> <span class='va'>pars</span><span class='op'>$</span><span class='va'>exp_noise</span>
   <span class='op'>}</span>
-  <span class='va'>incidence_modelled</span> <span class='op'>&lt;-</span> <span class='va'>prev_state</span><span class='op'>[</span><span class='fl'>1</span>,<span class='op'>]</span> <span class='op'>-</span> <span class='va'>state</span><span class='op'>[</span><span class='fl'>1</span>,<span class='op'>]</span>
+  <span class='va'>incidence_modelled</span> <span class='op'>&lt;-</span> <span class='va'>state</span><span class='op'>[</span><span class='fl'>1</span>,<span class='op'>]</span>
   <span class='va'>incidence_observed</span> <span class='op'>&lt;-</span> <span class='va'>observed</span><span class='op'>$</span><span class='va'>incidence</span>
   <span class='va'>lambda</span> <span class='op'>&lt;-</span> <span class='va'>incidence_modelled</span> <span class='op'>+</span>
     <span class='fu'><a href='https://rdrr.io/r/stats/Exponential.html'>rexp</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/length.html'>length</a></span><span class='op'>(</span><span class='va'>incidence_modelled</span><span class='op'>)</span>, <span class='va'>exp_noise</span><span class='op'>)</span>
@@ -425,7 +423,7 @@ requested (based on environment variables and OpenMP support).</p></dd>
 <span class='co'># Construct the particle_filter object with 100 particles</span>
 <span class='va'>p</span> <span class='op'>&lt;-</span> <span class='va'>particle_filter</span><span class='op'>$</span><span class='fu'>new</span><span class='op'>(</span><span class='va'>data</span>, <span class='va'>gen</span>, <span class='fl'>100</span>, <span class='va'>compare</span><span class='op'>)</span>
 <span class='va'>p</span><span class='op'>$</span><span class='fu'>run</span><span class='op'>(</span>save_history <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; [1] -239.7084</div><div class='input'>
+</div><div class='output co'>#&gt; [1] -16642</div><div class='input'>
 <span class='co'># Our simulated trajectories, with the "real" data superimposed</span>
 <span class='va'>history</span> <span class='op'>&lt;-</span> <span class='va'>p</span><span class='op'>$</span><span class='fu'>history</span><span class='op'>(</span><span class='op'>)</span>
 <span class='fu'><a href='https://rdrr.io/r/graphics/matplot.html'>matplot</a></span><span class='op'>(</span><span class='va'>data_raw</span><span class='op'>$</span><span class='va'>day</span>, <span class='fu'><a href='https://rdrr.io/r/base/t.html'>t</a></span><span class='op'>(</span><span class='va'>history</span><span class='op'>[</span><span class='fl'>1</span>, , <span class='op'>-</span><span class='fl'>1</span><span class='op'>]</span><span class='op'>)</span>, type <span class='op'>=</span> <span class='st'>"l"</span>,
