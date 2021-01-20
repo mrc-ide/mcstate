@@ -1,3 +1,7 @@
+# mcstate 0.4.0
+
+* Compare functions no longer use (or accept) the `prev_state` argument and now use just the current model state. This requires that models compute things like "daily incidence" within model code but simplifies use with irregular time series (#94)
+
 # mcstate 0.3.4
 
 * Support for "compiled compare functions", introduced in `dust` 0.6.1 (#92)

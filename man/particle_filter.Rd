@@ -14,10 +14,10 @@ gen <- dust::dust_example("sir")
 
 # Some data that we will fit to, using 1 particle:
 sir <- gen$new(pars = list(), step = 0, n_particles = 1)
-dt <- 1/4
+dt <- 1 / 4
 day <- seq(1, 100)
 incidence <- rep(NA, length(day))
-true_history <- array(NA_real_, c(4, 1, 101))
+true_history <- array(NA_real_, c(5, 1, 101))
 true_history[, 1, 1] <- sir$state()
 for (i in day) {
   state_start <- sir$state()
@@ -33,13 +33,13 @@ data_raw <- data.frame(day = day, incidence = incidence)
 data <- particle_filter_data(data_raw, "day", 4)
 
 # A comparison function
-compare <- function(state, prev_state, observed, pars = NULL) {
+compare <- function(state, observed, pars = NULL) {
   if (is.null(pars$exp_noise)) {
     exp_noise <- 1e6
   } else {
     exp_noise <- pars$exp_noise
   }
-  incidence_modelled <- prev_state[1,] - state[1,]
+  incidence_modelled <- state[1,]
   incidence_observed <- observed$incidence
   lambda <- incidence_modelled +
     rexp(length(incidence_modelled), exp_noise)
@@ -119,12 +119,10 @@ steps relate to time.}
 \item{\code{n_particles}}{The number of particles to simulate}
 
 \item{\code{compare}}{A comparison function.  Must take arguments
-\code{state}, \code{prev_state}, \code{observed} and \code{pars} as arguments
-(though the arguments may have different names).
-\code{state} is the simulated model state (a matrix with as
-many rows as there are state variables and as many columns as
-there are particles.  \code{prev_state} is the state from previous
-timestep (deprecated and will be removed shortly), \code{data}
+\code{state}, \code{observed} and \code{pars} as arguments (though the arguments
+may have different names). \code{state} is the simulated model state
+(a matrix with as many rows as there are state variables and as
+many columns as there are particles, \code{data}
 is a \code{list} of observed data corresponding to the current
 time's row in the \code{data} object provided here in the
 constructor.  \code{pars} is any additional parameters passed

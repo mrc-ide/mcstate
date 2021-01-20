@@ -57,7 +57,7 @@ plot(value ~ step, data, type = "o", pch = 19, las = 1)
 In order to estimate the parameters of the process that might have generated this dataset, we need, in addition to our model, an observation/comparison function.  In this case, given that we observe some `state`:
 
 ```{r, volatility_compare}
-volatility_compare <- function(state, prev_state, observed, pars) {
+volatility_compare <- function(state, observed, pars) {
   dnorm(observed$value, pars$gamma * drop(state), pars$tau, log = TRUE)
 }
 ```

@@ -10,7 +10,7 @@ test_that("run particle filter on sir model", {
 
   state <- p$state()
   expect_is(state, "matrix")
-  expect_equal(dim(state), c(4, n_particles))
+  expect_equal(dim(state), c(5, n_particles))
 
   expect_equal(length(p$unique_particles), nrow(dat$data) + 1)
   expect_true(all(p$unique_particles <= n_particles & p$unique_particles >= 1))
@@ -41,8 +41,8 @@ test_that("run particle filter without index", {
   p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index)
 
-  compare2 <- function(state, prev_state, ...) {
-    dat$compare(state[4, , drop = FALSE], prev_state[4, , drop = FALSE], ...)
+  compare2 <- function(state, ...) {
+    dat$compare(state[5, , drop = FALSE], ...)
   }
 
   p2 <- particle_filter$new(dat$data, dat$model, n_particles, compare2)
@@ -54,7 +54,7 @@ test_that("run particle filter without index", {
   expect_identical(ll1, ll2)
 
   expect_equal(dim(p1$history()), c(3, n_particles, 101))
-  expect_equal(dim(p2$history()), c(4, n_particles, 101))
+  expect_equal(dim(p2$history()), c(5, n_particles, 101))
 })
 
 
@@ -74,8 +74,8 @@ test_that("stop simulation when likelihood is impossible", {
   n_particles <- 42
   steps <- nrow(dat$data) + 1
 
-  compare <- function(state, output, observed, pars) {
-    ret <- dat$compare(state, output, observed, pars)
+  compare <- function(state, observed, pars) {
+    ret <- dat$compare(state, observed, pars)
     if (observed$incidence > 15) {
       ret[] <- -Inf
     }
@@ -237,7 +237,7 @@ test_that("initialise with simple state", {
   n_particles <- 100
 
   initial <- function(info, n_particles, pars) {
-    c(1000, pars$I0, 0, 0)
+    c(1000, pars$I0, 0, 0, 0)
   }
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index, initial = initial)
@@ -262,7 +262,7 @@ test_that("initialise with complex state", {
   n_particles <- 100
 
   initial <- function(info, n_particles, pars) {
-    y <- matrix(0, 4, n_particles)
+    y <- matrix(0, 5, n_particles)
     set.seed(1) # so that we can check below
     i0 <- rpois(n_particles, pars$I0)
     y[1, ] <- 1100 - i0
@@ -313,7 +313,7 @@ test_that("Control the starting point of the simulation", {
 
   ## Then tune the start date to get the same effect:
   initial <- function(info, n_particles, pars) {
-    list(state = c(1000, pars$I0, 0, 0),
+    list(state = c(1000, pars$I0, 0, 0, 0),
          step = pars$step)
   }
 
@@ -358,7 +358,7 @@ test_that("Variable initial starting point of the simulation", {
     set.seed(1)
     i0 <- rpois(n_particles, pars$I0)
     step <- pars$step_offset - rpois(n_particles, pars$step_mean)
-    list(state = rbind(1000, i0, 0, 0, deparse.level = 0),
+    list(state = rbind(1000, i0, 0, 0, 0, deparse.level = 0),
          step = step)
   }
   compare <- function(...) {
@@ -528,7 +528,7 @@ test_that("Can extract state from the model", {
   end <- c(20, 40, 60)
   res <- p$run(save_restart = end)
   s <- p$restart_state()
-  expect_equal(dim(s), c(4, n_particles, length(end)))
+  expect_equal(dim(s), c(5, n_particles, length(end)))
 
   f <- function(n) {
     set.seed(1)
@@ -563,8 +563,8 @@ test_that("can extract just one restart state", {
   res <- p$run(save_restart = end)
   s <- p$restart_state()
   s1 <- p$restart_state(1)
-  expect_equal(dim(s), c(4, n_particles, 1))
-  expect_equal(dim(s1), c(4, 1, 1))
+  expect_equal(dim(s), c(5, n_particles, 1))
+  expect_equal(dim(s1), c(5, 1, 1))
 
   set.seed(1)
   d <- dat$data[dat$data$day_end <= end, ]

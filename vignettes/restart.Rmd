@@ -50,12 +50,12 @@ data <- mcstate::particle_filter_data(incidence, time = "day", rate = 1 / dt)
 A comparison function
 
 ```{r}
-compare <- function(state, prev_state, observed, pars = NULL) {
+compare <- function(state, observed, pars = NULL) {
   if (is.na(observed$cases)) {
     return(NULL)
   }
   exp_noise <- 1e6
-  incidence_modelled <- state[1, , drop = TRUE] - prev_state[1, , drop = TRUE]
+  incidence_modelled <- state[1, , drop = TRUE]
   incidence_observed <- observed$cases
   lambda <- incidence_modelled +
     rexp(n = length(incidence_modelled), rate = exp_noise)
