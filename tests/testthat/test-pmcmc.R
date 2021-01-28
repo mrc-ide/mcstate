@@ -559,3 +559,28 @@ test_that("can restart the mcmc using saved state", {
   expect_equal(res2$trajectories$step, (40:100) * 4)
   expect_equal(dim(res2$trajectories$state), c(3, 51, 61))
 })
+
+
+test_that("Fix parameters in sir model", {
+  proposal_kernel <- diag(2) * 1e-4
+  row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("beta", "gamma")
+
+  pars <- pmcmc_parameters$new(
+    list(pmcmc_parameter("beta", 0.2, min = 0, max = 1,
+                         prior = function(p) log(1e-10)),
+         pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
+                         prior = function(p) log(1e-10))),
+    proposal = proposal_kernel)
+
+  pars2 <- pars$fix(c(gamma = 0.1))
+
+  dat <- example_sir()
+  n_particles <- 40
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
+  control <- pmcmc_control(10, save_trajectories = TRUE, save_state = TRUE)
+
+  results <- pmcmc(pars2, p, control = control)
+  expect_equal(dim(results$pars), c(11, 1))
+  expect_equal(results$predict$transform(pi), list(beta = pi, gamma = 0.1))
+})

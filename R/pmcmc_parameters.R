@@ -105,6 +105,7 @@ pmcmc_parameters <- R6::R6Class(
   private = list(
     parameters = NULL,
     proposal = NULL,
+    proposal_kernel = NULL,
     transform = NULL,
     discrete = NULL,
     min = NULL,
@@ -176,6 +177,7 @@ pmcmc_parameters <- R6::R6Class(
       }
 
       private$parameters <- parameters
+      private$proposal_kernel <- proposal
       private$proposal <- rmvnorm_generator(proposal)
       private$transform <- transform
 
@@ -207,7 +209,7 @@ pmcmc_parameters <- R6::R6Class(
                  discrete = private$discrete)
     },
 
-    ##' Compute the prior for a parameter vector
+    ##' @description Compute the prior for a parameter vector
     ##'
     ##' @param theta a parameter vector in the same order as your
     ##' parameters were defined in (see `$names()` for that order.
@@ -216,7 +218,7 @@ pmcmc_parameters <- R6::R6Class(
       sum(list_to_numeric(lp))
     },
 
-    ##' Propose a new parameter vector given a current parameter
+    ##' @description Propose a new parameter vector given a current parameter
     ##' vector. This proposes a new parameter vector given your current
     ##' vector and the variance-covariance matrix of your proposal
     ##' kernel, discretises any discrete values, and reflects bounded
@@ -235,12 +237,40 @@ pmcmc_parameters <- R6::R6Class(
       reflect_proposal(theta, private$min, private$max)
     },
 
-    ##' Apply the model transformation function to a parameter vector.
+    ##' @description Apply the model transformation function to a parameter
+    ##' vector.
     ##'
     ##' @param theta a parameter vector in the same order as your
     ##' parameters were defined in (see `$names()` for that order.
     model = function(theta) {
       private$transform(theta)
+    },
+
+    ##' @description Set some parameters to fixed values. Use this to
+    ##' reduce the dimensionality of your system.
+    ##'
+    ##' @param fixed a named vector of parameters to fix
+    fix = function(fixed) {
+      assert_named(fixed, TRUE)
+      idx_fixed <- match(names(fixed), names(private$parameters))
+      if (any(is.na(idx_fixed))) {
+        stop("Fixed parameters not found in model: ",
+             paste(squote(names(fixed)[is.na(idx_fixed)]), collapse = ", "))
+      }
+      if (length(idx_fixed) == length(private$parameters)) {
+        stop("Cannot fix all parameters")
+      }
+      idx_vary <- setdiff(seq_along(private$parameters), idx_fixed)
+      proposal <- private$proposal_kernel[idx_vary, idx_vary, drop = FALSE]
+
+      base <- set_names(rep(NA_real_, length(private$parameters)),
+                        names(private$parameters))
+      base[idx_fixed] <- fixed
+      base_transform <- private$transform
+      transform <- function(p) {
+        base_transform(set_into(base, idx_vary, p))
+      }
+      pmcmc_parameters$new(private$parameters[idx_vary], proposal, transform)
     }
   ))
 
