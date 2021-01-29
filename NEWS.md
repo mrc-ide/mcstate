@@ -1,6 +1,6 @@
 # mcstate 0.4.1
 
-* New `$fix()` method on `pmcmc_parameters` objects for fixing the value for a subset of paramters before running with `pmcmc` (#98)
+* New `$fix()` method on `pmcmc_parameters` objects for fixing the value for a subset of parameters before running with `pmcmc` (#98)
 
 # mcstate 0.4.0
 
