@@ -84,7 +84,7 @@ used." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.4.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.4.1</span>
       </span>
     </div>
 
@@ -172,6 +172,7 @@ used.</p>
 <li><p><a href='#method-prior'><code>pmcmc_parameters$prior()</code></a></p></li>
 <li><p><a href='#method-propose'><code>pmcmc_parameters$propose()</code></a></p></li>
 <li><p><a href='#method-model'><code>pmcmc_parameters$model()</code></a></p></li>
+<li><p><a href='#method-fix'><code>pmcmc_parameters$fix()</code></a></p></li>
 </ul>
 <p><hr>
 <a id="method-new"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>new()</code></h3>
@@ -216,31 +217,27 @@ vector</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#argument
 <p><hr>
 <a id="method-summary"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code><a href='https://rdrr.io/r/base/summary.html'>summary()</a></code></h3>
 <p>Return a <code>data.frame</code> with information about
-parameters (name, min, max, and discrete).
-Compute the prior for a parameter vector</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+parameters (name, min, max, and discrete).</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
 <p><div class="r"></p><pre><span class='va'>pmcmc_parameters</span><span class='op'>$</span><span class='fu'>summary</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
 <p><hr>
 <a id="method-prior"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>prior()</code></h3>
-
-<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p>Compute the prior for a parameter vector</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
 <p><div class="r"></p><pre><span class='va'>pmcmc_parameters</span><span class='op'>$</span><span class='fu'>prior</span><span class='op'>(</span><span class='va'>theta</span><span class='op'>)</span></pre><p></div></p>
 
 <h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>theta</code></dt><dd><p>a parameter vector in the same order as your
-parameters were defined in (see <code>$names()</code> for that order.
-Propose a new parameter vector given a current parameter
-vector. This proposes a new parameter vector given your current
-vector and the variance-covariance matrix of your proposal
-kernel, discretises any discrete values, and reflects bounded
-parameters until they lie within <code>min</code>:<code>max</code>.</p></dd>
+parameters were defined in (see <code>$names()</code> for that order.</p></dd>
 
 </dl><p></div></p>
 <p><hr>
 <a id="method-propose"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>propose()</code></h3>
-
-<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p>Propose a new parameter vector given a current parameter
+vector. This proposes a new parameter vector given your current
+vector and the variance-covariance matrix of your proposal
+kernel, discretises any discrete values, and reflects bounded
+parameters until they lie within <code>min</code>:<code>max</code>.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
 <p><div class="r"></p><pre><span class='va'>pmcmc_parameters</span><span class='op'>$</span><span class='fu'>propose</span><span class='op'>(</span><span class='va'>theta</span>, scale <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span></pre><p></div></p>
 
 <h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
@@ -251,20 +248,30 @@ parameters were defined in (see <code>$names()</code> for that order.</p></dd>
 <dt><code>scale</code></dt><dd><p>an optional scaling factor to apply to the
 proposal distribution. This may be useful in sampling starting
 points. The parameter is equivalent to a multiplicative factor
-applied to the variance covariance matrix.
-Apply the model transformation function to a parameter vector.</p></dd>
+applied to the variance covariance matrix.</p></dd>
 
 </dl><p></div></p>
 <p><hr>
 <a id="method-model"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>model()</code></h3>
-
-<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p>Apply the model transformation function to a parameter
+vector.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
 <p><div class="r"></p><pre><span class='va'>pmcmc_parameters</span><span class='op'>$</span><span class='fu'>model</span><span class='op'>(</span><span class='va'>theta</span><span class='op'>)</span></pre><p></div></p>
 
 <h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>theta</code></dt><dd><p>a parameter vector in the same order as your
 parameters were defined in (see <code>$names()</code> for that order.</p></dd>
+
+</dl><p></div></p>
+<p><hr>
+<a id="method-fix"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code><a href='https://rdrr.io/r/utils/fix.html'>fix()</a></code></h3>
+<p>Set some parameters to fixed values. Use this to
+reduce the dimensionality of your system.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>pmcmc_parameters</span><span class='op'>$</span><span class='fu'>fix</span><span class='op'>(</span><span class='va'>fixed</span><span class='op'>)</span></pre><p></div></p>
+
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
+<dt><code>fixed</code></dt><dd><p>a named vector of parameters to fix</p></dd>
 
 </dl><p></div></p>
 
