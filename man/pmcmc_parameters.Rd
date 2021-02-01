@@ -45,6 +45,7 @@ pars$model(p)
 \item \href{#method-prior}{\code{pmcmc_parameters$prior()}}
 \item \href{#method-propose}{\code{pmcmc_parameters$propose()}}
 \item \href{#method-model}{\code{pmcmc_parameters$model()}}
+\item \href{#method-fix}{\code{pmcmc_parameters$fix()}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -110,7 +111,6 @@ Return the names of the parameters
 \subsection{Method \code{summary()}}{
 Return a \code{data.frame} with information about
 parameters (name, min, max, and discrete).
-Compute the prior for a parameter vector
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters$summary()}\if{html}{\out{</div>}}
 }
@@ -120,6 +120,7 @@ Compute the prior for a parameter vector
 \if{html}{\out{<a id="method-prior"></a>}}
 \if{latex}{\out{\hypertarget{method-prior}{}}}
 \subsection{Method \code{prior()}}{
+Compute the prior for a parameter vector
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters$prior(theta)}\if{html}{\out{</div>}}
 }
@@ -128,12 +129,7 @@ Compute the prior for a parameter vector
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{theta}}{a parameter vector in the same order as your
-parameters were defined in (see \verb{$names()} for that order.
-Propose a new parameter vector given a current parameter
-vector. This proposes a new parameter vector given your current
-vector and the variance-covariance matrix of your proposal
-kernel, discretises any discrete values, and reflects bounded
-parameters until they lie within \code{min}:\code{max}.}
+parameters were defined in (see \verb{$names()} for that order.}
 }
 \if{html}{\out{</div>}}
 }
@@ -142,6 +138,11 @@ parameters until they lie within \code{min}:\code{max}.}
 \if{html}{\out{<a id="method-propose"></a>}}
 \if{latex}{\out{\hypertarget{method-propose}{}}}
 \subsection{Method \code{propose()}}{
+Propose a new parameter vector given a current parameter
+vector. This proposes a new parameter vector given your current
+vector and the variance-covariance matrix of your proposal
+kernel, discretises any discrete values, and reflects bounded
+parameters until they lie within \code{min}:\code{max}.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters$propose(theta, scale = 1)}\if{html}{\out{</div>}}
 }
@@ -155,8 +156,7 @@ parameters were defined in (see \verb{$names()} for that order.}
 \item{\code{scale}}{an optional scaling factor to apply to the
 proposal distribution. This may be useful in sampling starting
 points. The parameter is equivalent to a multiplicative factor
-applied to the variance covariance matrix.
-Apply the model transformation function to a parameter vector.}
+applied to the variance covariance matrix.}
 }
 \if{html}{\out{</div>}}
 }
@@ -165,6 +165,8 @@ Apply the model transformation function to a parameter vector.}
 \if{html}{\out{<a id="method-model"></a>}}
 \if{latex}{\out{\hypertarget{method-model}{}}}
 \subsection{Method \code{model()}}{
+Apply the model transformation function to a parameter
+vector.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters$model(theta)}\if{html}{\out{</div>}}
 }
@@ -174,6 +176,24 @@ Apply the model transformation function to a parameter vector.}
 \describe{
 \item{\code{theta}}{a parameter vector in the same order as your
 parameters were defined in (see \verb{$names()} for that order.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-fix"></a>}}
+\if{latex}{\out{\hypertarget{method-fix}{}}}
+\subsection{Method \code{fix()}}{
+Set some parameters to fixed values. Use this to
+reduce the dimensionality of your system.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters$fix(fixed)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{fixed}}{a named vector of parameters to fix}
 }
 \if{html}{\out{</div>}}
 }

@@ -103,3 +103,15 @@ squote <- function(x) {
 r6_private <- function(x) {
   x[[".__enclos_env__"]]$private
 }
+
+
+set_into <- function(x, at, value) {
+  x[at] <- value
+  x
+}
+
+
+set_names <- function(x, nms) {
+  names(x) <- nms
+  x
+}

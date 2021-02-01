@@ -241,3 +241,58 @@ test_that("named parameters must match parameter names", {
     pmcmc_parameters$new(setNames(pars, c("b", "a")), m),
     "'parameters' is named, but the names do not match parameters")
 })
+
+
+test_that("can fix parameters", {
+  n <- 5
+  nms <- letters[seq_len(n)]
+  vcv <- var(matrix(runif(n * n), n, n))
+  rownames(vcv) <- colnames(vcv) <- nms
+
+  initial <- runif(n)
+  prior_rate <- runif(n)
+  pars <- Map(function(nm, i, r)
+    pmcmc_parameter(nm, i, prior = function(p) log(r)),
+    nms, initial, prior_rate)
+
+  p <- pmcmc_parameters$new(pars, proposal = vcv)
+  p2 <- p$fix(c(b = 0.5, d = 0.2))
+
+  expect_equal(p2$names(), c("a", "c", "e"))
+  expect_equal(p2$initial(), p$initial()[c("a", "c", "e")])
+  expect_equal(p2$propose(p2$initial(), 0), p2$initial())
+
+  ## Loose check here; the underlying implementation is simple enough
+  ## though
+  i <- c(1, 3, 5)
+  expect_equal(
+    var(t(replicate(5000, p2$propose(initial[i])))),
+    unname(vcv[i, i]),
+    tolerance = 1e-2)
+
+  cmp <- as.list(p$initial())
+  cmp[c("b", "d")] <- c(0.5, 0.2)
+  expect_equal(p2$model(p2$initial()), cmp)
+})
+
+
+test_that("prevent impossible fixed parameters", {
+  n <- 5
+  nms <- letters[seq_len(n)]
+  vcv <- var(matrix(runif(n * n), n, n))
+  rownames(vcv) <- colnames(vcv) <- nms
+
+  initial <- runif(n)
+  prior_rate <- runif(n)
+  pars <- Map(function(nm, i, r)
+    pmcmc_parameter(nm, i, prior = function(p) log(r)),
+    nms, initial, prior_rate)
+
+  p <- pmcmc_parameters$new(pars, proposal = vcv)
+  expect_error(p$fix(c(1, 2)), "'fixed' must be named")
+  expect_error(p$fix(c(a = 1, b = 2, a = 1)), "'fixed' must have unique names")
+  expect_error(p$fix(c(a = 1, b = 2, f = 1)),
+               "Fixed parameters not found in model: 'f'")
+  expect_error(p$fix(c(a = 1, b = 1, c = 1, d = 1, e = 1)),
+               "Cannot fix all parameters")
+})
