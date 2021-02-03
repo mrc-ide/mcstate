@@ -40,12 +40,6 @@ test_that("can construct a set of parameters", {
                           min = c(0, 1),
                           max = c(10, 2),
                           discrete = FALSE))
-
-
-  vcv <- diag(2)
-  propose(
-
-  p$sample(10)
 })
 
 
