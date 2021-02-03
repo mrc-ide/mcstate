@@ -16,7 +16,7 @@ particle_filter_state <- R6::R6Class(
 
   public = list(
     model = NULL,
-    step_current = 0L,
+    current_step_index = 0L,
     complete = FALSE,
     state = NULL,
     history = NULL,
@@ -102,9 +102,9 @@ particle_filter_state <- R6::R6Class(
       if (self$complete) {
         stop("The particle filter has reached the end of the data")
       }
-      self$step_current <- self$step_current + 1L
-      self$complete <- self$step_current >= nrow(private$steps)
-      step <- self$step_current
+      self$current_step_index <- self$current_step_index + 1L
+      self$complete <- self$current_step_index >= nrow(private$steps)
+      step <- self$current_step_index
       step_end <- private$steps[step, 2]
       save_history <- !is.null(self$history)
 
@@ -114,11 +114,11 @@ particle_filter_state <- R6::R6Class(
           self$model$state(self$history$index)
       }
 
-      data <- private$data_split[[step]]
       if (is.null(private$compare)) {
         log_weights <- self$model$compare_data()
       } else {
-        log_weights <- private$compare(state, data, private$pars)
+        log_weights <- private$compare(state, private$data_split[[step]],
+                                       private$pars)
       }
 
       if (is.null(log_weights)) {
@@ -159,7 +159,7 @@ particle_filter_state <- R6::R6Class(
         save_history, private$save_restart)
 
       ## Run it up to the same point
-      for (i in seq_len(self$step_current)) {
+      for (i in seq_len(self$current_step_index)) {
         ret$step()
       }
 
