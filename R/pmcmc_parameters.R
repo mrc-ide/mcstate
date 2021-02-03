@@ -59,7 +59,7 @@ pmcmc_parameter <- function(name, initial, min = -Inf, max = Inf,
   }
 
   ret <- list(name = name, initial = initial, min = min, max = max,
-              discrete = discrete, prior = prior %||% function(p) 0)
+              discrete = discrete, prior = prior)
   class(ret) <- "pmcmc_parameter"
   ret
 }
@@ -136,24 +136,7 @@ pmcmc_parameters <- R6::R6Class(
     ##' generate derived parameters from those being actively sampled
     ##' you can do arbitrary transformations here.
     initialize = function(parameters, proposal, transform = NULL) {
-      assert_is(parameters, "list")
-      if (length(parameters) == 0) {
-        stop("At least one parameter is required")
-      }
-      ok <- vlapply(parameters, inherits, "pmcmc_parameter")
-      if (!all(ok)) {
-        stop("Expected all elements of '...' to be 'pmcmc_parameter' objects")
-      }
-      nms <- vcapply(parameters, "[[", "name", USE.NAMES = FALSE)
-      dups <- nms[duplicated(nms)]
-      if (length(dups) > 0L) {
-        stop("Duplicate parameter names: ",
-             paste(squote(unique(dups)), collapse = ", "))
-      }
-      if (!is.null(names(parameters)) && !identical(nms, names(parameters))) {
-        stop("'parameters' is named, but the names do not match parameters")
-      }
-      names(parameters) <- nms
+      parameters <- check_parameters(parameters, "pmcmc_parameter")
 
       if (is.null(transform)) {
         transform <- as.list
@@ -299,4 +282,27 @@ reflect_proposal_both <- function(x, x_min, x_max) {
 
 reflect_proposal_one <- function(x, x_bound) {
   2 * x_bound - x
+}
+
+
+check_parameters <- function(parameters, type) {
+  assert_is(parameters, "list")
+  if (length(parameters) == 0) {
+    stop("At least one parameter is required")
+  }
+  ok <- vlapply(parameters, inherits, type)
+  if (!all(ok)) {
+    stop(sprintf("Expected all elements of '...' to be '%s' objects", type))
+  }
+  nms <- vcapply(parameters, "[[", "name", USE.NAMES = FALSE)
+  dups <- nms[duplicated(nms)]
+  if (length(dups) > 0L) {
+    stop("Duplicate parameter names: ",
+         paste(squote(unique(dups)), collapse = ", "))
+  }
+  if (!is.null(names(parameters)) && !identical(nms, names(parameters))) {
+    stop("'parameters' is named, but the names do not match parameters")
+  }
+  names(parameters) <- nms
+  parameters
 }
