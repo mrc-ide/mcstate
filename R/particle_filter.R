@@ -75,8 +75,7 @@ particle_filter <- R6::R6Class(
     n_threads = NULL,
     ## Updated when the model is run
     last_model = NULL,
-    last_history_value = NULL,
-    last_history_order = NULL,
+    last_history = NULL,
     last_index_state = NULL,
     last_restart_state = NULL
   ),
@@ -85,10 +84,6 @@ particle_filter <- R6::R6Class(
     ##' @field model The dust model generator being simulated (cannot be
     ##' re-bound)
     model = NULL,
-
-    ##' @field unique_particles The number of unique particles sampled
-    ##' at each step that has been run
-    unique_particles = NULL,
 
     ##' @field n_particles Number of particles used (read only)
     n_particles = NULL,
@@ -180,6 +175,9 @@ particle_filter <- R6::R6Class(
       if (is.null(compare)) {
         private$data_split <- dust::dust_data(private$data, "step_end")
       } else {
+        ## TODO: it would be tidiest if we always used
+        ## dust::dust_data, really, but that changes our comparison
+        ## function a little.
         private$data_split <- df_to_list_of_lists(data)
       }
       private$steps <- unname(as.matrix(data[c("step_start", "step_end")]))
@@ -198,7 +196,7 @@ particle_filter <- R6::R6Class(
       lockBinding("n_particles", self)
     },
 
-    ##' Run the particle filter
+    ##' @description Run the particle filter
     ##'
     ##' @param pars A list representing parameters. This will be passed as
     ##' the `pars` argument to your model, to your `compare`
@@ -223,118 +221,60 @@ particle_filter <- R6::R6Class(
     ##' @return A single numeric value representing the log-likelihood
     ##' (`-Inf` if the model is impossible)
     run = function(pars = list(), save_history = FALSE, save_restart = NULL) {
-      compare <- private$compare
-      steps <- private$steps
-      np <- self$n_particles
-      n_steps <- nrow(steps)
-
-      if (is.null(private$last_model)) {
-        model <- self$model$new(pars = pars, step = steps[[1L]],
-                                n_particles = np,
-                                n_threads = private$n_threads,
-                                seed = private$seed)
-        if (is.null(private$compare)) {
-          model$set_index(integer(0))
-          model$set_data(private$data_split)
-        }
-      } else {
-        model <- private$last_model
-        model$reset(pars, steps[[1L]])
-      }
-
-      if (!is.null(private$initial)) {
-        initial <- private$initial(model$info(), np, pars)
-        if (is.list(initial)) {
-          steps <- particle_steps(private$steps, initial$step)
-          model$set_state(initial$state, initial$step)
-        } else {
-          model$set_state(initial)
+      obj <- self$run_begin(pars, save_history, save_restart)
+      ll <- 0
+      while (!obj$complete) {
+        ll <- obj$step()
+        if (!is.finite(ll)) {
+          break
         }
       }
-      if (is.null(private$index)) {
-        index_state <- NULL
-      } else {
-        index <- private$index(model$info())
-        if (!is.null(private$compare) && !is.null(index$run)) {
-          model$set_index(index$run)
-        }
-        index_state <- index$state
-      }
-
-      ## TODO: We might want to save the history on the particle
-      ## filter somewhere where we can just allocate the space and
-      ## query from it using the tree structure more directly.
-      unique_particles <- rep(np, n_steps + 1)
-      if (save_history) {
-        state <- model$state(index_state)
-        history_value <- array(NA_real_, c(dim(state), n_steps + 1))
-        history_value[, , 1] <- state
-        history_order <- matrix(seq_len(np), np, n_steps + 1)
-      } else {
-        history_value <- NULL
-        history_order <- NULL
-      }
-
-      save_restart_step <- check_save_restart(save_restart, private$data)
-      if (length(save_restart_step) > 0) {
-        restart_state <- history_collector(length(save_restart_step) - 1L)
-      } else {
-        restart_state <- NULL
-      }
-
-      log_likelihood <- 0
-      for (t in seq_len(n_steps)) {
-        step_end <- steps[t, 2]
-        res <- model$run(step_end)
-        if (save_history) {
-          history_value[, , t + 1L] <- model$state(index_state)
-        }
-
-        if (is.null(compare)) {
-          log_weights <- model$compare_data()
-        } else {
-          log_weights <- compare(res, private$data_split[[t]], pars)
-        }
-        if (is.null(log_weights)) {
-          if (save_history) {
-            history_order[, t + 1L] <- seq_len(np)
-          }
-        } else {
-          weights <- scale_log_weights(log_weights)
-          log_likelihood <- log_likelihood + weights$average
-          if (weights$average == -Inf) {
-            ## Everything is impossible, so stop here
-            break
-          }
-
-          kappa <- particle_resample(weights$weights)
-          unique_particles[t + 1L] <- length(unique(kappa))
-          model$reorder(kappa)
-          ## Because we will use the values from "run" a second time
-          ## in the compare function, we need to reorder them as
-          ## well.
-          if (save_history) {
-            history_order[, t + 1L] <- kappa
-          }
-
-          if (step_end %in% save_restart_step) {
-            restart_state$add(model$state())
-          }
-        }
-      }
-
-      private$last_history_value <- history_value
-      private$last_history_order <- history_order
-      self$unique_particles <- unique_particles
-      private$last_model <- model
-      private$last_index_state <- index_state
-      if (length(save_restart_step) > 0) {
-        private$last_restart_state <- list_to_array(restart_state$get())
-      } else {
+      private$last_history <- obj$history
+      private$last_model <- obj$model
+      private$last_index_state <- obj$index_state
+      if (is.null(obj$restart_state)) {
         private$last_restart_state <- NULL
+      } else {
+        private$last_restart_state <- list_to_array(obj$restart_state$get())
       }
+      ll
+    },
 
-      log_likelihood
+    ##' @description Begin a particle filter run. This is part of the
+    ##' "advanced" interface for the particle filter; typically you will
+    ##' want to use `$run()` which provides a user-facing wrapper around
+    ##' this function. Once created with `$run_begin()`, you should take
+    ##' as many steps as needed with `$step()`, then finalise with
+    ##' `$end()`.
+    ##'
+    ##' @param pars A list representing parameters. See `$run()` for details.
+    ##'
+    ##' @param save_history Logical, indicating if the history of all
+    ##' particles should be saved. See `$run()` for details.
+    ##'
+    ##' @param save_restart Times to save restart state at. See `$run()` for
+    ##' details.
+    ##'
+    ##' @return An object of class `particle_filter_state`, with methods
+    ##' `step` and `end`. This interface is still subject to change.
+    run_begin = function(pars = list(), save_history = FALSE,
+                         save_restart = NULL) {
+      ## TODO: Think about the implications of this; this is a change
+      ## from before where we retained a single model and its RNG
+      ## state, which is certainly faster. We might expand this
+      ## function to accept a 'fork' argument or something and based
+      ## on that send in the last model where it is available, causing
+      ## run_begin() to reset it.
+      if (is.null(private$last_model)) {
+        seed <- private$seed
+      } else {
+        seed <- private$last_model$rng_state()
+      }
+      particle_filter_state$new(
+        pars, self$model, private$data, private$data_split, private$steps,
+        self$n_particles, private$n_threads,
+        private$initial, private$index, private$compare, seed,
+        save_history, save_restart)
     },
 
     ##' @description Extract the current model state, optionally filtering.
@@ -367,12 +307,12 @@ particle_filter <- R6::R6Class(
       if (is.null(private$last_model)) {
         stop("Model has not yet been run")
       }
-      history_value <- private$last_history_value
-      if (is.null(history_value)) {
+      if (is.null(private$last_history)) {
         stop("Can't get history as model was run with save_history = FALSE")
       }
-
-      history_order <- private$last_history_order
+      history_value <- private$last_history$value
+      history_order <- private$last_history$order
+      history_index <- private$last_history$index
 
       if (is.null(index_particle)) {
         index_particle <- seq_len(ncol(history_value))
@@ -391,7 +331,7 @@ particle_filter <- R6::R6Class(
                     rep(idx, each = ny),
                     rep(seq_len(nt), each = ny * np))
       ret <- array(history_value[cidx], c(ny, np, nt))
-      rownames(ret) <- names(private$last_index_state)
+      rownames(ret) <- names(history_index)
       ret
     },
 

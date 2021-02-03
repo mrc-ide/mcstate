@@ -66,9 +66,6 @@ matpoints(data_raw$day, t(true_history[1:3, , -1]), pch = 19,
 \item{\code{model}}{The dust model generator being simulated (cannot be
 re-bound)}
 
-\item{\code{unique_particles}}{The number of unique particles sampled
-at each step that has been run}
-
 \item{\code{n_particles}}{Number of particles used (read only)}
 }
 \if{html}{\out{</div>}}
@@ -78,6 +75,7 @@ at each step that has been run}
 \itemize{
 \item \href{#method-new}{\code{particle_filter$new()}}
 \item \href{#method-run}{\code{particle_filter$run()}}
+\item \href{#method-run_begin}{\code{particle_filter$run_begin()}}
 \item \href{#method-state}{\code{particle_filter$state()}}
 \item \href{#method-history}{\code{particle_filter$history()}}
 \item \href{#method-restart_state}{\code{particle_filter$restart_state()}}
@@ -171,8 +169,7 @@ creation. Can be \code{NULL} (to initialise using R's random number
 generator), a positive integer, or a raw vector - see \code{\link[dust:dust]{dust::dust}}
 and \code{\link[dust:dust_rng]{dust::dust_rng}} for more details. Note that the random number
 stream is unrelated from R's random number generator, except for
-initialisation with \code{seed = NULL}.
-Run the particle filter}
+initialisation with \code{seed = NULL}.}
 }
 \if{html}{\out{</div>}}
 }
@@ -181,6 +178,7 @@ Run the particle filter}
 \if{html}{\out{<a id="method-run"></a>}}
 \if{latex}{\out{\hypertarget{method-run}{}}}
 \subsection{Method \code{run()}}{
+Run the particle filter
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{particle_filter$run(pars = list(), save_history = FALSE, save_restart = NULL)}\if{html}{\out{</div>}}
 }
@@ -213,6 +211,42 @@ filtering operation (i.e., at the end of the step).}
 \subsection{Returns}{
 A single numeric value representing the log-likelihood
 (\code{-Inf} if the model is impossible)
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-run_begin"></a>}}
+\if{latex}{\out{\hypertarget{method-run_begin}{}}}
+\subsection{Method \code{run_begin()}}{
+Begin a particle filter run. This is part of the
+"advanced" interface for the particle filter; typically you will
+want to use \verb{$run()} which provides a user-facing wrapper around
+this function. Once created with \verb{$run_begin()}, you should take
+as many steps as needed with \verb{$step()}, then finalise with
+\verb{$end()}.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter$run_begin(
+  pars = list(),
+  save_history = FALSE,
+  save_restart = NULL
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{pars}}{A list representing parameters. See \verb{$run()} for details.}
+
+\item{\code{save_history}}{Logical, indicating if the history of all
+particles should be saved. See \verb{$run()} for details.}
+
+\item{\code{save_restart}}{Times to save restart state at. See \verb{$run()} for
+details.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+An object of class \code{particle_filter_state}, with methods
+\code{step} and \code{end}. This interface is still subject to change.
 }
 }
 \if{html}{\out{<hr>}}

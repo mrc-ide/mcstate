@@ -3,6 +3,7 @@ context("particle_filter")
 test_that("run particle filter on sir model", {
   dat <- example_sir()
   n_particles <- 42
+  set.seed(1)
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index)
   res <- p$run()
@@ -12,8 +13,6 @@ test_that("run particle filter on sir model", {
   expect_is(state, "matrix")
   expect_equal(dim(state), c(5, n_particles))
 
-  expect_equal(length(p$unique_particles), nrow(dat$data) + 1)
-  expect_true(all(p$unique_particles <= n_particles & p$unique_particles >= 1))
   expect_error(
     p$history(),
     "Can't get history as model was run with save_history = FALSE")
@@ -228,7 +227,6 @@ test_that("we do not reorder particles when compare is NULL", {
                            function(...) NULL, index = dat$index)
   res <- p$run()
   expect_equal(res, 0)
-  expect_equal(p$unique_particles, rep(n_particles, 101))
 })
 
 
@@ -520,13 +518,14 @@ test_that("Can extract state from the model", {
   n_particles <- 42
   seed <- 100
   index <- function(info) {
-    list(run = 4L, state = 1:3)
+    list(run = 5L, state = 1:3)
   }
   set.seed(1)
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = index, seed = seed)
   end <- c(20, 40, 60)
   res <- p$run(save_restart = end)
+
   s <- p$restart_state()
   expect_equal(dim(s), c(5, n_particles, length(end)))
 
@@ -554,7 +553,7 @@ test_that("can extract just one restart state", {
   n_particles <- 42
   seed <- 100
   index <- function(info) {
-    list(run = 4L, state = 1:3)
+    list(run = 5L, state = 1:3)
   }
   set.seed(1)
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
@@ -641,4 +640,79 @@ test_that("prevent using compiled compare where model does not support it", {
   expect_error(
     particle_filter$new(dat$data, dat$model, n_particles, NULL),
     "Your model does not have a built-in 'compare' function")
+})
+
+
+test_that("incrementally run a particle filter", {
+  dat <- example_sir()
+  n_particles <- 42
+
+  set.seed(1)
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, seed = 1L)
+  cmp <- p1$run()
+
+  set.seed(1)
+  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  ans <- numeric(nrow(dat$data))
+  obj <- p2$run_begin()
+  expect_s3_class(obj, "particle_filter_state")
+  for (i in seq_along(ans)) {
+    ans[[i]] <- obj$step()
+  }
+
+  expect_identical(obj$log_likelihood, cmp)
+  expect_identical(ans[[length(ans)]], cmp)
+  expect_true(all(diff(ans) < 0))
+})
+
+
+test_that("Can't step a particle filter object past its end", {
+  dat <- example_sir()
+  n_particles <- 42
+
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, seed = 1L)
+  obj <- p$run_begin()
+  while (!obj$complete) {
+    obj$step()
+  }
+
+  expect_error(obj$step(),
+               "The particle filter has reached the end of the data")
+})
+
+
+test_that("Can fork a particle_filter_state object", {
+  dat <- example_sir()
+  n_particles <- 42
+
+  set.seed(1)
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, seed = 1L)
+  ans <- numeric(nrow(dat$data))
+  obj <- p1$run_begin(save_history = TRUE)
+
+  for (i in seq_len(10)) {
+    ans[[i]] <- obj$step()
+  }
+
+  tmp <- obj$model$rng_state()
+
+  set.seed(1)
+  res <- obj$fork(list(beta = 0.15))
+  expect_identical(res$model$rng_state(), obj$model$rng_state())
+  expect_false(identical(obj$model$rng_state(), tmp))
+
+  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = tmp)
+  set.seed(1)
+  cmp <- p2$run_begin(list(beta = 0.15), save_history = TRUE)
+  for (i in seq_len(10)) {
+    cmp$step()
+  }
+
+  expect_identical(res$log_likelihood, cmp$log_likelihood)
+  expect_identical(res$history, cmp$history)
 })
