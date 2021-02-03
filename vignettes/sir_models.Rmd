@@ -42,7 +42,7 @@ Discretising this model in time steps of width $dt$ gives the following update e
 $$\begin{align*}
 S_{t+1} &= S_t - n_{SI} \\
 I_{t+1} &= I_t + n_{SI} - n_{IR} \\
-R_{t+1} &= R_t - n_{IR}
+R_{t+1} &= R_t + n_{IR}
 \end{align*}$$
 
 where
