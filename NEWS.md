@@ -1,3 +1,7 @@
+# mcstate 0.4.2
+
+* Fix typo in `sir_models.Rmd`
+
 # mcstate 0.4.1
 
 * New `$fix()` method on `pmcmc_parameters` objects for fixing the value for a subset of parameters before running with `pmcmc` (#98)
