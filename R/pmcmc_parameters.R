@@ -110,7 +110,9 @@ pmcmc_parameters <- R6::R6Class(
     discrete = NULL,
     min = NULL,
     max = NULL,
-    populations = NULL
+    populations = NULL,
+    varied = NULL,
+    fixed = NULL
   ),
 
   public = list(
@@ -133,18 +135,24 @@ pmcmc_parameters <- R6::R6Class(
     ##' @param transform An optional transformation function to apply
     ##' to your parameter vector immediately before passing it to the
     ##' model function. If not given, then [as.list] is
-    ##' used, as dust models require this. However, if t you need to
+    ##' used, as dust models require this. However, if you need to
     ##' generate derived parameters from those being actively sampled
     ##' you can do arbitrary transformations here.
-    initialize = function(parameters, proposal, transform = NULL) {
+    ##'
+    ##' @param populations Specifies the names of the different populations.
+    ##' Ignored if `varied` is NULL.
+    initialize = function(parameters, proposal, transform = NULL,
+                          populations = NULL) {
       parameters <- check_parameters(parameters,
                       c("pmcmc_parameter", "pmcmc_varied_parameter"))
 
+      # FIXME - CONFIRM WORKS WITH VARIED
       if (is.null(transform)) {
         transform <- as.list
       }
       assert_is(transform, "function")
 
+      # FIXME - UPDATE TO ARRAY WITH 3D = LENGTH(POPULATIONS)
       assert_is(proposal, "matrix")
       if (!all(dim(proposal) == length(parameters))) {
         stop(sprintf(
@@ -163,19 +171,33 @@ pmcmc_parameters <- R6::R6Class(
 
       private$parameters <- parameters
       private$proposal_kernel <- proposal
+
+      # useful extra fields to store for quicker reference
+      varied <- vapply(parameters, inherits, logical(1),
+                      what = "pmcmc_varied_parameter")
+      private$varied <- parameters$names(varied)
+      private$fixed <- parameters$names(!varied)
+
+      # FIXME - VECTORISE ACROSS POPULATIONS
       private$proposal <- rmvnorm_generator(proposal)
+
       private$transform <- transform
+      private$populations <- assert_character(populations)
 
       private$discrete <- vlapply(private$parameters, "[[", "discrete",
                                   USE.NAMES = FALSE)
+
+      # FIXME - CONFIRM WORKS WITH VARIED
       private$min <- vnapply(private$parameters, "[[", "min",
                              USE.NAMES = FALSE)
       private$max <- vnapply(private$parameters, "[[", "max",
                              USE.NAMES = FALSE)
+
     },
 
     ##' @description Return the initial parameter values as a named numeric
     ##' vector
+    # FIXME - UPDATE TO ARRAY WITH 3D = LENGTH(POPULATIONS)
     initial = function() {
       vnapply(private$parameters, "[[", "initial")
     },
@@ -186,18 +208,22 @@ pmcmc_parameters <- R6::R6Class(
     },
 
     ##' @description Return a `data.frame` with information about
-    ##' parameters (name, min, max, and discrete).
+    ##' parameters (name, min, max, discrete, fixed or varied).
     summary = function() {
-      data_frame(name = self$names(),
-                 min = private$min,
-                 max = private$max,
-                 discrete = private$discrete)
+      data_frame(
+          name = self$names(),
+          min = private$min,
+          max = private$max,
+          discrete = private$discrete,
+          type = ifelse(self$names() %in% private$varied, "varied", "fixed")
+      )
     },
 
     ##' @description Compute the prior for a parameter vector
     ##'
     ##' @param theta a parameter vector in the same order as your
     ##' parameters were defined in (see `$names()` for that order.
+    ##' FIXME - Expand to work with theta as array
     prior = function(theta) {
       lp <- Map(function(p, value) p$prior(value), private$parameters, theta)
       sum(list_to_numeric(lp))
@@ -216,6 +242,7 @@ pmcmc_parameters <- R6::R6Class(
     ##' proposal distribution. This may be useful in sampling starting
     ##' points. The parameter is equivalent to a multiplicative factor
     ##' applied to the variance covariance matrix.
+    ##' FIXME - Expand to return array
     propose = function(theta, scale = 1) {
       theta <- private$proposal(theta, scale)
       theta[private$discrete] <- round(theta[private$discrete])
@@ -227,6 +254,7 @@ pmcmc_parameters <- R6::R6Class(
     ##'
     ##' @param theta a parameter vector in the same order as your
     ##' parameters were defined in (see `$names()` for that order.
+    ##' FIXME - Expand to work with theta as array
     model = function(theta) {
       private$transform(theta)
     },
@@ -235,6 +263,7 @@ pmcmc_parameters <- R6::R6Class(
     ##' reduce the dimensionality of your system.
     ##'
     ##' @param fixed a named vector of parameters to fix
+    ##' FIXME - Expand to work with params as array
     fix = function(fixed) {
       assert_named(fixed, TRUE)
       idx_fixed <- match(names(fixed), names(private$parameters))
@@ -262,6 +291,7 @@ pmcmc_parameters <- R6::R6Class(
 
 ## create function to reflect proposal boundaries at pars_min and pars_max
 ## this ensures the proposal is symetrical and we can simplify the MH step
+# FIXME - CONFIRM WORKS WITH VARIED
 reflect_proposal <- function(x, x_min, x_max) {
   i <- x < x_min | x > x_max
   if (any(i)) {

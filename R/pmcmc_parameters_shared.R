@@ -88,9 +88,8 @@ pmcmc_parameters_shared <- R6::R6Class(
                 str_collapse(par_names)
             ))
         } else {
-            private$varied <- varied
-            private$fixed <- setdiff(par_names, varied)
-            private$populations <- assert_character(populations)
+
+
         }
     }
 

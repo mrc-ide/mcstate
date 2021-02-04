@@ -54,7 +54,12 @@ pars$model(p)
 \subsection{Method \code{new()}}{
 Create the pmcmc_parameters object
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters$new(parameters, proposal, transform = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters$new(
+  parameters,
+  proposal,
+  transform = NULL,
+  populations = NULL
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -77,9 +82,12 @@ matrix it must be symmetric and positive definite.}
 \item{\code{transform}}{An optional transformation function to apply
 to your parameter vector immediately before passing it to the
 model function. If not given, then \link{as.list} is
-used, as dust models require this. However, if t you need to
+used, as dust models require this. However, if you need to
 generate derived parameters from those being actively sampled
 you can do arbitrary transformations here.}
+
+\item{\code{populations}}{Specifies the names of the different populations.
+Ignored if \code{varied} is NULL.}
 }
 \if{html}{\out{</div>}}
 }
@@ -110,7 +118,7 @@ Return the names of the parameters
 \if{latex}{\out{\hypertarget{method-summary}{}}}
 \subsection{Method \code{summary()}}{
 Return a \code{data.frame} with information about
-parameters (name, min, max, and discrete).
+parameters (name, min, max, discrete, fixed or varied).
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters$summary()}\if{html}{\out{</div>}}
 }
@@ -129,7 +137,8 @@ Compute the prior for a parameter vector
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{theta}}{a parameter vector in the same order as your
-parameters were defined in (see \verb{$names()} for that order.}
+parameters were defined in (see \verb{$names()} for that order.
+FIXME - Expand to work with theta as array}
 }
 \if{html}{\out{</div>}}
 }
@@ -156,7 +165,8 @@ parameters were defined in (see \verb{$names()} for that order.}
 \item{\code{scale}}{an optional scaling factor to apply to the
 proposal distribution. This may be useful in sampling starting
 points. The parameter is equivalent to a multiplicative factor
-applied to the variance covariance matrix.}
+applied to the variance covariance matrix.
+FIXME - Expand to return array}
 }
 \if{html}{\out{</div>}}
 }
@@ -175,7 +185,8 @@ vector.
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{theta}}{a parameter vector in the same order as your
-parameters were defined in (see \verb{$names()} for that order.}
+parameters were defined in (see \verb{$names()} for that order.
+FIXME - Expand to work with theta as array}
 }
 \if{html}{\out{</div>}}
 }
@@ -193,7 +204,8 @@ reduce the dimensionality of your system.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{fixed}}{a named vector of parameters to fix}
+\item{\code{fixed}}{a named vector of parameters to fix
+FIXME - Expand to work with params as array}
 }
 \if{html}{\out{</div>}}
 }
