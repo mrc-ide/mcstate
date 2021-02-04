@@ -115,3 +115,7 @@ set_names <- function(x, nms) {
   names(x) <- nms
   x
 }
+
+str_collapse <- function(x) {
+  paste0("{", paste0(x, collapse = ", "), "}")
+}

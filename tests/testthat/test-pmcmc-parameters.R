@@ -296,3 +296,114 @@ test_that("prevent impossible fixed parameters", {
   expect_error(p$fix(c(a = 1, b = 1, c = 1, d = 1, e = 1)),
                "Cannot fix all parameters")
 })
+
+test_that("Can construct a varied parameter", {
+  p <- pmcmc_varied_parameter("a", 1:10, 0, 10)
+  expect_s3_class(p, "pmcmc_varied_parameter")
+  expect_equal(p$name, "a")
+  expect_equal(p$initial, 1:10)
+  expect_equal(p$min, numeric(10))
+  expect_equal(p$max, rep(10, 10))
+  expect_false(p$discrete)
+  expect_equal(p$prior(1:10), numeric(10))
+})
+
+test_that("can construct varied parameters", {
+ expect_silent(mcstate::pmcmc_varied_parameter(name = "a", 1))
+ expect_silent(mcstate::pmcmc_varied_parameter(name = "a", 1:100))
+
+  expect_silent(mcstate::pmcmc_varied_parameter(name = "a",
+    initial = 0.1, min = 0, max = 1, prior = function(a) log(a)))
+
+  expect_silent(mcstate::pmcmc_varied_parameter(name = "a",
+    initial = 1:5, min = 0, max = 6, prior = function(a) log(a)))
+
+  expect_error(mcstate::pmcmc_varied_parameter(name = "a",
+    initial = 1:5, min = 0, max = 4, prior = function(a) log(a)), "<= 'max'")
+
+  expect_error(mcstate::pmcmc_varied_parameter(name = "a",
+    initial = 1:5, min = 2, max = 6, prior = function(a) log(a)), ">= 'min'")
+
+  expect_error(mcstate::pmcmc_varied_parameter(name = "a",
+    initial = 1:5, min = 0:1, max = 6,
+    prior = function(a) log(a)), "Length of 'min'")
+
+  expect_error(mcstate::pmcmc_varied_parameter(name = "a",
+    initial = 1:5, min = 0, max = 3:4,
+    prior = function(a) log(a)), "Length of 'max'")
+
+  expect_error(mcstate::pmcmc_varied_parameter(name = "a",
+    initial = 1:5, min = 0, max = 6,
+    prior = list(function(a) log(a))), "must be a function")
+
+  expect_error(mcstate::pmcmc_varied_parameter(name = "a",
+    initial = 1:5, min = 0, max = 6,
+    prior = function(a) 0), "5 values")
+
+  expect_error(mcstate::pmcmc_varied_parameter(name = "a",
+    initial = 1:5, min = 0, max = 6,
+    prior = function(a) c(1,1,1,1,Inf)), "non-finite value")
+
+  expect_silent(mcstate::pmcmc_varied_parameter(name = "a",
+    initial = 1:5, min = 0, max = 6,
+    prior = function(a) numeric(5)))
+})
+
+test_that("can construct shared parameters", {
+  set.seed(42)
+  mat = matrix(runif(20), 5, 4)
+  mat = round(t(mat) %*% mat, 1) / 10
+  p <- mcstate::pmcmc_parameters_shared$new(
+  list(mcstate::pmcmc_parameter("a", 0.1, min = 0, max = 1,
+                                prior = function(a) log(a)),
+       mcstate::pmcmc_parameter("b", 0, prior = dnorm),
+       mcstate::pmcmc_parameter("c", 0.5, min = 0, max = 1,
+                                prior = dunif),
+       mcstate::pmcmc_parameter("d", 1)),
+  proposal = mat,
+  varied = c("a", "c"),
+  populations = c("Europe", "America", "Africa"))
+  expect_true(inherits(p, "pmcmc_parameters"))
+})
+
+test_that("shared propose, type = fixed/varied", {
+  set.seed(42)
+  mat = matrix(runif(20), 5, 4)
+  mat = round(t(mat) %*% mat, 1) / 10
+  p <- mcstate::pmcmc_parameters_shared$new(
+  list(mcstate::pmcmc_parameter("a", 0.1, min = 0, max = 1,
+                                prior = function(a) log(a)),
+       mcstate::pmcmc_parameter("b", 0, prior = dnorm),
+       mcstate::pmcmc_parameter("c", 0.5, min = 0, max = 1,
+                                prior = dunif),
+       mcstate::pmcmc_parameter("d", 1)),
+  proposal = mat,
+  varied = c("a", "c"),
+  populations = c("Europe", "America", "Africa"))
+
+  theta <- p$initial()
+  proposals = p$propose(theta, type = "fixed")
+
+  expect_true(inherits(proposals, "list"))
+  # check proposals are same for varied
+  expect_equal(proposals[[1]][c(1, 3)], theta[c(1, 3)])
+  expect_equal(proposals[[2]][c(1, 3)], theta[c(1, 3)])
+  expect_equal(proposals[[3]][c(1, 3)], theta[c(1, 3)])
+  # check proposals are different for fixed
+  expect_true(all(proposals[[1]][c(2, 4)] != theta[c(2, 4)]))
+  expect_true(all(proposals[[2]][c(2, 4)] != theta[c(2, 4)]))
+  expect_true(all(proposals[[3]][c(2, 4)] != theta[c(2, 4)]))
+
+  # check same for 'type = '"shared"'
+  proposals = p$propose(theta, type = "varied")
+
+  expect_true(inherits(proposals, "list"))
+  # check proposals are same for varied
+  expect_equal(proposals[[1]][c(2, 4)], theta[c(2, 4)])
+  expect_equal(proposals[[2]][c(2, 4)], theta[c(2, 4)])
+  expect_equal(proposals[[3]][c(2, 4)], theta[c(2, 4)])
+  # check proposals are different for fixed
+  expect_true(all(proposals[[1]][c(1, 3)] != theta[c(1, 3)]))
+  expect_true(all(proposals[[2]][c(1, 3)] != theta[c(1, 3)]))
+  expect_true(all(proposals[[3]][c(1, 3)] != theta[c(1, 3)]))
+})

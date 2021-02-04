@@ -109,7 +109,8 @@ pmcmc_parameters <- R6::R6Class(
     transform = NULL,
     discrete = NULL,
     min = NULL,
-    max = NULL
+    max = NULL,
+    populations = NULL
   ),
 
   public = list(
@@ -136,7 +137,8 @@ pmcmc_parameters <- R6::R6Class(
     ##' generate derived parameters from those being actively sampled
     ##' you can do arbitrary transformations here.
     initialize = function(parameters, proposal, transform = NULL) {
-      parameters <- check_parameters(parameters, "pmcmc_parameter")
+      parameters <- check_parameters(parameters,
+                      c("pmcmc_parameter", "pmcmc_varied_parameter"))
 
       if (is.null(transform)) {
         transform <- as.list
