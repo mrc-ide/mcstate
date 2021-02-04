@@ -60,17 +60,18 @@ smc2_engine <- R6::R6Class(
     step = function() {
       message(sprintf("Step %d / %d",
                       private$step_current + 1L, private$n_steps))
-      ll <- vnapply(private$state$filter, function(f) f$step())
-      private$state$log_likelihood <- private$state$log_likelihood + ll
-      private$state$log_posterior <- private$state$log_posterior + ll
-      private$state$log_weights <- private$state$log_weights + ll
+      vnapply(private$state$filter, function(f) f$step())
+      step_ll <- vnapply(private$state$filter, function(f) f$log_likelihood_step)
+      private$state$log_likelihood <- private$state$log_likelihood + step_ll
+      private$state$log_posterior <- private$state$log_posterior + step_ll
+      private$state$log_weights <- private$state$log_weights + step_ll
       private$state$weights <-
         scale_log_weights(private$state$log_weights)$weights
       ess <- sum(private$state$weights)^2 / sum(private$state$weights^2)
       private$step_current <- private$step_current + 1L
       private$ess[private$step_current] <- ess
       if (ess < private$degeneracy_threshold * length(private$state$filter)) {
-        message("Degenerate!")
+        message("Degenerate - rejuvenating filters")
         kernel <- self$vcv() * private$covariance_scaling
         self$resample()
         self$update(self$propose(kernel))
