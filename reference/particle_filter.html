@@ -82,7 +82,7 @@ interface will be implemented later." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.4.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.4.3</span>
       </span>
     </div>
 
@@ -161,9 +161,6 @@ interface will be implemented later.</p>
 <dt><code>model</code></dt><dd><p>The dust model generator being simulated (cannot be
 re-bound)</p></dd>
 
-<dt><code>unique_particles</code></dt><dd><p>The number of unique particles sampled
-at each step that has been run</p></dd>
-
 <dt><code>n_particles</code></dt><dd><p>Number of particles used (read only)</p></dd>
 
 </dl><p></div></p>
@@ -175,6 +172,7 @@ at each step that has been run</p></dd>
 <ul>
 <li><p><a href='#method-new'><code>particle_filter$new()</code></a></p></li>
 <li><p><a href='#method-run'><code>particle_filter$run()</code></a></p></li>
+<li><p><a href='#method-run_begin'><code>particle_filter$run_begin()</code></a></p></li>
 <li><p><a href='#method-state'><code>particle_filter$state()</code></a></p></li>
 <li><p><a href='#method-history'><code>particle_filter$history()</code></a></p></li>
 <li><p><a href='#method-restart_state'><code>particle_filter$restart_state()</code></a></p></li>
@@ -262,14 +260,12 @@ creation. Can be <code>NULL</code> (to initialise using R's random number
 generator), a positive integer, or a raw vector - see <code><a href='https://rdrr.io/pkg/dust/man/dust.html'>dust::dust</a></code>
 and <code><a href='https://rdrr.io/pkg/dust/man/dust_rng.html'>dust::dust_rng</a></code> for more details. Note that the random number
 stream is unrelated from R's random number generator, except for
-initialisation with <code>seed = NULL</code>.
-Run the particle filter</p></dd>
+initialisation with <code>seed = NULL</code>.</p></dd>
 
 </dl><p></div></p>
 <p><hr>
 <a id="method-run"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>run()</code></h3>
-
-<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p>Run the particle filter</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
 <p><div class="r"></p><pre><span class='va'>particle_filter</span><span class='op'>$</span><span class='fu'>run</span><span class='op'>(</span>pars <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='op'>)</span>, save_history <span class='op'>=</span> <span class='cn'>FALSE</span>, save_restart <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre><p></div></p>
 
 <h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
@@ -298,6 +294,33 @@ filtering operation (i.e., at the end of the step).</p></dd>
 <h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A single numeric value representing the log-likelihood
 (<code>-Inf</code> if the model is impossible)</p>
+<p><hr>
+<a id="method-run_begin"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>run_begin()</code></h3>
+<p>Begin a particle filter run. This is part of the
+"advanced" interface for the particle filter; typically you will
+want to use <code>$run()</code> which provides a user-facing wrapper around
+this function. Once created with <code>$run_begin()</code>, you should take
+as many steps as needed with <code>$step()</code>.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>particle_filter</span><span class='op'>$</span><span class='fu'>run_begin</span><span class='op'>(</span>
+  pars <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='op'>)</span>,
+  save_history <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  save_restart <span class='op'>=</span> <span class='cn'>NULL</span>
+<span class='op'>)</span></pre><p></div></p>
+
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
+<dt><code>pars</code></dt><dd><p>A list representing parameters. See <code>$run()</code> for details.</p></dd>
+
+<dt><code>save_history</code></dt><dd><p>Logical, indicating if the history of all
+particles should be saved. See <code>$run()</code> for details.</p></dd>
+
+<dt><code>save_restart</code></dt><dd><p>Times to save restart state at. See <code>$run()</code> for
+details.</p></dd>
+
+</dl><p></div></p>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
+<p>An object of class <code>particle_filter_state</code>, with methods
+<code>step</code> and <code>end</code>. This interface is still subject to change.</p>
 <p><hr>
 <a id="method-state"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code><a href='https://rdrr.io/r/datasets/state.html'>state()</a></code></h3>
 <p>Extract the current model state, optionally filtering.

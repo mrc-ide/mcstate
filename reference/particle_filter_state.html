@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Run a pmcmc sampler — pmcmc • mcstate</title>
+<title>Particle filter state — particle_filter_state • mcstate</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -46,8 +46,16 @@
 
 
 
-<meta property="og:title" content="Run a pmcmc sampler — pmcmc" />
-<meta property="og:description" content="Run a pmcmc sampler" />
+<meta property="og:title" content="Particle filter state — particle_filter_state" />
+<meta property="og:description" content="Particle filter internal state. This object is not
+ordinarily constructed directly by users, but via the
+$run_begin method to particle_filter. It provides
+an advanced interface to the particle filter that allows
+partially running the particle filter over part of the time
+trajectory.
+This state object has a number of public fields that you can read
+but must not write (they are not read-only so you could write
+them, but don't)." />
 <meta property="og:image" content="/logo.png" />
 
 
@@ -140,108 +148,108 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Run a pmcmc sampler</h1>
-    <small class="dont-index">Source: <a href='https://github.com/mrc-ide/mcstate/blob/master/R/pmcmc.R'><code>R/pmcmc.R</code></a></small>
-    <div class="hidden name"><code>pmcmc.Rd</code></div>
+    <h1>Particle filter state</h1>
+    <small class="dont-index">Source: <a href='https://github.com/mrc-ide/mcstate/blob/master/R/particle_filter_state.R'><code>R/particle_filter_state.R</code></a></small>
+    <div class="hidden name"><code>particle_filter_state.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Run a pmcmc sampler</p>
+    <p>Particle filter internal state. This object is not
+ordinarily constructed directly by users, but via the
+<code>$run_begin</code> method to <a href='particle_filter.html'>particle_filter</a>. It provides
+an advanced interface to the particle filter that allows
+partially running the particle filter over part of the time
+trajectory.</p>
+<p>This state object has a number of public fields that you can read
+but must not write (they are not read-only so you <em>could</em> write
+them, but don't).</p>
     </div>
 
-    <pre class="usage"><span class='fu'>pmcmc</span><span class='op'>(</span>
+
+
+    <h2 class="hasAnchor" id="public-fields"><a class="anchor" href="#public-fields"></a>Public fields</h2>
+
+    <p><div class="r6-fields"></p><dl>
+<dt><code>model</code></dt><dd><p>The dust model generator being simulated (cannot be
+re-bound)</p></dd>
+
+<dt><code>complete</code></dt><dd><p>Logical, indicating if the particle filter has
+reached the end of the data.</p></dd>
+
+<dt><code>history</code></dt><dd><p>The particle history, if created with
+<code>save_history = TRUE</code>. This is an internal format subject to</p></dd>
+
+<dt><code>restart_state</code></dt><dd><p>Full model state at a series of points in
+time, if the model was created with non-<code>NULL</code> <code>save_restart</code>.
+This is a 3d array as described in <a href='particle_filter.html'>particle_filter</a></p></dd>
+
+<dt><code>log_likelihood</code></dt><dd><p>The log-likelihood so far. This starts at
+0 when initialised and accumulates value for each step taken.</p></dd>
+
+<dt><code>log_likelihood_step</code></dt><dd><p>The log-likelihood attributable to the
+last step (i.e., the contribution to <code>log_likelihood</code> made on the
+last call to <code>$step()</code>.</p></dd>
+
+</dl><p></div></p>
+    <h2 class="hasAnchor" id="methods"><a class="anchor" href="#methods"></a>Methods</h2>
+
+    
+<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Public methods</h3>
+
+<ul>
+<li><p><a href='#method-new'><code>particle_filter_state$new()</code></a></p></li>
+<li><p><a href='#method-step'><code>particle_filter_state$step()</code></a></p></li>
+<li><p><a href='#method-fork'><code>particle_filter_state$fork()</code></a></p></li>
+</ul>
+<p><hr>
+<a id="method-new"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>new()</code></h3>
+<p>Initialise the particle filter state. Ordinarily
+this should not be called by users, and so arguments are not
+documented.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>particle_filter_state</span><span class='op'>$</span><span class='fu'>new</span><span class='op'>(</span>
   <span class='va'>pars</span>,
-  <span class='va'>filter</span>,
-  <span class='va'>n_steps</span>,
-  save_state <span class='op'>=</span> <span class='cn'>TRUE</span>,
-  save_trajectories <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  progress <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  n_chains <span class='op'>=</span> <span class='fl'>1</span>,
-  initial <span class='op'>=</span> <span class='cn'>NULL</span>,
-  rerun_every <span class='op'>=</span> <span class='cn'>Inf</span>,
-  control <span class='op'>=</span> <span class='cn'>NULL</span>
-<span class='op'>)</span></pre>
+  <span class='va'>generator</span>,
+  <span class='va'>model</span>,
+  <span class='va'>data</span>,
+  <span class='va'>data_split</span>,
+  <span class='va'>steps</span>,
+  <span class='va'>n_particles</span>,
+  <span class='va'>n_threads</span>,
+  <span class='va'>initial</span>,
+  <span class='va'>index</span>,
+  <span class='va'>compare</span>,
+  <span class='va'>seed</span>,
+  <span class='va'>save_history</span>,
+  <span class='va'>save_restart</span>
+<span class='op'>)</span></pre><p></div></p>
 
-    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
-    <table class="ref-arguments">
-    <colgroup><col class="name" /><col class="desc" /></colgroup>
-    <tr>
-      <th>pars</th>
-      <td><p>A <code><a href='pmcmc_parameters.html'>pmcmc_parameters</a></code> object containing
-information about parameters (ranges, priors, proposal kernel,
-translation functions for use with the particle filter).</p></td>
-    </tr>
-    <tr>
-      <th>filter</th>
-      <td><p>A <code><a href='particle_filter.html'>particle_filter</a></code> object</p></td>
-    </tr>
-    <tr>
-      <th>n_steps</th>
-      <td><p>Deprecated: use <a href='pmcmc_control.html'>pmcmc_control</a> instead</p></td>
-    </tr>
-    <tr>
-      <th>save_state</th>
-      <td><p>Deprecated: use <a href='pmcmc_control.html'>pmcmc_control</a> instead</p></td>
-    </tr>
-    <tr>
-      <th>save_trajectories</th>
-      <td><p>Deprecated: use <a href='pmcmc_control.html'>pmcmc_control</a> instead</p></td>
-    </tr>
-    <tr>
-      <th>progress</th>
-      <td><p>Deprecated: use <a href='pmcmc_control.html'>pmcmc_control</a> instead</p></td>
-    </tr>
-    <tr>
-      <th>n_chains</th>
-      <td><p>Deprecated: use <a href='pmcmc_control.html'>pmcmc_control</a> instead</p></td>
-    </tr>
-    <tr>
-      <th>initial</th>
-      <td><p>Optional initial starting point. If given, it must
-be compatible with the parameters given in <code>pars</code>, and must be
-valid against your prior. You can use this to override the
-initial conditions saved in your <code>pars</code> object. You can provide
-either a vector of initial conditions, or a matrix with
-<code>n_chains</code> columns to use a different starting point for each
-chain.</p></td>
-    </tr>
-    <tr>
-      <th>rerun_every</th>
-      <td><p>Deprecated: use <a href='pmcmc_control.html'>pmcmc_control</a> instead</p></td>
-    </tr>
-    <tr>
-      <th>control</th>
-      <td><p>A <a href='pmcmc_control.html'>pmcmc_control</a> object which will set
-parameters. This will become the primary way of specifying
-options very soon and it is an error if you use both <code>control</code>
-and any of the parameters above aside from <code>pars</code> and <code>filter</code>.</p></td>
-    </tr>
-    </table>
+<p><hr>
+<a id="method-step"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code><a href='https://rdrr.io/r/stats/step.html'>step()</a></code></h3>
+<p>Take a step with the particle filter. This moves
+the particle filter forward one step within the <em>data</em> (which
+may correspond to more than one step with your model) and
+returns the likelihood so far.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>particle_filter_state</span><span class='op'>$</span><span class='fu'>step</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+<p><hr>
+<a id="method-fork"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>fork()</code></h3>
+<p>Create a new <code>particle_filter_state</code> object based
+on this one (same model, position in time within the data) but
+with new parameters. To do this, we create a new
+<code>particle_filter_state</code> with new parameters at the beginning of
+the simulation (corresponding to the start of your data or the
+<code>initial</code> argument to <a href='particle_filter.html'>particle_filter</a>) with your new
+<code>pars</code>, and then run the filter foward in time until it reaches
+the same step as the parent model.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>particle_filter_state</span><span class='op'>$</span><span class='fu'>fork</span><span class='op'>(</span><span class='va'>pars</span><span class='op'>)</span></pre><p></div></p>
 
-    <p>A <code>mcstate_pmcmc</code> object containing <code>pars</code>
-(sampled parameters) and <code>probabilities</code> (log prior, log
-likelihood and log posterior values for these
-probabilities). Two additional fields may be present:
-<code>state</code> (if <code>return_state</code> was <code>TRUE</code>),
-containing the final state of a randomly selected particle at
-the end of the simulation, for each step (will be a matrix with
-as many rows as your state has variables, and as <code>n_steps + 1</code> columns corresponding to each step). <code>trajectories</code> will
-include a 3d array of particle trajectories through the
-simulation (if <code>return_trajectories</code> was <code>TRUE</code>).</p>
-    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
+<dt><code>pars</code></dt><dd><p>New model parameters</p></dd>
 
-    <p>This is a basic Metropolis-Hastings MCMC sampler.  The
-<code>filter</code> is run with a set of parameters to evaluate the
-likelihood. A new set of parameters is proposed, and these
-likelihoods are compared, jumping with probability equal to their
-ratio. This is repeated for <code>n_mcmc</code> proposals.</p>
-<p>While this function is called <code>pmcmc</code> and requires a particle
-filter object, there's nothing special about it for particle
-filtering. However, we may need to add things in the future that
-make assumptions about the particle filter, so we have named it
-with a "p".</p>
+</dl><p></div></p>
+
+
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
