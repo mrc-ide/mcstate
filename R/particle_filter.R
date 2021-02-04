@@ -76,7 +76,6 @@ particle_filter <- R6::R6Class(
     ## Updated when the model is run
     last_model = NULL,
     last_history = NULL,
-    last_index_state = NULL,
     last_restart_state = NULL
   ),
 
@@ -233,7 +232,6 @@ particle_filter <- R6::R6Class(
       }
       private$last_history <- obj$history
       private$last_model <- obj$model
-      private$last_index_state <- obj$index_state
       private$last_restart_state <- obj$restart_state
       ll
     },

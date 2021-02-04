@@ -53,11 +53,6 @@ particle_filter_state <- R6::R6Class(
     ##'   0 when initialised and accumulates value for each step taken.
     log_likelihood = NULL,
 
-    ##' @field index_state The index used to query state when running
-    ##'   the model (this is needed to make sense of the final model state.
-    ## TODO: I think this can be removed.
-    index_state = NULL,
-
     ##' @description Initialise the particle filter state. Ordinarily
     ##' this should not be called by users, and so arguments are not
     ##' documented.
@@ -103,16 +98,10 @@ particle_filter_state <- R6::R6Class(
           value = history_value,
           order = history_order,
           index = index_data$state)
-        ## We also need to export this out because the *final state*
-        ## needs to know this.
-        self$index_state <- index_data$state
       } else {
         self$history <- NULL
       }
 
-      ## TODO: replace this with an array, once we know all the
-      ## dimensions here; that requires exposing n_state from the dust
-      ## object to do efficiently and generally.
       save_restart_step <- check_save_restart(save_restart, data)
       if (length(save_restart_step) > 0) {
         self$restart_state <- array(NA_real_,
