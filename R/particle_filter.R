@@ -260,21 +260,10 @@ particle_filter <- R6::R6Class(
     ##' `step` and `end`. This interface is still subject to change.
     run_begin = function(pars = list(), save_history = FALSE,
                          save_restart = NULL) {
-      ## TODO: Think about the implications of this; this is a change
-      ## from before where we retained a single model and its RNG
-      ## state, which is certainly faster. We might expand this
-      ## function to accept a 'fork' argument or something and based
-      ## on that send in the last model where it is available, causing
-      ## run_begin() to reset it.
-      if (is.null(private$last_model)) {
-        seed <- private$seed
-      } else {
-        seed <- private$last_model$rng_state()
-      }
       particle_filter_state$new(
-        pars, self$model, private$data, private$data_split, private$steps,
-        self$n_particles, private$n_threads,
-        private$initial, private$index, private$compare, seed,
+        pars, self$model, private$last_model, private$data, private$data_split,
+        private$steps, self$n_particles, private$n_threads,
+        private$initial, private$index, private$compare, private$seed,
         save_history, save_restart)
     },
 
