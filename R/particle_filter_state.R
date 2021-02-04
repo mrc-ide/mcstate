@@ -53,6 +53,11 @@ particle_filter_state <- R6::R6Class(
     ##'   0 when initialised and accumulates value for each step taken.
     log_likelihood = NULL,
 
+    ##' @field log_likelihood_step The log-likelihood attributable to the
+    ##' last step (i.e., the contribution to `log_likelihood` made on the
+    ##' last call to `$step()`.
+    log_likelihood_step = NULL,
+
     ##' @description Initialise the particle filter state. Ordinarily
     ##' this should not be called by users, and so arguments are not
     ##' documented.
@@ -164,6 +169,7 @@ particle_filter_state <- R6::R6Class(
         }
       } else {
         weights <- scale_log_weights(log_weights)
+        self$log_likelihood_step <- weights$average
         self$log_likelihood <- self$log_likelihood + weights$average
         if (self$log_likelihood == -Inf) {
           self$complete <- TRUE

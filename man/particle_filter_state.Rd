@@ -34,8 +34,9 @@ This is a 3d array as described in \link{particle_filter}}
 \item{\code{log_likelihood}}{The log-likelihood so far. This starts at
 0 when initialised and accumulates value for each step taken.}
 
-\item{\code{index_state}}{The index used to query state when running
-the model (this is needed to make sense of the final model state.}
+\item{\code{log_likelihood_step}}{The log-likelihood attributable to the
+last step (i.e., the contribution to \code{log_likelihood} made on the
+last call to \verb{$step()}.}
 }
 \if{html}{\out{</div>}}
 }

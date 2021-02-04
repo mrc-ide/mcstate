@@ -655,16 +655,21 @@ test_that("incrementally run a particle filter", {
   set.seed(1)
   p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index, seed = 1L)
-  ans <- numeric(nrow(dat$data))
+
+  n <- nrow(dat$data)
+  ans1 <- numeric(n)
+  ans2 <- numeric(n)
   obj <- p2$run_begin()
   expect_s3_class(obj, "particle_filter_state")
-  for (i in seq_along(ans)) {
-    ans[[i]] <- obj$step()
+  for (i in seq_len(n)) {
+    ans1[[i]] <- obj$step()
+    ans2[[i]] <- obj$log_likelihood_step
   }
 
   expect_identical(obj$log_likelihood, cmp)
-  expect_identical(ans[[length(ans)]], cmp)
-  expect_true(all(diff(ans) < 0))
+  expect_identical(ans1[[length(ans1)]], cmp)
+  expect_true(all(diff(ans1) < 0))
+  expect_equal(c(ans1[[1]], diff(ans1)), ans2)
 })
 
 
