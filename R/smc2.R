@@ -58,10 +58,7 @@ smc2_engine <- R6::R6Class(
     },
 
     step = function() {
-      message(sprintf("Step %d / %d",
-                      private$step_current + 1L, private$n_steps))
-      vnapply(private$state$filter, function(f) f$step())
-      step_ll <- vnapply(private$state$filter, function(f) f$log_likelihood_step)
+      step_ll <- vnapply(private$state$filter, function(f) f$step(TRUE))
       private$state$log_likelihood <- private$state$log_likelihood + step_ll
       private$state$log_posterior <- private$state$log_posterior + step_ll
       private$state$log_weights <- private$state$log_weights + step_ll
