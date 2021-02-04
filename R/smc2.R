@@ -14,13 +14,17 @@ smc2_engine <- R6::R6Class(
 
     ## Configuration
     degeneracy_threshold = NULL,
-    covariance_scaling = NULL
+    covariance_scaling = NULL,
+
+    ## Progress
+    progress = NULL
   ),
 
   public = list(
     initialize = function(parameters, filter, n_parameter_sets,
                           degeneracy_threshold = 0.5,
                           covariance_scaling = 0.5,
+                          progress = TRUE,
                           save_history = FALSE) {
       private$parameters <- parameters
       private$filter <- filter
@@ -55,6 +59,8 @@ smc2_engine <- R6::R6Class(
 
       private$degeneracy_threshold <- degeneracy_threshold
       private$covariance_scaling <- covariance_scaling
+
+      private$progress <- pmcmc_progress(private$n_steps, progress)
     },
 
     step = function() {
@@ -68,11 +74,11 @@ smc2_engine <- R6::R6Class(
       private$step_current <- private$step_current + 1L
       private$ess[private$step_current] <- ess
       if (ess < private$degeneracy_threshold * length(private$state$filter)) {
-        message("Degenerate - rejuvenating filters")
         kernel <- self$vcv() * private$covariance_scaling
         self$resample()
         self$update(self$propose(kernel))
       }
+      private$progress()
     },
 
     run = function() {
