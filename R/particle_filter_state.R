@@ -46,7 +46,7 @@ particle_filter_state <- R6::R6Class(
 
     ##' @field restart_state Full model state at a series of points in
     ##'   time, if the model was created with non-`NULL` `save_restart`.
-    ##'   This is an internal format subject to change.
+    ##'   This is a 3d array as described in [mcstate::particle_filter]
     restart_state = NULL,
 
     ##' @field log_likelihood The log-likelihood so far. This starts at
@@ -115,7 +115,10 @@ particle_filter_state <- R6::R6Class(
       ## object to do efficiently and generally.
       save_restart_step <- check_save_restart(save_restart, data)
       if (length(save_restart_step) > 0) {
-        self$restart_state <- history_collector(length(save_restart_step) - 1L)
+        self$restart_state <- array(NA_real_,
+                                    c(model$n_state(),
+                                      n_particles,
+                                      length(save_restart)))
       } else {
         self$restart_state <- NULL
       }
@@ -185,8 +188,11 @@ particle_filter_state <- R6::R6Class(
         }
       }
 
-      if (step_end %in% private$save_restart_step) {
-        self$restart_state$add(self$model$state())
+      if (!is.null(private$save_restart_step)) {
+        i_restart <- match(step_end, private$save_restart_step)
+        if (!is.na(i_restart)) {
+          self$restart_state[, , i_restart] <- self$model$state()
+        }
       }
 
       self$log_likelihood

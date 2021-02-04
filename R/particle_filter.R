@@ -237,7 +237,7 @@ particle_filter <- R6::R6Class(
       if (is.null(obj$restart_state)) {
         private$last_restart_state <- NULL
       } else {
-        private$last_restart_state <- list_to_array(obj$restart_state$get())
+        private$last_restart_state <- obj$restart_state
       }
       ll
     },

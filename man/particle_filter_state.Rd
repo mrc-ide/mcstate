@@ -29,7 +29,7 @@ reached the end of the data.}
 
 \item{\code{restart_state}}{Full model state at a series of points in
 time, if the model was created with non-\code{NULL} \code{save_restart}.
-This is an internal format subject to change.}
+This is a 3d array as described in \link{particle_filter}}
 
 \item{\code{log_likelihood}}{The log-likelihood so far. This starts at
 0 when initialised and accumulates value for each step taken.}
@@ -45,7 +45,6 @@ the model (this is needed to make sense of the final model state.}
 \item \href{#method-new}{\code{particle_filter_state$new()}}
 \item \href{#method-step}{\code{particle_filter_state$step()}}
 \item \href{#method-fork}{\code{particle_filter_state$fork()}}
-\item \href{#method-clone}{\code{particle_filter_state$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -59,6 +58,7 @@ documented.
 \if{html}{\out{<div class="r">}}\preformatted{particle_filter_state$new(
   pars,
   generator,
+  model,
   data,
   data_split,
   steps,
@@ -107,23 +107,6 @@ the same step as the parent model.
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{pars}}{New model parameters}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_filter_state$clone(deep = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
 }
 \if{html}{\out{</div>}}
 }
