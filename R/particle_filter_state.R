@@ -12,6 +12,8 @@
 ##'   them, but don't).
 particle_filter_state <- R6::R6Class(
   "particle_filter_state",
+  cloneable = FALSE,
+
   private = list(
     generator = NULL,
     pars = NULL,
