@@ -221,8 +221,7 @@ Begin a particle filter run. This is part of the
 "advanced" interface for the particle filter; typically you will
 want to use \verb{$run()} which provides a user-facing wrapper around
 this function. Once created with \verb{$run_begin()}, you should take
-as many steps as needed with \verb{$step()}, then finalise with
-\verb{$end()}.
+as many steps as needed with \verb{$step()}.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{particle_filter$run_begin(
   pars = list(),

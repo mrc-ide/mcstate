@@ -1,3 +1,15 @@
+##' @title Particle filter state
+##'
+##' @description Particle filter internal state. This object is not
+##'   ordinarily constructed directly by users, but via the
+##'   `$run_begin` method to [mcstate::particle_filter]. It provides
+##'   an advanced interface to the particle filter that allows
+##'   partially running the particle filter over part of the time
+##'   trajectory.
+##'
+##' This state object has a number of public fields that you can read
+##'   but must not write (they are not read-only so you *could* write
+##'   them, but don't).
 particle_filter_state <- R6::R6Class(
   "particle_filter_state",
   private = list(
@@ -11,23 +23,47 @@ particle_filter_state <- R6::R6Class(
     initial = NULL,
     index = NULL,
     compare = NULL,
-    save_restart_step = NULL
+    save_restart_step = NULL,
+    save_restart = NULL,
+    current_step_index = 0L
   ),
 
   public = list(
+    ##' @field model The dust model generator being simulated (cannot be
+    ##'   re-bound)
     model = NULL,
-    current_step_index = 0L,
-    complete = FALSE,
-    state = NULL,
-    history = NULL,
-    restart_state = NULL,
-    log_likelihood = NULL,
-    index_state = NULL,
-    save_restart = NULL,
 
+    ##' @field complete Logical, indicating if the particle filter has
+    ##'   reached the end of the data.
+    complete = FALSE,
+
+    ##' @field history The particle history, if created with
+    ##'   `save_history = TRUE`. This is an internal format subject to
+    ##    change.
+    history = NULL,
+
+    ##' @field restart_state Full model state at a series of points in
+    ##'   time, if the model was created with non-`NULL` `save_restart`.
+    ##'   This is an internal format subject to change.
+    restart_state = NULL,
+
+    ##' @field log_likelihood The log-likelihood so far. This starts at
+    ##'   0 when initialised and accumulates value for each step taken.
+    log_likelihood = NULL,
+
+    ##' @field index_state The index used to query state when running
+    ##'   the model (this is needed to make sense of the final model state.
+    ## TODO: I think this can be removed.
+    index_state = NULL,
+
+    ##' @description Initialise the particle filter state. Ordinarily
+    ##' this should not be called by users, and so arguments are not
+    ##' documented.
     initialize = function(pars, generator, data, data_split, steps,
                           n_particles, n_threads, initial, index, compare,
                           seed, save_history, save_restart) {
+      ## NOTE: this will generate a warning when updating docs but
+      ## that's ok; see https://github.com/r-lib/roxygen2/issues/1067
       model <- generator$new(pars = pars, step = steps[[1L]],
                              n_particles = n_particles, n_threads = n_threads,
                              seed = seed)
@@ -91,20 +127,24 @@ particle_filter_state <- R6::R6Class(
       private$index <- index
       private$compare <- compare
       private$save_restart_step <- save_restart_step
-      private$save_restart
+      private$save_restart <- save_restart
 
       ## Variable (see also history)
       self$model <- model
       self$log_likelihood <- 0.0
     },
 
+    ##' @description Take a step with the particle filter. This moves
+    ##' the particle filter forward one step within the *data* (which
+    ##' may correspond to more than one step with your model) and
+    ##' returns the likelihood so far.
     step = function() {
       if (self$complete) {
         stop("The particle filter has reached the end of the data")
       }
-      self$current_step_index <- self$current_step_index + 1L
-      self$complete <- self$current_step_index >= nrow(private$steps)
-      step <- self$current_step_index
+      private$current_step_index <- private$current_step_index + 1L
+      self$complete <- private$current_step_index >= nrow(private$steps)
+      step <- private$current_step_index
       step_end <- private$steps[step, 2]
       save_history <- !is.null(self$history)
 
@@ -147,9 +187,17 @@ particle_filter_state <- R6::R6Class(
       self$log_likelihood
     },
 
+    ##' @description Create a new `particle_filter_state` object based
+    ##' on this one (same model, position in time within the data) but
+    ##' with new parameters. To do this, we create a new
+    ##' `particle_filter_state` with new parameters at the beginning of
+    ##' the simulation (corresponding to the start of your data or the
+    ##' `initial` argument to [mcstate::particle_filter]) with your new
+    ##' `pars`, and then run the filter foward in time until it reaches
+    ##' the same step as the parent model.
+    ##'
+    ##' @param pars New model parameters
     fork = function(pars) {
-      ## Create a new particle_filter_state object based on our current
-      ## one; same model, different parameters
       seed <- self$model$rng_state()
       save_history <- !is.null(self$history)
       ret <- particle_filter_state$new(
@@ -159,7 +207,7 @@ particle_filter_state <- R6::R6Class(
         save_history, private$save_restart)
 
       ## Run it up to the same point
-      for (i in seq_len(self$current_step_index)) {
+      for (i in seq_len(private$current_step_index)) {
         ret$step()
       }
 

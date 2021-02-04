@@ -175,9 +175,11 @@ particle_filter <- R6::R6Class(
       if (is.null(compare)) {
         private$data_split <- dust::dust_data(private$data, "step_end")
       } else {
-        ## TODO: it would be tidiest if we always used
+        ## NOTE: it might be tidiest if we always used
         ## dust::dust_data, really, but that changes our comparison
-        ## function a little.
+        ## function a little or otherwise requires logic near to where
+        ## the comparison function is used (many times) rather than
+        ## once here.
         private$data_split <- df_to_list_of_lists(data)
       }
       private$steps <- unname(as.matrix(data[c("step_start", "step_end")]))
@@ -244,8 +246,7 @@ particle_filter <- R6::R6Class(
     ##' "advanced" interface for the particle filter; typically you will
     ##' want to use `$run()` which provides a user-facing wrapper around
     ##' this function. Once created with `$run_begin()`, you should take
-    ##' as many steps as needed with `$step()`, then finalise with
-    ##' `$end()`.
+    ##' as many steps as needed with `$step()`.
     ##'
     ##' @param pars A list representing parameters. See `$run()` for details.
     ##'
