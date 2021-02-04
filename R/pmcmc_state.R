@@ -144,7 +144,7 @@ pmcmc_state <- R6::R6Class(
         ## Do we *definitely* need step and rate here?
         data <- private$filter$inputs()$data
         predict <- list(transform = r6_private(private$pars)$transform,
-                        index = r6_private(private$filter)$last_index_state,
+                        index = r6_private(private$filter)$last_history$index,
                         step = last(data$step_end),
                         rate = attr(data, "rate", exact = TRUE),
                         filter = private$filter$inputs())
