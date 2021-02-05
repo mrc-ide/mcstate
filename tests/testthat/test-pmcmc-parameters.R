@@ -186,13 +186,13 @@ test_that("if proposal has names, they must match parameters", {
 
   expect_error(
     pmcmc_parameters$new(pars, proposal = m(c("a", "b"))),
-    "Expected dimension names of 'proposal' to match parmeters")
+    "Expected dimension names of 'proposal' to match parameters")
   expect_error(
     pmcmc_parameters$new(pars, proposal = m(c("a", "b"), nms)),
-    "Expected dimension names of 'proposal' to match parmeters")
+    "Expected dimension names of 'proposal' to match parameters")
   expect_error(
     pmcmc_parameters$new(pars, proposal = m(nms, c("a", "b"))),
-    "Expected dimension names of 'proposal' to match parmeters")
+    "Expected dimension names of 'proposal' to match parameters")
   expect_silent(pmcmc_parameters$new(pars, proposal = m(nms)))
 })
 
@@ -305,105 +305,211 @@ test_that("Can construct a varied parameter", {
   expect_equal(p$min, numeric(10))
   expect_equal(p$max, rep(10, 10))
   expect_false(p$discrete)
-  expect_equal(p$prior(1:10), numeric(10))
+  expect_equal(p$prior[[1]](1), 0)
 })
 
 test_that("can construct varied parameters", {
- expect_silent(mcstate::pmcmc_varied_parameter(name = "a", 1))
- expect_silent(mcstate::pmcmc_varied_parameter(name = "a", 1:100))
+ expect_silent(pmcmc_varied_parameter(name = "a", 1))
+ expect_silent(pmcmc_varied_parameter(name = "a", 1:100))
 
-  expect_silent(mcstate::pmcmc_varied_parameter(name = "a",
-    initial = 0.1, min = 0, max = 1, prior = function(a) log(a)))
+  expect_silent(pmcmc_varied_parameter(name = "a", initial = 0.1, min = 0,
+    max = 1, prior = function(a) log(a)))
 
-  expect_silent(mcstate::pmcmc_varied_parameter(name = "a",
-    initial = 1:5, min = 0, max = 6, prior = function(a) log(a)))
+  expect_silent(pmcmc_varied_parameter(name = "a", initial = 1:5, min = 0,
+    max = 6, prior = function(a) log(a)))
 
-  expect_error(mcstate::pmcmc_varied_parameter(name = "a",
-    initial = 1:5, min = 0, max = 4, prior = function(a) log(a)), "<= 'max'")
+  expect_error(pmcmc_varied_parameter(name = "a", initial = 1:5, min = 0,
+    max = 4, prior = function(a) log(a)), "<= 'max'")
 
-  expect_error(mcstate::pmcmc_varied_parameter(name = "a",
-    initial = 1:5, min = 2, max = 6, prior = function(a) log(a)), ">= 'min'")
+  expect_error(pmcmc_varied_parameter(name = "a", initial = 1:5, min = 2,
+    max = 6, prior = function(a) log(a)), ">= 'min'")
 
-  expect_error(mcstate::pmcmc_varied_parameter(name = "a",
-    initial = 1:5, min = 0:1, max = 6,
-    prior = function(a) log(a)), "Length of 'min'")
+  expect_error(pmcmc_varied_parameter(name = "a", initial = 1:5, min = 0:1,
+    max = 6, prior = function(a) log(a)), "Length of 'min'")
 
-  expect_error(mcstate::pmcmc_varied_parameter(name = "a",
-    initial = 1:5, min = 0, max = 3:4,
-    prior = function(a) log(a)), "Length of 'max'")
+  expect_error(pmcmc_varied_parameter(name = "a", initial = 1:5, min = 0,
+    max = 3:4, prior = function(a) log(a)), "Length of 'max'")
 
-  expect_error(mcstate::pmcmc_varied_parameter(name = "a",
-    initial = 1:5, min = 0, max = 6,
-    prior = list(function(a) log(a))), "must be a function")
+  expect_equal(
+    pmcmc_varied_parameter(name = "a", initial = 1:5, min = 0,
+      max = 6, prior = list(function(a) log(a))),
+    pmcmc_varied_parameter(name = "a", initial = 1:5, min = 0,
+      max = 6, prior = function(a) log(a)))
 
-  expect_error(mcstate::pmcmc_varied_parameter(name = "a",
-    initial = 1:5, min = 0, max = 6,
-    prior = function(a) 0), "5 values")
+  expect_error(pmcmc_varied_parameter(name = "a", initial = 1:5, min = 0,
+    max = 6, prior = function(a) Inf), "non-finite value")
 
-  expect_error(mcstate::pmcmc_varied_parameter(name = "a",
-    initial = 1:5, min = 0, max = 6,
-    prior = function(a) c(1,1,1,1,Inf)), "non-finite value")
-
-  expect_silent(mcstate::pmcmc_varied_parameter(name = "a",
-    initial = 1:5, min = 0, max = 6,
-    prior = function(a) numeric(5)))
+  expect_error(pmcmc_varied_parameter(name = "a", initial = 1:5, min = 0,
+    max = 6, prior = function(a) stop()), "Prior function for 'a'")
 })
 
-test_that("can construct shared parameters", {
-  set.seed(42)
-  mat = matrix(runif(20), 5, 4)
-  mat = round(t(mat) %*% mat, 1) / 10
-  p <- mcstate::pmcmc_parameters_shared$new(
-  list(mcstate::pmcmc_parameter("a", 0.1, min = 0, max = 1,
-                                prior = function(a) log(a)),
-       mcstate::pmcmc_parameter("b", 0, prior = dnorm),
-       mcstate::pmcmc_parameter("c", 0.5, min = 0, max = 1,
-                                prior = dunif),
-       mcstate::pmcmc_parameter("d", 1)),
-  proposal = mat,
-  varied = c("a", "c"),
-  populations = c("Europe", "America", "Africa"))
-  expect_true(inherits(p, "pmcmc_parameters"))
+test_that("varied parameters in pmcmc_parameters", {
+  expect_silent(pmcmc_parameters$new(list(
+    pmcmc_varied_parameter(name = "a", 1),
+    pmcmc_parameter(name = "b", 1)
+  ), matrix(c(1, 0.5, 0.5, 1), 2, 2), populations = c("Europe", "America")))
+
+  expect_error(
+    pmcmc_parameters$new(list(
+      pmcmc_varied_parameter(name = "a", 1:3, 2:4, min = c(0, 1, 2)),
+      pmcmc_parameter(name = "b", 1)
+    ), matrix(c(1, 0.5, 0.5, 1), 2, 2), populations = c("Europe", "America")),
+    "Expected length"
+  )
 })
 
-test_that("shared propose, type = fixed/varied", {
-  set.seed(42)
-  mat = matrix(runif(20), 5, 4)
-  mat = round(t(mat) %*% mat, 1) / 10
-  p <- mcstate::pmcmc_parameters_shared$new(
-  list(mcstate::pmcmc_parameter("a", 0.1, min = 0, max = 1,
-                                prior = function(a) log(a)),
-       mcstate::pmcmc_parameter("b", 0, prior = dnorm),
-       mcstate::pmcmc_parameter("c", 0.5, min = 0, max = 1,
-                                prior = dunif),
-       mcstate::pmcmc_parameter("d", 1)),
-  proposal = mat,
-  varied = c("a", "c"),
-  populations = c("Europe", "America", "Africa"))
+test_that("varied pmcmc_parameters summary", {
+  p <- pmcmc_parameters$new(
+    parameters = list(
+      pmcmc_varied_parameter(name = "a", 2:4, min = 0:2, max = 4:6),
+      pmcmc_parameter(name = "b", 2, min = 1, max = 3)),
+    proposal = matrix(c(1, 0.5, 0.5, 1), 2, 2),
+    populations = c("Europe", "America", "Africa")
+  )
 
-  theta <- p$initial()
-  proposals = p$propose(theta, type = "fixed")
+  expect_identical(p$summary("Europe"),
+    data.frame(name = c("a", "b"), min = c(0, 1), max = c(4, 3),
+               discrete = FALSE, type = c("varied", "fixed"))
+  )
+  expect_identical(p$summary("Africa"),
+    data.frame(name = c("a", "b"), min = c(2, 1), max = c(6, 3),
+               discrete = FALSE, type = c("varied", "fixed"))
+  )
+  expect_error(p$summary("Australia"), "Expected 'population'")
 
-  expect_true(inherits(proposals, "list"))
-  # check proposals are same for varied
-  expect_equal(proposals[[1]][c(1, 3)], theta[c(1, 3)])
-  expect_equal(proposals[[2]][c(1, 3)], theta[c(1, 3)])
-  expect_equal(proposals[[3]][c(1, 3)], theta[c(1, 3)])
-  # check proposals are different for fixed
-  expect_true(all(proposals[[1]][c(2, 4)] != theta[c(2, 4)]))
-  expect_true(all(proposals[[2]][c(2, 4)] != theta[c(2, 4)]))
-  expect_true(all(proposals[[3]][c(2, 4)] != theta[c(2, 4)]))
+  s <- p$summary()
+  expect_equal(s,
+              list(Europe = p$summary("Europe"),
+                  America = p$summary("America"),
+                  Africa = p$summary("Africa")))
 
-  # check same for 'type = '"shared"'
-  proposals = p$propose(theta, type = "varied")
+})
 
-  expect_true(inherits(proposals, "list"))
-  # check proposals are same for varied
-  expect_equal(proposals[[1]][c(2, 4)], theta[c(2, 4)])
-  expect_equal(proposals[[2]][c(2, 4)], theta[c(2, 4)])
-  expect_equal(proposals[[3]][c(2, 4)], theta[c(2, 4)])
-  # check proposals are different for fixed
-  expect_true(all(proposals[[1]][c(1, 3)] != theta[c(1, 3)]))
-  expect_true(all(proposals[[2]][c(1, 3)] != theta[c(1, 3)]))
-  expect_true(all(proposals[[3]][c(1, 3)] != theta[c(1, 3)]))
+test_that("varied initial", {
+    p <- pmcmc_parameters$new(
+    parameters = list(
+      pmcmc_varied_parameter(name = "a", 2:4, min = 0:2, max = 4:6),
+      pmcmc_parameter(name = "b", 2, min = 1, max = 3)),
+    proposal = matrix(c(1, 0.5, 0.5, 1), 2, 2),
+    populations = c("Europe", "America", "Africa")
+  )
+  expect_identical(p$initial(),
+    matrix(c(2, 2, 3, 2, 4, 2), 3, 2, TRUE,
+    dimnames = list(c("Europe", "America", "Africa"), letters[1:2])))
+})
+
+
+test_that("varied proposal", {
+  p <- pmcmc_parameters$new(
+    parameters = list(
+      pmcmc_varied_parameter(name = "a", 2:4, min = 0:2, max = 4:6),
+      pmcmc_parameter(name = "b", 2, min = 1, max = 3)),
+    proposal = matrix(c(1, 0.5, 0.5, 1), 2, 2),
+    populations = c("Europe", "America", "Africa")
+  )
+  init <- p$initial()
+
+  aprop <- p$propose(init, type = "fixed")
+  expect_equal(dimnames(aprop),
+    list(c("Europe", "America", "Africa"), c("a", "b")))
+  expect_equal(aprop[, 1], init[, 1])
+  expect_true(all(aprop[, 2] != init[, 2]))
+
+  aprop <- p$propose(init, type = "varied")
+  expect_equal(dimnames(aprop),
+    list(c("Europe", "America", "Africa"), c("a", "b")))
+  expect_equal(aprop[, 2], init[, 2])
+  expect_true(all(aprop[, 1] != init[, 1]))
+
+  aprop <- p$propose(init, type = "both")
+  expect_equal(dimnames(aprop),
+    list(c("Europe", "America", "Africa"), c("a", "b")))
+  expect_true(all(aprop[, 1] != init[, 1]))
+  expect_true(all(aprop[, 2] != init[, 2]))
+})
+
+test_that("varied prior", {
+    p <- pmcmc_parameters$new(
+    parameters = list(
+      pmcmc_varied_parameter(name = "a", 2:4, min = 0:2, max = 4:6,
+        prior = list(function(x) 1, function(x) 2, function(x) 3)),
+      pmcmc_parameter(name = "b", 2, min = 1, max = 3, prior = function(x) 4)),
+    proposal = matrix(c(1, 0.5, 0.5, 1), 2, 2),
+    populations = c("Europe", "America", "Africa")
+  )
+  init <- p$initial()
+  expect_equal(p$prior(init), set_names(5:7, c("Europe", "America", "Africa")))
+
+  p <- pmcmc_parameters$new(
+    parameters = list(
+      pmcmc_varied_parameter(name = "a", 2:4, min = 0:2, max = 4:6,
+        prior = list(dnorm, dexp, function(x) dnorm(x, 2))),
+      pmcmc_parameter(name = "b", 2, min = 1, max = 3, prior = dlnorm)),
+    proposal = matrix(c(1, 0.5, 0.5, 1), 2, 2),
+    populations = c("Europe", "America", "Africa")
+  )
+  init <- p$initial()
+  expect_equal(p$prior(init),
+    set_names(c(dnorm(2) + dlnorm(2), dexp(3) + dlnorm(2), dnorm(4, 2) + dlnorm(2)),
+    c("Europe", "America", "Africa")))
+})
+
+test_that("varied model/transform", {
+  p <- pmcmc_parameters$new(
+    parameters = list(
+      pmcmc_varied_parameter(name = "a", 2:4, min = 0:2, max = 4:6,
+        prior = list(dnorm, dexp, function(x) dnorm(x, 2))),
+      pmcmc_parameter(name = "b", 2, min = 1, max = 3, prior = dlnorm)),
+    proposal = matrix(c(1, 0.5, 0.5, 1), 2, 2),
+    populations = c("Europe", "America", "Africa")
+  )
+  expect_equal(p$model(p$initial()), apply(p$initial(), 1, as.list))
+
+  p <- pmcmc_parameters$new(
+    parameters = list(
+      pmcmc_varied_parameter(name = "a", 2:4, min = 0:2, max = 4:6,
+        prior = list(dnorm, dexp, function(x) dnorm(x, 2))),
+      pmcmc_parameter(name = "b", 2, min = 1, max = 3, prior = dlnorm)),
+    proposal = matrix(c(1, 0.5, 0.5, 1), 2, 2),
+    populations = c("Europe", "America", "Africa"),
+    transform = function(x) as.list(log(x))
+  )
+  expect_equal(p$model(p$initial()),
+                apply(p$initial(), 1, function(x) as.list(log(x))))
+})
+
+test_that("varied fixed", {
+  p <- pmcmc_parameters$new(
+    parameters = list(
+      pmcmc_varied_parameter(name = "a", 2:4, min = 0:2, max = 4:6,
+        prior = list(dnorm, dexp, function(x) dnorm(x, 2))),
+      pmcmc_parameter(name = "b", 2, min = 1, max = 3, prior = dlnorm),
+      pmcmc_parameter(name = "c", 3),
+      pmcmc_varied_parameter(name = "d", 4)),
+    proposal = diag(4),
+    populations = c("Europe", "America", "Africa")
+  )
+  p_fix <- pmcmc_parameters$new(
+    parameters = list(
+      pmcmc_parameter(name = "b", 2, min = 1, max = 3, prior = dlnorm),
+      pmcmc_varied_parameter(name = "d", 4)),
+    proposal = diag(2),
+    populations = c("Europe", "America", "Africa"),
+    transform = function(p) {
+          base_transform(set_into(base, idx_vary, p))
+      }
+  )
+  fixedp <- p$fix(c(a = 1, c = 2))
+  expect_equal(fixedp, p_fix)
+
+  expect_equal(
+    fixedp$initial(),
+    matrix(c(2, 4), nrow = 3, ncol = 2, TRUE,
+    list(c("Europe", "America", "Africa"), c("b", "d")))
+  )
+
+  mod <- fixedp$model(fixedp$initial())
+  expect_true(is.list(mod) && length(mod) == 3)
+  expect_equal(names(mod), c("Europe", "America", "Africa"))
+  expect_equal(mod$Europe, list(a = 1, b = 2, c = 2, d = 4))
 })

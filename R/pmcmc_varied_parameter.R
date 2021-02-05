@@ -27,26 +27,35 @@ pmcmc_varied_parameter <- function(name, initial, min = -Inf, max = Inf,
   }
 
   if (is.null(prior)) {
-    prior <- function(p) { }
-    body(prior) <- substitute(numeric(lng))
+    prior <- rep(list(function(p) 0), lng)
   } else {
-    assert_is(prior, "function")
-    value <- tryCatch(
-      prior(initial),
-      error = function(e)
-        stop(sprintf(
+    if (is.function(prior)) {
+      prior <- rep(list(prior), lng)
+    } else {
+      assert_is(prior, "list")
+      if (length(prior) == 1) {
+        prior <- rep(prior, lng)
+      } else if (length(prior) != lng) {
+        stop(sprintf("Length of 'prior' must be '1' or %s.", lng))
+      }
+      if (any(!vlapply(prior, inherits, what = "function"))) {
+        stop("'prior' should be a list of functions.")
+      }
+    }
+
+    mapply(function(x, y) {
+      value <- tryCatch(x(y),
+        error = function(e)
+          stop(sprintf(
           "Prior function for '%s' failed to evaluate initial value: %s",
           name, e$message)))
-    if (!all(is.finite(value))) {
-     stop(sprintf(
-     "Prior function for '%s' returned a non-finite value on initial value(s)",
-     name))
-    }
-    if (length(value) != lng) {
-      stop(sprintf(
-        "Prior function for '%s' should return %s values.",
-        name, lng))
-    }
+
+      if (!is.finite(value)) {
+        stop(sprintf(
+        "Prior function for '%s' returned a non-finite value on initial value(s)",
+        name))
+      }
+    }, prior, initial)
   }
 
   ret <- list(name = name, initial = initial, min = min, max = max,

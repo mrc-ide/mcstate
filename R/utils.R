@@ -110,8 +110,25 @@ set_into <- function(x, at, value) {
   x
 }
 
+set_minto <- function(x, atx = NULL, aty = NULL, value) {
+  if (is.null(atx)) {
+    x[, aty] <- value
+  } else if (is.null(aty)) {
+    x[atx, ] <- value
+  } else if (is.null(atx) && is.null(aty)) {
+    x[] <- value
+  } else {
+    x[atx, aty] <- value
+  }
+  x
+}
+
 
 set_names <- function(x, nms) {
   names(x) <- nms
   x
+}
+
+str_collapse <- function(x) {
+  paste0("{", paste0(x, collapse = ", "), "}")
 }
