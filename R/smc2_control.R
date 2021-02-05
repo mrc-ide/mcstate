@@ -24,8 +24,8 @@
 ##'   trajectories should be saved during the simulation.
 ##'
 ##' @return A `smc2_control` object, which should not be modified once created.
+##' @export
 ##' @examples
-##'
 ##' mcstate::smc2_control(100)
 smc2_control <- function(n_parameter_sets, degeneracy_threshold = 0.5,
                          covariance_scaling = 0.5, progress = TRUE,

@@ -40,6 +40,5 @@ object. Do not refer to any argument except \code{n_parameter_sets} by
 position as the order of the arguments may change in future.
 }
 \examples{
-
 mcstate::smc2_control(100)
 }
