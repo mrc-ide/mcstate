@@ -101,47 +101,47 @@ pmcmc_state <- R6::R6Class(
           private$update_history()
         }
 
-        if (inherits(pars, "pmcmc_parameters_shared")) {
-          # varied parameters
-          which <- private$pars$summary()$type == "varied"
-          prop_varied_pars <- private$pars$propose(private$curr_pars,
-                                                   type = "varied")
-          prop_varied_lprior <- private$pars$prior(prop_varied_pars)
-          # FIXME - Need to update `run_filter` to return vector for populations
-          prop_varied_llik <- private$run_filter(prop_varied_pars)
-          prop_varied_lpost <- prop_varied_lprior + prop_varied_llik
+        # if (inherits(pars, "pmcmc_parameters_shared")) {
+        #   # varied parameters
+        #   which <- private$pars$summary()$type == "varied"
+        #   prop_varied_pars <- private$pars$propose(private$curr_pars,
+        #                                            type = "varied")
+        #   prop_varied_lprior <- private$pars$prior(prop_varied_pars)
+        #   # FIXME - Need to update `run_filter` to return vector for populations
+        #   prop_varied_llik <- private$run_filter(prop_varied_pars)
+        #   prop_varied_lpost <- prop_varied_lprior + prop_varied_llik
 
-          # FIXME - Need to update below, should these be stored as vectors?
-          # - accept/reject individually
-          for (i in seq_along(prop_varied_pars)) {
-            if (runif(1) < exp(prop_varied_lpost[i] - private$curr_lpost)) {
-              private$curr_pars <- prop_pars
-              private$curr_lprior <- prop_lprior
-              private$curr_llik <- prop_llik
-              private$curr_lpost <- prop_lpost
-              private$update_history()
-            }
-          }
+        #   # FIXME - Need to update below, should these be stored as vectors?
+        #   # - accept/reject individually
+        #   for (i in seq_along(prop_varied_pars)) {
+        #     if (runif(1) < exp(prop_varied_lpost[i] - private$curr_lpost)) {
+        #       private$curr_pars <- prop_pars
+        #       private$curr_lprior <- prop_lprior
+        #       private$curr_llik <- prop_llik
+        #       private$curr_lpost <- prop_lpost
+        #       private$update_history()
+        #     }
+        #   }
 
-          # fixed parameters
-          which <- private$pars$summary()$type == "fixed"
-          prop_fixed_pars <- private$pars$propose(private$curr_pars,
-                                                   type = "fixed")
-          prop_fixed_lprior <- private$pars$prior(prop_fixed_pars)
-          # FIXME - Need to update `run_filter` to return vector for populations
-          prop_fixed_llik <- private$run_filter(prop_fixed_pars)
-          prop_fixed_lpost <- sum(prop_fixed_lprior + prop_fixed_llik)
+        #   # fixed parameters
+        #   which <- private$pars$summary()$type == "fixed"
+        #   prop_fixed_pars <- private$pars$propose(private$curr_pars,
+        #                                            type = "fixed")
+        #   prop_fixed_lprior <- private$pars$prior(prop_fixed_pars)
+        #   # FIXME - Need to update `run_filter` to return vector for populations
+        #   prop_fixed_llik <- private$run_filter(prop_fixed_pars)
+        #   prop_fixed_lpost <- sum(prop_fixed_lprior + prop_fixed_llik)
 
-          # FIXME - Need to update below, should these be stored as vectors?
-          # - accept/reject collectively
-            if (runif(1) < exp(prop_fixed_lpost - private$curr_lpost)) {
-              private$curr_pars <- prop_pars
-              private$curr_lprior <- prop_lprior
-              private$curr_llik <- prop_llik
-              private$curr_lpost <- prop_lpost
-              private$update_history()
-            }
-          } else {
+        #   # FIXME - Need to update below, should these be stored as vectors?
+        #   # - accept/reject collectively
+        #     if (runif(1) < exp(prop_fixed_lpost - private$curr_lpost)) {
+        #       private$curr_pars <- prop_pars
+        #       private$curr_lprior <- prop_lprior
+        #       private$curr_llik <- prop_llik
+        #       private$curr_lpost <- prop_lpost
+        #       private$update_history()
+        #     }
+        #   } else {
           prop_pars <- private$pars$propose(private$curr_pars)
           prop_lprior <- private$pars$prior(prop_pars)
           prop_llik <- private$run_filter(prop_pars)
@@ -154,7 +154,7 @@ pmcmc_state <- R6::R6Class(
             private$curr_lpost <- prop_lpost
             private$update_history()
           }
-        }
+        # }
 
 
         private$history_pars$add(private$curr_pars)
