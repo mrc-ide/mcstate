@@ -368,7 +368,8 @@ pmcmc_parameters <- R6::R6Class(
     ##' either fixed parameters only ("fixed"), varied only ("varied"), or
     ##' both ("both") types. For 'fixed' and 'varied' then parameters of the
     ##' other type is returned equal to corresponding value in `theta`.
-    # FIXME - AS WITH INITIAL COULD CONSIDER ALWAYS RETURNING MATRIX FOR CONSISTENCY
+    # FIXME - AS WITH INITIAL COULD CONSIDER ALWAYS RETURNING MATRIX FOR
+    #         CONSISTENCY
     propose = function(theta, scale = 1, type = c("fixed", "varied", "both")) {
       if (is.null(private$varied)) {
         theta <- private$proposal(theta, scale)

@@ -450,7 +450,8 @@ test_that("varied prior", {
   )
   init <- p$initial()
   expect_equal(p$prior(init),
-    set_names(c(dnorm(2) + dlnorm(2), dexp(3) + dlnorm(2), dnorm(4, 2) + dlnorm(2)),
+    set_names(c(dnorm(2) + dlnorm(2), dexp(3) + dlnorm(2),
+    dnorm(4, 2) + dlnorm(2)),
     c("Europe", "America", "Africa")))
 })
 

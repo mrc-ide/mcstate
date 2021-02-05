@@ -52,7 +52,8 @@ pmcmc_varied_parameter <- function(name, initial, min = -Inf, max = Inf,
 
       if (!is.finite(value)) {
         stop(sprintf(
-        "Prior function for '%s' returned a non-finite value on initial value(s)",
+        "Prior function for '%s' returned a non-finite value on initial
+        value(s)",
         name))
       }
     }, prior, initial)
