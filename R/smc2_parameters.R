@@ -65,7 +65,7 @@ smc2_parameter <- function(name, sample, prior,
 ##' @title pmcmc_parameters
 ##'
 ##' @description Construct parameters for use with
-##'   [smc()]. This creates a utility object that is used
+##'   [smc2()]. This creates a utility object that is used
 ##'   internally to work with parameters. Most users only need to
 ##'   construct this object, but see the examples for how it can be
 ##'   used.

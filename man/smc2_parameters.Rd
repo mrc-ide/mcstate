@@ -5,7 +5,7 @@
 \title{pmcmc_parameters}
 \description{
 Construct parameters for use with
-\code{\link[=smc]{smc()}}. This creates a utility object that is used
+\code{\link[=smc2]{smc2()}}. This creates a utility object that is used
 internally to work with parameters. Most users only need to
 construct this object, but see the examples for how it can be
 used.
