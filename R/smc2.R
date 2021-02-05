@@ -1,8 +1,45 @@
+##' Run a SMC^2. This is experimental and subject to change. Use at
+##' your own risk.
+##'
+##' @title Run SMC^2
+##'
+##' @param pars A [`smc2_parameters`] object containing
+##'   information about parameters (ranges, priors, proposal kernel,
+##'   translation functions for use with the particle filter).
+##'
+##' @param filter A [`particle_filter`] object
+##'
+##' @param control A [mcstate::smc2_control] object to control the
+##'   behaviour of the algorithm
+##'
+##' @return A `smc2_result` object, with elements
+##'
+##' * `pars`: a matrix of sampled parameters (n_parameter_set long)
+##' * `probabilities`: a matrix of probabilities (`log_prior`, `log_likelihood`,
+##'    `log_posterior` and `weight`). The latter is the log posterior
+##'    normalised over all samples
+##' * `statistics`: interesting or useful statistics about your sample,
+##'    including the `ess` (effective sample size, over time),
+##'    `acceptance_rate` (where a regeneration step was done, the acceptance
+##'    rate), `n_particles`, `n_parameter_sets` and `n_steps` (inputs to
+##'    the simulation). The `effort` field is a rough calculation of the
+##'    number of particle-filter runs that this run was worth.
+##' @export
+smc2 <- function(pars, filter, control) {
+  assert_is(pars, "smc2_parameters")
+  assert_is(filter, "particle_filter")
+  assert_is(control, "smc2_control")
+  obj <- smc2_engine$new(pars, filter, control)
+  obj$run()
+  obj$results()
+}
+
+
 smc2_engine <- R6::R6Class(
   "smc2_engine",
 
   private = list(
-    parameters = NULL,
+    pars = NULL,
     filter = NULL,
     state = NULL,
     n_steps = NULL,
@@ -12,55 +49,42 @@ smc2_engine <- R6::R6Class(
     ess = NULL,
     step_current = 0L,
 
-    ## Configuration
-    degeneracy_threshold = NULL,
-    covariance_scaling = NULL,
-
-    ## Progress
-    progress = NULL
+    control = NULL,
+    tick = NULL
   ),
 
   public = list(
-    initialize = function(parameters, filter, n_parameter_sets,
-                          degeneracy_threshold = 0.5,
-                          covariance_scaling = 0.5,
-                          progress = TRUE,
-                          save_history = FALSE) {
-      private$parameters <- parameters
+    initialize = function(pars, filter, control) {
+      private$pars <- pars
       private$filter <- filter
+      private$control <- control
 
-      pars <- parameters$sample(n_parameter_sets)
-      log_prior <- parameters$prior(pars)
-      log_likelihood <- rep(0.0, n_parameter_sets)
+      theta <- pars$sample(control$n_parameter_sets)
+      log_prior <- pars$prior(theta)
+      log_likelihood <- rep(0.0, control$n_parameter_sets)
 
       inputs <- filter$inputs()
       ## TODO: fix this in dust to make it easier to get a
       ## "reasonable" state. We might also advance the state with a
       ## long jump first?
       seed <- dust::dust_rng$new(inputs$seed)$state()
-      filters <- vector("list", n_parameter_sets)
-      pars_model <- parameters$model(pars)
-      for (i in seq_len(n_parameter_sets)) {
+      filters <- vector("list", control$n_parameter_sets)
+      pars_model <- pars$model(theta)
+      for (i in seq_len(control$n_parameter_sets)) {
         seed <- dust::dust_rng_state_long_jump(seed)
         f <- particle_filter$new(
           inputs$data, inputs$model, inputs$n_particles, inputs$compare,
           inputs$index, inputs$initial, inputs$n_threads, seed)
-        ## TODO: Do we need to save the underlying filter objects? If
-        ## we're going to do projection they might be needed, but
-        ## that's going to be hard to swing potentially?
-        filters[[i]] <- f$run_begin(pars_model[[i]], save_history)
+        filters[[i]] <- f$run_begin(pars_model[[i]], control$save_trajectories)
       }
 
-      private$state <- smc2_state(filters, pars, log_prior, log_likelihood)
+      private$state <- smc2_state(filters, theta, log_prior, log_likelihood)
 
       private$n_steps <- nrow(inputs$data)
       private$acceptance_rate <- rep(NA_real_, private$n_steps)
       private$ess <- rep(NA_real_, private$n_steps)
 
-      private$degeneracy_threshold <- degeneracy_threshold
-      private$covariance_scaling <- covariance_scaling
-
-      private$progress <- pmcmc_progress(private$n_steps, progress)
+      private$tick <- pmcmc_progress(private$n_steps, control$progress)
     },
 
     step = function() {
@@ -73,12 +97,14 @@ smc2_engine <- R6::R6Class(
       ess <- sum(private$state$weights)^2 / sum(private$state$weights^2)
       private$step_current <- private$step_current + 1L
       private$ess[private$step_current] <- ess
-      if (ess < private$degeneracy_threshold * length(private$state$filter)) {
-        kernel <- self$vcv() * private$covariance_scaling
+      ess_crit <- private$control$degeneracy_threshold *
+        length(private$state$filter)
+      if (ess < ess_crit) {
+        kernel <- self$vcv() * private$control$covariance_scaling
         self$resample()
         self$update(self$propose(kernel))
       }
-      private$progress()
+      private$tick()
     },
 
     run = function() {
@@ -123,11 +149,11 @@ smc2_engine <- R6::R6Class(
     },
 
     propose = function(kernel) {
-      pars <- private$parameters$propose(private$state$pars, kernel)
-      pars_model <- private$parameters$model(pars)
+      pars <- private$pars$propose(private$state$pars, kernel)
+      pars_model <- private$pars$model(pars)
 
       ## Calculate log prior for the proposed parameter sets
-      log_prior <- private$parameters$prior(pars)
+      log_prior <- private$pars$prior(pars)
       log_likelihood <- rep(-Inf, length(log_prior))
       filter <- vector("list", length(private$state$filter))
 
@@ -160,6 +186,40 @@ smc2_engine <- R6::R6Class(
       }
 
       private$acceptance_rate[private$step_current] <- mean(accept)
+    },
+
+    results = function() {
+      weight <- scale_log_weights(private$state$log_posterior)$weights
+      probabilities <- cbind(
+        log_prior = private$state$log_prior,
+        log_likelihood = private$state$log_likelihood,
+        log_posterior = private$state$log_posterior,
+        weight = normalise(weight))
+      pars <- private$state$pars
+
+      ## The total number of filter steps we have taken; each time we
+      ## resample we have to catch up *and* run the current set. We'd
+      ## normalise this by dividing by n_steps (total number of full
+      ## runs) and multiplying by n_parameter_sets (number of
+      ## replicates) to get the equivalent number of complete runs of
+      ## the particle filter (and that is roughly equal to the number
+      ## of pmcmc steps)
+      acc <- private$acceptance_rate
+      effort <- sum(ifelse(is.na(acc), 1L, seq_along(acc) + 1L)) /
+        private$n_steps * nrow(pars)
+
+      ## TODO: Still don't get the trajectories out here
+      ret <- list(pars = pars,
+                  probabilities = probabilities,
+                  statistics = list(
+                    ess = private$ess,
+                    acceptance_rate = private$acceptance_rate,
+                    n_particles = private$filter$n_particles,
+                    n_parameter_sets = nrow(pars),
+                    n_steps = private$n_steps,
+                    effort = effort))
+      class(ret) <- "smc2_result"
+      ret
     }
   ))
 
@@ -172,4 +232,12 @@ smc2_state <- function(filter, pars, log_prior, log_likelihood) {
        log_posterior = log_prior + log_likelihood,
        log_weights = rep(0, length(filter)),
        weights = rep(1, length(filter)))
+}
+
+
+##' @export
+predict.smc2_result <- function(object, n = NULL, ...) {
+  w <- object$probabilities[, "weight"]
+  i <- sample.int(length(w), n %||% length(w), replace = TRUE, prob = w)
+  object$pars[i, , drop = FALSE]
 }

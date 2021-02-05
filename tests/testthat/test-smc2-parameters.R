@@ -22,6 +22,17 @@ test_that("can construct a parameter", {
 })
 
 
+test_that("smc2_parmeter must satisfy min/max constraints", {
+  expect_error(
+    smc2_parameter("a",
+                   function(n) runif(n, 0, 10),
+                   function(x) dunif(x, 0, 10, log = TRUE),
+                   min = 20, max = 10),
+    "'max' must be > 'min' (20)",
+    fixed = TRUE)
+})
+
+
 test_that("can construct a set of parameters", {
   p <- smc2_parameters$new(
     list(

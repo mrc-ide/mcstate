@@ -116,3 +116,7 @@ recycle <- function(x, n, name = deparse(substitute(x))) {
     stop(sprintf("Invalid length for '%s', expected 1 or %d", name, n))
   }
 }
+
+normalise <- function(x) {
+  x / sum(x)
+}
