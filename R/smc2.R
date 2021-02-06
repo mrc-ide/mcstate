@@ -88,14 +88,15 @@ smc2_engine <- R6::R6Class(
     },
 
     step = function() {
-      step_ll <- vnapply(private$state$filter, function(f) f$step(TRUE))
+      t <- private$step_current + 1L
+      step_ll <- vnapply(private$state$filter, function(f) f$step(t, TRUE))
       private$state$log_likelihood <- private$state$log_likelihood + step_ll
       private$state$log_posterior <- private$state$log_posterior + step_ll
       private$state$log_weights <- private$state$log_weights + step_ll
       private$state$weights <-
         scale_log_weights(private$state$log_weights)$weights
       ess <- sum(private$state$weights)^2 / sum(private$state$weights^2)
-      private$step_current <- private$step_current + 1L
+      private$step_current <- t
       private$ess[private$step_current] <- ess
       ess_crit <- private$control$degeneracy_threshold *
         length(private$state$filter)
