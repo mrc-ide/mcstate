@@ -38,7 +38,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.4.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.4.4</span>
       </span>
     </div>
 
@@ -171,12 +171,12 @@
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span>
 <span class="co">#&gt;   step      value</span>
-<span class="co">#&gt; 1    1  1.3886842</span>
-<span class="co">#&gt; 2    2 -2.4069339</span>
-<span class="co">#&gt; 3    3 -1.5893926</span>
-<span class="co">#&gt; 4    4 -2.7667882</span>
-<span class="co">#&gt; 5    5 -1.1812202</span>
-<span class="co">#&gt; 6    6  0.1031056</span>
+<span class="co">#&gt; 1    1 -0.5386879</span>
+<span class="co">#&gt; 2    2 -1.5200665</span>
+<span class="co">#&gt; 3    3 -0.2689406</span>
+<span class="co">#&gt; 4    4 -1.4782263</span>
+<span class="co">#&gt; 5    5 -1.6714681</span>
+<span class="co">#&gt; 6    6 -1.9516663</span>
 <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">value</span> <span class="op">~</span> <span class="va">step</span>, <span class="va">data</span>, type <span class="op">=</span> <span class="st">"o"</span>, pch <span class="op">=</span> <span class="fl">19</span>, las <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></code></pre></div>
 <p><img src="kalman_files/figure-html/volatility_data_show-1.png" width="672"></p>
 <p>In order to estimate the parameters of the process that might have generated this dataset, we need, in addition to our model, an observation/comparison function. In this case, given that we observe some <code>state</code>:</p>
@@ -205,12 +205,12 @@
 <code class="sourceCode R"><span class="va">volatility_data</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/particle_filter_data.html">particle_filter_data</a></span><span class="op">(</span><span class="va">data</span>, <span class="st">"step"</span>, <span class="fl">1</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">volatility_data</span><span class="op">)</span>
 <span class="co">#&gt;   step_start step_end step_start step_end      value</span>
-<span class="co">#&gt; 1          0        1          0        1  1.3886842</span>
-<span class="co">#&gt; 2          1        2          1        2 -2.4069339</span>
-<span class="co">#&gt; 3          2        3          2        3 -1.5893926</span>
-<span class="co">#&gt; 4          3        4          3        4 -2.7667882</span>
-<span class="co">#&gt; 5          4        5          4        5 -1.1812202</span>
-<span class="co">#&gt; 6          5        6          5        6  0.1031056</span></code></pre></div>
+<span class="co">#&gt; 1          0        1          0        1 -0.5386879</span>
+<span class="co">#&gt; 2          1        2          1        2 -1.5200665</span>
+<span class="co">#&gt; 3          2        3          2        3 -0.2689406</span>
+<span class="co">#&gt; 4          3        4          3        4 -1.4782263</span>
+<span class="co">#&gt; 5          4        5          4        5 -1.6714681</span>
+<span class="co">#&gt; 6          5        6          5        6 -1.9516663</span></code></pre></div>
 <p>With all these pieces we can create our particle filter object, specifying that we will use <span class="math inline">\(10^3\)</span> particles</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">filter</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="va"><a href="../reference/particle_filter.html">particle_filter</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">volatility_data</span>, <span class="va">volatility</span>, <span class="fl">1000</span>,
@@ -244,11 +244,11 @@
 <p>Running the particle filter simulates the process on all <span class="math inline">\(10^3\)</span> particles and compares at each timestep the simulated data with your observed data using the provided comparison function. It returns the log-likelihood:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">filter</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="va">pars</span><span class="op">)</span>
-<span class="co">#&gt; [1] -187.7764</span></code></pre></div>
+<span class="co">#&gt; [1] -180.9987</span></code></pre></div>
 <p>This is stochastic and each time you run it, the estimate will differ:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">filter</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="va">pars</span><span class="op">)</span>
-<span class="co">#&gt; [1] -187.6154</span></code></pre></div>
+<span class="co">#&gt; [1] -181.4394</span></code></pre></div>
 <p>In this case the model is simple enough that we can use a <a href="https://en.wikipedia.org/wiki/Kalman_filter">Kalman Filter</a> to calculate the likelihood exactly:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">kalman_filter</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">alpha</span>, <span class="va">sigma</span>, <span class="va">gamma</span>, <span class="va">tau</span>, <span class="va">data</span><span class="op">)</span> <span class="op">{</span>
@@ -277,11 +277,11 @@
 <span class="va">ll_k</span> <span class="op">&lt;-</span> <span class="fu">kalman_filter</span><span class="op">(</span><span class="va">pars</span><span class="op">$</span><span class="va">alpha</span>, <span class="va">pars</span><span class="op">$</span><span class="va">sigma</span>, <span class="va">pars</span><span class="op">$</span><span class="va">gamma</span>, <span class="va">pars</span><span class="op">$</span><span class="va">tau</span>,
                       <span class="va">volatility_data</span><span class="op">)</span>
 <span class="va">ll_k</span>
-<span class="co">#&gt; [1] -187.4392</span></code></pre></div>
+<span class="co">#&gt; [1] -181.0562</span></code></pre></div>
 <p>Unlike the particle filter the Kalman filter is deterministic:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu">kalman_filter</span><span class="op">(</span><span class="va">pars</span><span class="op">$</span><span class="va">alpha</span>, <span class="va">pars</span><span class="op">$</span><span class="va">sigma</span>, <span class="va">pars</span><span class="op">$</span><span class="va">gamma</span>, <span class="va">pars</span><span class="op">$</span><span class="va">tau</span>, <span class="va">volatility_data</span><span class="op">)</span>
-<span class="co">#&gt; [1] -187.4392</span></code></pre></div>
+<span class="co">#&gt; [1] -181.0562</span></code></pre></div>
 <p>However, the particle filter, run multiple times, will create a distribution centred on this likelihood:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">ll</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">replicate</a></span><span class="op">(</span><span class="fl">200</span>, <span class="va">filter</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="va">pars</span><span class="op">)</span><span class="op">)</span>
@@ -301,7 +301,7 @@
 <p>If you run a particle filter with <code>save_history = TRUE</code>, it will record the (filtered) trajectories:s</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">filter</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="va">pars</span>, save_history <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
-<span class="co">#&gt; [1] -187.547</span>
+<span class="co">#&gt; [1] -180.921</span>
 <span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">filter</span><span class="op">$</span><span class="fu">history</span><span class="op">(</span><span class="op">)</span><span class="op">)</span>
 <span class="co">#&gt; [1]    1 1000  101</span></code></pre></div>
 <p>This is a <em>N</em> state (here 1) x <em>N</em> particles (1000) x <em>N</em> time steps (100) 3d array, but we will drop the first rank of this for plotting</p>
