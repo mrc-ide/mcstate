@@ -100,8 +100,9 @@ returns the likelihood so far.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{step_index}}{The step \emph{index} to move to. This is not the same as
-the model step, nor time, so be careful. It is an error to provide
+\item{\code{step_index}}{The step \emph{index} to move to. This is not the same
+as the model step, nor time, so be careful (it's the index within
+the data provided to the filter). It is an error to provide
 a value here that is lower than the current step index, or past
 the end of the data.}
 }

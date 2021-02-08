@@ -147,7 +147,8 @@ particle_filter_state <- R6::R6Class(
     ##' returns the likelihood so far.
     ##'
     ##' @param step_index The step *index* to move to. This is not the same
-    ##' as the model step, nor time, so be careful. It is an error to provide
+    ##' as the model step, nor time, so be careful (it's the index within
+    ##' the data provided to the filter). It is an error to provide
     ##' a value here that is lower than the current step index, or past
     ##' the end of the data.
     step = function(step_index) {
