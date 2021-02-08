@@ -1,3 +1,7 @@
+# mcstate 0.4.4
+
+* Fix performance regression added in 0.4.3
+
 # mcstate 0.4.3
 
 * Support for incrementally running a particle filter (up to some point in the time series) and forking these partial runs; see the `$begin_run` method on the particle filter (#78)

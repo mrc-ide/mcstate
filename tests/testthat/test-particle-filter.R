@@ -662,7 +662,7 @@ test_that("incrementally run a particle filter", {
   obj <- p2$run_begin()
   expect_s3_class(obj, "particle_filter_state")
   for (i in seq_len(n)) {
-    ans1[[i]] <- obj$step()
+    ans1[[i]] <- obj$step(i)
     ans2[[i]] <- obj$log_likelihood_step
   }
 
@@ -680,12 +680,49 @@ test_that("Can't step a particle filter object past its end", {
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index, seed = 1L)
   obj <- p$run_begin()
-  while (!obj$complete) {
-    obj$step()
-  }
+  n <- nrow(dat$data)
+  obj$run()
+  expect_error(obj$run(),
+               "Particle filter has reached the end of the data")
+  expect_error(obj$step(n),
+               "Particle filter has reached the end of the data")
+  expect_error(obj$step(n + 1),
+               "Particle filter has reached the end of the data")
+})
 
-  expect_error(obj$step(),
-               "The particle filter has reached the end of the data")
+
+test_that("Can't rerun a step", {
+  dat <- example_sir()
+  n_particles <- 42
+
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, seed = 1L)
+  obj <- p$run_begin()
+  n <- nrow(dat$data)
+  obj$step(10)
+  expect_error(
+    obj$step(10),
+    "Particle filter has already run step index 10 (to model step 40)",
+    fixed = TRUE)
+  expect_error(
+    obj$step(5),
+    "Particle filter has already run step index 5 (to model step 20)",
+    fixed = TRUE)
+})
+
+
+test_that("Can't run past the end of the data", {
+  dat <- example_sir()
+  n_particles <- 42
+
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, seed = 1L)
+  obj <- p$run_begin()
+  n <- nrow(dat$data)
+  expect_error(
+    obj$step(n + 1),
+    "step_index 101 is beyond the length of the data (max 100)",
+    fixed = TRUE)
 })
 
 
@@ -700,7 +737,7 @@ test_that("Can fork a particle_filter_state object", {
   obj <- p1$run_begin(save_history = TRUE)
 
   for (i in seq_len(10)) {
-    ans[[i]] <- obj$step()
+    ans[[i]] <- obj$step(i)
   }
 
   tmp <- obj$model$rng_state()
@@ -714,9 +751,7 @@ test_that("Can fork a particle_filter_state object", {
                             index = dat$index, seed = tmp)
   set.seed(1)
   cmp <- p2$run_begin(list(beta = 0.15), save_history = TRUE)
-  for (i in seq_len(10)) {
-    cmp$step()
-  }
+  cmp$step(10)
 
   expect_identical(res$log_likelihood, cmp$log_likelihood)
   expect_identical(res$history, cmp$history)

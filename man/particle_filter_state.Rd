@@ -21,9 +21,6 @@ them, but don't).
 \item{\code{model}}{The dust model generator being simulated (cannot be
 re-bound)}
 
-\item{\code{complete}}{Logical, indicating if the particle filter has
-reached the end of the data.}
-
 \item{\code{history}}{The particle history, if created with
 \code{save_history = TRUE}. This is an internal format subject to}
 
@@ -44,6 +41,7 @@ last call to \verb{$step()}.}
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-new}{\code{particle_filter_state$new()}}
+\item \href{#method-run}{\code{particle_filter_state$run()}}
 \item \href{#method-step}{\code{particle_filter_state$step()}}
 \item \href{#method-fork}{\code{particle_filter_state$fork()}}
 }
@@ -76,6 +74,18 @@ documented.
 
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-run"></a>}}
+\if{latex}{\out{\hypertarget{method-run}{}}}
+\subsection{Method \code{run()}}{
+Run the particle filter to the end of the data. This is
+a convenience function around \verb{$step()} which provides the correct
+value of \code{step_index}
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter_state$run()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-step"></a>}}
 \if{latex}{\out{\hypertarget{method-step}{}}}
 \subsection{Method \code{step()}}{
@@ -84,9 +94,19 @@ the particle filter forward one step within the \emph{data} (which
 may correspond to more than one step with your model) and
 returns the likelihood so far.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_filter_state$step()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter_state$step(step_index)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{step_index}}{The step \emph{index} to move to. This is not the same as
+the model step, nor time, so be careful. It is an error to provide
+a value here that is lower than the current step index, or past
+the end of the data.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-fork"></a>}}

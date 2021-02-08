@@ -223,17 +223,11 @@ particle_filter <- R6::R6Class(
     ##' (`-Inf` if the model is impossible)
     run = function(pars = list(), save_history = FALSE, save_restart = NULL) {
       obj <- self$run_begin(pars, save_history, save_restart)
-      ll <- 0
-      while (!obj$complete) {
-        ll <- obj$step()
-        if (!is.finite(ll)) {
-          break
-        }
-      }
+      obj$run()
       private$last_history <- obj$history
       private$last_model <- obj$model
       private$last_restart_state <- obj$restart_state
-      ll
+      obj$log_likelihood
     },
 
     ##' @description Begin a particle filter run. This is part of the
