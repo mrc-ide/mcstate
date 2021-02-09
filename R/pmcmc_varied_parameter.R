@@ -1,30 +1,33 @@
-pmcmc_varied_parameter <- function(name, initial, min = -Inf, max = Inf,
-                            discrete = FALSE, prior = NULL) {
-  assert_scalar_character(name)
-  assert_scalar_logical(discrete)
-  assert_is(min, c("numeric", "integer"))
-  assert_is(max, c("numeric", "integer"))
+pmcmc_varied_parameter <- function(name, populations, initial, min = -Inf,
+                                  max = Inf, discrete = FALSE, prior = NULL) {
 
-  lng <- length(initial)
+  assert_character(populations)
+  lng <- length(populations)
+
+  if (length(initial) == 1) {
+    initial <- rep(initial, lng)
+  } else if (length(initial) != lng) {
+    stop(sprintf("Length of 'initial' must be '1' or %d.", lng))
+  }
 
   if (length(min) == 1) {
     min <- rep(min, lng)
   } else if (length(min) != lng) {
-    stop(sprintf("Length of 'min' must be '1' or %s.", lng))
+    stop(sprintf("Length of 'min' must be '1' or %d.", lng))
   }
 
   if (length(max) == 1) {
     max <- rep(max, lng)
   } else if (length(max) != lng) {
-    stop(sprintf("Length of 'max' must be '1' or %s.", lng))
+    stop(sprintf("Length of 'max' must be '1' or %d.", lng))
   }
 
-  if (any(initial < min)) {
-    stop(sprintf("'initial' must be >= 'min' (%s)", min))
+  if (length(discrete) == 1) {
+    discrete <- rep(discrete, lng)
+  } else if (length(discrete) != lng) {
+    stop(sprintf("Length of 'discrete' must be '1' or %d.", lng))
   }
-  if (any(initial > max)) {
-    stop(sprintf("'initial' must be <= 'max' (%s)", max))
-  }
+
 
   if (is.null(prior)) {
     prior <- rep(list(function(p) 0), lng)
@@ -36,31 +39,14 @@ pmcmc_varied_parameter <- function(name, initial, min = -Inf, max = Inf,
       if (length(prior) == 1) {
         prior <- rep(prior, lng)
       } else if (length(prior) != lng) {
-        stop(sprintf("Length of 'prior' must be '1' or %s.", lng))
-      }
-      if (any(!vlapply(prior, inherits, what = "function"))) {
-        stop("'prior' should be a list of functions.")
+        stop(sprintf("Length of 'prior' must be '1' or %d.", lng))
       }
     }
-
-    mapply(function(x, y) {
-      value <- tryCatch(x(y),
-        error = function(e)
-          stop(sprintf(
-          "Prior function for '%s' failed to evaluate initial value: %s",
-          name, e$message)))
-
-      if (!is.finite(value)) {
-        stop(sprintf(
-        "Prior function for '%s' returned a non-finite value on initial
-        value(s)",
-        name))
-      }
-    }, prior, initial)
   }
 
-  ret <- list(name = name, initial = initial, min = min, max = max,
-              discrete = discrete, prior = prior)
-  class(ret) <- "pmcmc_varied_parameter"
-  ret
+  params <- Map(pmcmc_parameter, name, initial, min, max, discrete, prior)
+  names(params) <- populations
+  class(params) <- "pmcmc_varied_parameter"
+
+  params
 }

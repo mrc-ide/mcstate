@@ -138,8 +138,10 @@ pmcmc_parameters <- R6::R6Class(
     ##' generate derived parameters from those being actively sampled
     ##' you can do arbitrary transformations here.
     ##'
-    ##' @param populations Specifies the names of the different populations.
-    ##' Ignored if no varied parameters are included.
+    ##' @param populations Specifies the names of the different populations
+    ##' that the parameters vary according to. Assumes that varied parameters
+    ##' are estimated based on representative samples drawn from the respective
+    ##' populations. Ignored if no varied parameters are included.
     initialize = function(parameters, proposal, transform = NULL,
                           populations = NULL) {
       parameters <- check_parameters(parameters,
@@ -149,17 +151,17 @@ pmcmc_parameters <- R6::R6Class(
       #  with 3 dimensions, second is matrix.
       varied <- vlapply(parameters, inherits, what = "pmcmc_varied_parameter")
       if (any(varied)) {
-        # is.null(private$varied) quick check to see if all fixed
         private$varied <- vcapply(parameters[varied], "[[", "name")
         private$populations <- assert_character(populations)
-        lapply(parameters, function(.x) {
-          if (!(length(.x$initial) %in% c(1, length(populations)))) {
-            stop(sprintf(
-              "Expected length '1' or '%d' but got '%d' for parameter '%s'.",
-              length(populations), length(.x$initial), .x$name
-            ))
-          }
-        })
+        n <- viapply(parameters, function(x) length(x$initial))
+        err <- !(n %in% c(1, length(populations)))
+        if (any(err)) {
+          stop(sprintf(
+            "Expected length '1' or '%d', but got invalid length for
+            parameter %s",
+            length(populations), paste(squote(names(parameters)[err]))
+          ))
+        }
 
         # proposal
         assert_is(proposal, "array")
@@ -177,8 +179,8 @@ pmcmc_parameters <- R6::R6Class(
         }
 
         # catch wrong dimension sizes
-        if (dims[3] != length(populations) ||
-            !all(dims[1:2] == length(parameters))) {
+        if (!all(dims,
+            c(length(populations), length(parameters), length(parameters)))) {
           stop(sprintf(
             "Expected proposal array with dimensions %d x %d x %d.",
             length(parameters), length(parameters), length(populations)))
@@ -197,20 +199,16 @@ pmcmc_parameters <- R6::R6Class(
         }
 
          private$proposal <- apply(proposal, 3, rmvnorm_generator)
-         private$min <- sapply(parameters, function(.x) {
-           min <- .x[["min"]]
-           if (length(min) == 1) {
-             min <- rep(min, length(populations))
-           }
-           min
-         })
-         private$max <- sapply(parameters, function(.x) {
-           max <- .x[["max"]]
-           if (length(max) == 1) {
-             max <- rep(max, length(populations))
-           }
-           max
-         })
+         private$min <- vapply(
+           parameters,
+           function(x) rep_len(x[["min"]], length(populations)),
+           numeric(length(populations))
+         )
+         private$max <- vapply(
+           parameters,
+           function(x) rep_len(x[["max"]], length(populations)),
+           numeric(length(populations))
+         )
          rownames(private$min) <- populations
          rownames(private$max) <- populations
 
@@ -296,13 +294,15 @@ pmcmc_parameters <- R6::R6Class(
         if (is.null(population)) {
           # FIXME - not convinced if best representation, could consider array
           # or force 1 pop
+          type <- rep("fixed", length(self$names()))
+          type[self$names() %in% private$varied] <- "varied"
           pops <- lapply(private$populations, function(.x) {
             data_frame(
               name = self$names(),
               min = private$min[rownames(private$min) %in% .x],
               max = private$max[rownames(private$max) %in% .x],
               discrete = private$discrete,
-              type = ifelse(self$names() %in% private$varied, "varied", "fixed")
+              type = type
             )
           })
           names(pops) <- private$populations
@@ -312,12 +312,14 @@ pmcmc_parameters <- R6::R6Class(
             stop(sprintf("Expected 'population' in %s.",
                           str_collapse(private$populations)))
           }
+          type <- rep("fixed", length(self$names()))
+          type[self$names() %in% private$varied] <- "varied"
           data_frame(
             name = self$names(),
             min = private$min[rownames(private$min) %in% population],
             max = private$max[rownames(private$max) %in% population],
             discrete = private$discrete,
-            type = ifelse(self$names() %in% private$varied, "varied", "fixed")
+            type = type
           )
         }
       }
@@ -498,44 +500,3 @@ check_parameters <- function(parameters, type) {
   names(parameters) <- nms
   parameters
 }
-
-# p <- pmcmc_parameters$new(
-#   list(
-#     pmcmc_parameter("beta", 0.2, min = 0, max = 1,
-#                     prior = function(p) log(1e-10)),
-#     pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
-#                     prior = function(p) log(1e-10))),
-#   proposal = proposal_kernel)
-
-# pmcmc_parameters_shared$new(
-#   list(
-#     pmcmc_parameter("beta", 0.2, min = 0, max = 1,
-#                     prior = function(p) log(1e-10)),
-#     pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
-#                     prior = function(p) log(1e-10))),
-#   proposal = proposal_kernel,
-#   shared = c("beta"),
-#   group = regions)
-## $propose gets argument type = c("individual", "shared", "both") and
-## always returns a list
-## $prior takes that list and returns a vector
-## Assume 3 regions here
-## individual:
-## 1. propose individual parameters (varied)
-##    [[beta + a, gamma], [beta + b, gamma], [beta + c, gamma]]
-## 2. compute priors for all 3 (implies that the prior function
-##    returns a vector)
-## 3. compute likelihoods for each of the 3 regions, giving posteriors
-## 4. accept or reject the updates individually
-## shared:
-## 1. propose shared parmeters
-##    [[beta, gamma + x], [beta, gamma + x], [beta, gamma + x]]
-## 2. compute sum log prior
-## 3. compute likelihoods for each of the 3 regions, and sum
-## 4. accept or reject collectively
-## both:
-## 1. propose all parameters
-##    [[beta + a, gamma + x], [beta + b, gamma + x], [beta + c, gamma +x]]#
-## 2. compute sum log prior
-## 3. compute likelihoods for each of the 3 regions, and sum
-## 4. accept or reject collectively

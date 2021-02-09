@@ -12,6 +12,10 @@ vnapply <- function(x, fun, ...) {
   vapply(x, fun, numeric(1), ...)
 }
 
+viapply <- function(x, fun, ...) {
+  vapply(x, fun, integer(1), ...)
+}
+
 
 vcapply <- function(x, fun, ...) {
   vapply(x, fun, character(1), ...)
@@ -109,20 +113,6 @@ set_into <- function(x, at, value) {
   x[at] <- value
   x
 }
-
-set_minto <- function(x, atx = NULL, aty = NULL, value) {
-  if (is.null(atx)) {
-    x[, aty] <- value
-  } else if (is.null(aty)) {
-    x[atx, ] <- value
-  } else if (is.null(atx) && is.null(aty)) {
-    x[] <- value
-  } else {
-    x[atx, aty] <- value
-  }
-  x
-}
-
 
 set_names <- function(x, nms) {
   names(x) <- nms
