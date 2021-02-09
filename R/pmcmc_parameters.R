@@ -155,7 +155,7 @@ pmcmc_parameters <- R6::R6Class(
         ok <- identical(rownames(proposal), names(parameters)) &&
           identical(colnames(proposal), names(parameters))
         if (!ok) {
-          stop("Expected dimension names of 'proposal' to match parmeters")
+          stop("Expected dimension names of 'proposal' to match parameters")
         }
       }
 
