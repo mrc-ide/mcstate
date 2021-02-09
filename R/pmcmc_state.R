@@ -101,20 +101,18 @@ pmcmc_state <- R6::R6Class(
           private$update_history()
         }
 
-          prop_pars <- private$pars$propose(private$curr_pars)
-          prop_lprior <- private$pars$prior(prop_pars)
-          prop_llik <- private$run_filter(prop_pars)
-          prop_lpost <- prop_lprior + prop_llik
+        prop_pars <- private$pars$propose(private$curr_pars)
+        prop_lprior <- private$pars$prior(prop_pars)
+        prop_llik <- private$run_filter(prop_pars)
+        prop_lpost <- prop_lprior + prop_llik
 
-          if (runif(1) < exp(prop_lpost - private$curr_lpost)) {
-            private$curr_pars <- prop_pars
-            private$curr_lprior <- prop_lprior
-            private$curr_llik <- prop_llik
-            private$curr_lpost <- prop_lpost
-            private$update_history()
-          }
-        # }
-
+        if (runif(1) < exp(prop_lpost - private$curr_lpost)) {
+          private$curr_pars <- prop_pars
+          private$curr_lprior <- prop_lprior
+          private$curr_llik <- prop_llik
+          private$curr_lpost <- prop_lpost
+          private$update_history()
+        }
 
         private$history_pars$add(private$curr_pars)
         private$history_probabilities$add(

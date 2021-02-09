@@ -109,9 +109,7 @@ pmcmc_parameters <- R6::R6Class(
     transform = NULL,
     discrete = NULL,
     min = NULL,
-    max = NULL,
-    populations = NULL,
-    varied = NULL
+    max = NULL
   ),
 
   public = list(
@@ -134,140 +132,50 @@ pmcmc_parameters <- R6::R6Class(
     ##' @param transform An optional transformation function to apply
     ##' to your parameter vector immediately before passing it to the
     ##' model function. If not given, then [as.list] is
-    ##' used, as dust models require this. However, if you need to
+    ##' used, as dust models require this. However, if t you need to
     ##' generate derived parameters from those being actively sampled
     ##' you can do arbitrary transformations here.
-    ##'
-    ##' @param populations Specifies the names of the different populations
-    ##' that the parameters vary according to. Assumes that varied parameters
-    ##' are estimated based on representative samples drawn from the respective
-    ##' populations. Ignored if no varied parameters are included.
-    initialize = function(parameters, proposal, transform = NULL,
-                          populations = NULL) {
-      parameters <- check_parameters(parameters,
-                      c("pmcmc_parameter", "pmcmc_varied_parameter"))
-
-      # Split constructor for different proposal types. First asssumes array
-      #  with 3 dimensions, second is matrix.
-      varied <- vlapply(parameters, inherits, what = "pmcmc_varied_parameter")
-      if (any(varied)) {
-        private$varied <- vcapply(parameters[varied], "[[", "name")
-        private$populations <- assert_character(populations)
-        n <- viapply(parameters, function(x) length(x$initial))
-        err <- !(n %in% c(1, length(populations)))
-        if (any(err)) {
-          stop(sprintf(
-            "Expected length '1' or '%d', but got invalid length for
-            parameter %s",
-            length(populations), paste(squote(names(parameters)[err]))
-          ))
-        }
-
-        # proposal
-        assert_is(proposal, "array")
-        dims <- dim(proposal)
-
-        # assume that if matrix provided then same proposal for all populations
-        if (is.na(dims[3])) {
-          arr_proposal <- array(proposal,
-            dim = c(dim(proposal), length(populations)))
-          if (!is.null(dimnames(proposal))) {
-            dimnames(arr_proposal) <- c(dimnames(proposal), list(populations))
-          }
-          proposal <- arr_proposal
-          dims <- dim(proposal)
-        }
-
-        # catch wrong dimension sizes
-        if (!all(dims,
-            c(length(populations), length(parameters), length(parameters)))) {
-          stop(sprintf(
-            "Expected proposal array with dimensions %d x %d x %d.",
-            length(parameters), length(parameters), length(populations)))
-        }
-
-        if (!is.null(dimnames(proposal))) {
-          ## At this point we could reorder if that's useful and these
-          ## are setequal.
-          ok <- identical(rownames(proposal), names(parameters)) &&
-            identical(colnames(proposal), names(parameters)) &&
-            identical(dimnames(proposal)[3], populations)
-          if (!ok) {
-            stop("Expected dimension names of 'proposal' to match parameters
-            and populations.")
-          }
-        }
-
-         private$proposal <- apply(proposal, 3, rmvnorm_generator)
-         private$min <- vapply(
-           parameters,
-           function(x) rep_len(x[["min"]], length(populations)),
-           numeric(length(populations))
-         )
-         private$max <- vapply(
-           parameters,
-           function(x) rep_len(x[["max"]], length(populations)),
-           numeric(length(populations))
-         )
-         rownames(private$min) <- populations
-         rownames(private$max) <- populations
-
-      } else {
-        assert_is(proposal, "matrix")
-        # proposal
-        if (!all(dim(proposal) == length(parameters))) {
-          stop(sprintf(
-            "Expected a square proposal matrix with %d rows and columns",
-            length(parameters)))
-        }
-        if (!is.null(dimnames(proposal))) {
-          ## At this point we could reorder if that's useful and these
-          ## are setequal.
-          ok <- identical(rownames(proposal), names(parameters)) &&
-            identical(colnames(proposal), names(parameters))
-          if (!ok) {
-            stop("Expected dimension names of 'proposal' to match parameters")
-          }
-        }
-
-         private$proposal <- rmvnorm_generator(proposal)
-         private$min <- vnapply(parameters, "[[", "min",
-                                USE.NAMES = FALSE)
-         private$max <- vnapply(parameters, "[[", "max",
-                                USE.NAMES = FALSE)
-      }
+    initialize = function(parameters, proposal, transform = NULL) {
+      parameters <- check_parameters(parameters, "pmcmc_parameter")
 
       if (is.null(transform)) {
         transform <- as.list
-      } else {
-        assert_is(transform, "function")
+      }
+      assert_is(transform, "function")
+
+      assert_is(proposal, "matrix")
+      if (!all(dim(proposal) == length(parameters))) {
+        stop(sprintf(
+          "Expected a square proposal matrix with %d rows and columns",
+          length(parameters)))
+      }
+      if (!is.null(dimnames(proposal))) {
+        ## At this point we could reorder if that's useful and these
+        ## are setequal.
+        ok <- identical(rownames(proposal), names(parameters)) &&
+          identical(colnames(proposal), names(parameters))
+        if (!ok) {
+          stop("Expected dimension names of 'proposal' to match parmeters")
+        }
       }
 
       private$parameters <- parameters
       private$proposal_kernel <- proposal
+      private$proposal <- rmvnorm_generator(proposal)
       private$transform <- transform
 
       private$discrete <- vlapply(private$parameters, "[[", "discrete",
                                   USE.NAMES = FALSE)
+      private$min <- vnapply(private$parameters, "[[", "min",
+                             USE.NAMES = FALSE)
+      private$max <- vnapply(private$parameters, "[[", "max",
+                             USE.NAMES = FALSE)
     },
 
     ##' @description Return the initial parameter values as a named numeric
-    ##' vector or named matrix for multiple populations.
-    # FIXME - COULD CONSIDER ALWAYS RETURNING MATRIX FOR CONSISTENCY
+    ##' vector
     initial = function() {
-      if (length(private$populations)) {
-        initial <- sapply(private$parameters, function(.x) {
-           initial <- .x[["initial"]]
-           if (length(initial) == 1) {
-             initial <- rep(initial, length(private$populations))
-           }
-           initial
-        })
-        rownames(initial) <- private$populations
-        initial
-      } else {
-        vnapply(private$parameters, "[[", "initial")
-      }
+      vnapply(private$parameters, "[[", "initial")
     },
 
     ##' @description Return the names of the parameters
@@ -276,87 +184,28 @@ pmcmc_parameters <- R6::R6Class(
     },
 
     ##' @description Return a `data.frame` with information about
-    ##' parameters (name, min, max, discrete, fixed or varied).
-    ##'
-    ##' @param population For parameter sets including varied parameters,
-    ##' `population` specifies which population to summarise. If `NULL` then
-    ##'  returns summary of each population as a list. If no varied parameters
-    ##'  included then `population` is ignored.
-    summary = function(population = NULL) {
-      if (is.null(private$varied)) {
-        data_frame(
-          name = self$names(),
-          min = private$min,
-          max = private$max,
-          discrete = private$discrete
-        )
-      } else {
-        if (is.null(population)) {
-          # FIXME - not convinced if best representation, could consider array
-          # or force 1 pop
-          type <- rep("fixed", length(self$names()))
-          type[self$names() %in% private$varied] <- "varied"
-          pops <- lapply(private$populations, function(.x) {
-            data_frame(
-              name = self$names(),
-              min = private$min[rownames(private$min) %in% .x],
-              max = private$max[rownames(private$max) %in% .x],
-              discrete = private$discrete,
-              type = type
-            )
-          })
-          names(pops) <- private$populations
-          pops
-        } else {
-          if (!(population %in% private$populations)) {
-            stop(sprintf("Expected 'population' in %s.",
-                          str_collapse(private$populations)))
-          }
-          type <- rep("fixed", length(self$names()))
-          type[self$names() %in% private$varied] <- "varied"
-          data_frame(
-            name = self$names(),
-            min = private$min[rownames(private$min) %in% population],
-            max = private$max[rownames(private$max) %in% population],
-            discrete = private$discrete,
-            type = type
-          )
-        }
-      }
+    ##' parameters (name, min, max, and discrete).
+    summary = function() {
+      data_frame(name = self$names(),
+                 min = private$min,
+                 max = private$max,
+                 discrete = private$discrete)
     },
 
-    ##' @description Compute the prior(s) for a parameter vector/matrix
+    ##' @description Compute the prior for a parameter vector
     ##'
     ##' @param theta a parameter vector in the same order as your
     ##' parameters were defined in (see `$names()` for that order.
     prior = function(theta) {
-      if (is.null(private$populations)) {
-        lp <- Map(function(p, value) p$prior(value), private$parameters, theta)
-        sum(list_to_numeric(lp))
-      } else {
-        priors <- numeric(nrow(theta))
-        names(priors) <- private$populations
-        for (i in seq_along(priors)) {
-          lp <- Map(function(p, value) {
-            fprior <- p$prior
-            if (is.function(fprior)) {
-              fprior(value)
-            } else {
-              fprior[[i]](value)
-            }
-          }, private$parameters, theta[i, ])
-          priors[[i]] <- sum(list_to_numeric(lp))
-        }
-        priors
-      }
+      lp <- Map(function(p, value) p$prior(value), private$parameters, theta)
+      sum(list_to_numeric(lp))
     },
 
     ##' @description Propose a new parameter vector given a current parameter
-    ##' vector. This proposes a new parameter vector/matrix given your current
+    ##' vector. This proposes a new parameter vector given your current
     ##' vector and the variance-covariance matrix of your proposal
     ##' kernel, discretises any discrete values, and reflects bounded
-    ##' parameters until they lie within `min`:`max`. Returns matrix if any
-    ##' varied parameters are included, otherwise vector.
+    ##' parameters until they lie within `min`:`max`.
     ##'
     ##' @param theta a parameter vector in the same order as your
     ##' parameters were defined in (see `$names()` for that order.
@@ -365,37 +214,10 @@ pmcmc_parameters <- R6::R6Class(
     ##' proposal distribution. This may be useful in sampling starting
     ##' points. The parameter is equivalent to a multiplicative factor
     ##' applied to the variance covariance matrix.
-    ##'
-    ##' @param type specifies which type of parameters should be proposed,
-    ##' either fixed parameters only ("fixed"), varied only ("varied"), or
-    ##' both ("both") types. For 'fixed' and 'varied' then parameters of the
-    ##' other type is returned equal to corresponding value in `theta`.
-    # FIXME - AS WITH INITIAL COULD CONSIDER ALWAYS RETURNING MATRIX FOR
-    #         CONSISTENCY
-    propose = function(theta, scale = 1, type = c("fixed", "varied", "both")) {
-      if (is.null(private$varied)) {
-        theta <- private$proposal(theta, scale)
-        theta[private$discrete] <- round(theta[private$discrete])
-        reflect_proposal(theta, private$min, private$max)
-      } else {
-        proposals <- private$proposal
-        type <- match.arg(type)
-        mpropose <- matrix(nrow = nrow(theta), ncol = ncol(theta),
-                           dimnames = dimnames(theta))
-        for (i in seq_along(proposals)) {
-          proposal <- proposals[[i]](theta[i, ], scale)
-          proposal[private$discrete] <- round(proposal[private$discrete])
-          proposal <- reflect_proposal(proposal, private$min[i, ],
-                                       private$max[i, ])
-          if (type != "both") {
-              # if not requested type then revert to theta
-              which <- self$summary(private$populations[[i]])$type != type
-              proposal[which] <- theta[i, which]
-          }
-          mpropose[i, ] <- proposal
-        }
-        mpropose
-      }
+    propose = function(theta, scale = 1) {
+      theta <- private$proposal(theta, scale)
+      theta[private$discrete] <- round(theta[private$discrete])
+      reflect_proposal(theta, private$min, private$max)
     },
 
     ##' @description Apply the model transformation function to a parameter
@@ -404,11 +226,7 @@ pmcmc_parameters <- R6::R6Class(
     ##' @param theta a parameter vector in the same order as your
     ##' parameters were defined in (see `$names()` for that order.
     model = function(theta) {
-      if (is.null(private$populations)) {
-        private$transform(theta)
-      } else {
-        apply(theta, 1, private$transform)
-      }
+      private$transform(theta)
     },
 
     ##' @description Set some parameters to fixed values. Use this to
@@ -426,28 +244,16 @@ pmcmc_parameters <- R6::R6Class(
         stop("Cannot fix all parameters")
       }
       idx_vary <- setdiff(seq_along(private$parameters), idx_fixed)
+      proposal <- private$proposal_kernel[idx_vary, idx_vary, drop = FALSE]
 
       base <- set_names(rep(NA_real_, length(private$parameters)),
                         names(private$parameters))
       base[idx_fixed] <- fixed
       base_transform <- private$transform
-
-      if (is.null(private$populations)) {
-        proposal <- private$proposal_kernel[idx_vary, idx_vary, drop = FALSE]
-      } else {
-        proposal <- array(
-          apply(private$proposal_kernel, 3, "[", idx_vary,
-                                idx_vary, drop = FALSE),
-          dim = c(length(idx_vary), length(idx_vary),
-                  length(private$populations)))
-      }
-
       transform <- function(p) {
-          base_transform(set_into(base, idx_vary, p))
+        base_transform(set_into(base, idx_vary, p))
       }
-
-      pmcmc_parameters$new(private$parameters[idx_vary], proposal, transform,
-        populations = private$populations)
+      pmcmc_parameters$new(private$parameters[idx_vary], proposal, transform)
     }
   ))
 
