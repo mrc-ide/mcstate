@@ -252,6 +252,8 @@ test_that("pmcmc_nested_parameters summary", {
         type = c("fixed", "fixed", "varied", "varied")))
   expect_equal(p$summary(), list(p1 = p$summary("p1"), p2 = p$summary("p2")))
 
+  expect_error(p$summary("a"), "Expected 'population' in")
+
   # 1 varied 1 pop
   parameters <- list(a = pmcmc_varied_parameter("a", c("p1"), 1))
   proposal_varied <- diag(1)
