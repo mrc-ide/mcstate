@@ -149,10 +149,23 @@ test_that("construct pmcmc_nested_parameters", {
     proposal_fixed <- diag(2)
     proposal_varied <- diag(2) + 1
 
-    expect_silent(pmcmc_nested_parameters$new(parameters, proposal_fixed,
-        proposal_varied))
-    expect_silent(pmcmc_nested_parameters$new(parameters, proposal_fixed,
-        proposal_varied, transform = as.list))
+    expect_silent(pmcmc_nested_parameters$new(parameters, proposal_varied,
+      proposal_fixed))
+    expect_silent(pmcmc_nested_parameters$new(parameters, proposal_varied,
+      proposal_fixed, transform = as.list))
+
+    # edge case, 1 each
+    parameters <- list(a = pmcmc_varied_parameter("a", c("p1", "p2"), 2),
+                       d = pmcmc_parameter("d", 4))
+    proposal_fixed <- diag(1)
+    proposal_varied <- diag(1) + 1
+    expect_silent(pmcmc_nested_parameters$new(parameters, proposal_varied,
+      proposal_fixed))
+
+    # varied only
+    parameters <- list(a = pmcmc_varied_parameter("a", c("p1", "p2"), 2))
+    proposal_varied <- diag(1) + 1
+    expect_silent(pmcmc_nested_parameters$new(parameters, proposal_varied))
 })
 
 test_that("pmcmc_nested_parameters initial", {
@@ -162,12 +175,46 @@ test_that("pmcmc_nested_parameters initial", {
                      d = pmcmc_parameter("d", 6))
   proposal_fixed <- diag(2)
   proposal_varied <- diag(2) + 1
-  p <- pmcmc_nested_parameters$new(parameters, proposal_fixed,
-      proposal_varied)
+  p <- pmcmc_nested_parameters$new(parameters, proposal_varied, proposal_fixed)
   expect_equal(
     p$initial(),
     matrix(c(5, 5, 6, 6, 1:4), nrow = 2, ncol = 4,
         dimnames = list(c("p1", "p2"), c("c", "d", "a", "b")))
+  )
+
+  # varied only
+  parameters <- list(
+    a = pmcmc_varied_parameter("a", c("p1", "p2"), 1:2),
+    b = pmcmc_varied_parameter("b", c("p1", "p2"), 3:4)
+  )
+  proposal_varied <- diag(2)
+  p <- pmcmc_nested_parameters$new(parameters, proposal_varied)
+  expect_equal(
+    p$initial(),
+    matrix(1:4, 2, 2, dimnames = list(c("p1", "p2"), letters[1:2]))
+  )
+
+  # 1 varied 1 pop
+  parameters <- list(
+    a = pmcmc_varied_parameter("a", c("p1"), 1)
+  )
+  proposal_varied <- diag(1)
+  p <- pmcmc_nested_parameters$new(parameters, proposal_varied)
+  expect_equal(
+    p$initial(),
+    matrix(1, nrow = 1, ncol = 1, dimnames = list(c("p1"), "a"))
+  )
+
+  # 1 varied 1 fix
+  parameters <- list(
+    a = pmcmc_varied_parameter("a", c("p1", "p2"), 1, prior = dnorm),
+    b = pmcmc_parameter("b", 1, prior = dexp))
+  proposal_varied <- diag(1)
+  proposal_fixed <- diag(1)
+  p <- pmcmc_nested_parameters$new(parameters, proposal_varied, proposal_fixed)
+  expect_equal(
+    p$initial(),
+    matrix(1, nrow = 2, ncol = 2, dimnames = list(c("p1", "p2"), c("b", "a")))
   )
 })
 
@@ -178,10 +225,16 @@ test_that("pmcmc_nested_parameters names/populations", {
                      d = pmcmc_parameter("d", 6))
   proposal_fixed <- diag(2)
   proposal_varied <- diag(2) + 1
-  p <- pmcmc_nested_parameters$new(parameters, proposal_fixed,
-      proposal_varied)
+  p <- pmcmc_nested_parameters$new(parameters, proposal_varied, proposal_fixed)
   expect_equal(p$names(), c("c", "d", "a", "b"))
   expect_equal(p$populations(), c("p1", "p2"))
+
+  # 1 varied 1 pop
+  parameters <- list(a = pmcmc_varied_parameter("a", c("p1"), 1))
+  proposal_varied <- diag(1)
+  p <- pmcmc_nested_parameters$new(parameters, proposal_varied)
+  expect_equal(p$names(), "a")
+  expect_equal(p$populations(), "p1")
 })
 
 test_that("pmcmc_nested_parameters summary", {
@@ -192,13 +245,20 @@ test_that("pmcmc_nested_parameters summary", {
     d = pmcmc_parameter("d", 6))
   proposal_fixed <- diag(2)
   proposal_varied <- diag(2) + 1
-  p <- pmcmc_nested_parameters$new(parameters, proposal_fixed,
-      proposal_varied)
+  p <- pmcmc_nested_parameters$new(parameters, proposal_varied, proposal_fixed)
   expect_equal(p$summary("p1"),
     data.frame(name = c("c", "d", "a", "b"), min = -Inf, max = Inf,
         discrete = c(FALSE, FALSE, FALSE, TRUE),
         type = c("fixed", "fixed", "varied", "varied")))
   expect_equal(p$summary(), list(p1 = p$summary("p1"), p2 = p$summary("p2")))
+
+  # 1 varied 1 pop
+  parameters <- list(a = pmcmc_varied_parameter("a", c("p1"), 1))
+  proposal_varied <- diag(1)
+  p <- pmcmc_nested_parameters$new(parameters, proposal_varied)
+  expect_equal(p$summary(),
+    list(p1 = data.frame(name = "a", min = -Inf, max = Inf, discrete = FALSE,
+      type = "varied")))
 })
 
 test_that("pmcmc_nested_parameters prior", {
@@ -211,8 +271,7 @@ test_that("pmcmc_nested_parameters prior", {
     d = pmcmc_parameter("d", 6, prior = function(x) 6))
   proposal_fixed <- diag(2)
   proposal_varied <- diag(2) + 1
-  p <- pmcmc_nested_parameters$new(parameters, proposal_fixed,
-      proposal_varied)
+  p <- pmcmc_nested_parameters$new(parameters, proposal_varied, proposal_fixed)
 
   init <- p$initial()
   expect_equal(p$prior(init), set_names(c(15, 17), c("p1", "p2")))
@@ -225,13 +284,30 @@ test_that("pmcmc_nested_parameters prior", {
     c = pmcmc_parameter("c", 5, prior = function(x) 5),
     d = pmcmc_parameter("d", 6, prior = function(x) 6))
 
-  p <- pmcmc_nested_parameters$new(parameters, proposal_fixed,
-      proposal_varied)
+  p <- pmcmc_nested_parameters$new(parameters, proposal_varied, proposal_fixed)
 
   init <- p$initial()
   expect_equal(p$prior(init),
     set_names(c(11 + dnorm(1) + dlnorm(3), 11 + dexp(2) + dlnorm(4)),
         c("p1", "p2")))
+
+  # 1 varied 1 pop
+  parameters <- list(a = pmcmc_varied_parameter("a", "p1", 1, prior = dnorm))
+  proposal_varied <- diag(1)
+  p <- pmcmc_nested_parameters$new(parameters, proposal_varied)
+  init <- p$initial()
+  expect_equal(p$prior(init), set_names(dnorm(1), "p1"))
+
+  # 1 varied 1 fix
+  parameters <- list(
+    a = pmcmc_varied_parameter("a", c("p1", "p2"), 1, prior = dnorm),
+    b = pmcmc_parameter("b", 1, prior = dexp))
+  proposal_varied <- diag(1)
+  proposal_fixed <- diag(1)
+  p <- pmcmc_nested_parameters$new(parameters, proposal_varied, proposal_fixed)
+  init <- p$initial()
+  prior <- dnorm(1) + dexp(1)
+  expect_equal(p$prior(init), set_names(rep(prior, 2), c("p1", "p2")))
 })
 
 test_that("pmcmc_nested_parameters model/transform", {
@@ -244,13 +320,12 @@ test_that("pmcmc_nested_parameters model/transform", {
     d = pmcmc_parameter("d", 6, prior = function(x) 6))
   proposal_fixed <- diag(2)
   proposal_varied <- diag(2) + 1
-  p <- pmcmc_nested_parameters$new(parameters, proposal_fixed,
-      proposal_varied)
+  p <- pmcmc_nested_parameters$new(parameters, proposal_varied, proposal_fixed)
 
   expect_equal(p$model(p$initial()), apply(p$initial(), 1, as.list))
 
-  p <- pmcmc_nested_parameters$new(parameters, proposal_fixed,
-      proposal_varied, transform = function(x) as.list(log(x)))
+  p <- pmcmc_nested_parameters$new(parameters, proposal_varied, proposal_fixed,
+    transform = function(x) as.list(log(x)))
 
   expect_equal(p$model(p$initial()),
                 apply(p$initial(), 1, function(x) as.list(log(x))))
@@ -266,8 +341,7 @@ test_that("pmcmc_nested_parameters propose", {
     d = pmcmc_parameter("d", 6, prior = function(x) 6))
   proposal_fixed <- diag(2)
   proposal_varied <- diag(2) + 1
-  p <- pmcmc_nested_parameters$new(parameters, proposal_fixed,
-      proposal_varied)
+  p <- pmcmc_nested_parameters$new(parameters, proposal_varied, proposal_fixed)
 
   init <- p$initial()
 
@@ -285,6 +359,35 @@ test_that("pmcmc_nested_parameters propose", {
   expect_false(identical(prop[, 3:4], init[, 3:4]))
   expect_false(identical(prop[, 1:2], init[, 1:2]))
   expect_equal(prop[1, 1:2], prop[2, 1:2])
+
+  # 1 varied 1 pop
+  parameters <- list(a = pmcmc_varied_parameter("a", "p1", 1, prior = dnorm))
+  proposal_varied <- diag(1)
+  p <- pmcmc_nested_parameters$new(parameters, proposal_varied)
+  init <- p$initial()
+
+  prop <- p$propose(init, type = "varied")
+  expect_true(inherits(prop, "matrix"))
+  expect_identical(dimnames(prop), list("p1", "a"))
+
+  expect_equal(p$propose(init, type = "fixed"), NULL)
+  expect_equal(
+    with(set.seed(1), p$propose(init, type = "both")),
+    with(set.seed(1), p$propose(init, type = "varied"))
+  )
+
+  # 1 varied 1 fix
+  parameters <- list(
+    a = pmcmc_varied_parameter("a", "p1", 1, prior = dnorm),
+    b = pmcmc_parameter("b", 1, prior = dexp))
+  proposal_varied <- diag(1)
+  proposal_fixed <- diag(1)
+  p <- pmcmc_nested_parameters$new(parameters, proposal_varied, proposal_fixed)
+  init <- p$initial()
+
+  prop <- p$propose(init, type = "fixed")
+  expect_true(identical(prop[, 2], init[, 2]))
+  expect_false(identical(prop[, 1], init[, 1]))
 })
 
 # TODO

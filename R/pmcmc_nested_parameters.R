@@ -74,7 +74,7 @@ pmcmc_nested_parameters <- R6::R6Class(
     ##' that the parameters vary according to. Assumes that varied parameters
     ##' are estimated based on representative samples drawn from the respective
     ##' populations. Ignored if no varied parameters are included.
-    initialize = function(parameters, proposal_fixed, proposal_varied,
+    initialize = function(parameters, proposal_varied, proposal_fixed = NULL,
       transform = NULL) {
 
       parameters <- clean_parameters(parameters)
@@ -85,8 +85,10 @@ pmcmc_nested_parameters <- R6::R6Class(
       private$param_names <- parameters$names
 
       # create pmcmc_parameters
-      private$fixed_parameters <-
-        pmcmc_parameters$new(parameters$fixed, kernels$fixed)
+      if (!is.null(kernels$fixed)) {
+        private$fixed_parameters <-
+          pmcmc_parameters$new(parameters$fixed, kernels$fixed)
+      }
 
       private$varied_parameters <- vector("list", length(parameters$pop))
       names(private$varied_parameters) <- parameters$pop
@@ -173,13 +175,25 @@ pmcmc_nested_parameters <- R6::R6Class(
     ##' @description Return the initial parameter values as a named numeric
     ##' vector or named matrix for multiple populations.
     initial = function() {
-      fixed <- private$fixed_parameters$initial()
-      varied <- vapply(private$varied_parameters, function(x) x$initial(),
-        numeric(length(self$populations())))
 
-      t(rbind(
-        matrix(fixed, 2, 2, dimnames = list(names(fixed), self$populations())),
-        varied))
+      varied <- vapply(private$varied_parameters, function(x) x$initial(),
+        numeric(length(private$param_names$varied)))
+
+      # edge case - 1 varied
+      if (length(private$param_names$varied) == 1) {
+        varied <- t(as.matrix(varied))
+        rownames(varied) <- private$param_names$varied
+      }
+
+      if (is.null(private$fixed_parameters)) {
+        t(varied)
+      } else {
+        fixed <- private$fixed_parameters$initial()
+        t(rbind(
+          matrix(fixed, length(names(fixed)), length(self$populations()),
+            dimnames = list(names(fixed), self$populations())),
+          varied))
+      }
     },
 
     ##' @description Compute the prior(s) for a parameter vector/matrix
@@ -190,8 +204,13 @@ pmcmc_nested_parameters <- R6::R6Class(
       priors <- numeric(nrow(theta))
       names(priors) <- self$populations()
 
-      lp_fix <- private$fixed_parameters$prior(
-        theta[1, private$param_names$fixed])
+      if (!is.null(private$fixed_parameters)) {
+        lp_fix <- private$fixed_parameters$prior(
+          theta[1, private$param_names$fixed])
+      } else {
+        lp_fix <- 0
+      }
+
       lp_vary <- vnapply(self$populations(),
         function(x) private$varied_parameters[[x]]$prior(
           theta[x, private$param_names$varied]))
@@ -221,12 +240,20 @@ pmcmc_nested_parameters <- R6::R6Class(
     propose = function(theta, scale = 1, type = c("fixed", "varied", "both")) {
       type <- match.arg(type)
       pfix <- function(theta, scale) {
-        private$proposal_fixed(theta, scale)
+        if (!is.null(private$proposal_fixed)) {
+          private$proposal_fixed(theta, scale)
+        }
       }
       pvar <- function(theta, scale) {
         var <- vapply(seq(nrow(theta)), function(i)
           private$proposal_varied[[rownames(theta)[[i]]]](theta[i, ], scale),
           numeric(length(self$names())))
+        # catch one varied edge case
+        if (!inherits(var, "matrix")) {
+          var <- as.matrix(var)
+          rownames(var) <- private$param_names$varied
+        }
+
         colnames(var) <- self$populations()
         t(var)
       }
@@ -237,8 +264,12 @@ pmcmc_nested_parameters <- R6::R6Class(
       } else {
         fix <- pfix(theta, scale)
         var <- pvar(theta, scale)
-        fix[, private$param_names$varied] <- var[, private$param_names$varied]
-        fix
+        if (is.null(fix)) {
+          var
+        } else {
+          fix[, private$param_names$varied] <- var[, private$param_names$varied]
+          fix
+        }
       }
     },
 
@@ -360,8 +391,7 @@ clean_parameters <- function(parameters) {
 
 clean_proposals <- function(proposal_fixed, proposal_varied, populations,
   params) {
-  # minimal checks for proposals as these will be passed to constructors
-  assert_is(proposal_fixed, "matrix")
+
   assert_is(proposal_varied, "array")
 
   if (is.na(dim(proposal_varied)[3])) {
@@ -394,17 +424,20 @@ clean_proposals <- function(proposal_fixed, proposal_varied, populations,
   }
   dimnames(proposal_varied)[1:2] <- list(params$varied, params$varied)
 
-  if (!is.null(rownames(proposal_fixed)) ||
-    !is.null(colnames(proposal_fixed))) {
-    ok <- identical(rownames(proposal_fixed), params$fixed) &&
-            identical(colnames(proposal_fixed), params$fixed)
-    if (!ok) {
-      stop("Expected row and column names of 'proposal_fixed' to match
-      fixed parameters.")
+  # minimal checks for fixed proposals as these will be passed to constructors
+  if (!is.null(proposal_fixed)) {
+    assert_is(proposal_fixed, "matrix")
+    if (!is.null(rownames(proposal_fixed)) ||
+      !is.null(colnames(proposal_fixed))) {
+      ok <- identical(rownames(proposal_fixed), params$fixed) &&
+              identical(colnames(proposal_fixed), params$fixed)
+      if (!ok) {
+        stop("Expected row and column names of 'proposal_fixed' to match
+        fixed parameters.")
+      }
     }
+    dimnames(proposal_fixed)[1:2] <- list(params$fixed, params$fixed)
   }
-  dimnames(proposal_fixed)[1:2] <- list(params$fixed, params$fixed)
-
 
   list(fixed = proposal_fixed, varied = proposal_varied)
 }
@@ -423,7 +456,12 @@ make_proposals <- function(kernel_fixed, kernel_varied, param_names) {
 
   proposal_varied <- lapply(kernel_varied_list, rmvnorm_generator)
 
-  proposal_fixed <- make_proposal_fixed(kernel_fixed)
+  if (!is.null(kernel_fixed)) {
+    proposal_fixed <- make_proposal_fixed(kernel_fixed)
+  } else {
+    proposal_fixed <- NULL
+  }
+
 
   list(kernel_varied = kernel_varied_list,
        kernel_fixed = kernel_fixed,
