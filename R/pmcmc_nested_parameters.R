@@ -138,7 +138,7 @@ pmcmc_nested_parameters <- R6::R6Class(
     ##' `population` specifies which population to summarise. If `NULL` then
     ##'  returns summary of each population as a list.
     summary = function(population = NULL) {
-      summarise_population = function(population) {
+      summarise_population <- function(population) {
         if (!(population %in% self$populations())) {
           stop(sprintf("Expected 'population' in %s.",
             str_collapse(self$populations())))
@@ -220,12 +220,12 @@ pmcmc_nested_parameters <- R6::R6Class(
     ##' other type is returned equal to corresponding value in `theta`.
     propose = function(theta, scale = 1, type = c("fixed", "varied", "both")) {
       type <- match.arg(type)
-      pfix = function(theta, scale) {
+      pfix <- function(theta, scale) {
         private$proposal_fixed(theta, scale)
       }
-      pvar = function(theta, scale) {
+      pvar <- function(theta, scale) {
         var <- vapply(seq(nrow(theta)), function(i)
-          private$proposal_varied[[rownames(theta)[[i]]]](theta[i,], scale),
+          private$proposal_varied[[rownames(theta)[[i]]]](theta[i, ], scale),
           numeric(length(self$names())))
         colnames(var) <- self$populations()
         t(var)
@@ -235,8 +235,8 @@ pmcmc_nested_parameters <- R6::R6Class(
       } else if (type == "varied") {
         pvar(theta, scale)
       } else {
-        fix = pfix(theta, scale)
-        var = pvar(theta, scale)
+        fix <- pfix(theta, scale)
+        var <- pvar(theta, scale)
         fix[, private$param_names$varied] <- var[, private$param_names$varied]
         fix
       }
@@ -412,7 +412,7 @@ clean_proposals <- function(proposal_fixed, proposal_varied, populations,
 make_proposals <- function(kernel_fixed, kernel_varied, param_names) {
   kernel_varied_list <- lapply(seq_len(dim(kernel_varied)[[3]]),
     function(i) {
-      kernel <- kernel_varied[,, i]
+      kernel <- kernel_varied[, , i]
       # catch for drop on numeric
       if (!inherits(kernel, "matrix")) {
         kernel <- matrix(kernel,

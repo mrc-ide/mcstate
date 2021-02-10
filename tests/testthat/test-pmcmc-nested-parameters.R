@@ -41,7 +41,7 @@ test_that("varied parameter errors", {
   expect_error(pmcmc_varied_parameter("p1", letters[1:3], 1, max = 1:2),
     "Length of")
   expect_error(
-    pmcmc_varied_parameter("p1", letters[1:3], 1,discrete = c(TRUE, FALSE)),
+    pmcmc_varied_parameter("p1", letters[1:3], 1, discrete = c(TRUE, FALSE)),
     "Length of")
   expect_error(
     pmcmc_varied_parameter("p1", letters[1:3], 1,
