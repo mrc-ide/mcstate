@@ -2,21 +2,26 @@
 % Please edit documentation in R/pmcmc_parameters_nested.R
 \name{pmcmc_parameters_nested}
 \alias{pmcmc_parameters_nested}
-\title{pmcmc_parameters}
+\title{pmcmc_parameters_nested}
 \description{
-Construct parameters for use with
+Construct nested parameters for use with
 \code{\link[=pmcmc]{pmcmc()}}. This creates a utility object that is used
-internally to work with parameters. Most users only need to
-construct this object, but see the examples for how it can be
-used.
+internally to work with parameters that may be fixed and the same for all
+given populations, or varied and possibly-different between populations.
+Most users only need to construct this object, but see the examples for
+how it can be used.
 }
 \examples{
-#Construct an object with two parameters:
-pars <- mcstate::pmcmc_parameters$new(
-  list(mcstate::pmcmc_parameter("a", 0.1, min = 0, max = 1,
-                                prior = function(a) log(a)),
-       mcstate::pmcmc_parameter("b", 0, prior = dnorm)),
-  matrix(c(1, 0.5, 0.5, 2), 2, 2))
+#Construct an object with two varied parameters, two fixed parameters,
+#and two populations:
+parameters <- list(pmcmc_varied_parameter("a", c("p1", "p2"), 2),
+                   pmcmc_varied_parameter("b", c("p1", "p2"), 2),
+                   pmcmc_parameter("c", 3),
+                   pmcmc_parameter("d", 4))
+proposal_fixed <- diag(2)
+proposal_varied <- diag(2) + 1
+pars <- mcstate::pmcmc_parameters_nested$new(parameters, proposal_varied,
+                                             proposal_fixed))
 
 # Initial parameters
 p <- pars$initial()
@@ -68,15 +73,24 @@ Create the pmcmc_parameters object
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{parameters}}{A \code{list} of
-\link{pmcmc_parameter} objects, each of which describe a
-single parameter in your model. If \code{parameters} is named, then
-these names must match the \verb{$name} element of each parameter is
-used (this is verified).}
+\link{pmcmc_parameter} or \link{pmcmc_varied_parameter} objects, each of which
+describe a single (possibly-varying) parameter in your model.
+If \code{parameters} is named, then these names must match the \verb{$name}
+element of each parameter that is used (this is verified).}
+
+\item{\code{proposal_varied, proposal_fixed}}{Square proposal matrices
+corresponding to the variance-covariance matrix of a multivariate
+gaussian distribution used to generate new varied and fixed parameters
+respectively.'. They must have the same number of
+rows and columns as there are varied and fixed parameters respectively.
+The names must correspond exactly to the names in
+\code{parameters}. Because it corresponds to a variance-covariance
+matrix it must be symmetric and positive definite.}
 
 \item{\code{populations}}{Specifies the names of the different populations
-that the parameters vary according to. Assumes that varied parameters
-are estimated based on representative samples drawn from the respective
-populations. Ignored if no varied parameters are included.}
+that the varying parameters change according to. Only required if no
+\link{pmcmc_varied_parameter} objects are included in \code{parameters}.
+Otherwise population names are taken from those objects.}
 
 \item{\code{transform}}{An optional transformation function to apply
 to your parameter vector immediately before passing it to the
@@ -84,14 +98,6 @@ model function. If not given, then \link{as.list} is
 used, as dust models require this. However, if you need to
 generate derived parameters from those being actively sampled
 you can do arbitrary transformations here.}
-
-\item{\code{proposal}}{A square proposal distribution corresponding to the
-variance-covariance matrix of a multivariate gaussian distribution
-used to generate new parameters. It must have the same number of
-rows and columns as there are elements in \code{parameters}, and if
-named the names must correspond exactly to the names in
-\code{parameters}. Because it corresponds to a variance-covariance
-matrix it must be symmetric and positive definite.}
 }
 \if{html}{\out{</div>}}
 }
@@ -129,9 +135,8 @@ parameters (name, min, max, discrete, fixed or varied).
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{population}}{For parameter sets including varied parameters,
-\code{population} specifies which population to summarise. If \code{NULL} then
-returns summary of each population as a list.}
+\item{\code{population}}{Specifies which population to summarise. If \code{NULL}
+then returns a summary of each population as a list.}
 }
 \if{html}{\out{</div>}}
 }
@@ -140,8 +145,8 @@ returns summary of each population as a list.}
 \if{html}{\out{<a id="method-initial"></a>}}
 \if{latex}{\out{\hypertarget{method-initial}{}}}
 \subsection{Method \code{initial()}}{
-Return the initial parameter values as a named numeric
-vector or named matrix for multiple populations.
+Return the initial parameter values as a named matrix with
+rows corresponding to populations and columns are parameters.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters_nested$initial()}\if{html}{\out{</div>}}
 }
@@ -151,7 +156,8 @@ vector or named matrix for multiple populations.
 \if{html}{\out{<a id="method-prior"></a>}}
 \if{latex}{\out{\hypertarget{method-prior}{}}}
 \subsection{Method \code{prior()}}{
-Compute the prior(s) for a parameter vector/matrix
+Compute the prior(s) for a parameter matrix. Returns a
+named vector with names corresponding to populations.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters_nested$prior(theta)}\if{html}{\out{</div>}}
 }
@@ -169,12 +175,11 @@ Compute the prior(s) for a parameter vector/matrix
 \if{html}{\out{<a id="method-propose"></a>}}
 \if{latex}{\out{\hypertarget{method-propose}{}}}
 \subsection{Method \code{propose()}}{
-Propose a new parameter vector given a current parameter
-vector. This proposes a new parameter vector/matrix given your current
-vector and the variance-covariance matrix of your proposal
-kernel, discretises any discrete values, and reflects bounded
-parameters until they lie within \code{min}:\code{max}. Returns matrix if any
-varied parameters are included, otherwise vector.
+This proposes a new parameter matrix given your current
+matrix and the variance-covariance matrices of the proposal
+kernels, discretises any discrete values, and reflects bounded
+parameters until they lie within \code{min}:\code{max}. Returns matrix with rows
+corresponding to populations and columns to parameters.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters_nested$propose(
   theta,
@@ -186,8 +191,8 @@ varied parameters are included, otherwise vector.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{theta}}{a parameter vector in the same order as your
-parameters were defined in (see \verb{$names()} for that order.}
+\item{\code{theta}}{a parameter matrix with columns in the same order as
+\verb{$names()} and rows in the same order as \verb{$populations()}.}
 
 \item{\code{scale}}{an optional scaling factor to apply to the
 proposal distribution. This may be useful in sampling starting
@@ -196,8 +201,8 @@ applied to the variance covariance matrix.}
 
 \item{\code{type}}{specifies which type of parameters should be proposed,
 either fixed parameters only ("fixed"), varied only ("varied"), or
-both ("both") types. For 'fixed' and 'varied' then parameters of the
-other type is returned equal to corresponding value in \code{theta}.}
+both ("both") types. For 'fixed' and 'varied', parameters of the
+other type are left unchanged.}
 }
 \if{html}{\out{</div>}}
 }
@@ -207,7 +212,7 @@ other type is returned equal to corresponding value in \code{theta}.}
 \if{latex}{\out{\hypertarget{method-model}{}}}
 \subsection{Method \code{model()}}{
 Apply the model transformation function to a parameter
-vector.
+matrix.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters_nested$model(theta)}\if{html}{\out{</div>}}
 }
@@ -215,8 +220,8 @@ vector.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{theta}}{a parameter vector in the same order as your
-parameters were defined in (see \verb{$names()} for that order.}
+\item{\code{theta}}{a parameter matrix with columns in the same order as
+\verb{$names()} and rows in the same order as \verb{$populations()}.}
 }
 \if{html}{\out{</div>}}
 }

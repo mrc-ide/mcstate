@@ -1,19 +1,24 @@
-##' @title pmcmc_parameters
+##' @title pmcmc_parameters_nested
 ##'
-##' @description Construct parameters for use with
+##' @description Construct nested parameters for use with
 ##'   [pmcmc()]. This creates a utility object that is used
-##'   internally to work with parameters. Most users only need to
-##'   construct this object, but see the examples for how it can be
-##'   used.
+##'   internally to work with parameters that may be fixed and the same for all
+##'   given populations, or varied and possibly-different between populations.
+##'   Most users only need to construct this object, but see the examples for
+##'   how it can be used.
 ##'
 ##' @export
 ##' @examples
-##' #Construct an object with two parameters:
-##' pars <- mcstate::pmcmc_parameters$new(
-##'   list(mcstate::pmcmc_parameter("a", 0.1, min = 0, max = 1,
-##'                                 prior = function(a) log(a)),
-##'        mcstate::pmcmc_parameter("b", 0, prior = dnorm)),
-##'   matrix(c(1, 0.5, 0.5, 2), 2, 2))
+##' #Construct an object with two varied parameters, two fixed parameters,
+##' #and two populations:
+##' parameters <- list(pmcmc_varied_parameter("a", c("p1", "p2"), 2),
+##'                    pmcmc_varied_parameter("b", c("p1", "p2"), 2),
+##'                    pmcmc_parameter("c", 3),
+##'                    pmcmc_parameter("d", 4))
+##' proposal_fixed <- diag(2)
+##' proposal_varied <- diag(2) + 1
+##' pars <- mcstate::pmcmc_parameters_nested$new(parameters, proposal_varied,
+##'                                              proposal_fixed))
 ##'
 ##' # Initial parameters
 ##' p <- pars$initial()
@@ -51,18 +56,24 @@ pmcmc_parameters_nested <- R6::R6Class(
     ##' @description Create the pmcmc_parameters object
     ##'
     ##' @param parameters A `list` of
-    ##' [pmcmc_parameter] objects, each of which describe a
-    ##' single parameter in your model. If `parameters` is named, then
-    ##' these names must match the `$name` element of each parameter is
-    ##' used (this is verified).
+    ##' [pmcmc_parameter] or [pmcmc_varied_parameter] objects, each of which
+    ##' describe a single (possibly-varying) parameter in your model.
+    ##' If `parameters` is named, then these names must match the `$name`
+    ##' element of each parameter that is used (this is verified).
     ##'
-    ##' @param proposal A square proposal distribution corresponding to the
-    ##' variance-covariance matrix of a multivariate gaussian distribution
-    ##' used to generate new parameters. It must have the same number of
-    ##' rows and columns as there are elements in `parameters`, and if
-    ##' named the names must correspond exactly to the names in
+    ##' @param proposal_varied,proposal_fixed Square proposal matrices
+    ##' corresponding to the variance-covariance matrix of a multivariate
+    ##' gaussian distribution used to generate new varied and fixed parameters
+    ##' respectively.'. They must have the same number of
+    ##' rows and columns as there are varied and fixed parameters respectively.
+    ##' The names must correspond exactly to the names in
     ##' `parameters`. Because it corresponds to a variance-covariance
     ##' matrix it must be symmetric and positive definite.
+    ##'
+    ##' @param populations Specifies the names of the different populations
+    ##' that the varying parameters change according to. Only required if no
+    ##' [pmcmc_varied_parameter] objects are included in `parameters`.
+    ##' Otherwise population names are taken from those objects.
     ##'
     ##' @param transform An optional transformation function to apply
     ##' to your parameter vector immediately before passing it to the
@@ -70,11 +81,6 @@ pmcmc_parameters_nested <- R6::R6Class(
     ##' used, as dust models require this. However, if you need to
     ##' generate derived parameters from those being actively sampled
     ##' you can do arbitrary transformations here.
-    ##'
-    ##' @param populations Specifies the names of the different populations
-    ##' that the parameters vary according to. Assumes that varied parameters
-    ##' are estimated based on representative samples drawn from the respective
-    ##' populations. Ignored if no varied parameters are included.
     initialize = function(parameters, proposal_varied = NULL,
                           proposal_fixed = NULL, populations = NULL,
                           transform = NULL) {
@@ -152,9 +158,8 @@ pmcmc_parameters_nested <- R6::R6Class(
     ##' @description Return a `data.frame` with information about
     ##' parameters (name, min, max, discrete, fixed or varied).
     ##'
-    ##' @param population For parameter sets including varied parameters,
-    ##' `population` specifies which population to summarise. If `NULL` then
-    ##'  returns summary of each population as a list.
+    ##' @param population Specifies which population to summarise. If `NULL`
+    ##' then returns a summary of each population as a list.
     summary = function(population = NULL) {
       summarise_population <- function(population) {
         if (!(population %in% self$populations())) {
@@ -182,8 +187,8 @@ pmcmc_parameters_nested <- R6::R6Class(
       }
     },
 
-    ##' @description Return the initial parameter values as a named numeric
-    ##' vector or named matrix for multiple populations.
+    ##' @description Return the initial parameter values as a named matrix with
+    ##' rows corresponding to populations and columns are parameters.
     initial = function() {
 
       varied_params <- private$param_names$varied
@@ -215,7 +220,8 @@ pmcmc_parameters_nested <- R6::R6Class(
       init[, match(self$names(), colnames(init)), drop = FALSE]
     },
 
-    ##' @description Compute the prior(s) for a parameter vector/matrix
+    ##' @description Compute the prior(s) for a parameter matrix. Returns a
+    ##' named vector with names corresponding to populations.
     ##'
     ##' @param theta a parameter matrix with columns in the same order as
     ##' `$names()` and rows in the same order as `$populations()`.
@@ -246,15 +252,14 @@ pmcmc_parameters_nested <- R6::R6Class(
       lp_fix + lp_vary
     },
 
-    ##' @description Propose a new parameter vector given a current parameter
-    ##' vector. This proposes a new parameter vector/matrix given your current
-    ##' vector and the variance-covariance matrix of your proposal
-    ##' kernel, discretises any discrete values, and reflects bounded
-    ##' parameters until they lie within `min`:`max`. Returns matrix if any
-    ##' varied parameters are included, otherwise vector.
+    ##' @description This proposes a new parameter matrix given your current
+    ##' matrix and the variance-covariance matrices of the proposal
+    ##' kernels, discretises any discrete values, and reflects bounded
+    ##' parameters until they lie within `min`:`max`. Returns matrix with rows
+    ##' corresponding to populations and columns to parameters.
     ##'
-    ##' @param theta a parameter vector in the same order as your
-    ##' parameters were defined in (see `$names()` for that order.
+    ##' @param theta a parameter matrix with columns in the same order as
+    ##' `$names()` and rows in the same order as `$populations()`.
     ##'
     ##' @param scale an optional scaling factor to apply to the
     ##' proposal distribution. This may be useful in sampling starting
@@ -263,8 +268,8 @@ pmcmc_parameters_nested <- R6::R6Class(
     ##'
     ##' @param type specifies which type of parameters should be proposed,
     ##' either fixed parameters only ("fixed"), varied only ("varied"), or
-    ##' both ("both") types. For 'fixed' and 'varied' then parameters of the
-    ##' other type is returned equal to corresponding value in `theta`.
+    ##' both ("both") types. For 'fixed' and 'varied', parameters of the
+    ##' other type are left unchanged.
     propose = function(theta, scale = 1, type = c("fixed", "varied", "both")) {
       type <- match.arg(type)
       pfix <- function(theta, scale) {
@@ -306,10 +311,10 @@ pmcmc_parameters_nested <- R6::R6Class(
     },
 
     ##' @description Apply the model transformation function to a parameter
-    ##' vector.
+    ##' matrix.
     ##'
-    ##' @param theta a parameter vector in the same order as your
-    ##' parameters were defined in (see `$names()` for that order.
+    ##' @param theta a parameter matrix with columns in the same order as
+    ##' `$names()` and rows in the same order as `$populations()`.
     model = function(theta) {
       apply(theta, 1, private$transform)
     },

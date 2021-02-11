@@ -38,7 +38,7 @@
 ##'
 ##' @export
 ##' @examples
-##' pmcmc_parameter(
+##' pmcmc_varied_parameter(
 ##'   name = "size",
 ##'   populations = c("Europe", "America"),
 ##'   initial = c(100, 200),
