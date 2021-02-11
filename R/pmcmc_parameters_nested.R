@@ -18,7 +18,7 @@
 ##' proposal_fixed <- diag(2)
 ##' proposal_varied <- diag(2) + 1
 ##' pars <- mcstate::pmcmc_parameters_nested$new(parameters, proposal_varied,
-##'                                              proposal_fixed))
+##'                                              proposal_fixed)
 ##'
 ##' # Initial parameters
 ##' p <- pars$initial()
