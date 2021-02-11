@@ -553,8 +553,35 @@ test_that("pmcmc_parameters_nested propose - 1 varied 1 fix", {
   expect_false(identical(prop[, 2], init[, 2]))
 })
 
+test_that("pmcmc_parameters_nested propose - fixed only", {
+  parameters <- list(
+    b = pmcmc_parameter("b", 1, prior = dexp))
+  proposal_varied <- NULL
+  proposal_fixed <- diag(1)
+  p <- pmcmc_parameters_nested$new(parameters, NULL, proposal_fixed,
+                                   populations = letters[1:2])
+  init <- p$initial()
 
-test_that("pmcmc_parameters_nested fixed", {
+  prop <- p$propose(init, type = "fixed")
+  expect_true(identical(prop[1, 1], prop[2, 1]))
+  expect_true(all(prop != init))
+})
+
+test_that("pmcmc_parameters_nested fix errors", {
+  parameters <- list(
+    b = pmcmc_parameter("b", 1, prior = dexp))
+  proposal_varied <- NULL
+  proposal_fixed <- diag(1)
+  p <- pmcmc_parameters_nested$new(parameters, NULL, proposal_fixed,
+                                   populations = letters[1:2])
+  expect_error(p$fix(matrix(1)), "should have rownames")
+  expect_error(p$fix(matrix(1, nrow = 2, dimnames = list(letters[1:2], "a"))),
+              "Fixed parameters")
+  expect_error(p$fix(matrix(1, nrow = 2, dimnames = list(letters[1:2], "b"))),
+              "Cannot fix")
+})
+
+test_that("pmcmc_parameters_nested fix", {
   parameters <- list(
     a = pmcmc_varied_parameter("a", c("p1", "p2"), 1:2,
                                prior = list(function(x) 1, function(x) 2)),

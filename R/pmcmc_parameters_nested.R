@@ -329,6 +329,10 @@ pmcmc_parameters_nested <- R6::R6Class(
     ##' @param fixed a named vector of parameters to fix
     fix = function(fixed) {
       assert_is(fixed, "matrix")
+      if (is.null(rownames(fixed)) || is.null(colnames(fixed))) {
+        stop("`fixed` should have rownames (populations) and colnames
+             (parameters).")
+      }
 
       param_names <- private$param_names$original
       pops <- self$populations()
