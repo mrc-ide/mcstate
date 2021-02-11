@@ -48,7 +48,7 @@
 ##'   prior = list(dnorm, dexp)
 ##' )
 pmcmc_varied_parameter <- function(name, populations, initial, min = -Inf,
-                                  max = Inf, discrete = FALSE, prior = NULL) {
+                                   max = Inf, discrete = FALSE, prior = NULL) {
 
   assert_character(populations)
   len <- length(populations)

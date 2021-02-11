@@ -104,9 +104,9 @@ pmcmc_parameters_nested <- R6::R6Class(
       private$pops <- populations
 
       kernels <- clean_proposals(proposal_varied, proposal_fixed,
-        populations, parameters$names)
+                                 populations, parameters$names)
       proposals <- make_proposals(kernels$varied, kernels$fixed,
-        parameters$names)
+                                  parameters$names)
 
       private$param_names <- parameters$names
 
@@ -129,8 +129,8 @@ pmcmc_parameters_nested <- R6::R6Class(
             kernel <- as.matrix(kernel)
           }
           private$varied_parameters[[i]] <-
-              pmcmc_parameters$new(
-                lapply(parameters$varied, "[[", populations[[i]]), kernel)
+            pmcmc_parameters$new(
+              lapply(parameters$varied, "[[", populations[[i]]), kernel)
         }
 
         private$proposal_kernel_varied <- proposals$kernel_varied
@@ -168,7 +168,7 @@ pmcmc_parameters_nested <- R6::R6Class(
       summarise_population <- function(population) {
         if (!(population %in% self$populations())) {
           stop(sprintf("Expected 'population' in %s.",
-            str_collapse(self$populations())))
+                       str_collapse(self$populations())))
         }
         type <- rep("fixed", length(self$names()))
         type[self$names() %in% private$param_names$varied] <- "varied"
@@ -248,7 +248,7 @@ pmcmc_parameters_nested <- R6::R6Class(
       if (length(private$varied_parameters)) {
         lp_vary <- vnapply(pops,
                            function(x) private$varied_parameters[[x]]$prior(
-                                        theta[x, private$param_names$varied]))
+                             theta[x, private$param_names$varied]))
       } else {
         lp_vary <- 0
       }
@@ -349,16 +349,16 @@ pmcmc_parameters_nested <- R6::R6Class(
       idx_vary <- setdiff(seq_along(param_names), idx_fixed)
 
       base <- matrix(NA_real_, nrow = length(pops), ncol = length(param_names),
-                    dimnames = list(pops, param_names))
+                     dimnames = list(pops, param_names))
       base[, idx_fixed] <- fixed
       base_transform <- private$transform
 
       idfix_fixed <- match(colnames(fixed), private$param_names$fixed)
       idfix_varied <- setdiff(seq_along(private$param_names$fixed),
-                                idfix_fixed)
+                              idfix_fixed)
       idvar_fixed <- match(colnames(fixed), private$param_names$varied)
       idvar_varied <- setdiff(seq_along(private$param_names$varied),
-                                idvar_fixed)
+                              idvar_fixed)
       if (length(idfix_varied)) {
         proposal_fixed <- private$proposal_kernel_fixed[idfix_varied,
                                                         idfix_varied,
@@ -373,7 +373,7 @@ pmcmc_parameters_nested <- R6::R6Class(
         proposal_varied <- simplify2array(private$proposal_kernel_varied)
         proposal_varied <- proposal_varied[idvars, idvars, , drop = FALSE]
         proposal_varied <- proposal_varied[idvar_varied, idvar_varied, ,
-                                          drop = FALSE]
+                                           drop = FALSE]
       } else {
         proposal_varied <- NULL
       }
@@ -384,7 +384,8 @@ pmcmc_parameters_nested <- R6::R6Class(
       }
 
       pmcmc_parameters_nested$new(private$parameters[idx_vary],
-        proposal_varied, proposal_fixed, self$populations(), transform)
+                                  proposal_varied, proposal_fixed,
+                                  self$populations(), transform)
     }
   ))
 
@@ -443,7 +444,7 @@ clean_parameters <- function(parameters, proposal_varied, proposal_fixed) {
 
   if (!is.null(fixed_parameters)) {
     if (!is.null(names(fixed_parameters)) &&
-      !identical(fix_nms, names(fixed_parameters))) {
+        !identical(fix_nms, names(fixed_parameters))) {
       stop("Fixed parameters are named, but the names do not match
       parameters.")
     }
@@ -452,7 +453,7 @@ clean_parameters <- function(parameters, proposal_varied, proposal_fixed) {
 
   if (!is.null(varied_parameters)) {
     if (!is.null(names(varied_parameters)) &&
-      !identical(var_nms, names(varied_parameters))) {
+        !identical(var_nms, names(varied_parameters))) {
       stop("Varied parameters are named, but the names do not match
             parameters.")
     }
@@ -474,7 +475,7 @@ clean_parameters <- function(parameters, proposal_varied, proposal_fixed) {
 }
 
 clean_proposals <- function(proposal_varied, proposal_fixed, populations,
-  params) {
+                            params) {
 
   if (!is.null(proposal_varied)) {
     len_varied <- length(params$varied)
@@ -485,13 +486,13 @@ clean_proposals <- function(proposal_varied, proposal_fixed, populations,
 
     if (is.na(dim(proposal_varied)[3])) {
       proposal_varied <- array(proposal_varied,
-                              dim = c(dim(proposal_varied), len_pop))
+                               dim = c(dim(proposal_varied), len_pop))
     }
 
     if (!identical(dim(proposal_varied), c(len_varied, len_varied, len_pop))) {
-        stop(sprintf(
-          "Expected proposal array with dimensions %d x %d x %d.",
-          len_varied, len_varied, len_pop))
+      stop(sprintf(
+        "Expected proposal array with dimensions %d x %d x %d.",
+        len_varied, len_varied, len_pop))
     }
 
     if (!is.null(dim_names_var[[3]])) {
@@ -504,7 +505,7 @@ clean_proposals <- function(proposal_varied, proposal_fixed, populations,
 
     if (!is.null(dim_names_var[[1]]) || !is.null(dim_names_var[[2]])) {
       ok <- identical(dim_names_var[[1]], params$varied) &&
-              identical(dim_names_var[[2]], params$varied)
+        identical(dim_names_var[[2]], params$varied)
       if (!ok) {
         stop("Expected row and column names of 'proposal_varied' to match
         varied parameters.")
@@ -519,7 +520,7 @@ clean_proposals <- function(proposal_varied, proposal_fixed, populations,
     assert_is(proposal_fixed, "matrix")
     if (!is.null(dim_names_fix[[1]]) || !is.null(dim_names_fix[[2]])) {
       ok <- identical(dim_names_fix[[1]], params$fixed) &&
-              identical(dim_names_fix[[2]], params$fixed)
+        identical(dim_names_fix[[2]], params$fixed)
       if (!ok) {
         stop("Expected row and column names of 'proposal_fixed' to match
         fixed parameters.")
@@ -556,10 +557,10 @@ make_proposals <- function(kernel_varied, kernel_fixed, params) {
 }
 
 expand <- function(m, complete) {
-   n <- length(complete)
-   ret <- matrix(0, ncol = n, nrow = n, dimnames = list(complete, complete))
-   ret[rownames(m), colnames(m)] <- m
-   ret
+  n <- length(complete)
+  ret <- matrix(0, ncol = n, nrow = n, dimnames = list(complete, complete))
+  ret[rownames(m), colnames(m)] <- m
+  ret
 }
 
 make_proposal_fixed <- function(kernel) {
