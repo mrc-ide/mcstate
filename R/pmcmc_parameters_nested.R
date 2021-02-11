@@ -36,12 +36,12 @@ pmcmc_parameters_nested <- R6::R6Class(
   cloneable = FALSE,
 
   private = list(
-    fixed_parameters = NULL,
-    varied_parameters = NULL,
-    proposal_varied = NULL,
-    proposal_fixed = NULL,
-    proposal_kernel_varied = NULL,
-    proposal_kernel_fixed = NULL,
+    fixed_parameters = list(),
+    varied_parameters = list(),
+    proposal_varied = list(),
+    proposal_fixed = list(),
+    proposal_kernel_varied = list(),
+    proposal_kernel_fixed = list(),
     transform = NULL,
     param_names = NULL,
     pops = NULL
@@ -222,9 +222,9 @@ pmcmc_parameters_nested <- R6::R6Class(
     prior = function(theta) {
       pops <- self$populations()
       priors <- numeric(nrow(theta))
-      names(priors) <- pops
+      names(priors) <- names(priors)
 
-      if (!is.null(private$fixed_parameters)) {
+      if (length(private$fixed_parameters)) {
         ## as theta is same in all populations for fixed, 1 chosen arbitrarily
         lp_fix <- private$fixed_parameters$prior(
           theta[1, private$param_names$fixed])
@@ -235,7 +235,7 @@ pmcmc_parameters_nested <- R6::R6Class(
         lp_fix <- 0
       }
 
-      if (!is.null(private$varied_parameters)) {
+      if (length(private$varied_parameters)) {
         lp_vary <- vnapply(pops,
                            function(x) private$varied_parameters[[x]]$prior(
                                         theta[x, private$param_names$varied]))
@@ -268,12 +268,12 @@ pmcmc_parameters_nested <- R6::R6Class(
     propose = function(theta, scale = 1, type = c("fixed", "varied", "both")) {
       type <- match.arg(type)
       pfix <- function(theta, scale) {
-        if (!is.null(private$proposal_fixed)) {
+        if (length(private$proposal_fixed)) {
           private$proposal_fixed(theta, scale)
         }
       }
       pvar <- function(theta, scale) {
-        if (!is.null(private$proposal_varied)) {
+        if (length(private$proposal_varied)) {
           var <- vapply(seq(nrow(theta)), function(i)
             private$proposal_varied[[rownames(theta)[[i]]]](theta[i, ], scale),
             numeric(length(self$names())))
@@ -539,14 +539,14 @@ make_proposal_fixed <- function(kernel) {
 }
 
 get_inner_params <- function(param, population, private) {
-  if (!is.null(private$fixed_parameters)) {
+  if (length(private$fixed_parameters)) {
     fixed <- r6_private(private$fixed_parameters)[[param]]
     names(fixed) <- private$param_names$fixed
   } else {
     fixed <- NULL
   }
 
-  if (!is.null(private$varied_parameters)) {
+  if (length(private$varied_parameters)) {
     varied <- r6_private(private$varied_parameters[[population]])[[param]]
     names(varied) <- private$param_names$varied
   } else {
