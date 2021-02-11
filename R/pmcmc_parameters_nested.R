@@ -372,7 +372,7 @@ pmcmc_parameters_nested <- R6::R6Class(
                         private$param_names$original)
         proposal_varied <- simplify2array(private$proposal_kernel_varied)
         proposal_varied <- proposal_varied[idvars, idvars, , drop = FALSE]
-        proposal_varied <- proposal_varied[idvar_varied, idvar_varied,,
+        proposal_varied <- proposal_varied[idvar_varied, idvar_varied, ,
                                           drop = FALSE]
       } else {
         proposal_varied <- NULL
