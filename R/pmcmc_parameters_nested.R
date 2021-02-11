@@ -327,7 +327,6 @@ pmcmc_parameters_nested <- R6::R6Class(
     ##' reduce the dimensionality of your system.
     ##'
     ##' @param fixed a named vector of parameters to fix
-    # TODO
     fix = function(fixed) {
       assert_is(fixed, "matrix")
 
