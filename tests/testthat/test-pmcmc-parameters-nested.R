@@ -562,9 +562,14 @@ test_that("pmcmc_parameters_nested propose - fixed only", {
                                    populations = letters[1:2])
   init <- p$initial()
 
+  set.seed(1)
   prop <- p$propose(init, type = "fixed")
   expect_true(identical(prop[1, 1], prop[2, 1]))
   expect_true(all(prop != init))
+
+  set.seed(1)
+  prop2 <- p$propose(init, type = "both")
+  expect_equal(prop, prop2)
 })
 
 test_that("pmcmc_parameters_nested fix errors", {
