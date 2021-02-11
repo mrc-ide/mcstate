@@ -12,8 +12,8 @@ test_that("Can construct a varied parameter", {
   expect_equal(p$b$max, Inf)
   expect_equal(p$a$discrete, FALSE)
   expect_equal(p$b$discrete, FALSE)
-  expect_equal(p$a$prior, function(p) 0)
-  expect_equal(p$b$prior, function(p) 0)
+  expect_equal(p$a$prior(1), 0)
+  expect_equal(p$b$prior(1), 0)
 })
 
 test_that("varied parameter reps", {
