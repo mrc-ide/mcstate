@@ -122,3 +122,13 @@ set_names <- function(x, nms) {
 str_collapse <- function(x) {
   paste0("{", paste0(x, collapse = ", "), "}")
 }
+
+recycle <- function(x, n, name = deparse(substitute(x))) {
+  if (length(x) == n) {
+    x
+  } else if (length(x) == 1L) {
+    rep_len(x, n)
+  } else {
+    stop(sprintf("Invalid length for '%s', expected 1 or %d", name, n))
+  }
+}
