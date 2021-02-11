@@ -35,7 +35,8 @@ test_that("varied parameter reps", {
 })
 
 test_that("recycle", {
-  expect_error(pmcmc_varied_parameter("p1", letters[1:3], 1:2), "Invalid length")
+  expect_error(pmcmc_varied_parameter("p1", letters[1:3], 1:2),
+              "Invalid length")
 })
 
 test_that("clean_parameters - error on empty and wrong type", {
@@ -442,7 +443,8 @@ test_that("pmcmc_parameters_nested prior - 0 varied 1 fix", {
   parameters <- list(
     b = pmcmc_parameter("b", 1, prior = dexp))
   proposal_fixed <- diag(1)
-  p <- pmcmc_parameters_nested$new(parameters, NULL, proposal_fixed, c("p1", "p2"))
+  p <- pmcmc_parameters_nested$new(parameters, NULL, proposal_fixed,
+                                  c("p1", "p2"))
   init <- p$initial()
   expect_equal(p$prior(init), set_names(rep(dexp(1), 2), c("p1", "p2")))
 })

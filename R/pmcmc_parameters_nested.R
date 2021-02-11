@@ -119,7 +119,7 @@ pmcmc_parameters_nested <- R6::R6Class(
         private$varied_parameters <- vector("list", length(populations))
         names(private$varied_parameters) <- populations
         for (i in seq_along(populations)) {
-          kernel <- kernels$varied[,, i]
+          kernel <- kernels$varied[, , i]
           # catch for dropping on numeric
           if (!inherits(kernel, "matrix")) {
             kernel <- as.matrix(kernel)
