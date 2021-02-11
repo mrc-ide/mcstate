@@ -49,7 +49,8 @@ pmcmc_parameters_nested <- R6::R6Class(
     proposal_kernel_fixed = list(),
     transform = NULL,
     param_names = NULL,
-    pops = NULL
+    pops = NULL,
+    parameters = list()
   ),
 
   public = list(
@@ -84,6 +85,9 @@ pmcmc_parameters_nested <- R6::R6Class(
     initialize = function(parameters, proposal_varied = NULL,
                           proposal_fixed = NULL, populations = NULL,
                           transform = NULL) {
+
+      # original format required for `fix`
+      private$parameters <- parameters
 
       parameters <- clean_parameters(parameters,
                                      proposal_varied, proposal_fixed)
@@ -137,7 +141,7 @@ pmcmc_parameters_nested <- R6::R6Class(
 
       # transform function
       if (is.null(transform)) {
-        private$transform <- as.list
+        private$transform <- function(x) apply(x, 1, as.list)
       } else {
         private$transform <- assert_is(transform, "function")
       }
@@ -316,7 +320,7 @@ pmcmc_parameters_nested <- R6::R6Class(
     ##' @param theta a parameter matrix with columns in the same order as
     ##' `$names()` and rows in the same order as `$populations()`.
     model = function(theta) {
-      apply(theta, 1, private$transform)
+      private$transform(theta)
     },
 
     ##' @description Set some parameters to fixed values. Use this to
@@ -325,38 +329,62 @@ pmcmc_parameters_nested <- R6::R6Class(
     ##' @param fixed a named vector of parameters to fix
     # TODO
     fix = function(fixed) {
-      assert_named(fixed, TRUE)
-      idx_fixed <- match(names(fixed), names(private$parameters))
+      assert_is(fixed, "matrix")
+
+      param_names <- private$param_names$original
+      pops <- self$populations()
+
+      if (any(is.na(match(rownames(fixed), pops)))) {
+        stop("Rownames of `fixed` should be identical to `$populations`.")
+      }
+
+      idx_fixed <- match(colnames(fixed), param_names)
       if (any(is.na(idx_fixed))) {
         stop("Fixed parameters not found in model: ",
-             paste(squote(names(fixed)[is.na(idx_fixed)]), collapse = ", "))
+             paste(squote(colnames(fixed)[is.na(idx_fixed)]), collapse = ", "))
       }
-      if (length(idx_fixed) == length(private$parameters)) {
+      if (length(idx_fixed) == length(param_names)) {
         stop("Cannot fix all parameters")
       }
-      idx_vary <- setdiff(seq_along(private$parameters), idx_fixed)
+      idx_vary <- setdiff(seq_along(param_names), idx_fixed)
 
-      base <- set_names(rep(NA_real_, length(private$parameters)),
-                        names(private$parameters))
-      base[idx_fixed] <- fixed
+      base <- matrix(NA_real_, nrow = length(pops), ncol = length(param_names),
+                    dimnames = list(pops, param_names))
+      base[, idx_fixed] <- fixed
       base_transform <- private$transform
 
-      if (is.null(self$populations())) {
-        proposal <- private$proposal_kernel[idx_vary, idx_vary, drop = FALSE]
+      idfix_fixed <- match(colnames(fixed), private$param_names$fixed)
+      idfix_varied <- setdiff(seq_along(private$param_names$fixed),
+                                idfix_fixed)
+      idvar_fixed <- match(colnames(fixed), private$param_names$varied)
+      idvar_varied <- setdiff(seq_along(private$param_names$varied),
+                                idvar_fixed)
+      if (length(idfix_varied)) {
+        proposal_fixed <- private$proposal_kernel_fixed[idfix_varied,
+                                                        idfix_varied,
+                                                        drop = FALSE]
       } else {
-        proposal <- array(
-          apply(private$proposal_kernel, 3, "[", idx_vary,
-                                idx_vary, drop = FALSE),
-          dim = c(length(idx_vary), length(idx_vary),
-                  length(self$populations())))
+        proposal_fixed <- NULL
+      }
+
+      if (length(idvar_varied)) {
+        idvars <- match(private$param_names$varied,
+                        private$param_names$original)
+        proposal_varied <- simplify2array(private$proposal_kernel_varied)
+        proposal_varied <- proposal_varied[idvars, idvars, , drop = FALSE]
+        proposal_varied <- proposal_varied[idvar_varied, idvar_varied,,
+                                          drop = FALSE]
+      } else {
+        proposal_varied <- NULL
       }
 
       transform <- function(p) {
-          base_transform(set_into(base, idx_vary, p))
+        base[, idx_vary] <- p
+        base_transform(base)
       }
 
-      pmcmc_parameters$new(private$parameters[idx_vary], proposal, transform,
-        populations = self$populations())
+      pmcmc_parameters_nested$new(private$parameters[idx_vary],
+        proposal_varied, proposal_fixed, self$populations(), transform)
     }
   ))
 
@@ -506,7 +534,7 @@ clean_proposals <- function(proposal_varied, proposal_fixed, populations,
 make_proposals <- function(kernel_varied, kernel_fixed, params) {
   if (!is.null(kernel_varied)) {
     kernel_varied_list <- lapply(seq_len(dim(kernel_varied)[[3]]), function(i)
-      expand(kernel_varied[, , i], params$original))
+      expand(kernel_varied[, , i, drop = FALSE], params$original))
     names(kernel_varied_list) <- dimnames(kernel_varied)[[3]]
     proposal_varied <- lapply(kernel_varied_list, rmvnorm_generator)
   } else {
