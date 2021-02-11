@@ -586,7 +586,10 @@ test_that("pmcmc_parameters_nested fixed", {
       base_transform(base)
     })
 
-  expect_equal(fix_p, fixed_p)
+  expect_equal(with(set.seed(1), fix_p$propose(fix_p$initial())),
+              with(set.seed(1), fixed_p$propose(fixed_p$initial())))
+
+
 
   init <- fix_p$initial()
   expect_identical(fix_p$model(init),
