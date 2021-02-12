@@ -635,9 +635,9 @@ test_that("use compiled compare function", {
 test_that("prevent using compiled compare where model does not support it", {
   dat <- example_sir()
   n_particles <- 100
-  model <- dust::dust_example("volatility")
+  model <- dust::dust_example("walk")
   expect_error(
-    particle_filter$new(dat$data, dat$model, n_particles, NULL),
+    particle_filter$new(dat$data, model, n_particles, NULL),
     "Your model does not have a built-in 'compare' function")
 })
 
