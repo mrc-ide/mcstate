@@ -36,8 +36,7 @@ is assumed for all populations.}
 
 \item{discrete}{Logical, indicating if this parameter is
 discrete. If \code{TRUE} then the parameter will be rounded
-after a new parameter is proposed. Must be either length \code{n_pop} or \code{1},
-in which case the same value is assumed for all populations.}
+after a new parameter is proposed.}
 
 \item{prior}{A prior function (if not given an improper flat prior
 is used - be careful!). It must be a function that takes a

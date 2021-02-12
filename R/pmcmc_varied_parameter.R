@@ -26,8 +26,7 @@
 ##'
 ##' @param discrete Logical, indicating if this parameter is
 ##'   discrete. If `TRUE` then the parameter will be rounded
-##'   after a new parameter is proposed. Must be either length `n_pop` or `1`,
-##'   in which case the same value is assumed for all populations.
+##'   after a new parameter is proposed.
 ##'
 ##' @param prior A prior function (if not given an improper flat prior
 ##'   is used - be careful!). It must be a function that takes a
@@ -56,7 +55,7 @@ pmcmc_varied_parameter <- function(name, populations, initial, min = -Inf,
   initial <- recycle(initial, len)
   min <- recycle(min, len)
   max <- recycle(max, len)
-  discrete <- recycle(discrete, len)
+  discrete <- assert_logical(discrete)
 
   if (is.null(prior)) {
     prior <- rep(list(function(p) 0), len)
