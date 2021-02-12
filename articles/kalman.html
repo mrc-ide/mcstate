@@ -38,7 +38,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.4.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.4.5</span>
       </span>
     </div>
 
@@ -112,71 +112,86 @@
 <div class="sourceCode" id="cb1"><pre class="sourceCode cc"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">class</span> volatility {</span>
 <span id="cb1-2"><a href="#cb1-2"></a><span class="kw">public</span>:</span>
 <span id="cb1-3"><a href="#cb1-3"></a>  <span class="kw">typedef</span> <span class="dt">double</span> <span class="dt">real_t</span>;</span>
-<span id="cb1-4"><a href="#cb1-4"></a>  <span class="kw">typedef</span> dust::no_data <span class="dt">data_t</span>;</span>
-<span id="cb1-5"><a href="#cb1-5"></a>  <span class="kw">typedef</span> dust::no_internal <span class="dt">internal_t</span>;</span>
-<span id="cb1-6"><a href="#cb1-6"></a></span>
-<span id="cb1-7"><a href="#cb1-7"></a>  <span class="kw">struct</span> <span class="dt">shared_t</span> {</span>
-<span id="cb1-8"><a href="#cb1-8"></a>    <span class="dt">real_t</span> alpha;</span>
-<span id="cb1-9"><a href="#cb1-9"></a>    <span class="dt">real_t</span> sigma;</span>
-<span id="cb1-10"><a href="#cb1-10"></a>    <span class="dt">real_t</span> x0;</span>
-<span id="cb1-11"><a href="#cb1-11"></a>  };</span>
-<span id="cb1-12"><a href="#cb1-12"></a></span>
-<span id="cb1-13"><a href="#cb1-13"></a>  volatility(<span class="at">const</span> dust::<span class="dt">pars_t</span>&lt;volatility&gt;&amp; pars) : shared(pars.shared) {</span>
-<span id="cb1-14"><a href="#cb1-14"></a>  }</span>
-<span id="cb1-15"><a href="#cb1-15"></a></span>
-<span id="cb1-16"><a href="#cb1-16"></a>  <span class="dt">size_t</span> size() {</span>
-<span id="cb1-17"><a href="#cb1-17"></a>    <span class="cf">return</span> <span class="dv">1</span>;</span>
+<span id="cb1-4"><a href="#cb1-4"></a>  <span class="kw">struct</span> <span class="dt">data_t</span> {</span>
+<span id="cb1-5"><a href="#cb1-5"></a>    <span class="dt">real_t</span> observed;</span>
+<span id="cb1-6"><a href="#cb1-6"></a>  };</span>
+<span id="cb1-7"><a href="#cb1-7"></a>  <span class="kw">typedef</span> dust::no_internal <span class="dt">internal_t</span>;</span>
+<span id="cb1-8"><a href="#cb1-8"></a></span>
+<span id="cb1-9"><a href="#cb1-9"></a>  <span class="kw">struct</span> <span class="dt">shared_t</span> {</span>
+<span id="cb1-10"><a href="#cb1-10"></a>    <span class="dt">real_t</span> alpha;</span>
+<span id="cb1-11"><a href="#cb1-11"></a>    <span class="dt">real_t</span> sigma;</span>
+<span id="cb1-12"><a href="#cb1-12"></a>    <span class="dt">real_t</span> gamma;</span>
+<span id="cb1-13"><a href="#cb1-13"></a>    <span class="dt">real_t</span> tau;</span>
+<span id="cb1-14"><a href="#cb1-14"></a>    <span class="dt">real_t</span> x0;</span>
+<span id="cb1-15"><a href="#cb1-15"></a>  };</span>
+<span id="cb1-16"><a href="#cb1-16"></a></span>
+<span id="cb1-17"><a href="#cb1-17"></a>  volatility(<span class="at">const</span> dust::<span class="dt">pars_t</span>&lt;volatility&gt;&amp; pars) : shared(pars.shared) {</span>
 <span id="cb1-18"><a href="#cb1-18"></a>  }</span>
 <span id="cb1-19"><a href="#cb1-19"></a></span>
-<span id="cb1-20"><a href="#cb1-20"></a>  <span class="bu">std::</span>vector&lt;<span class="dt">real_t</span>&gt; initial(<span class="dt">size_t</span> step) {</span>
-<span id="cb1-21"><a href="#cb1-21"></a>    <span class="bu">std::</span>vector&lt;<span class="dt">real_t</span>&gt; state(<span class="dv">1</span>);</span>
-<span id="cb1-22"><a href="#cb1-22"></a>    state[<span class="dv">0</span>] = shared-&gt;x0;</span>
-<span id="cb1-23"><a href="#cb1-23"></a>    <span class="cf">return</span> state;</span>
-<span id="cb1-24"><a href="#cb1-24"></a>  }</span>
-<span id="cb1-25"><a href="#cb1-25"></a></span>
-<span id="cb1-26"><a href="#cb1-26"></a>  <span class="dt">void</span> update(<span class="dt">size_t</span> step, <span class="at">const</span> <span class="dt">real_t</span> * state,</span>
-<span id="cb1-27"><a href="#cb1-27"></a>              dust::<span class="dt">rng_state_t</span>&lt;<span class="dt">real_t</span>&gt;&amp; rng_state, <span class="dt">real_t</span> * state_next) {</span>
-<span id="cb1-28"><a href="#cb1-28"></a>    <span class="at">const</span> <span class="dt">real_t</span> x = state[<span class="dv">0</span>];</span>
-<span id="cb1-29"><a href="#cb1-29"></a>    state_next[<span class="dv">0</span>] = shared-&gt;alpha * x +</span>
-<span id="cb1-30"><a href="#cb1-30"></a>      shared-&gt;sigma * dust::distr::rnorm(rng_state, <span class="dv">0</span>, <span class="dv">1</span>);</span>
-<span id="cb1-31"><a href="#cb1-31"></a>  }</span>
-<span id="cb1-32"><a href="#cb1-32"></a></span>
-<span id="cb1-33"><a href="#cb1-33"></a><span class="kw">private</span>:</span>
-<span id="cb1-34"><a href="#cb1-34"></a>  dust::shared_ptr&lt;volatility&gt; shared;</span>
-<span id="cb1-35"><a href="#cb1-35"></a>};</span>
+<span id="cb1-20"><a href="#cb1-20"></a>  <span class="dt">size_t</span> size() {</span>
+<span id="cb1-21"><a href="#cb1-21"></a>    <span class="cf">return</span> <span class="dv">1</span>;</span>
+<span id="cb1-22"><a href="#cb1-22"></a>  }</span>
+<span id="cb1-23"><a href="#cb1-23"></a></span>
+<span id="cb1-24"><a href="#cb1-24"></a>  <span class="bu">std::</span>vector&lt;<span class="dt">real_t</span>&gt; initial(<span class="dt">size_t</span> step) {</span>
+<span id="cb1-25"><a href="#cb1-25"></a>    <span class="bu">std::</span>vector&lt;<span class="dt">real_t</span>&gt; state(<span class="dv">1</span>);</span>
+<span id="cb1-26"><a href="#cb1-26"></a>    state[<span class="dv">0</span>] = shared-&gt;x0;</span>
+<span id="cb1-27"><a href="#cb1-27"></a>    <span class="cf">return</span> state;</span>
+<span id="cb1-28"><a href="#cb1-28"></a>  }</span>
+<span id="cb1-29"><a href="#cb1-29"></a></span>
+<span id="cb1-30"><a href="#cb1-30"></a>  <span class="dt">void</span> update(<span class="dt">size_t</span> step, <span class="at">const</span> <span class="dt">real_t</span> * state,</span>
+<span id="cb1-31"><a href="#cb1-31"></a>              dust::<span class="dt">rng_state_t</span>&lt;<span class="dt">real_t</span>&gt;&amp; rng_state, <span class="dt">real_t</span> * state_next) {</span>
+<span id="cb1-32"><a href="#cb1-32"></a>    <span class="at">const</span> <span class="dt">real_t</span> x = state[<span class="dv">0</span>];</span>
+<span id="cb1-33"><a href="#cb1-33"></a>    state_next[<span class="dv">0</span>] = shared-&gt;alpha * x +</span>
+<span id="cb1-34"><a href="#cb1-34"></a>      shared-&gt;sigma * dust::distr::rnorm(rng_state, <span class="dv">0</span>, <span class="dv">1</span>);</span>
+<span id="cb1-35"><a href="#cb1-35"></a>  }</span>
 <span id="cb1-36"><a href="#cb1-36"></a></span>
-<span id="cb1-37"><a href="#cb1-37"></a><span class="pp">#include </span><span class="im">&lt;cpp11/list.hpp&gt;</span></span>
-<span id="cb1-38"><a href="#cb1-38"></a><span class="kw">template</span> &lt;&gt;</span>
-<span id="cb1-39"><a href="#cb1-39"></a>dust::<span class="dt">pars_t</span>&lt;volatility&gt; dust_pars&lt;volatility&gt;(cpp11::list pars) {</span>
-<span id="cb1-40"><a href="#cb1-40"></a>  volatility::<span class="dt">real_t</span> x0 = <span class="dv">0</span>;</span>
-<span id="cb1-41"><a href="#cb1-41"></a>  volatility::<span class="dt">real_t</span> alpha = <span class="fl">0.91</span>;</span>
-<span id="cb1-42"><a href="#cb1-42"></a>  volatility::<span class="dt">real_t</span> sigma = <span class="dv">1</span>;</span>
-<span id="cb1-43"><a href="#cb1-43"></a></span>
-<span id="cb1-44"><a href="#cb1-44"></a>  SEXP r_alpha = pars[<span class="st">"alpha"</span>];</span>
-<span id="cb1-45"><a href="#cb1-45"></a>  <span class="cf">if</span> (r_alpha != R_NilValue) {</span>
-<span id="cb1-46"><a href="#cb1-46"></a>    alpha = cpp11::as_cpp&lt;volatility::<span class="dt">real_t</span>&gt;(r_alpha);</span>
-<span id="cb1-47"><a href="#cb1-47"></a>  }</span>
-<span id="cb1-48"><a href="#cb1-48"></a>  SEXP r_sigma = pars[<span class="st">"sigma"</span>];</span>
-<span id="cb1-49"><a href="#cb1-49"></a>  <span class="cf">if</span> (r_sigma != R_NilValue) {</span>
-<span id="cb1-50"><a href="#cb1-50"></a>    sigma = cpp11::as_cpp&lt;volatility::<span class="dt">real_t</span>&gt;(r_sigma);</span>
-<span id="cb1-51"><a href="#cb1-51"></a>  }</span>
-<span id="cb1-52"><a href="#cb1-52"></a></span>
-<span id="cb1-53"><a href="#cb1-53"></a>  volatility::<span class="dt">shared_t</span> shared{alpha, sigma, x0};</span>
-<span id="cb1-54"><a href="#cb1-54"></a>  <span class="cf">return</span> dust::<span class="dt">pars_t</span>&lt;volatility&gt;(shared);</span>
-<span id="cb1-55"><a href="#cb1-55"></a>}</span></code></pre></div>
+<span id="cb1-37"><a href="#cb1-37"></a>  <span class="dt">real_t</span> compare_data(<span class="at">const</span> <span class="dt">real_t</span> * state, <span class="at">const</span> <span class="dt">data_t</span>&amp; data,</span>
+<span id="cb1-38"><a href="#cb1-38"></a>                      dust::<span class="dt">rng_state_t</span>&lt;<span class="dt">real_t</span>&gt;&amp; rng_state) {</span>
+<span id="cb1-39"><a href="#cb1-39"></a>    <span class="cf">return</span> dust::dnorm(data.observed, shared-&gt;gamma * state[<span class="dv">0</span>],</span>
+<span id="cb1-40"><a href="#cb1-40"></a>                       shared-&gt;tau, <span class="kw">true</span>);</span>
+<span id="cb1-41"><a href="#cb1-41"></a>  }</span>
+<span id="cb1-42"><a href="#cb1-42"></a></span>
+<span id="cb1-43"><a href="#cb1-43"></a><span class="kw">private</span>:</span>
+<span id="cb1-44"><a href="#cb1-44"></a>  dust::shared_ptr&lt;volatility&gt; shared;</span>
+<span id="cb1-45"><a href="#cb1-45"></a>};</span>
+<span id="cb1-46"><a href="#cb1-46"></a></span>
+<span id="cb1-47"><a href="#cb1-47"></a><span class="pp">#include </span><span class="im">&lt;cpp11/list.hpp&gt;</span></span>
+<span id="cb1-48"><a href="#cb1-48"></a></span>
+<span id="cb1-49"><a href="#cb1-49"></a><span class="co">// Helper function for accepting values with defaults</span></span>
+<span id="cb1-50"><a href="#cb1-50"></a><span class="kw">inline</span> <span class="dt">double</span> with_default(<span class="dt">double</span> default_value, cpp11::sexp value) {</span>
+<span id="cb1-51"><a href="#cb1-51"></a>  <span class="cf">return</span> value == R_NilValue ? default_value : cpp11::as_cpp&lt;<span class="dt">double</span>&gt;(value);</span>
+<span id="cb1-52"><a href="#cb1-52"></a>}</span>
+<span id="cb1-53"><a href="#cb1-53"></a></span>
+<span id="cb1-54"><a href="#cb1-54"></a><span class="kw">template</span> &lt;&gt;</span>
+<span id="cb1-55"><a href="#cb1-55"></a>dust::<span class="dt">pars_t</span>&lt;volatility&gt; dust_pars&lt;volatility&gt;(cpp11::list pars) {</span>
+<span id="cb1-56"><a href="#cb1-56"></a>  <span class="kw">typedef</span> volatility::<span class="dt">real_t</span> <span class="dt">real_t</span>;</span>
+<span id="cb1-57"><a href="#cb1-57"></a>  <span class="dt">real_t</span> x0 = <span class="dv">0</span>;</span>
+<span id="cb1-58"><a href="#cb1-58"></a>  <span class="dt">real_t</span> alpha = with_default(<span class="fl">0.91</span>, pars[<span class="st">"alpha"</span>]);</span>
+<span id="cb1-59"><a href="#cb1-59"></a>  <span class="dt">real_t</span> sigma = with_default(<span class="dv">1</span>, pars[<span class="st">"sigma"</span>]);</span>
+<span id="cb1-60"><a href="#cb1-60"></a>  <span class="dt">real_t</span> gamma = with_default(<span class="dv">1</span>, pars[<span class="st">"gamma"</span>]);</span>
+<span id="cb1-61"><a href="#cb1-61"></a>  <span class="dt">real_t</span> tau = with_default(<span class="dv">1</span>, pars[<span class="st">"tau"</span>]);</span>
+<span id="cb1-62"><a href="#cb1-62"></a></span>
+<span id="cb1-63"><a href="#cb1-63"></a>  volatility::<span class="dt">shared_t</span> shared{alpha, sigma, gamma, tau, x0};</span>
+<span id="cb1-64"><a href="#cb1-64"></a>  <span class="cf">return</span> dust::<span class="dt">pars_t</span>&lt;volatility&gt;(shared);</span>
+<span id="cb1-65"><a href="#cb1-65"></a>}</span>
+<span id="cb1-66"><a href="#cb1-66"></a></span>
+<span id="cb1-67"><a href="#cb1-67"></a><span class="kw">template</span> &lt;&gt;</span>
+<span id="cb1-68"><a href="#cb1-68"></a>volatility::<span class="dt">data_t</span> dust_data&lt;volatility&gt;(cpp11::list data) {</span>
+<span id="cb1-69"><a href="#cb1-69"></a>  <span class="cf">return</span> volatility::<span class="dt">data_t</span>{cpp11::as_cpp&lt;<span class="dt">double</span>&gt;(data[<span class="st">"observed"</span>])};</span>
+<span id="cb1-70"><a href="#cb1-70"></a>}</span></code></pre></div>
 <p>This is a <a href="https://mrc-ide.github.io/dust"><code>dust</code></a> model; refer to the documentation there for details. This file can be compiled with <code><a href="https://rdrr.io/pkg/dust/man/dust.html">dust::dust</a></code>, but here we use the version bundled with <code>dust</code></p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">volatility</span> <span class="op">&lt;-</span> <span class="fu">dust</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/dust/man/dust_example.html">dust_example</a></span><span class="op">(</span><span class="st">"volatility"</span><span class="op">)</span></code></pre></div>
 <p>We can simulate some data from the model:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span>
-<span class="co">#&gt;   step      value</span>
-<span class="co">#&gt; 1    1 -0.5386879</span>
-<span class="co">#&gt; 2    2 -1.5200665</span>
-<span class="co">#&gt; 3    3 -0.2689406</span>
-<span class="co">#&gt; 4    4 -1.4782263</span>
-<span class="co">#&gt; 5    5 -1.6714681</span>
-<span class="co">#&gt; 6    6 -1.9516663</span>
+<span class="co">#&gt;   step     value</span>
+<span class="co">#&gt; 1    1  1.676830</span>
+<span class="co">#&gt; 2    2  2.423528</span>
+<span class="co">#&gt; 3    3  2.840277</span>
+<span class="co">#&gt; 4    4  2.214624</span>
+<span class="co">#&gt; 5    5  3.252789</span>
+<span class="co">#&gt; 6    6 -1.378202</span>
 <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">value</span> <span class="op">~</span> <span class="va">step</span>, <span class="va">data</span>, type <span class="op">=</span> <span class="st">"o"</span>, pch <span class="op">=</span> <span class="fl">19</span>, las <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></code></pre></div>
 <p><img src="kalman_files/figure-html/volatility_data_show-1.png" width="672"></p>
 <p>In order to estimate the parameters of the process that might have generated this dataset, we need, in addition to our model, an observation/comparison function. In this case, given that we observe some <code>state</code>:</p>
@@ -204,13 +219,13 @@
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">volatility_data</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/particle_filter_data.html">particle_filter_data</a></span><span class="op">(</span><span class="va">data</span>, <span class="st">"step"</span>, <span class="fl">1</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">volatility_data</span><span class="op">)</span>
-<span class="co">#&gt;   step_start step_end step_start step_end      value</span>
-<span class="co">#&gt; 1          0        1          0        1 -0.5386879</span>
-<span class="co">#&gt; 2          1        2          1        2 -1.5200665</span>
-<span class="co">#&gt; 3          2        3          2        3 -0.2689406</span>
-<span class="co">#&gt; 4          3        4          3        4 -1.4782263</span>
-<span class="co">#&gt; 5          4        5          4        5 -1.6714681</span>
-<span class="co">#&gt; 6          5        6          5        6 -1.9516663</span></code></pre></div>
+<span class="co">#&gt;   step_start step_end step_start step_end     value</span>
+<span class="co">#&gt; 1          0        1          0        1  1.676830</span>
+<span class="co">#&gt; 2          1        2          1        2  2.423528</span>
+<span class="co">#&gt; 3          2        3          2        3  2.840277</span>
+<span class="co">#&gt; 4          3        4          3        4  2.214624</span>
+<span class="co">#&gt; 5          4        5          4        5  3.252789</span>
+<span class="co">#&gt; 6          5        6          5        6 -1.378202</span></code></pre></div>
 <p>With all these pieces we can create our particle filter object, specifying that we will use <span class="math inline">\(10^3\)</span> particles</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">filter</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="va"><a href="../reference/particle_filter.html">particle_filter</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">volatility_data</span>, <span class="va">volatility</span>, <span class="fl">1000</span>,
@@ -244,11 +259,11 @@
 <p>Running the particle filter simulates the process on all <span class="math inline">\(10^3\)</span> particles and compares at each timestep the simulated data with your observed data using the provided comparison function. It returns the log-likelihood:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">filter</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="va">pars</span><span class="op">)</span>
-<span class="co">#&gt; [1] -180.9987</span></code></pre></div>
+<span class="co">#&gt; [1] -188.739</span></code></pre></div>
 <p>This is stochastic and each time you run it, the estimate will differ:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">filter</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="va">pars</span><span class="op">)</span>
-<span class="co">#&gt; [1] -181.4394</span></code></pre></div>
+<span class="co">#&gt; [1] -188.4773</span></code></pre></div>
 <p>In this case the model is simple enough that we can use a <a href="https://en.wikipedia.org/wiki/Kalman_filter">Kalman Filter</a> to calculate the likelihood exactly:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">kalman_filter</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">alpha</span>, <span class="va">sigma</span>, <span class="va">gamma</span>, <span class="va">tau</span>, <span class="va">data</span><span class="op">)</span> <span class="op">{</span>
@@ -277,11 +292,11 @@
 <span class="va">ll_k</span> <span class="op">&lt;-</span> <span class="fu">kalman_filter</span><span class="op">(</span><span class="va">pars</span><span class="op">$</span><span class="va">alpha</span>, <span class="va">pars</span><span class="op">$</span><span class="va">sigma</span>, <span class="va">pars</span><span class="op">$</span><span class="va">gamma</span>, <span class="va">pars</span><span class="op">$</span><span class="va">tau</span>,
                       <span class="va">volatility_data</span><span class="op">)</span>
 <span class="va">ll_k</span>
-<span class="co">#&gt; [1] -181.0562</span></code></pre></div>
+<span class="co">#&gt; [1] -188.3275</span></code></pre></div>
 <p>Unlike the particle filter the Kalman filter is deterministic:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu">kalman_filter</span><span class="op">(</span><span class="va">pars</span><span class="op">$</span><span class="va">alpha</span>, <span class="va">pars</span><span class="op">$</span><span class="va">sigma</span>, <span class="va">pars</span><span class="op">$</span><span class="va">gamma</span>, <span class="va">pars</span><span class="op">$</span><span class="va">tau</span>, <span class="va">volatility_data</span><span class="op">)</span>
-<span class="co">#&gt; [1] -181.0562</span></code></pre></div>
+<span class="co">#&gt; [1] -188.3275</span></code></pre></div>
 <p>However, the particle filter, run multiple times, will create a distribution centred on this likelihood:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">ll</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">replicate</a></span><span class="op">(</span><span class="fl">200</span>, <span class="va">filter</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="va">pars</span><span class="op">)</span><span class="op">)</span>
@@ -301,7 +316,7 @@
 <p>If you run a particle filter with <code>save_history = TRUE</code>, it will record the (filtered) trajectories:s</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">filter</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="va">pars</span>, save_history <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
-<span class="co">#&gt; [1] -180.921</span>
+<span class="co">#&gt; [1] -188.3159</span>
 <span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">filter</span><span class="op">$</span><span class="fu">history</span><span class="op">(</span><span class="op">)</span><span class="op">)</span>
 <span class="co">#&gt; [1]    1 1000  101</span></code></pre></div>
 <p>This is a <em>N</em> state (here 1) x <em>N</em> particles (1000) x <em>N</em> time steps (100) 3d array, but we will drop the first rank of this for plotting</p>
