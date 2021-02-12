@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Thin a pmcmc chain — pmcmc_thin • mcstate</title>
+<title>Describe varying pmcmc parameter — pmcmc_varied_parameter • mcstate</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -46,11 +46,11 @@
 
 
 
-<meta property="og:title" content="Thin a pmcmc chain — pmcmc_thin" />
-<meta property="og:description" content="Thin results of running pmcmc(). This function may be useful
-before using pmcmc_predict(), or before saving pmcmc output to
-disk.  pmcmc_thin takes every thin'th sample, while
-pmcmc_sample randomly selects a total of n_sample samples." />
+<meta property="og:title" content="Describe varying pmcmc parameter — pmcmc_varied_parameter" />
+<meta property="og:description" content="Describe a varying parameter for use within the nested pmcmc. Note that
+the name is not set here, but will end up being naturally defined
+when used with pmcmc_parameters_nested, which collects
+these together for use with pmcmc()." />
 <meta property="og:image" content="/logo.png" />
 
 
@@ -143,54 +143,140 @@ pmcmc_sample randomly selects a total of n_sample samples." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Thin a pmcmc chain</h1>
-    <small class="dont-index">Source: <a href='https://github.com/mrc-ide/mcstate/blob/master/R/pmcmc_tools.R'><code>R/pmcmc_tools.R</code></a></small>
-    <div class="hidden name"><code>pmcmc_thin.Rd</code></div>
+    <h1>Describe varying pmcmc parameter</h1>
+    <small class="dont-index">Source: <a href='https://github.com/mrc-ide/mcstate/blob/master/R/pmcmc_varied_parameter.R'><code>R/pmcmc_varied_parameter.R</code></a></small>
+    <div class="hidden name"><code>pmcmc_varied_parameter.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Thin results of running <code><a href='pmcmc.html'>pmcmc()</a></code>. This function may be useful
-before using <code><a href='pmcmc_predict.html'>pmcmc_predict()</a></code>, or before saving pmcmc output to
-disk.  <code>pmcmc_thin</code> takes every <code>thin</code>'th sample, while
-<code>pmcmc_sample</code> randomly selects a total of <code>n_sample</code> samples.</p>
+    <p>Describe a varying parameter for use within the nested pmcmc. Note that
+the name is not set here, but will end up being naturally defined
+when used with <code><a href='pmcmc_parameters_nested.html'>pmcmc_parameters_nested</a></code>, which collects
+these together for use with <code><a href='pmcmc.html'>pmcmc()</a></code>.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>pmcmc_thin</span><span class='op'>(</span><span class='va'>object</span>, burnin <span class='op'>=</span> <span class='cn'>NULL</span>, thin <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span>
-
-<span class='fu'>pmcmc_sample</span><span class='op'>(</span><span class='va'>object</span>, <span class='va'>n_sample</span>, burnin <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>pmcmc_varied_parameter</span><span class='op'>(</span>
+  <span class='va'>name</span>,
+  <span class='va'>populations</span>,
+  <span class='va'>initial</span>,
+  min <span class='op'>=</span> <span class='op'>-</span><span class='cn'>Inf</span>,
+  max <span class='op'>=</span> <span class='cn'>Inf</span>,
+  discrete <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  prior <span class='op'>=</span> <span class='cn'>NULL</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>object</th>
-      <td><p>Results of running <code><a href='pmcmc.html'>pmcmc()</a></code></p></td>
+      <th>name</th>
+      <td><p>Name for the parameter (a string)</p></td>
     </tr>
     <tr>
-      <th>burnin</th>
-      <td><p>Optional integer number of iterations to discard as
-"burn-in". If given then samples <code>1:burnin</code> will be
-excluded from your results. Remember that the first sample
-represents the starting point of the chain. It is an error if
-this is not a positive integer or is greater than or equal to
-the number of samples (i.e., there must be at least one sample
-remaining after discarding burnin).</p></td>
+      <th>populations</th>
+      <td><p>The name of the populations for which different values
+of the parameter are being estimated for, length <code>n_pop</code>.</p></td>
     </tr>
     <tr>
-      <th>thin</th>
-      <td><p>Optional integer thinning factor. If given, then every
-<code>thin</code>'th sample is retained (e.g., if <code>thin</code> is 10
-then we keep samples 1, 11, 21, ...).</p></td>
+      <th>initial</th>
+      <td><p>Initial value(s) for the parameter. Must be either length
+<code>n_pop</code> or <code>1</code>, in which case the same value is assumed for all
+populations.</p></td>
     </tr>
     <tr>
-      <th>n_sample</th>
-      <td><p>The number of samples to draw from <code>object</code> <em>with
-replacement</em>. This means that <code>n_sample</code> can be larger than the
-total number of samples taken (though it probably should not)</p></td>
+      <th>min</th>
+      <td><p>Optional minimum value(s) for the parameter (otherwise
+<code>-Inf</code>). If given, then <code>initial</code> must be at least this
+value. Must be either length <code>n_pop</code> or <code>1</code>, in which case the same value
+is assumed for all populations.</p></td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td><p>Optional max value for the parameter (otherwise
+<code>Inf</code>). If given, then <code>initial</code> must be at most this
+value. Must be either length <code>n_pop</code> or <code>1</code>, in which case the same value
+is assumed for all populations.</p></td>
+    </tr>
+    <tr>
+      <th>discrete</th>
+      <td><p>Logical, indicating if this parameter is
+discrete. If <code>TRUE</code> then the parameter will be rounded
+after a new parameter is proposed.</p></td>
+    </tr>
+    <tr>
+      <th>prior</th>
+      <td><p>A prior function (if not given an improper flat prior
+is used - be careful!). It must be a function that takes a
+single argument, being the value of this parameter. If given,
+then <code>prior(initial)</code> must evaluate to a finite value. Must be either
+length <code>n_pop</code> or <code>1</code>, in which case the same value is assumed for all
+populations.</p></td>
     </tr>
     </table>
 
 
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='fu'>pmcmc_varied_parameter</span><span class='op'>(</span>
+  name <span class='op'>=</span> <span class='st'>"size"</span>,
+  populations <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"Europe"</span>, <span class='st'>"America"</span><span class='op'>)</span>,
+  initial <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>100</span>, <span class='fl'>200</span><span class='op'>)</span>,
+  min <span class='op'>=</span> <span class='fl'>0</span>,
+  max <span class='op'>=</span> <span class='cn'>Inf</span>,
+  discrete <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  prior <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='va'>dnorm</span>, <span class='va'>dexp</span><span class='op'>)</span>
+<span class='op'>)</span>
+</div><div class='output co'>#&gt; $Europe
+#&gt; $name
+#&gt; [1] "size"
+#&gt; 
+#&gt; $initial
+#&gt; [1] 100
+#&gt; 
+#&gt; $min
+#&gt; [1] 0
+#&gt; 
+#&gt; $max
+#&gt; [1] Inf
+#&gt; 
+#&gt; $discrete
+#&gt; [1] TRUE
+#&gt; 
+#&gt; $prior
+#&gt; function (x, mean = 0, sd = 1, log = FALSE) 
+#&gt; .Call(C_dnorm, x, mean, sd, log)
+#&gt; &lt;bytecode: 0x7f8541f4c978&gt;
+#&gt; &lt;environment: namespace:stats&gt;
+#&gt; 
+#&gt; attr(,"class")
+#&gt; [1] "pmcmc_parameter"
+#&gt; 
+#&gt; $America
+#&gt; $name
+#&gt; [1] "size"
+#&gt; 
+#&gt; $initial
+#&gt; [1] 200
+#&gt; 
+#&gt; $min
+#&gt; [1] 0
+#&gt; 
+#&gt; $max
+#&gt; [1] Inf
+#&gt; 
+#&gt; $discrete
+#&gt; [1] TRUE
+#&gt; 
+#&gt; $prior
+#&gt; function (x, rate = 1, log = FALSE) 
+#&gt; .Call(C_dexp, x, 1/rate, log)
+#&gt; &lt;bytecode: 0x7f8543526400&gt;
+#&gt; &lt;environment: namespace:stats&gt;
+#&gt; 
+#&gt; attr(,"class")
+#&gt; [1] "pmcmc_parameter"
+#&gt; 
+#&gt; attr(,"class")
+#&gt; [1] "pmcmc_varied_parameter"</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
