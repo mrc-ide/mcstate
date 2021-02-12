@@ -584,6 +584,14 @@ test_that("pmcmc_parameters_nested fix errors", {
               "Fixed parameters")
   expect_error(p$fix(matrix(1, nrow = 2, dimnames = list(letters[1:2], "b"))),
               "Cannot fix")
+
+  parameters <- list(
+    pmcmc_parameter("a", 1, prior = dexp),
+    pmcmc_parameter("b", 1, prior = dexp))
+  p <- pmcmc_parameters_nested$new(parameters, NULL, diag(2),
+                                   populations = letters[1:2])
+  expect_error(p$fix(matrix(1, nrow = 2, dimnames = list(c("c", "b"), "a"))),
+              "Rownames of")
 })
 
 test_that("pmcmc_parameters_nested fix", {
