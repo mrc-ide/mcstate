@@ -615,8 +615,7 @@ test_that("use compiled compare function", {
   n_particles <- 100
   set.seed(1)
 
-  model <- dust::dust(system.file("examples/sir2.cpp", package = "dust"),
-                      quiet = TRUE)
+  model <- dust::dust_example("sir")
   p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index)
   p2 <- particle_filter$new(dat$data, model, n_particles, NULL,
