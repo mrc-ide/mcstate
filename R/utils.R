@@ -110,8 +110,21 @@ set_into <- function(x, at, value) {
   x
 }
 
-
 set_names <- function(x, nms) {
   names(x) <- nms
   x
+}
+
+str_collapse <- function(x) {
+  paste0("{", paste0(x, collapse = ", "), "}")
+}
+
+recycle <- function(x, n, name = deparse(substitute(x))) {
+  if (length(x) == n) {
+    x
+  } else if (length(x) == 1L) {
+    rep_len(x, n)
+  } else {
+    stop(sprintf("Invalid length for '%s', expected 1 or %d", name, n))
+  }
 }

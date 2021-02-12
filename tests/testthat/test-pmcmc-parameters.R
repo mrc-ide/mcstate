@@ -186,13 +186,13 @@ test_that("if proposal has names, they must match parameters", {
 
   expect_error(
     pmcmc_parameters$new(pars, proposal = m(c("a", "b"))),
-    "Expected dimension names of 'proposal' to match parmeters")
+    "Expected dimension names of 'proposal' to match parameters")
   expect_error(
     pmcmc_parameters$new(pars, proposal = m(c("a", "b"), nms)),
-    "Expected dimension names of 'proposal' to match parmeters")
+    "Expected dimension names of 'proposal' to match parameters")
   expect_error(
     pmcmc_parameters$new(pars, proposal = m(nms, c("a", "b"))),
-    "Expected dimension names of 'proposal' to match parmeters")
+    "Expected dimension names of 'proposal' to match parameters")
   expect_silent(pmcmc_parameters$new(pars, proposal = m(nms)))
 })
 
