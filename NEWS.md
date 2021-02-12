@@ -1,3 +1,8 @@
+# mcstate 0.4.6
+
+* Added `pmcmc_varied_parameter` for parameters that can vary between different populations.
+* Added `pmcmc_parameters_nested` to hold parameters that vary between populations (`pmcmc_varied_parameter`) and parameters that are the same (fixed) between populations (`pmcmc_parameter`).
+
 # mcstate 0.4.4
 
 * Fix performance regression added in 0.4.3
