@@ -153,7 +153,7 @@ particle_filter_state <- R6::R6Class(
     ##' the end of the data.
     ##'
     ##' @param partial Logical, indicating if we should return the partial
-    ##' likelihood, due to this step, rather than the full likelihood so far. 
+    ##' likelihood, due to this step, rather than the full likelihood so far.
     step = function(step_index, partial = FALSE) {
       steps <- private$steps
       n_steps <- private$n_steps
