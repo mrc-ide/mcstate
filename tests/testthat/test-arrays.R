@@ -95,3 +95,40 @@ test_that("reshape preserves dimnames where it can", {
   expect_equal(dimnames(res),
                list(letters[1:5], NULL, NULL, NULL, NULL))
 })
+
+
+test_that("drop spare dimensions", {
+  m4 <- random_array(c(5, 1, 10, 1))
+  res1 <- array_drop(m4, 2)
+  expect_equal(c(m4), c(res1))
+  expect_equal(dim(res1), c(5, 10, 1))
+
+  res2 <- array_drop(m4, c(2, 4))
+  expect_equal(c(m4), c(res2))
+  expect_equal(dim(res2), c(5, 10))
+})
+
+
+test_that("preserve names when dropping dimensions", {
+  m4 <- random_array(c(5, 1, 10, 1), TRUE)
+  expect_equal(dimnames(array_drop(m4, 2)), dimnames(m4)[-2])
+  expect_equal(dimnames(array_drop(m4, c(2, 4))), dimnames(m4)[-c(2, 4)])
+})
+
+
+test_that("Prevent impossible drops", {
+  m4 <- random_array(c(5, 1, 10, 1))
+  expect_error(array_drop(m4, c(2, 5)),
+               "array only has 4 dimensions, can't update dimension 5")
+
+  expect_error(array_drop(m4, 1),
+               "Can't drop dimension 1 as it is length 5, not 1")
+  expect_error(
+    array_drop(m4, c(1, 3)),
+    "Can't drop dimensions (1, 3) as they are length (5, 10), not 1",
+    fixed = TRUE)
+  expect_error(
+    array_drop(m4, c(1, 2, 3)),
+    "Can't drop dimensions (1, 3) as they are length (5, 10), not 1",
+    fixed = TRUE)
+})

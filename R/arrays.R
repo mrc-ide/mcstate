@@ -118,3 +118,64 @@ array_reshape <- function(x, i, d) {
   }
   x
 }
+
+
+##' Drop specific array dimensions that are equal to 1. This a more
+##' explicit, safer version of [drop], which requires you indicate
+##' which dimensions will be dropped and errors if dimensions can't be
+##' dropped.
+##'
+##' @title Drop specific array dimensions
+##'
+##' @param x An array
+##'
+##' @param i Index or indices of dimensions to remove
+##'
+##' @return An array
+##' @export
+##' @examples
+##'
+##' # Suppose we have an array with a redundant 2nd dimension
+##' m <- array(1:25, c(5, 1, 5))
+##'
+##' # commonly we might drop this with
+##' drop(m)
+##'
+##' # in this case, array_drop is the same:
+##' mcstate::array_drop(m, 2)
+##'
+##' # However, suppose that our matrix had, in this case, a first
+##' # dimension that was also 1 but we did not want to drop it:
+##' m2 <- m[1, , , drop = FALSE]
+##'
+##' # Here, drop(m2) returns just a vector, discarding our first dimension
+##' drop(m2)
+##'
+##' # However, array_drop will preserve that dimension
+##' mcstate::array_drop(m2, 2)
+array_drop <- function(x, i) {
+  dx <- dim(x)
+  if (length(dx) < max(i)) {
+    stop(sprintf(
+      "array only has %d dimensions, can't update dimension %d",
+      length(dx), max(i)))
+  }
+  if (!all(dx[i] == 1)) {
+    err <- i[dx[i] != 1]
+    if (length(err) == 1L) {
+      stop(sprintf(
+        "Can't drop dimension %d as it is length %d, not 1",
+        err, dx[err]))
+    } else {
+      stop(sprintf(
+        "Can't drop dimensions (%s) as they are length (%s), not 1",
+        paste(err, collapse = ", "), paste(dx[err], collapse = ", ")))
+    }
+  }
+  dn <- dimnames(x)
+  dim(x) <- dim(x)[-i]
+  if (!is.null(dn)) {
+    dimnames(x) <- dn[-i]
+  }
+  x
+}
