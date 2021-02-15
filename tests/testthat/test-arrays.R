@@ -1,0 +1,79 @@
+context("helpers")
+
+test_that("array_bind", {
+  m2 <- random_array(c(5, 10))
+  array_bind(m2[, 1:4], m2[, 5:10])
+
+  expect_identical(array_bind(m2[, 1:4], m2[, 5:10]), m2)
+
+  m3 <- random_array(c(5, 7, 10))
+  expect_identical(array_bind(m3[, , 1:4], m3[, , 5:10]), m3)
+
+  m4 <- random_array(c(5, 7, 3, 10))
+  expect_identical(array_bind(m4[, , , 1:4], m4[, , , 5:10]), m4)
+})
+
+
+test_that("preserve dimension names on merge", {
+  drop_last_names <- function(m) {
+    dn <- dimnames(m)
+    dn[length(dn)] <- list(NULL)
+    dimnames(m) <- dn
+    m
+  }
+
+  m2 <- random_array(c(5, 10), TRUE)
+  expect_identical(array_bind(m2[, 1:4], m2[, 5:10]), m2)
+  expect_identical(array_bind(drop_last_names(m2[, 1:4]), m2[, 5:10]),
+                   drop_last_names(m2))
+  expect_identical(array_bind(m2[, 1:4], drop_last_names(m2[, 5:10])),
+                   drop_last_names(m2))
+
+  m3 <- random_array(c(5, 7, 10), TRUE)
+  expect_identical(array_bind(m3[, , 1:4], m3[, , 5:10]), m3)
+
+  m4 <- random_array(c(5, 7, 3, 10), TRUE)
+  expect_identical(array_bind(m4[, , , 1:4], m4[, , , 5:10]), m4)
+})
+
+
+test_that("Can't merge incompatible arrays", {
+  m4 <- random_array(c(5, 7, 3, 10))
+  expect_error(
+    array_bind(m4[, , , 1:4], m4[, , -1, 5:10]),
+    "array 2 (dimension 3)",
+    fixed = TRUE)
+  expect_error(
+    array_bind(m4[, , , 1:4], m4[-1, , , 1:4], m4[-1, -1, -1, 5:10]),
+    "array 2 (dimension 1), array 3 (dimension 1, 2, 3)",
+    fixed = TRUE)
+  expect_error(
+    array_bind(m4[, , , 1:4], random_array(c(5, 7, 10))),
+    "Incompatible rank arrays (expected 4): array 2 (rank 3)",
+    fixed = TRUE)
+})
+
+
+test_that("trivial case", {
+  m4 <- random_array(c(5, 7, 3, 10))
+  expect_identical(array_bind(m4), m4)
+  expect_error(array_bind(), "Must provide at least one array")
+})
+
+
+test_that("reshape", {
+  m4 <- random_array(c(5, 7, 10, 13))
+  res <- array_reshape(m4, 3L, c(2, 5))
+  expect_equal(dim(res), c(5, 7, 2, 5, 13))
+  expect_equal(c(res), c(m4))
+
+  expect_equal(res[2, 2, , ,  2], matrix(m4[2, 2, , 2], 2, 5))
+
+  expect_error(
+    array_reshape(m4, 10, c(2, 5)),
+    "array only has 4 dimensions, can't update dimension 10")
+  expect_error(
+    array_reshape(m4, 3, c(2, 6)),
+    "New dimensions (2, 6) imply dimension 3 has length 12 but found 10",
+    fixed = TRUE)
+})
