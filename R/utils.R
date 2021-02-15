@@ -23,18 +23,6 @@ list_to_numeric <- function(x) {
 }
 
 
-## Array-bind on 3rd dimension
-abind3 <- function(a, b) {
-  na <- dim(a)[3]
-  nb <- dim(b)[3]
-  nab <- dim(a)[1:2]
-  ret <- array(NA_real_, c(nab, na + nb))
-  ret[, , seq_len(na)] <- a
-  ret[, , seq_len(nb) + na] <- b
-  ret
-}
-
-
 data_frame <- function(...) {
   data.frame(..., stringsAsFactors = FALSE)
 }
