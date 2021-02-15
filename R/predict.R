@@ -51,13 +51,19 @@ pmcmc_predict <- function(object, steps, prepend_trajectories = FALSE,
   }
 
   state <- object$state
-  data <- apply(object$pars, 1, object$predict$transform)
+  pars <- apply(object$pars, 1, object$predict$transform)
   index <- object$predict$index
   model <- object$predict$filter$model
   n_threads <- n_threads %||% object$predict$filter$n_threads
 
-  y <- dust::dust_simulate(model, steps, data, state, index, n_threads, seed)
-  rownames(y) <- names(index)
+  ## NOTE: n_particles here is 1 because every particle gets a
+  ## different state.
+  mod <- model$new(pars, steps[[1]], 1L, n_threads = n_threads,
+                   seed = seed, pars_multi = TRUE)
+  mod$set_state(array_reshape(state, 2, c(1, length(data))))
+  mod$set_index(index)
+  y <- mod$simulate(steps)
+  y <- array_drop(y, 2L) # (state x particles(1) x pars x time)
 
   res <- mcstate_trajectories(steps, object$predict$rate, y, TRUE)
   if (prepend_trajectories) {
