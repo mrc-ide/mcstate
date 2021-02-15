@@ -60,7 +60,7 @@ pmcmc_predict <- function(object, steps, prepend_trajectories = FALSE,
   ## different state.
   mod <- model$new(pars, steps[[1]], 1L, n_threads = n_threads,
                    seed = seed, pars_multi = TRUE)
-  mod$set_state(array_reshape(state, 2, c(1, length(data))))
+  mod$set_state(array_reshape(state, 2, c(1, length(pars))))
   mod$set_index(index)
   y <- mod$simulate(steps)
   y <- array_drop(y, 2L) # (state x particles(1) x pars x time)
