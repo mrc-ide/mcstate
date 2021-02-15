@@ -42,7 +42,7 @@ array_bind <- function(..., arrays = list(...)) {
   r <- r[[1]]
   d <- matrix(unlist(d), r)
 
-  d_shared <- d[-r , , drop = FALSE]
+  d_shared <- d[-r, , drop = FALSE]
   d_diff <- d_shared - d_shared[, 1] != 0
   if (any(d_diff)) {
     err <- which(d_diff, TRUE)
