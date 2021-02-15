@@ -77,3 +77,21 @@ test_that("reshape", {
     "New dimensions (2, 6) imply dimension 3 has length 12 but found 10",
     fixed = TRUE)
 })
+
+
+test_that("reshape preserves dimnames where it can", {
+  m4 <- random_array(c(5, 7, 10, 13), TRUE)
+  res <- array_reshape(m4, 3L, c(2, 5))
+  expect_equal(dim(res), c(5, 7, 2, 5, 13))
+  expect_equal(dimnames(res),
+               c(dimnames(m4)[1:2],
+                 list(NULL, NULL),
+                 dimnames(m4)[4]))
+
+  dimnames(m4) <- NULL
+  rownames(m4) <- letters[1:5]
+  res <- array_reshape(m4, 3L, c(2, 5))
+  expect_equal(dim(res), c(5, 7, 2, 5, 13))
+  expect_equal(dimnames(res),
+               list(letters[1:5], NULL, NULL, NULL, NULL))
+})
