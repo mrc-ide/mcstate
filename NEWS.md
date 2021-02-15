@@ -1,6 +1,6 @@
 # mcstate 0.4.7
 
-* Added helper methods `mcstate::array_bind` and `mcstate::array_reshape` to simplify some common array operations (#106)
+* Added helper methods `mcstate::array_bind`, `mcstate::array_reshape` and `mcstate::array_drop` to simplify some common array operations (#106)
 
 # mcstate 0.4.6
 
