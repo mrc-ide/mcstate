@@ -1,3 +1,7 @@
+# mcstate 0.4.7
+
+* Added helper methods `mcstate::array_bind` and `mcstate::array_reshape` to simplify some common array operations (#106)
+
 # mcstate 0.4.6
 
 * Added `pmcmc_varied_parameter` for parameters that can vary between different populations.
