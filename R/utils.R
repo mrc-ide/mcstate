@@ -116,3 +116,36 @@ recycle <- function(x, n, name = deparse(substitute(x))) {
     stop(sprintf("Invalid length for '%s', expected 1 or %d", name, n))
   }
 }
+
+is_3d_array <- function(x) {
+  !is.na(nlayer(x))
+}
+
+nlayer <- function(x) {
+  dim(x)[3L]
+}
+
+NLAYER <- function(x) {
+  d <- dim(x)
+  if (length(d) > 2L) {
+    d[3L]
+  } else {
+    1L
+  }
+}
+
+layernames <- function (x, do.NULL = TRUE, prefix = "layer") {
+    dn <- dimnames(x)
+    if (!is.null(dn[[3L]]))
+        dn[[3L]]
+    else {
+      nl <- NLAYER(x)
+      if (do.NULL) {
+        NULL
+      } else if (nl > 0L) {
+        paste0(prefix, seq_len(nl))
+      } else {
+        character()
+      }
+    }
+}

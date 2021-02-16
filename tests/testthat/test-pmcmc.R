@@ -584,3 +584,21 @@ test_that("Fix parameters in sir model", {
   expect_equal(dim(results$pars), c(11, 1))
   expect_equal(results$predict$transform(pi), list(beta = pi, gamma = 0.1))
 })
+
+test_that("mcmc works for uniform distribution on unit square", {
+  dat <- example_uniform_shared()
+  control <- pmcmc_control(1000, save_state = FALSE, save_trajectories = FALSE)
+
+  res <- pmcmc(dat$pars, dat$filter, control = control)
+
+
+
+  set.seed(1)
+  testthat::try_again(5, {
+
+    expect_s3_class(res, "mcstate_pmcmc")
+    expect_true(all(acceptance_rate(res$pars) == 1))
+    expect_true(abs(mean(res$pars[, "a"]) - 0.5) < 0.05)
+    expect_true(abs(mean(res$pars[, "b"]) - 0.5) < 0.05)
+  })
+})

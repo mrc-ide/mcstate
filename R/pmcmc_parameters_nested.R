@@ -501,7 +501,7 @@ clean_proposals <- function(proposal_varied, proposal_fixed, populations,
         len_varied, len_varied, len_pop))
     }
 
-    if (!is.null(dim_names_var[[3]])) {
+    if (length(dim_names_var) == 3) {
       if (!identical(dim_names_var[[3]], populations)) {
         stop("Expected 3rd dimension names of 'proposal' to match
         populations")
