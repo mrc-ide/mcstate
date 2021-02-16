@@ -62,7 +62,7 @@ pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
                   save_trajectories = FALSE, progress = FALSE,
                   n_chains = 1, initial = NULL, rerun_every = Inf,
                   control = NULL) {
-  assert_is(pars, "pmcmc_parameters")
+  assert_is(pars, c("pmcmc_parameters", "pmcmc_parameters_nested"))
   assert_is(filter, "particle_filter")
   if (is.null(control)) {
     warning("Please update your code to use pmcmc::pmcmc_control()",
@@ -83,7 +83,12 @@ pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
     }
   }
 
-  initial <- pmcmc_check_initial(initial, pars, control$n_chains)
+  if (inherits(pars, "pmcmc_parameters_nested")) {
+    initial <- pmcmc_check_initial_nested(initial, pars, control$n_chains)
+  } else {
+    initial <- pmcmc_check_initial(initial, pars, control$n_chains)
+  }
+
 
   if (control$n_workers == 1) {
     pmcmc_multiple_series(pars, initial, filter, control)
@@ -148,6 +153,62 @@ pmcmc_check_initial <- function(initial, pars, n_chains) {
     initial <- pars$initial()
   }
   if (is.matrix(initial)) {
+    if (nrow(initial) != n_pars) {
+      stop(sprintf("Expected a matrix with %d rows for 'initial'", n_pars))
+    }
+    if (ncol(initial) != n_chains) {
+      stop(sprintf("Expected a matrix with %d columns for 'initial'", n_chains))
+    }
+    if (!is.null(rownames(initial)) && !identical(rownames(initial), nms)) {
+      stop("If 'initial' has rownames, they must match pars$names()")
+    }
+    ok <- apply(initial, 2, function(p) is.finite(pars$prior(p)))
+    if (any(!ok)) {
+      stop(sprintf(
+        "Starting point does not have finite prior probability (%s)",
+        paste(which(!ok), collapse = ", ")))
+    }
+  } else {
+    if (length(initial) != n_pars) {
+      stop(sprintf("Expected a vector of length %d for 'initial'", n_pars))
+    }
+    if (!is.null(names(initial)) && !identical(names(initial), nms)) {
+      stop("If 'initial' has names, they must match pars$names()")
+    }
+    if (!is.finite(pars$prior(initial))) {
+      stop("Starting point does not have finite prior probability")
+    }
+    initial <- matrix(initial, n_pars, n_chains)
+  }
+  dimnames(initial) <- list(nms, NULL)
+  initial
+}
+
+## TODO: This does not check that the parameters are in range, or that
+## they are appropriately discrete. We should add that in too at some
+## point, though this overlaps with some outstanding validation in the
+## smc2 branch.
+pmcmc_check_initial_nested <- function(initial, pars, n_chains) {
+  nms <- pars$names()
+  n_pars <- length(nms)
+  n_pops <- length(pars$populations())
+
+  if (is.null(initial)) {
+    initial <- pars$initial()
+  }
+  if (is_3d_array(initial)) {
+    if (nlayer(initial) != n_chains) {
+      stop(sprintf("Expected an array with %d layers for 'initial'", n_chains))
+    }
+    if (ncol(initial) != n_pars) {
+      stop(sprintf("Expected an array with %d columns for 'initial'", n_pars))
+    }
+    if (nrow(initial) != n_pops) {
+      stop(sprintf("Expected an array with %d rows for 'initial'", n_pops))
+    }
+
+
+
     if (nrow(initial) != n_pars) {
       stop(sprintf("Expected a matrix with %d rows for 'initial'", n_pars))
     }
