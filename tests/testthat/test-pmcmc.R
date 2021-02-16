@@ -585,10 +585,89 @@ test_that("Fix parameters in sir model", {
   expect_equal(results$predict$transform(pi), list(beta = pi, gamma = 0.1))
 })
 
+test_that("pmcmc_check_initial_nested - silent null initial", {
+  dat <- example_uniform_shared()
+  expect_equal(
+    pmcmc_check_initial_nested(NULL, dat$pars, 2),
+    array(dat$pars$initial(), c(3, 4, 2),
+      dimnames = list(c("p1", "p2", "p3"), letters[1:4]))
+  )
+})
+
+test_that("pmcmc_check_initial_nested - silent matrix initial", {
+  dat <- example_uniform_shared()
+  expect_equal(
+    pmcmc_check_initial_nested(matrix(1, 3, 4), dat$pars, 2),
+    array(1, c(3, 4, 2), dimnames = list(paste0("p", 1:3), letters[1:4], NULL))
+  )
+})
+
+test_that("pmcmc_check_initial_nested - silent array initial", {
+  dat <- example_uniform_shared()
+  expect_equal(
+    pmcmc_check_initial_nested(array(1, c(3, 4, 2)), dat$pars, 2),
+    array(1, c(3, 4, 2), dimnames = list(paste0("p", 1:3), letters[1:4], NULL))
+  )
+})
+
+test_that("pmcmc_check_initial_nested - error array initial", {
+  dat <- example_uniform_shared()
+  expect_error(
+    pmcmc_check_initial_nested(array(dim = c(3, 4, 1)), dat$pars, 2),
+    "Expected an array with 2 layers"
+  )
+  expect_error(
+    pmcmc_check_initial_nested(array(dim = c(3, 5, 2)), dat$pars, 2),
+    "Expected an array with 4 columns"
+  )
+  expect_error(
+    pmcmc_check_initial_nested(array(dim = c(2, 4, 2)), dat$pars, 2),
+    "Expected an array with 3 rows"
+  )
+  expect_error(
+    pmcmc_check_initial_nested(array(dim = c(3, 4, 2),
+      dimnames = list(letters[1:3], letters[1:4], NULL)), dat$pars, 2),
+    "has rownames"
+  )
+  expect_error(
+    pmcmc_check_initial_nested(array(dim = c(3, 4, 2),
+      dimnames = list(paste0("p", 1:3), letters[10:13], NULL)), dat$pars, 2),
+    "has colnames"
+  )
+  expect_error(
+    pmcmc_check_initial_nested(array(2, dim = c(3, 4, 2)), dat$pars, 2),
+    "finite prior"
+  )
+})
+
+test_that("pmcmc_check_initial_nested - error matrix initial", {
+  dat <- example_uniform_shared()
+  expect_error(
+    pmcmc_check_initial_nested(matrix(nrow = 3, ncol = 5), dat$pars, 2),
+    "Expected a matrix with 4 columns"
+  )
+  expect_error(
+    pmcmc_check_initial_nested(matrix(nrow = 2, ncol = 4), dat$pars, 2),
+    "Expected a matrix with 3 rows"
+  )
+  expect_error(
+    pmcmc_check_initial_nested(matrix(nrow = 3, ncol = 4,
+      dimnames = list(letters[1:3], letters[1:4])), dat$pars, 2),
+    "has rownames"
+  )
+  expect_error(
+    pmcmc_check_initial_nested(matrix(nrow = 3, ncol = 4,
+      dimnames = list(paste0("p", 1:3), letters[10:13])), dat$pars, 2),
+    "has colnames"
+  )
+  expect_error(pmcmc_check_initial_nested(matrix(2, 3, 4), dat$pars, 2),
+               "finite prior")
+})
+
+
 test_that("mcmc works for uniform distribution on unit square", {
   dat <- example_uniform_shared()
   control <- pmcmc_control(1000, save_state = FALSE, save_trajectories = FALSE)
-
   res <- pmcmc(dat$pars, dat$filter, control = control)
 
 

@@ -87,12 +87,12 @@ example_uniform <- function(proposal_kernel = NULL) {
 example_uniform_shared <- function(proposal_varied = NULL,
                                    proposal_fixed = NULL) {
   target <- function(p, ...) {
-    1
+    rep(1, 3)
   }
   filter <- structure(list(run = target,
                            n_particles = 10,
-                           state = function() matrix(1, 2, 10),
-                           trajectories = function(i) matrix(1, 2, 10)),
+                           state = function() array(1, c(3, 4, 10)),
+                           trajectories = function(i) array(1, c(3, 4, 10))),
                       class = "particle_filter")
 
   if (is.null(proposal_varied)) {
@@ -104,18 +104,20 @@ example_uniform_shared <- function(proposal_varied = NULL,
     row.names(proposal_fixed) <- colnames(proposal_fixed) <- c("a", "b")
   }
 
+  pops <- paste0("p", 1:3)
+
   pars <- pmcmc_parameters_nested$new(
     list(pmcmc_parameter("a", 0.5, min = 0, max = 1,
                          prior = function(p) dunif(p, log = TRUE)),
          pmcmc_parameter("b", 0.5, min = 0, max = 1,
                          prior = function(p) dunif(p, log = TRUE)),
-         pmcmc_varied_parameter("c", c("p1", "p2"), 0.5, min = 0, max = 1,
+         pmcmc_varied_parameter("c", pops, 0.5, min = 0, max = 1,
                          prior = function(p) dunif(p, log = TRUE)),
-         pmcmc_varied_parameter("d", c("p1", "p2"), 0.5, min = 0, max = 1,
+         pmcmc_varied_parameter("d", pops, 0.5, min = 0, max = 1,
                          prior = function(p) dunif(p, log = TRUE))),
     proposal_varied = proposal_varied,
     proposal_fixed = proposal_fixed,
-    populations = c("p1", "p2"))
+    populations = pops)
 
   list(target = target, filter = filter, pars = pars)
 }
