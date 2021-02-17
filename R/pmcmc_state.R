@@ -64,9 +64,15 @@ pmcmc_state <- R6::R6Class(
       private$curr_lpost <- private$curr_lprior + private$curr_llik
 
       private$history_pars$add(private$curr_pars)
-      private$history_probabilities$add(c(private$curr_lprior,
+      if (inherits(pars, "pmcmc_parameters_nested")) {
+        private$history_probabilities$add(
+          matrix(c(private$curr_lprior, private$curr_llik, private$curr_lpost),
+                 ncol = 3, byrow = TRUE))
+      } else {
+        private$history_probabilities$add(c(private$curr_lprior,
                                           private$curr_llik,
                                           private$curr_lpost))
+      }
 
       private$tick <- pmcmc_progress(control$n_steps, control$progress)
 
@@ -101,7 +107,7 @@ pmcmc_state <- R6::R6Class(
           private$update_history()
         }
 
-        prop_pars <- private$pars$propose(private$curr_pars, type = "varied")
+        prop_pars <- private$pars$propose(private$curr_pars)
         prop_lprior <- private$pars$prior(prop_pars)
         prop_llik <- private$run_filter(prop_pars)
         prop_lpost <- prop_lprior + prop_llik
@@ -187,7 +193,8 @@ pmcmc_state <- R6::R6Class(
 
         private$history_pars$add(private$curr_pars)
         private$history_probabilities$add(
-          c(private$curr_lprior, private$curr_llik, private$curr_lpost))
+          matrix(c(private$curr_lprior, private$curr_llik, private$curr_lpost),
+                 ncol = 3, byrow = TRUE))
         if (private$control$save_trajectories) {
           private$history_trajectories$add(private$curr_trajectories)
         }
@@ -252,11 +259,13 @@ pmcmc_state <- R6::R6Class(
     },
 
     finish_nested = function() {
-      pars_matrix <- set_colnames(list_to_matrix(private$history_pars$get()),
-                                  names(private$curr_pars))
-      probabilities <- set_colnames(
-        list_to_matrix(private$history_probabilities$get()),
-        c("log_prior", "log_likelihood", "log_posterior"))
+      pars_array <- list_to_array(private$history_pars$get())
+      dimnames(pars_array)[1:2] <- dimnames(private$curr_pars)
+
+      probabilities <- list_to_array(private$history_probabilities$get())
+      dimnames(probabilities)[1:2] <- list(rownames(private$curr_pars),
+                                        c("log_prior", "log_likelihood",
+                                          "log_posterior"))
 
       predict <- state <- restart <- trajectories <- NULL
 
@@ -296,7 +305,7 @@ pmcmc_state <- R6::R6Class(
                                              trajectories_state, FALSE)
       }
 
-      mcstate_pmcmc(pars_matrix, probabilities, state, trajectories, restart,
+      mcstate_pmcmc(pars_array, probabilities, state, trajectories, restart,
                     predict)
     }
   ))

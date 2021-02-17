@@ -100,7 +100,7 @@ example_uniform_shared <- function(proposal_varied = NULL,
     row.names(proposal_varied) <- colnames(proposal_varied) <- c("c", "d")
   }
   if (is.null(proposal_fixed)) {
-    proposal_fixed <- diag(2) * 0.3
+    proposal_fixed <- diag(2) * 0.1
     row.names(proposal_fixed) <- colnames(proposal_fixed) <- c("a", "b")
   }
 

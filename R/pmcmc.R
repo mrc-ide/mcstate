@@ -118,7 +118,7 @@ pmcmc_single_chain_nested <- function(pars, initial, filter, control,
   }
   obj <- pmcmc_state$new(pars, initial, filter, control)
   obj$run_nested()
-  obj$finish()
+  obj$finish_nested()
 }
 
 

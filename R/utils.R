@@ -67,7 +67,6 @@ set_colnames <- function(m, nms) {
   m
 }
 
-
 last <- function(x) {
   x[[length(x)]]
 }
@@ -98,14 +97,17 @@ set_into <- function(x, at, value) {
   x
 }
 
+
 set_names <- function(x, nms) {
   names(x) <- nms
   x
 }
 
+
 str_collapse <- function(x) {
   paste0("{", paste0(x, collapse = ", "), "}")
 }
+
 
 recycle <- function(x, n, name = deparse(substitute(x))) {
   if (length(x) == n) {
@@ -117,14 +119,19 @@ recycle <- function(x, n, name = deparse(substitute(x))) {
   }
 }
 
+
 is_3d_array <- function(x) {
   !is.na(nlayer(x))
 }
 
+
+## Copied from ncol
 nlayer <- function(x) {
   dim(x)[3L]
 }
 
+
+## Copied from NCOL
 NLAYER <- function(x) {
   d <- dim(x)
   if (length(d) > 2L) {
@@ -134,6 +141,8 @@ NLAYER <- function(x) {
   }
 }
 
+
+## Copied from colnames
 layernames <- function (x, do.NULL = TRUE, prefix = "layer") {
     dn <- dimnames(x)
     if (!is.null(dn[[3L]]))
@@ -148,4 +157,31 @@ layernames <- function (x, do.NULL = TRUE, prefix = "layer") {
         character()
       }
     }
+}
+
+
+## Copied from colnames<-
+`layernames<-` <- function (x, value) {
+  dn <- dimnames(x)
+  if (is.null(dn)) {
+    if (is.null(value))
+      return(x)
+    if ((nd <- length(dim(x))) < 3L)
+      stop("attempt to set 'layernames' on an object with less than three
+      dimensions")
+      dn <- vector("list", nd)
+  }
+  if (length(dn) < 3L)
+    stop("attempt to set 'colnames' on an object with less than three dimensions")
+  if (is.null(value))
+    dn[3L] <- list(NULL)
+  else dn[[3L]] <- value
+    dimnames(x) <- dn
+  x
+}
+
+
+set_layernames <- function(m, nms) {
+  layernames(m) <- nms
+  m
 }
