@@ -664,7 +664,7 @@ test_that("pmcmc_check_initial_nested - error matrix initial", {
                "finite prior")
 })
 
-test_that("mcmc works for uniform distribution on unit square - fixed only", {
+test_that("pmcmc nested Uniform on unit square - fixed only", {
   dat <- example_uniform_shared(varied = FALSE)
   control <- pmcmc_control(1000, save_state = FALSE, save_trajectories = FALSE)
 
@@ -680,7 +680,7 @@ test_that("mcmc works for uniform distribution on unit square - fixed only", {
   })
 })
 
-test_that("mcmc works for uniform distribution on unit square - varied only", {
+test_that("pmcmc nested Uniform on unit square - varied only", {
   dat <- example_uniform_shared(fixed = FALSE)
   control <- pmcmc_control(1000, save_state = FALSE, save_trajectories = FALSE)
 
@@ -697,7 +697,7 @@ test_that("mcmc works for uniform distribution on unit square - varied only", {
 })
 
 
-test_that("mcmc works for uniform distribution on unit square", {
+test_that("pmcmc nested Uniform on unit square", {
   dat <- example_uniform_shared()
   control <- pmcmc_control(1000, save_state = FALSE, save_trajectories = FALSE)
 
@@ -712,5 +712,20 @@ test_that("mcmc works for uniform distribution on unit square", {
     expect_true(abs(mean(res$pars[, "b", ]) - 0.5) < 0.05)
     expect_true(abs(mean(res$pars[, "c", ]) - 0.5) < 0.05)
     expect_true(abs(mean(res$pars[, "d", ]) - 0.5) < 0.05)
+  })
+})
+
+test_that("pmcmc nested multivariate gaussian", {
+  dat <- example_mvnorm_shared()
+  control <- pmcmc_control(1000, save_state = FALSE, save_trajectories = FALSE)
+
+  set.seed(1)
+  testthat::try_again(5, {
+    res <- pmcmc(dat$pars, dat$filter, control = control)
+    i <- seq(1, 1000, by = 20)
+    expect_s3_class(res, "mcstate_pmcmc")
+    expect_gt(ks.test(res$pars[i, "a"], "pnorm")$p.value, 0.05)
+    expect_gt(ks.test(res$pars[i, "b"], "pnorm")$p.value, 0.05)
+    expect_lt(abs(cov(res$pars)[1, 2]), 0.1)
   })
 })
