@@ -142,6 +142,9 @@ pmcmc_state <- R6::R6Class(
                 private$control$n_steps)
       steps <- seq(from = private$curr_step + 1L,
                    length.out = to - private$curr_step)
+      fixed_pars <- r6_private(private$pars)$param_names$fixed
+      varied_pars <- r6_private(private$pars)$param_names$varied
+
       for (i in steps) {
         private$tick()
 
@@ -151,36 +154,45 @@ pmcmc_state <- R6::R6Class(
           private$update_history()
         }
 
-        prop_fix_pars <- private$pars$propose(private$curr_pars,
-                                              type = "fixed")
-        prop_fix_lprior <- private$pars$prior(prop_fix_pars)
-        prop_fix_llik <- private$run_filter(prop_fix_pars)
-        prop_fix_lpost <- prop_fix_lprior + prop_fix_llik
-
-        prop_var_pars <- private$pars$propose(private$curr_pars,
-                                              type = "varied")
-        prop_var_lprior <- private$pars$prior(prop_var_pars)
-        prop_var_llik <- private$run_filter(prop_var_pars)
-        prop_var_lpost <- prop_var_lprior + prop_var_llik
-
         new_pars <- private$curr_pars
         new_lprior <- new_llik <- new_lpost <- numeric(nrow(new_pars))
-        fixed_pars <- r6_private(private$pars)$param_names$fixed
-        varied_pars <- r6_private(private$pars)$param_names$varied
 
-        if (all(runif(1) < exp(prop_fix_lpost - private$curr_lpost))) {
-          new_pars[, fixed_pars] <- prop_fix_pars[, fixed_pars]
-          new_lprior <- new_lprior + prop_fix_lprior
-          new_llik <- new_llik + prop_fix_llik
-          new_lpost <- new_lpost + prop_fix_lpost
+        if (length(fixed_pars) > 0) {
+          prop_fix_pars <- private$pars$propose(private$curr_pars,
+                                              type = "fixed")
+          prop_fix_lprior <- private$pars$prior(prop_fix_pars)
+          prop_fix_llik <- private$run_filter(prop_fix_pars)
+          prop_fix_lpost <- prop_fix_lprior + prop_fix_llik
+
+
+          # FIXME - I believe using runif(1) here and below is correct instead
+          # of runif(length(prop_fix_lpost)) but need to double check.
+          if (all(runif(1) < exp(prop_fix_lpost - private$curr_lpost))) {
+            new_pars[, fixed_pars] <- prop_fix_pars[, fixed_pars]
+            new_lprior <- new_lprior + prop_fix_lprior
+            new_llik <- new_llik + prop_fix_llik
+            new_lpost <- new_lpost + prop_fix_lpost
+          } else {
+            print(prop_fix_pars)
+            print(prop2)
+            stop()
+          }
         }
 
-        which <- runif(1) < exp(prop_var_lpost - private$curr_lpost)
-        if (any(which)) {
-          new_pars[which, varied_pars] <- prop_var_pars[which, varied_pars]
-          new_lprior[which] <- new_lprior[which] + prop_var_lprior[which]
-          new_llik[which] <- new_llik[which] + prop_var_llik[which]
-          new_lpost[which] <- new_lpost[which] + prop_var_lpost[which]
+        if (length(varied_pars) > 0) {
+          prop_var_pars <- private$pars$propose(private$curr_pars,
+                                                type = "varied")
+          prop_var_lprior <- private$pars$prior(prop_var_pars)
+          prop_var_llik <- private$run_filter(prop_var_pars)
+          prop_var_lpost <- prop_var_lprior + prop_var_llik
+
+          which <- runif(1) < exp(prop_var_lpost - private$curr_lpost)
+          if (any(which)) {
+            new_pars[which, varied_pars] <- prop_var_pars[which, varied_pars]
+            new_lprior[which] <- new_lprior[which] + prop_var_lprior[which]
+            new_llik[which] <- new_llik[which] + prop_var_llik[which]
+            new_lpost[which] <- new_lpost[which] + prop_var_lpost[which]
+          }
         }
 
         if (!identical(new_pars, private$curr_pars)) {

@@ -84,40 +84,57 @@ example_uniform <- function(proposal_kernel = NULL) {
   list(target = target, filter = filter, pars = pars)
 }
 
-example_uniform_shared <- function(proposal_varied = NULL,
+example_uniform_shared <- function(varied = TRUE, fixed = TRUE,
+                                   proposal_varied = NULL,
                                    proposal_fixed = NULL) {
   target <- function(p, ...) {
     rep(1, 3)
   }
+  if (!varied || !fixed) {
+    n_par <- 2
+  } else {
+    n_par <- 4
+  }
   filter <- structure(list(run = target,
                            n_particles = 10,
-                           state = function() array(1, c(3, 4, 10)),
-                           trajectories = function(i) array(1, c(3, 4, 10))),
+                           state = function() array(1, c(3, n_par, 10)),
+                           trajectories = function(i) array(1, c(3, n_par,
+                                                                 10))),
                       class = "particle_filter")
 
-  if (is.null(proposal_varied)) {
-    proposal_varied <- diag(2) * 0.1
-    row.names(proposal_varied) <- colnames(proposal_varied) <- c("c", "d")
-  }
-  if (is.null(proposal_fixed)) {
-    proposal_fixed <- diag(2) * 0.1
-    row.names(proposal_fixed) <- colnames(proposal_fixed) <- c("a", "b")
-  }
-
+  pars <- list()
   pops <- paste0("p", 1:3)
 
-  pars <- pmcmc_parameters_nested$new(
-    list(pmcmc_parameter("a", 0.5, min = 0, max = 1,
+  if (fixed) {
+    if (is.null(proposal_fixed)) {
+      proposal_fixed <- diag(2) * 0.1
+      row.names(proposal_fixed) <- colnames(proposal_fixed) <- c("a", "b")
+    }
+    pars <- c(pars,
+    list(
+      pmcmc_parameter("a", 0.5, min = 0, max = 1,
                          prior = function(p) dunif(p, log = TRUE)),
-         pmcmc_parameter("b", 0.5, min = 0, max = 1,
+      pmcmc_parameter("b", 0.5, min = 0, max = 1,
+                         prior = function(p) dunif(p, log = TRUE))
+    ))
+  }
+
+  if (varied) {
+    if (is.null(proposal_varied)) {
+      proposal_varied <- diag(2) * 0.1
+      row.names(proposal_varied) <- colnames(proposal_varied) <- c("c", "d")
+    }
+    pars <- c(pars,
+    list(
+      pmcmc_varied_parameter("c", pops, 0.5, min = 0, max = 1,
                          prior = function(p) dunif(p, log = TRUE)),
-         pmcmc_varied_parameter("c", pops, 0.5, min = 0, max = 1,
-                         prior = function(p) dunif(p, log = TRUE)),
-         pmcmc_varied_parameter("d", pops, 0.5, min = 0, max = 1,
-                         prior = function(p) dunif(p, log = TRUE))),
-    proposal_varied = proposal_varied,
-    proposal_fixed = proposal_fixed,
-    populations = pops)
+      pmcmc_varied_parameter("d", pops, 0.5, min = 0, max = 1,
+                         prior = function(p) dunif(p, log = TRUE))
+    ))
+  }
+
+  pars <- pmcmc_parameters_nested$new(pars, proposal_varied, proposal_fixed,
+                                      pops)
 
   list(target = target, filter = filter, pars = pars)
 }

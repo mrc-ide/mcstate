@@ -664,21 +664,36 @@ test_that("pmcmc_check_initial_nested - error matrix initial", {
                "finite prior")
 })
 
-
-test_that("mcmc works for uniform distribution on unit square", {
-  dat <- example_uniform_shared()
+test_that("mcmc works for uniform distribution on unit square - fixed only", {
+  dat <- example_uniform_shared(varied = FALSE)
   control <- pmcmc_control(1000, save_state = FALSE, save_trajectories = FALSE)
-  res <- pmcmc(dat$pars, dat$filter, control = control)
 
   set.seed(1)
   testthat::try_again(5, {
+    res <- pmcmc(dat$pars, dat$filter, control = control)
     expect_s3_class(res, "mcstate_pmcmc")
     expect_true(all(acceptance_rate(t(res$pars["p1", , ])) == 1))
     expect_true(all(acceptance_rate(t(res$pars["p2", , ])) == 1))
     expect_true(all(acceptance_rate(t(res$pars["p3", , ])) == 1))
-    expect_true(abs(mean(res$pars[, "a",]) - 0.5) < 0.05)
-    expect_true(abs(mean(res$pars[, "b",]) - 0.5) < 0.05)
-    expect_true(abs(mean(res$pars[, "c",]) - 0.5) < 0.05)
-    expect_true(abs(mean(res$pars[, "d",]) - 0.5) < 0.05)
+    expect_true(abs(mean(res$pars[, "a", ]) - 0.5) < 0.05)
+    expect_true(abs(mean(res$pars[, "b", ]) - 0.5) < 0.05)
+  })
+})
+
+test_that("mcmc works for uniform distribution on unit square", {
+  dat <- example_uniform_shared()
+  control <- pmcmc_control(1000, save_state = FALSE, save_trajectories = FALSE)
+
+  set.seed(1)
+  testthat::try_again(5, {
+    res <- pmcmc(dat$pars, dat$filter, control = control)
+    expect_s3_class(res, "mcstate_pmcmc")
+    expect_true(all(acceptance_rate(t(res$pars["p1", , ])) == 1))
+    expect_true(all(acceptance_rate(t(res$pars["p2", , ])) == 1))
+    expect_true(all(acceptance_rate(t(res$pars["p3", , ])) == 1))
+    expect_true(abs(mean(res$pars[, "a", ]) - 0.5) < 0.05)
+    expect_true(abs(mean(res$pars[, "b", ]) - 0.5) < 0.05)
+    expect_true(abs(mean(res$pars[, "c", ]) - 0.5) < 0.05)
+    expect_true(abs(mean(res$pars[, "d", ]) - 0.5) < 0.05)
   })
 })
