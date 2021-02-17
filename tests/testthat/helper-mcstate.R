@@ -160,6 +160,57 @@ example_mvnorm <- function() {
   list(target = target, filter = filter, pars = pars)
 }
 
+example_mvnorm_shared <- function(varied = TRUE, fixed = TRUE,
+                                   proposal_varied = NULL,
+                                   proposal_fixed = NULL) {
+  target <- function(p, ...) {
+    print(vnapply(p, mvtnorm::dmvnorm, x = unlist(p), log = TRUE))
+    stop()
+  }
+  if (!varied || !fixed) {
+    n_par <- 2
+  } else {
+    n_par <- 4
+  }
+  filter <- structure(list(run = target,
+                           n_particles = 10,
+                           state = function() array(1, c(3, n_par, 10)),
+                           trajectories = function(i) array(1, c(3, n_par,
+                                                                 10))),
+                      class = "particle_filter")
+
+  pars <- list()
+  pops <- paste0("p", 1:3)
+
+  if (fixed) {
+    if (is.null(proposal_fixed)) {
+      proposal_fixed <- diag(2)
+      row.names(proposal_fixed) <- colnames(proposal_fixed) <- c("a", "b")
+    }
+    pars <- c(pars,
+              list(
+                pmcmc_parameter("a", 0, min = -100, max = 100),
+                pmcmc_parameter("b", 0, min = -100, max = 100)
+              ))
+  }
+
+  if (varied) {
+    if (is.null(proposal_varied)) {
+      proposal_varied <- diag(2)
+      row.names(proposal_varied) <- colnames(proposal_varied) <- c("c", "d")
+    }
+    pars <- c(pars,
+              list(
+                pmcmc_varied_parameter("c", pops, 0, min = -100, max = 100),
+                pmcmc_varied_parameter("d", pops, 0, min = -100, max = 100)
+              ))
+  }
+
+  pars <- pmcmc_parameters_nested$new(pars, proposal_varied, proposal_fixed,
+                                      pops)
+
+  list(target = target, filter = filter, pars = pars)
+}
 
 ## Some form of these will likely go back into the package later
 acceptance_rate <- function(chain) {

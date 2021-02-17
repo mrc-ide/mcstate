@@ -156,6 +156,8 @@ pmcmc_state <- R6::R6Class(
 
         new_pars <- private$curr_pars
         new_lprior <- new_llik <- new_lpost <- rep(NA_real_, nrow(new_pars))
+        # FIXME - MOVE TO PRIVATE FIELD AND ADD TO HISTRORY
+        current_lpost_total <- sum(private$curr_lpost)
 
         if (length(fixed_pars) > 0) {
           prop_fix_pars <- private$pars$propose(private$curr_pars,
@@ -163,11 +165,9 @@ pmcmc_state <- R6::R6Class(
           prop_fix_lprior <- private$pars$prior(prop_fix_pars)
           prop_fix_llik <- private$run_filter(prop_fix_pars)
           prop_fix_lpost <- prop_fix_lprior + prop_fix_llik
+          prop_fix_lpost_total <- sum(prop_fix_lpost)
 
-
-          # FIXME - I believe using runif(1) here and below is correct instead
-          # of runif(length(prop_fix_lpost)) but need to double check.
-          if (all(runif(1) < exp(prop_fix_lpost - private$curr_lpost))) {
+          if (runif(1) < exp(prop_fix_lpost_total - current_lpost_total)) {
             new_pars[, fixed_pars] <- prop_fix_pars[, fixed_pars]
             new_lprior <- rbind(new_lprior, prop_fix_lprior)
             new_llik <- rbind(new_llik, prop_fix_llik)
@@ -182,7 +182,7 @@ pmcmc_state <- R6::R6Class(
           prop_var_llik <- private$run_filter(prop_var_pars)
           prop_var_lpost <- prop_var_lprior + prop_var_llik
 
-          which <- runif(1) < exp(prop_var_lpost - private$curr_lpost)
+          which <- runif(length(prop_var_lpost)) < exp(prop_var_lpost - private$curr_lpost)
           if (any(which)) {
             new_pars[which, varied_pars] <- prop_var_pars[which, varied_pars]
 
@@ -200,6 +200,7 @@ pmcmc_state <- R6::R6Class(
           }
         }
 
+        ## TODO - Confirm mean approach sensible
         if (!identical(new_pars, private$curr_pars)) {
           private$curr_pars <- new_pars
           private$curr_lprior <- apply(new_lprior, 2, mean, na.rm = TRUE)
