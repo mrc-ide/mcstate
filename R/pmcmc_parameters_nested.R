@@ -274,6 +274,9 @@ pmcmc_parameters_nested <- R6::R6Class(
     ##' other type are left unchanged.
     propose = function(theta, scale = 1, type = c("fixed", "varied", "both")) {
       type <- match.arg(type)
+      fix_params <- private$param_names$fixed
+      var_params <- private$param_names$varied
+
       pfix <- function(theta, scale) {
         if (length(private$proposal_fixed) > 0) {
           private$proposal_fixed(theta, scale)
@@ -286,8 +289,8 @@ pmcmc_parameters_nested <- R6::R6Class(
             numeric(length(self$names())))
           # catch one varied edge case
           if (!inherits(var, "matrix")) {
-            var <- as.matrix(var)
-            rownames(var) <- private$param_names$varied
+            var <- matrix(var, nrow = length(var_params),
+                          dimnames = list(var_params, NULL))
           }
 
           colnames(var) <- self$populations()
@@ -307,10 +310,30 @@ pmcmc_parameters_nested <- R6::R6Class(
         } else if (is.null(var)) {
           ret <- fix
         } else {
-          fix[, private$param_names$varied] <-
-            var[, private$param_names$varied]
+          fix[, var_params] <- var[, var_params]
           ret <- fix
         }
+      }
+
+      discrete_params <- character(0)
+      if (length(fix_params) > 0) {
+        which <- r6_private(private$fixed_parameters)$discrete
+        discrete_params <- c(discrete_params, fix_params[which])
+      }
+      if (length(var_params) > 0) {
+        # as discrete is same across populations arbitrarily select firsst
+        which <- r6_private(private$varied_parameters[[1]])$discrete
+        discrete_params <- c(discrete_params, var_params[which])
+      }
+
+      ret[, discrete_params] <- round(ret[, discrete_params])
+
+      for (i in seq(nrow(ret))) {
+        min <- vnapply(private$parameters, function(x)
+          if (is.null(x$min)) x[[i]]$min else x$min)
+        max <- vnapply(private$parameters, function(x)
+          if (is.null(x$max)) x[[i]]$max else x$max)
+        ret[i, ] <- reflect_proposal(ret[i, ], min, max)
       }
 
       ret
