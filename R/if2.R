@@ -3,86 +3,95 @@ if2 <- function(pars, data, generator, compare, compare_pars,
                 pars_sd, iterations, n_par_sets, cooling_target, # will become control
                 n_threads = 1L, seed = NULL) {
   # particle filter setup
-  if (!is_dust_generator(model)) {
-    stop("'model' must be a dust_generator")
-  }
+
   if (!is.null(index) && !is.function(index)) {
     stop("'index' must be function if not NULL")
   }
-  if (!is.null(initial) && !is.function(initial)) {
-    stop("'initial' must be function if not NULL")
-  }
+
   assert_is(data, "particle_filter_data")
 
-  #TODO check inputs
+  # TODO check inputs
+
+  # TODO model initial states
+
+  # TODO parameter transforms
 
   data_split <- df_to_list_of_lists(data)
 
   steps <- unname(as.matrix(data[c("step_start", "step_end")]))
   n_steps <- nrow(steps)
-  pars_series <- pars_walk(pars, n_par_sets, steps, pars_sd)
-  pars_list <- apply(pars_series[, , 1], 2, list)
 
-  #TODO pars transforms
-  model <- generator$new(pars = pars_list, step = steps[[1L]],
+  pars_vectors <- walk_initialise(pars, n_par_sets, n_steps)
+
+  model <- generator$new(pars = pars_vectors$list_form,
+                         step = steps[[1L]],
                          n_particles = 1L, n_threads = n_threads,
                          seed = seed, pars_multi = TRUE)
   if (!is.null(index)) {
     model$set_index(index)
   }
 
+  log_likelihood <- array(0, c(n_par_sets, iterations))
+  if_pars[, m, ] <- array(NA_real_, c(c(n_par_sets, iterations, n_pars)))
   alpha_cool <- cooling_target ^ (1 / iterations)
 
-  for (m in 1:n_par_sets) {
-    model$reset(pars = pars_list, steps[[1L]])
-    log_likelihood <- 0
+  for (m in 1:iterations) {
+    model$reset(pars = pars_vectors$list_form, steps[[1L]])
     for (t in seq(1L, n_steps)) {
       step_end <- steps[t, 2L]
       state <- model$run(step_end)
 
       log_weights <- compare(state, data_split[[t]], compare_pars)
 
-      if (is.null(log_weights)) {
-        log_likelihood_step <- NA_real_
-      } else {
+      if (!is.null(log_weights)) {
         weights <- scale_log_weights(log_weights)
-        log_likelihood_step <- weights$average
-        log_likelihood <- log_likelihood + log_likelihood_step
+        log_likelihood[, m] <- log_likelihood[, m] + weights$average
         if (log_likelihood == -Inf) {
           break
         }
 
         kappa <- particle_resample(weights$weights)
         model$reorder(kappa)
-        # TODO this is inefficient as shuffles all series forwards
-        # TODO better to generate steps here rather than at the start?
-        for (t_forward in seq(t, n_steps)) {
-          pars_series[, , t_forward] <- pars_series[, kappa, t_forward]
-        }
-        pars_list <- apply(pars_series[, , t + 1L], 2, list)
-        model$set_pars(pars_list)
+        pars_vectors <- pars_walk(pars_vectors$array_form[, kappa], pars_sd)
+        model$set_pars(pars_vectors$list_form)
       }
     }
     sd <- sd * alpha_cool
-    pars_series <- pars_walk(pars_list, n_par_sets, steps, pars_sd)
-    pars_list <- apply(pars_series[, , 1], 2, list)
+    pars_final <- pars_vectors$array_form
+    pars_vectors <- pars_walk(pars_final, pars_sd)
+    if_pars[, m, ] <- pars_final
   }
-  # TODO outputs
-  # should be:
+  # outputs
   # pars: n_pars * iterations * n_par_sets
   # ll: iterations * n_par_sets
+  list(log_likelihood = log_likelihood,
+       if_pars = if_pars)
 }
 
-pars_walk <- function(pars, n_par_sets, steps, sd) {
-  n_pars <- length(pars)
-  pars_series = array(NA_real_, c(n_pars, n_par_sets, steps),
-                      dimnames = list(names(pars), NULL, NULL))
+# TODO add plotting
+
+# TODO add likelihood sample
+# Run a particle filter at each point estimate at final state to get
+# mean + standard error
+
+pars_walk <- function(pars_vectors, pars_sd) {
+  for (par_idx in 1:n_pars) {
+    init <- pars_vectors[par_idx, ]
+    walk <- rnorm(n_par_sets, init, pars_sd[[par_idx]])
+    pars_vectors[par_idx, ] <- walk
+  }
+  list(array_form = pars_vectors, list_form = apply(pars_vectors, 2, list)
+}
+
+# Set up pars_series and set the first step
+walk_initialise <- function(pars, n_par_sets, n_steps, pars_sd) {
+  n_pars = length(pars)
+  pars_vectors = array(NA_real_, c(n_pars, n_par_sets),
+                       dimnames = list(names(pars), NULL))
   for (par_idx in 1:n_pars) {
     walk <- rep(pars[[par_idx]], n_pars)
-    for (step in 1:steps) {
-      walk <- rnorm(n_par_sets, walk, sd[par_idx])
-      pars_series[par_idx, , step] <- walk
-    }
+    walk <- rnorm(n_par_sets, walk, pars_sd[[par_idx]])
+    pars_vectors[par_idx, ] <- walk
   }
-  pars_series
+  list(array_form = pars_vectors, list_form = apply(pars_vectors, 2, list)
 }
