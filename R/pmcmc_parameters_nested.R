@@ -338,8 +338,6 @@ pmcmc_parameters_nested <- R6::R6Class(
         }
       }
 
-
-
       ret
     },
 

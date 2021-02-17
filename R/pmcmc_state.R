@@ -155,7 +155,7 @@ pmcmc_state <- R6::R6Class(
         }
 
         new_pars <- private$curr_pars
-        new_lprior <- new_llik <- new_lpost <- numeric(nrow(new_pars))
+        new_lprior <- new_llik <- new_lpost <- rep(NA_real_, nrow(new_pars))
 
         if (length(fixed_pars) > 0) {
           prop_fix_pars <- private$pars$propose(private$curr_pars,
@@ -169,13 +169,9 @@ pmcmc_state <- R6::R6Class(
           # of runif(length(prop_fix_lpost)) but need to double check.
           if (all(runif(1) < exp(prop_fix_lpost - private$curr_lpost))) {
             new_pars[, fixed_pars] <- prop_fix_pars[, fixed_pars]
-            new_lprior <- new_lprior + prop_fix_lprior
-            new_llik <- new_llik + prop_fix_llik
-            new_lpost <- new_lpost + prop_fix_lpost
-          } else {
-            print(prop_fix_pars)
-            print(prop2)
-            stop()
+            new_lprior <- rbind(new_lprior, prop_fix_lprior)
+            new_llik <- rbind(new_llik, prop_fix_llik)
+            new_lpost <- rbind(new_lpost, prop_fix_lpost)
           }
         }
 
@@ -189,17 +185,26 @@ pmcmc_state <- R6::R6Class(
           which <- runif(1) < exp(prop_var_lpost - private$curr_lpost)
           if (any(which)) {
             new_pars[which, varied_pars] <- prop_var_pars[which, varied_pars]
-            new_lprior[which] <- new_lprior[which] + prop_var_lprior[which]
-            new_llik[which] <- new_llik[which] + prop_var_llik[which]
-            new_lpost[which] <- new_lpost[which] + prop_var_lpost[which]
+
+            new_lprior <- rbind(new_lprior,
+                                rep(NA_real_, length(prop_var_lprior)))
+            new_lprior[nrow(new_lprior), which] <- prop_var_lprior[which]
+
+            new_llik <- rbind(new_llik,
+                              rep(NA_real_, length(prop_var_llik)))
+            new_llik[nrow(new_llik), which] <- prop_var_llik[which]
+
+            new_lpost <- rbind(new_lpost,
+                               rep(NA_real_, length(prop_var_lpost)))
+            new_lpost[nrow(new_lpost), which] <- prop_var_lpost[which]
           }
         }
 
         if (!identical(new_pars, private$curr_pars)) {
           private$curr_pars <- new_pars
-          private$curr_lprior <- new_lprior
-          private$curr_llik <- new_llik
-          private$curr_lpost <- new_lpost
+          private$curr_lprior <- apply(new_lprior, 2, mean, na.rm = TRUE)
+          private$curr_llik <- apply(new_llik, 2, mean, na.rm = TRUE)
+          private$curr_lpost <- apply(new_lpost, 2, mean, na.rm = TRUE)
           private$update_history()
         }
 
