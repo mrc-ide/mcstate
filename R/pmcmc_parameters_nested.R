@@ -315,26 +315,30 @@ pmcmc_parameters_nested <- R6::R6Class(
         }
       }
 
-      discrete_params <- character(0)
-      if (length(fix_params) > 0) {
-        which <- r6_private(private$fixed_parameters)$discrete
-        discrete_params <- c(discrete_params, fix_params[which])
-      }
-      if (length(var_params) > 0) {
-        # as discrete is same across populations arbitrarily select firsst
-        which <- r6_private(private$varied_parameters[[1]])$discrete
-        discrete_params <- c(discrete_params, var_params[which])
+      if (!is.null(ret)) {
+        discrete_params <- character(0)
+        if (length(fix_params) > 0) {
+          which <- r6_private(private$fixed_parameters)$discrete
+          discrete_params <- c(discrete_params, fix_params[which])
+        }
+        if (length(var_params) > 0) {
+          # as discrete is same across populations arbitrarily select first
+          which <- r6_private(private$varied_parameters[[1]])$discrete
+          discrete_params <- c(discrete_params, var_params[which])
+        }
+
+        ret[, discrete_params] <- round(ret[, discrete_params])
+
+        for (i in seq(nrow(ret))) {
+          min <- vnapply(private$parameters, function(x)
+            if (is.null(x$min)) x[[i]]$min else x$min)
+          max <- vnapply(private$parameters, function(x)
+            if (is.null(x$max)) x[[i]]$max else x$max)
+          ret[i, ] <- reflect_proposal(ret[i, ], min, max)
+        }
       }
 
-      ret[, discrete_params] <- round(ret[, discrete_params])
 
-      for (i in seq(nrow(ret))) {
-        min <- vnapply(private$parameters, function(x)
-          if (is.null(x$min)) x[[i]]$min else x$min)
-        max <- vnapply(private$parameters, function(x)
-          if (is.null(x$max)) x[[i]]$max else x$max)
-        ret[i, ] <- reflect_proposal(ret[i, ], min, max)
-      }
 
       ret
     },
