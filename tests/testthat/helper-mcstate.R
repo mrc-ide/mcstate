@@ -164,8 +164,7 @@ example_mvnorm_shared <- function(varied = TRUE, fixed = TRUE,
                                    proposal_varied = NULL,
                                    proposal_fixed = NULL) {
   target <- function(p, ...) {
-    print(vnapply(p, mvtnorm::dmvnorm, x = unlist(p), log = TRUE))
-    stop()
+    vnapply(p, function(x) mvtnorm::dmvnorm(unlist(x), log = TRUE))
   }
   if (!varied || !fixed) {
     n_par <- 2

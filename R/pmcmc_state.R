@@ -42,6 +42,43 @@ pmcmc_state <- R6::R6Class(
       private$filter$run(private$pars$model(p),
                          private$control$save_trajectories,
                          private$control$save_restart)
+    },
+
+
+    run_fixed = function() {
+      if (length(r6_private(private$pars)$fixed_parameters) > 0) {
+        prop_pars <- private$pars$propose(private$curr_pars, type = "fixed")
+        prop_lprior <- private$pars$prior(prop_pars)
+        prop_llik <- private$run_filter(prop_pars)
+        prop_lpost <- prop_lprior + prop_llik
+
+        if (runif(1) < exp(sum(prop_lpost) - sum(private$curr_lpost))) {
+          private$curr_pars <- prop_pars
+          private$curr_lprior <- prop_lprior
+          private$curr_llik <- prop_llik
+          private$curr_lpost <- prop_lpost
+          private$update_history()
+        }
+      }
+    },
+
+    run_varied = function() {
+      if (length(r6_private(private$pars)$varied_parameters) > 0) {
+        prop_pars <- private$pars$propose(private$curr_pars, type = "varied")
+        prop_lprior <- private$pars$prior(prop_pars)
+        prop_llik <- private$run_filter(prop_pars)
+        prop_lpost <- prop_lprior + prop_llik
+
+        which <- runif(length(prop_lpost)) <
+                  exp(prop_lpost - private$curr_lpost)
+        if (any(which)) {
+          private$curr_pars[which, ] <- prop_pars[which, ]
+          private$curr_lprior[which] <- prop_lprior[which]
+          private$curr_llik[which] <- prop_llik[which]
+          private$curr_lpost[which] <- prop_lpost[which]
+          private$update_history()
+        }
+      }
     }
   ),
 
@@ -142,8 +179,6 @@ pmcmc_state <- R6::R6Class(
                 private$control$n_steps)
       steps <- seq(from = private$curr_step + 1L,
                    length.out = to - private$curr_step)
-      fixed_pars <- r6_private(private$pars)$param_names$fixed
-      varied_pars <- r6_private(private$pars)$param_names$varied
 
       for (i in steps) {
         private$tick()
@@ -154,59 +189,10 @@ pmcmc_state <- R6::R6Class(
           private$update_history()
         }
 
-        new_pars <- private$curr_pars
-        new_lprior <- new_llik <- new_lpost <- rep(NA_real_, nrow(new_pars))
-        # FIXME - MOVE TO PRIVATE FIELD AND ADD TO HISTRORY
-        current_lpost_total <- sum(private$curr_lpost)
-
-        if (length(fixed_pars) > 0) {
-          prop_fix_pars <- private$pars$propose(private$curr_pars,
-                                              type = "fixed")
-          prop_fix_lprior <- private$pars$prior(prop_fix_pars)
-          prop_fix_llik <- private$run_filter(prop_fix_pars)
-          prop_fix_lpost <- prop_fix_lprior + prop_fix_llik
-          prop_fix_lpost_total <- sum(prop_fix_lpost)
-
-          if (runif(1) < exp(prop_fix_lpost_total - current_lpost_total)) {
-            new_pars[, fixed_pars] <- prop_fix_pars[, fixed_pars]
-            new_lprior <- rbind(new_lprior, prop_fix_lprior)
-            new_llik <- rbind(new_llik, prop_fix_llik)
-            new_lpost <- rbind(new_lpost, prop_fix_lpost)
-          }
-        }
-
-        if (length(varied_pars) > 0) {
-          prop_var_pars <- private$pars$propose(private$curr_pars,
-                                                type = "varied")
-          prop_var_lprior <- private$pars$prior(prop_var_pars)
-          prop_var_llik <- private$run_filter(prop_var_pars)
-          prop_var_lpost <- prop_var_lprior + prop_var_llik
-
-          which <- runif(length(prop_var_lpost)) < exp(prop_var_lpost - private$curr_lpost)
-          if (any(which)) {
-            new_pars[which, varied_pars] <- prop_var_pars[which, varied_pars]
-
-            new_lprior <- rbind(new_lprior,
-                                rep(NA_real_, length(prop_var_lprior)))
-            new_lprior[nrow(new_lprior), which] <- prop_var_lprior[which]
-
-            new_llik <- rbind(new_llik,
-                              rep(NA_real_, length(prop_var_llik)))
-            new_llik[nrow(new_llik), which] <- prop_var_llik[which]
-
-            new_lpost <- rbind(new_lpost,
-                               rep(NA_real_, length(prop_var_lpost)))
-            new_lpost[nrow(new_lpost), which] <- prop_var_lpost[which]
-          }
-        }
-
-        ## TODO - Confirm mean approach sensible
-        if (!identical(new_pars, private$curr_pars)) {
-          private$curr_pars <- new_pars
-          private$curr_lprior <- apply(new_lprior, 2, mean, na.rm = TRUE)
-          private$curr_llik <- apply(new_llik, 2, mean, na.rm = TRUE)
-          private$curr_lpost <- apply(new_lpost, 2, mean, na.rm = TRUE)
-          private$update_history()
+        if (i %% 2) {
+          private$run_fixed()
+        } else {
+          private$run_varied()
         }
 
         private$history_pars$add(private$curr_pars)
@@ -222,6 +208,7 @@ pmcmc_state <- R6::R6Class(
         if (length(private$control$save_restart) > 0) {
           private$history_restart$add(private$curr_restart)
         }
+
       }
       private$curr_step <- to
       list(step = to, finished = to == private$control$n_steps)
