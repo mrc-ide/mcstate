@@ -43,45 +43,43 @@ pmcmc_parameters_nested <- R6::R6Class(
   private = list(
     fixed_parameters = list(),
     varied_parameters = list(),
-    proposal_varied = list(),
-    proposal_fixed = list(),
-    proposal_kernel_varied = list(),
-    proposal_kernel_fixed = list(),
     transform = NULL,
     param_names = NULL,
     pops = NULL,
-    parameters = list()
+    parameters = list(),
+    kernel_varied = NULL,
+    kernel_fixed = NULL
   ),
 
   public = list(
-    ##' @description Create the pmcmc_parameters object
-    ##'
-    ##' @param parameters A `list` of
-    ##' [pmcmc_parameter] or [pmcmc_varied_parameter] objects, each of which
-    ##' describe a single (possibly-varying) parameter in your model.
-    ##' If `parameters` is named, then these names must match the `$name`
-    ##' element of each parameter that is used (this is verified).
-    ##'
-    ##' @param proposal_varied,proposal_fixed Square proposal matrices
-    ##' corresponding to the variance-covariance matrix of a multivariate
-    ##' gaussian distribution used to generate new varied and fixed parameters
-    ##' respectively.'. They must have the same number of
-    ##' rows and columns as there are varied and fixed parameters respectively.
-    ##' The names must correspond exactly to the names in
-    ##' `parameters`. Because it corresponds to a variance-covariance
-    ##' matrix it must be symmetric and positive definite.
-    ##'
-    ##' @param populations Specifies the names of the different populations
-    ##' that the varying parameters change according to. Only required if no
-    ##' [pmcmc_varied_parameter] objects are included in `parameters`.
-    ##' Otherwise population names are taken from those objects.
-    ##'
-    ##' @param transform An optional transformation function to apply
-    ##' to your parameter vector immediately before passing it to the
-    ##' model function. If not given, then [as.list] is
-    ##' used, as dust models require this. However, if you need to
-    ##' generate derived parameters from those being actively sampled
-    ##' you can do arbitrary transformations here.
+##' @description Create the pmcmc_parameters object
+##'
+##' @param parameters A `list` of
+##' [pmcmc_parameter] or [pmcmc_varied_parameter] objects, each of which
+##' describe a single (possibly-varying) parameter in your model.
+##' If `parameters` is named, then these names must match the `$name`
+##' element of each parameter that is used (this is verified).
+##'
+##' @param proposal_varied,proposal_fixed Square proposal matrices
+##' corresponding to the variance-covariance matrix of a multivariate
+##' gaussian distribution used to generate new varied and fixed parameters
+##' respectively.'. They must have the same number of
+##' rows and columns as there are varied and fixed parameters respectively.
+##' The names must correspond exactly to the names in
+##' `parameters`. Because it corresponds to a variance-covariance
+##' matrix it must be symmetric and positive definite.
+##'
+##' @param populations Specifies the names of the different populations
+##' that the varying parameters change according to. Only required if no
+##' [pmcmc_varied_parameter] objects are included in `parameters`.
+##' Otherwise population names are taken from those objects.
+##'
+##' @param transform An optional transformation function to apply
+##' to your parameter vector immediately before passing it to the
+##' model function. If not given, then [as.list] is
+##' used, as dust models require this. However, if you need to
+##' generate derived parameters from those being actively sampled
+##' you can do arbitrary transformations here.
     initialize = function(parameters, proposal_varied = NULL,
                           proposal_fixed = NULL, populations = NULL,
                           transform = NULL) {
@@ -105,8 +103,8 @@ pmcmc_parameters_nested <- R6::R6Class(
 
       kernels <- clean_proposals(proposal_varied, proposal_fixed,
                                  populations, parameters$names)
-      proposals <- make_proposals(kernels$varied, kernels$fixed,
-                                  parameters$names)
+      private$kernel_varied <- kernels$varied
+      private$kernel_fixed <- kernels$fixed
 
       private$param_names <- parameters$names
 
@@ -114,9 +112,6 @@ pmcmc_parameters_nested <- R6::R6Class(
       if (!is.null(kernels$fixed)) {
         private$fixed_parameters <-
           pmcmc_parameters$new(parameters$fixed, kernels$fixed)
-
-        private$proposal_kernel_fixed <- proposals$kernel_fixed
-        private$proposal_fixed <- proposals$proposal_fixed
       }
 
       if (!is.null(kernels$varied)) {
@@ -132,11 +127,6 @@ pmcmc_parameters_nested <- R6::R6Class(
             pmcmc_parameters$new(
               lapply(parameters$varied, "[[", populations[[i]]), kernel)
         }
-
-        private$proposal_kernel_varied <- proposals$kernel_varied
-        private$proposal_varied <- proposals$proposal_varied
-        names(private$proposal_kernel_varied) <- populations
-        names(private$proposal_varied) <- populations
       }
 
       # transform function
@@ -160,10 +150,10 @@ pmcmc_parameters_nested <- R6::R6Class(
     },
 
     ##' @description Return a `data.frame` with information about
-    ##' parameters (name, min, max, discrete, fixed or varied).
-    ##'
-    ##' @param population Specifies which population to summarise. If `NULL`
-    ##' then returns a summary of each population as a list.
+##' parameters (name, min, max, discrete, fixed or varied).
+##'
+##' @param population Specifies which population to summarise. If `NULL`
+##' then returns a summary of each population as a list.
     summary = function(population = NULL) {
       summarise_population <- function(population) {
         if (!(population %in% self$populations())) {
@@ -192,7 +182,7 @@ pmcmc_parameters_nested <- R6::R6Class(
     },
 
     ##' @description Return the initial parameter values as a named matrix with
-    ##' rows corresponding to populations and columns are parameters.
+##' rows corresponding to populations and columns are parameters.
     initial = function() {
 
       varied_params <- private$param_names$varied
@@ -223,10 +213,10 @@ pmcmc_parameters_nested <- R6::R6Class(
     },
 
     ##' @description Compute the prior(s) for a parameter matrix. Returns a
-    ##' named vector with names corresponding to populations.
-    ##'
-    ##' @param theta a parameter matrix with columns in the same order as
-    ##' `$names()` and rows in the same order as `$populations()`.
+##' named vector with names corresponding to populations.
+##'
+##' @param theta a parameter matrix with columns in the same order as
+##' `$names()` and rows in the same order as `$populations()`.
     prior = function(theta) {
       pops <- self$populations()
       priors <- numeric(nrow(theta))
@@ -247,100 +237,58 @@ pmcmc_parameters_nested <- R6::R6Class(
         lp_vary <- vnapply(pops,
                            function(x) private$varied_parameters[[x]]$prior(
                              theta[x, private$param_names$varied]))
-      } else {
-        lp_vary <- 0
-      }
+                           } else {
+                             lp_vary <- 0
+                           }
 
       lp_fix + lp_vary
     },
 
-    ##' @description This proposes a new parameter matrix given your current
-    ##' matrix and the variance-covariance matrices of the proposal
-    ##' kernels, discretises any discrete values, and reflects bounded
-    ##' parameters until they lie within `min`:`max`. Returns matrix with rows
-    ##' corresponding to populations and columns to parameters.
-    ##'
-    ##' @param theta a parameter matrix with columns in the same order as
-    ##' `$names()` and rows in the same order as `$populations()`.
-    ##'
-    ##' @param scale an optional scaling factor to apply to the
-    ##' proposal distribution. This may be useful in sampling starting
-    ##' points. The parameter is equivalent to a multiplicative factor
-    ##' applied to the variance covariance matrix.
-    ##'
-    ##' @param type specifies which type of parameters should be proposed,
-    ##' either fixed parameters only ("fixed"), varied only ("varied"), or
-    ##' both ("both") types. For 'fixed' and 'varied', parameters of the
-    ##' other type are left unchanged.
-    propose = function(theta, scale = 1, type = c("fixed", "varied", "both")) {
+##' @description This proposes a new parameter matrix given your current
+##' matrix and the variance-covariance matrices of the proposal
+##' kernels, discretises any discrete values, and reflects bounded
+##' parameters until they lie within `min`:`max`. Returns matrix with rows
+##' corresponding to populations and columns to parameters.
+##'
+##' @param theta a parameter matrix with columns in the same order as
+##' `$names()` and rows in the same order as `$populations()`.
+##'
+##' @param scale an optional scaling factor to apply to the
+##' proposal distribution. This may be useful in sampling starting
+##' points. The parameter is equivalent to a multiplicative factor
+##' applied to the variance covariance matrix.
+##'
+##' @param type specifies which type of parameters should be proposed,
+##' either fixed parameters only ("fixed"), varied only ("varied"), or
+##' both ("both") types. For 'fixed' and 'varied', parameters of the
+##' other type are left unchanged.
+    propose = function(theta, scale = 1, type = c("both", "varied", "fixed")) {
       type <- match.arg(type)
       fix_params <- private$param_names$fixed
       var_params <- private$param_names$varied
 
-      pfix <- function(theta, scale) {
-        if (length(private$proposal_fixed) > 0) {
-          private$proposal_fixed(theta, scale)
-        }
-      }
-      pvar <- function(theta, scale) {
-        if (length(private$proposal_varied) > 0) {
-          var <- vapply(seq(nrow(theta)), function(i)
-            private$proposal_varied[[rownames(theta)[[i]]]](theta[i, ], scale),
-            numeric(length(self$names())))
-          # catch one varied edge case
-          if (!inherits(var, "matrix")) {
-            var <- matrix(var, nrow = length(var_params),
-                          dimnames = list(var_params, NULL))
-          }
-
-          colnames(var) <- self$populations()
-          t(var)
-        }
+      nok <- (type == "fixed" && length(fix_params) == 0) ||
+              (type == "varied" && length(var_params) == 0)
+      if (nok) {
+        stop("Requested proposal that doesn't exist.")
       }
 
-      if (type == "fixed") {
-        ret <- pfix(theta, scale)
-      } else if (type == "varied") {
-        ret <- pvar(theta, scale)
-      } else {
-        fix <- pfix(theta, scale)
-        var <- pvar(theta, scale)
-        if (is.null(fix)) {
-          ret <- var
-        } else if (is.null(var)) {
-          ret <- fix
-        } else {
-          fix[, var_params] <- var[, var_params]
-          ret <- fix
-        }
+      # arbitrarily select first population as both same
+      if (type %in% c("fixed", "both") && length(fix_params) > 0) {
+        theta[, fix_params] <-
+          matrix(private$fixed_parameters$propose(theta[1, fix_params], scale),
+                 nrow = length(self$populations()),
+                 ncol = length(fix_params), byrow = TRUE)
       }
 
-      if (!is.null(ret)) {
-        discrete_params <- character(0)
-        if (length(fix_params) > 0) {
-          which <- r6_private(private$fixed_parameters)$discrete
-          discrete_params <- c(discrete_params, fix_params[which])
-        }
-        if (length(var_params) > 0) {
-          # as discrete is same across populations arbitrarily select first
-          which <- r6_private(private$varied_parameters[[1]])$discrete
-          discrete_params <- c(discrete_params, var_params[which])
-        }
-
-        ret[, discrete_params] <- round(ret[, discrete_params])
-
-        for (i in seq(nrow(ret))) {
-          min <- vnapply(private$parameters, function(x)
-            if (is.null(x$min)) x[[i]]$min else x$min)
-          max <- vnapply(private$parameters, function(x)
-            if (is.null(x$max)) x[[i]]$max else x$max)
-          ret[i, ] <- reflect_proposal(ret[i, ], min, max)
-        }
+      if (type %in% c("varied", "both") && length(var_params) > 0) {
+        theta[, var_params] <-
+          t(vapply(self$populations(), function(x) {
+            private$varied_parameters[[x]]$propose(theta[x, var_params], scale)
+          }, numeric(length(var_params))))
       }
 
-
-
-      ret
+      theta
     },
 
     ##' @description Apply the model transformation function to a parameter
@@ -392,7 +340,7 @@ pmcmc_parameters_nested <- R6::R6Class(
       idvar_varied <- setdiff(seq_along(private$param_names$varied),
                               idvar_fixed)
       if (length(idfix_varied) > 0) {
-        proposal_fixed <- private$proposal_kernel_fixed[idfix_varied,
+        proposal_fixed <- private$kernel_fixed[idfix_varied,
                                                         idfix_varied,
                                                         drop = FALSE]
       } else {
@@ -402,8 +350,7 @@ pmcmc_parameters_nested <- R6::R6Class(
       if (length(idvar_varied) > 0) {
         idvars <- match(private$param_names$varied,
                         private$param_names$original)
-        proposal_varied <- simplify2array(private$proposal_kernel_varied)
-        proposal_varied <- proposal_varied[idvars, idvars, , drop = FALSE]
+        proposal_varied <- private$kernel_varied
         proposal_varied <- proposal_varied[idvar_varied, idvar_varied, ,
                                            drop = FALSE]
       } else {
@@ -562,52 +509,10 @@ clean_proposals <- function(proposal_varied, proposal_fixed, populations,
     dimnames(proposal_fixed)[1:2] <- list(params$fixed, params$fixed)
   }
 
+
+
   list(fixed = proposal_fixed, varied = proposal_varied)
 }
-
-
-make_proposals <- function(kernel_varied, kernel_fixed, params) {
-  if (!is.null(kernel_varied)) {
-    kernel_varied_list <- lapply(seq_len(dim(kernel_varied)[[3]]), function(i)
-      expand(kernel_varied[, , i, drop = FALSE], params$original))
-    names(kernel_varied_list) <- dimnames(kernel_varied)[[3]]
-    proposal_varied <- lapply(kernel_varied_list, rmvnorm_generator)
-  } else {
-    proposal_varied <- NULL
-    kernel_varied_list <- NULL
-  }
-
-  if (!is.null(kernel_fixed)) {
-    proposal_fixed <- make_proposal_fixed(kernel_fixed)
-  } else {
-    proposal_fixed <- NULL
-  }
-
-  list(kernel_varied = kernel_varied_list,
-       kernel_fixed = kernel_fixed,
-       proposal_varied = proposal_varied,
-       proposal_fixed = proposal_fixed)
-
-}
-
-
-expand <- function(m, complete) {
-  n <- length(complete)
-  ret <- matrix(0, ncol = n, nrow = n, dimnames = list(complete, complete))
-  ret[rownames(m), colnames(m)] <- m
-  ret
-}
-
-
-make_proposal_fixed <- function(kernel) {
-  rmv <- rmvnorm_generator(kernel)
-  nms <- rownames(kernel)
-  function(mean, scale = 1.0) {
-    mean[, nms] <- rep(rmv(mean[1, nms], scale = scale), each = nrow(mean))
-    mean
-  }
-}
-
 
 get_inner_params <- function(param, population, private) {
   if (length(private$fixed_parameters) > 0) {
