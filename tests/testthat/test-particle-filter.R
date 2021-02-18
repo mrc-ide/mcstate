@@ -756,21 +756,6 @@ test_that("Can fork a particle_filter_state object", {
   expect_identical(res$history, cmp$history)
 })
 
-test_that("particle filter with nested parameters", {
-  dat <- example_uniform_shared()
-  obj <- dat$filter
-  obj$run()
-
-
-  n_particles <- 42
-  model <- dat$pars$model(dat$pars$initial())
-
-  set.seed(1)
-  p1 <- particle_filter$new(dat$data, model, n_particles, dat$compare,
-                           index = dat$index, seed = 1L)
-})
-
-
 test_that("run particle filter on nested sir model", {
   dat <- example_sir_shared()
   n_particles <- 42
