@@ -137,7 +137,7 @@ nlayer <- function(x) {
 
 
 ## Copied from NCOL
-NLAYER <- function(x) {
+NLAYER <- function(x) { # nolint
   d <- dim(x)
   if (length(d) > 2L) {
     d[3L]
@@ -148,7 +148,7 @@ NLAYER <- function(x) {
 
 
 ## Copied from colnames
-layernames <- function (x, do.NULL = TRUE, prefix = "layer") {
+layernames <- function(x, do.NULL = TRUE, prefix = "layer") { # nolint
     dn <- dimnames(x)
     if (!is.null(dn[[3L]]))
         dn[[3L]]
@@ -166,7 +166,7 @@ layernames <- function (x, do.NULL = TRUE, prefix = "layer") {
 
 
 ## Copied from colnames<-
-`layernames<-` <- function (x, value) {
+`layernames<-` <- function(x, value) { # nolint
   dn <- dimnames(x)
   if (is.null(dn)) {
     if (is.null(value))
@@ -177,7 +177,8 @@ layernames <- function (x, do.NULL = TRUE, prefix = "layer") {
       dn <- vector("list", nd)
   }
   if (length(dn) < 3L)
-    stop("attempt to set 'colnames' on an object with less than three dimensions")
+    stop("attempt to set 'colnames' on an object with less than three
+    dimensions")
   if (is.null(value))
     dn[3L] <- list(NULL)
   else dn[[3L]] <- value
