@@ -25,7 +25,7 @@
 ##' p
 ##'
 ##' # Propose a new parameter point
-##' pars$propose(p)
+##' pars$propose(p, type = "both")
 ##'
 ##' # Information about parameters:
 ##' pars$names()
