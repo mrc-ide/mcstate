@@ -89,7 +89,7 @@ assert_scalar_character <- function(x, name = deparse(substitute(x))) {
   invisible(x)
 }
 
-assert_list <- function(x, name = deparse(substitute(x)), class = NULL) {
+assert_list <- function(x, class = NULL, name = deparse(substitute(x))) {
   if (!(is.list(x))) {
     stop(sprintf("'%s' must be a list", name), call. = FALSE)
   }

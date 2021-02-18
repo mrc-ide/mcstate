@@ -52,3 +52,45 @@ test_that("rmvnorm_generator can created scaled samples", {
   expect_equal((y1 - theta) * sqrt(2), y2 - theta)
   expect_equal(y2, y3)
 })
+
+test_that("NLAYER", {
+  expect_equal(NLAYER(array(1, c(2, 2, 2))), 2)
+  expect_equal(NLAYER(1), 1)
+})
+
+test_that("layernames", {
+  expect_equal(layernames(array(1, c(2, 2, 2)), do.NULL = TRUE), NULL)
+  expect_equal(layernames(array(1, c(1, 1, 2)), do.NULL = FALSE),
+               paste0("layer", 1:2))
+  expect_equal(layernames(array(1, c(1, 1, 1), as.list(letters[1:3]))), "c")
+})
+
+test_that("layernames<-", {
+  x <- matrix(1)
+  expect_error({ layernames(x) <- "a" }, "attempt to set")
+
+  x <- matrix(1, dimnames = as.list(letters[1:2]))
+  expect_error({ layernames(x) <- "a" }, "attempt to set")
+
+  x1 <- x2 <- array(1, c(1, 1, 1))
+  layernames(x2) <- NULL
+  expect_equal(x1, x2)
+
+  x <- array(1, c(1, 1, 1))
+  layernames(x) <- "a"
+  expect_equal(x, array(1, c(1, 1, 1), list(NULL, NULL, "a")))
+
+  x <- array(1, c(1, 1, 1), dimnames = list(NULL, NULL, "b"))
+  layernames(x) <- "a"
+  expect_equal(x, array(1, c(1, 1, 1), list(NULL, NULL, "a")))
+
+  x <- array(1, c(1, 1, 1), dimnames = list(NULL, NULL, "b"))
+  layernames(x) <- NULL
+  expect_equal(x, array(1, c(1, 1, 1), list(NULL, NULL, NULL)))
+})
+
+test_that("set_layernames", {
+  x <- (array(1, c(1, 1, 1), as.list(letters[1:3])))
+  expect_equal(set_layernames(array(1, c(1, 1, 1), list("a", "b", NULL)), "c"),
+                              x)
+})

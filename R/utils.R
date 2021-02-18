@@ -153,13 +153,10 @@ layernames <- function(x, do.NULL = TRUE, prefix = "layer") { # nolint
     if (!is.null(dn[[3L]]))
         dn[[3L]]
     else {
-      nl <- NLAYER(x)
       if (do.NULL) {
         NULL
-      } else if (nl > 0L) {
-        paste0(prefix, seq_len(nl))
       } else {
-        character()
+        paste0(prefix, seq_len(NLAYER(x)))
       }
     }
 }
@@ -169,20 +166,26 @@ layernames <- function(x, do.NULL = TRUE, prefix = "layer") { # nolint
 `layernames<-` <- function(x, value) { # nolint
   dn <- dimnames(x)
   if (is.null(dn)) {
-    if (is.null(value))
+    if (is.null(value)) {
       return(x)
-    if ((nd <- length(dim(x))) < 3L)
+    }
+    nd <- length(dim(x))
+    if (nd < 3L) {
       stop("attempt to set 'layernames' on an object with less than three
       dimensions")
+    }
       dn <- vector("list", nd)
   }
-  if (length(dn) < 3L)
+  if (length(dn) < 3L) {
     stop("attempt to set 'colnames' on an object with less than three
     dimensions")
-  if (is.null(value))
+  }
+  if (is.null(value)) {
     dn[3L] <- list(NULL)
-  else dn[[3L]] <- value
-    dimnames(x) <- dn
+  } else {
+    dn[[3L]] <- value
+  }
+  dimnames(x) <- dn
   x
 }
 

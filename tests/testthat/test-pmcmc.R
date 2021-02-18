@@ -750,7 +750,7 @@ test_that("pmcmc nested sir", {
     particle_filter$new(dat$data[[2]], dat$model, 100, dat$compare,
                         index = dat$index))
   control <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE,
-                           save_restart = TRUE)
+                           save_restart = TRUE, rerun_every = 10)
   proposal_fixed <- matrix(0.00026)
   proposal_varied <- matrix(0.00057)
 
@@ -763,4 +763,9 @@ test_that("pmcmc nested sir", {
     proposal_fixed = proposal_fixed, proposal_varied = proposal_varied)
 
   expect_silent(pmcmc(pars, p, control = control))
+})
+
+test_that("pmcmc error on wrong pars", {
+  expect_error(pmcmc(1, structure(class = "particle_filter")),
+               "'pars' should inherit")
 })
