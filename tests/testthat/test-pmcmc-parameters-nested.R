@@ -186,71 +186,6 @@ test_that("clean proposals - silent edge cases", {
     matrix(diag(1), dimnames = list("b", "b")))
 })
 
-test_that("make proposals - varied and fixed", {
-  params <- list(fixed = letters[1:2], varied = letters[3:4])
-  pops <- letters[5:6]
-  proposal_varied <- diag(2)
-  proposal_fixed <- diag(2)
-  kernels <- clean_proposals(proposal_varied, proposal_fixed, pops, params)
-
-  props <- make_proposals(kernels$varied, kernels$fixed,
-                          list(original = letters[1:4]))
-  expect_equal(props$kernel_varied$e,
-               matrix(c(rep(0, 10), 1, rep(0, 4), 1), 4, 4,
-                      dimnames = rep(list(letters[1:4]), 2)))
-  expect_equal(props$kernel_fixed, kernels$fixed)
-  expect_true(inherits(props$proposal_varied$e, "function"))
-  expect_true(inherits(props$proposal_varied$f, "function"))
-})
-
-test_that("make proposals - 1 varied, 1 fixed", {
-  params <- list(fixed = "a", varied = "b")
-  pops <- "p"
-  proposal_varied <- diag(1)
-  proposal_fixed <- diag(1)
-  kernels <- clean_proposals(proposal_varied, proposal_fixed, pops, params)
-
-  props <- make_proposals(kernels$varied, kernels$fixed,
-                          list(original = letters[1:2]))
-  expect_equal(props$kernel_varied$p,
-               matrix(c(rep(0, 3), 1), 2, 2,
-                      dimnames = rep(list(letters[1:2]), 2)))
-  expect_equal(props$kernel_fixed, kernels$fixed)
-  expect_true(inherits(props$proposal_varied$p, "function"))
-  expect_true(inherits(props$proposal_varied$p, "function"))
-})
-
-test_that("make proposals - varied only", {
-  params <- list(varied = letters[3:4])
-  pops <- letters[5:6]
-  proposal_varied <- diag(2)
-  kernels <- clean_proposals(proposal_varied, NULL, pops, params)
-
-  props <- make_proposals(kernels$varied, kernels$fixed,
-                          list(original = letters[3:4]))
-  expect_equal(props$kernel_varied$e, kernels$varied[, , 1])
-  expect_equal(props$kernel_fixed, kernels$fixed)
-  expect_true(inherits(props$proposal_varied$e, "function"))
-  expect_true(inherits(props$proposal_varied$f, "function"))
-
-  props <- make_proposals(kernels$varied, NULL,
-                          list(original = letters[1:4]))
-  expect_equal(props$proposal_fixed, NULL)
-})
-
-test_that("make proposals - fixed only", {
-  params <- list(fixed = letters[3:4])
-  pops <- letters[5:6]
-  proposal_fixed <- diag(2)
-  kernels <- clean_proposals(NULL, proposal_fixed, NULL, params)
-
-  props <- make_proposals(kernels$varied, kernels$fixed, letters[3:4])
-  expect_equal(props$kernel_varied$e, kernels$varied[, , 1])
-  expect_equal(props$kernel_fixed, kernels$fixed)
-  expect_true(inherits(props$proposal_fixed, "function"))
-  expect_equal(props$proposal_varied, NULL)
-})
-
 test_that("construct pmcmc_parameters_nested - silent", {
   parameters <- list(a = pmcmc_varied_parameter("a", c("p1", "p2"), 2),
                      b = pmcmc_varied_parameter("b", c("p1", "p2"), 2),
@@ -491,11 +426,9 @@ test_that("pmcmc_parameters_nested model/transform", {
 
 test_that("pmcmc_parameters_nested propose", {
   parameters <- list(
-    a = pmcmc_varied_parameter("a", c("p1", "p2"), 1:2,
-                               prior = list(function(x) 1, function(x) 2)),
+    a = pmcmc_varied_parameter("a", c("p1", "p2", "p3"), 1:3),
     b = pmcmc_parameter("b", 5, prior = function(x) 5),
-    c = pmcmc_varied_parameter("c", c("p1", "p2"), 3:4,
-                               prior = list(function(x) 3, function(x) 4)),
+    c = pmcmc_varied_parameter("c", c("p1", "p2", "p3"), 3:5),
     d = pmcmc_parameter("d", 6, prior = function(x) 6))
   proposal_fixed <- diag(2)
   proposal_varied <- diag(2) + 1
@@ -532,7 +465,7 @@ test_that("pmcmc_parameters_nested propose - 1 varied 1 pop", {
   expect_true(inherits(prop, "matrix"))
   expect_identical(dimnames(prop), list("p1", "a"))
 
-  expect_equal(p$propose(init, type = "fixed"), NULL)
+  expect_error(p$propose(init, type = "fixed"), "Requested")
   expect_equal(
     with(set.seed(1), p$propose(init, type = "both")),
     with(set.seed(1), p$propose(init, type = "varied"))
@@ -626,8 +559,8 @@ test_that("pmcmc_parameters_nested fix", {
       base_transform(base)
     })
 
-  expect_equal(with(set.seed(1), fix_p$propose(fix_p$initial())),
-              with(set.seed(1), fixed_p$propose(fixed_p$initial())))
+  expect_equal(with(set.seed(1), fix_p$propose(fix_p$initial(), "both")),
+              with(set.seed(1), fixed_p$propose(fixed_p$initial(), "both")))
 
 
 
@@ -659,8 +592,10 @@ test_that("pmcmc_parameters_nested fixed - 1 fix 1 var 1 pop - fix vary", {
       base_transform(base)
     })
 
-  expect_equal(with(set.seed(1), fix_p$propose(fix_p$initial())),
-               with(set.seed(1), fixed_p$propose(fixed_p$initial())))
+  expect_equal(
+    with(set.seed(1), fix_p$propose(fix_p$initial(), type = "both")),
+    with(set.seed(1), fixed_p$propose(fixed_p$initial(), type = "both"))
+  )
 
 
   init <- fix_p$initial()
@@ -692,11 +627,87 @@ test_that("pmcmc_parameters_nested fixed - 1 fix 1 var 1 pop - fix fixed", {
   r6_private(r6_private(fix_p)$varied_parameters$p1)$proposal_kernel
   r6_private(r6_private(fixed_p)$varied_parameters$p1)$proposal_kernel
 
-  expect_equal(with(set.seed(1), fix_p$propose(fix_p$initial())),
-               with(set.seed(1), fixed_p$propose(fixed_p$initial())))
+  expect_equal(with(set.seed(1), fix_p$propose(fix_p$initial(), "both")),
+               with(set.seed(1), fixed_p$propose(fixed_p$initial(), "both")))
 
   init <- fix_p$initial()
   expect_identical(fix_p$model(init),
                    list(p1 = list(a = 1, b = 3))
   )
+})
+
+test_that("pmcmc_parameters_nested - discrete proposal", {
+  parameters <- list(
+    a = pmcmc_varied_parameter("a", c("p1", "p2"), 1:2,
+                               prior = list(function(x) 1, function(x) 2),
+                               discrete = TRUE),
+    b = pmcmc_parameter("b", 1, discrete = TRUE,
+                        prior = function(x) 1),
+    c = pmcmc_varied_parameter("c", c("p1", "p2"), 1:2,
+                               prior = list(function(x) 1, function(x) 2)),
+    d = pmcmc_parameter("d", 5, prior = function(x) 5, discrete = TRUE),
+    e = pmcmc_varied_parameter("e", c("p1", "p2"), 3:4,
+                               prior = list(function(x) 3, function(x) 4)),
+    f = pmcmc_parameter("f", 6, prior = function(x) 6))
+  proposal_fixed <- diag(3) * 0.1
+  proposal_varied <- diag(3) * 0.1
+  p <- pmcmc_parameters_nested$new(parameters, proposal_varied, proposal_fixed)
+
+  prop <- p$propose(p$initial(), type = "both")
+  expect_equal(prop[, c(1, 2, 4)], round(prop[, c(1, 2, 4)]))
+  expect_false(any(prop[, c(3, 5, 6)] == round(prop[, c(3, 5, 6)])))
+})
+
+test_that("pmcmc_parameters_nested - discrete proposal, 1 fix 1 pop", {
+  parameters <- list(
+    b = pmcmc_parameter("b", 1, discrete = TRUE,
+                        prior = function(x) 1))
+  proposal_fixed <- diag(1) * 0.1
+  p <- pmcmc_parameters_nested$new(parameters, NULL, proposal_fixed,
+                                   populations = "p1")
+
+  prop <- p$propose(p$initial(), type = "both")
+  expect_equal(prop[, 1], round(prop[, 1]))
+})
+
+test_that("pmcmc_parameters_nested - discrete proposal, 1 var 1 pop", {
+  parameters <- list(
+    a =  pmcmc_varied_parameter("a", c("p1", "p2"), 1:2,
+                               prior = list(function(x) 1, function(x) 2),
+                               discrete = TRUE))
+  proposal <- diag(1) * 0.1
+  p <- pmcmc_parameters_nested$new(parameters, proposal)
+
+  prop <- p$propose(p$initial(), type = "both")
+  expect_equal(prop[, 1], round(prop[, 1]))
+})
+
+test_that("pmcmc_parameters_nested - reflect proposal", {
+  parameters <- list(
+    a = pmcmc_varied_parameter("a", c("p1", "p2"), 1:2,
+                               prior = list(function(x) 1, function(x) 2),
+                               min = 0:1, max = 3:4, discrete = TRUE),
+    b = pmcmc_parameter("b", 1, min = 0, max = 1, discrete = TRUE,
+                        prior = function(x) 1),
+    c = pmcmc_varied_parameter("c", c("p1", "p2"), 1:2,
+                               prior = list(function(x) 1, function(x) 2)),
+    d = pmcmc_parameter("d", 5, prior = function(x) 5, min = 4.5, max = 5.5,
+                        discrete = TRUE),
+    e = pmcmc_varied_parameter("e", c("p1", "p2"), 3:4,
+                               prior = list(function(x) 3, function(x) 4)),
+    f = pmcmc_parameter("f", 6, prior = function(x) 6))
+  proposal_fixed <- diag(3) * 2.1
+  proposal_varied <- diag(3) * 2.1
+  p <- pmcmc_parameters_nested$new(parameters, proposal_varied, proposal_fixed)
+
+  prop <- p$propose(p$initial(), type = "both")
+
+  expect_true(prop[1, 1] <= 3 & prop[1, 1] >= 0)
+  expect_true(prop[2, 1] <= 4 & prop[2, 1] >= 1)
+  expect_equal(prop[, 1], round(prop[, 1]))
+
+  expect_true(all(prop[, 2] >= 0 & prop[, 2] <= 1))
+  expect_equal(prop[, 2], round(prop[, 2]))
+
+  expect_true(all(prop[, 4] == 5))
 })

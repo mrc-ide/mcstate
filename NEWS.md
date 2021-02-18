@@ -1,3 +1,7 @@
+# mcstate 0.4.8
+
+* Bug fixes in `$proposal` method of `pmcmc_parameters_nested` for discrete and bounded parameters.
+
 # mcstate 0.4.7
 
 * Added helper methods `mcstate::array_bind`, `mcstate::array_reshape` and `mcstate::array_drop` to simplify some common array operations (#106)
