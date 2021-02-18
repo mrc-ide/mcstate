@@ -94,7 +94,7 @@ assert_list <- function(x, name = deparse(substitute(x)), class = NULL) {
     stop(sprintf("'%s' must be a list", name), call. = FALSE)
   }
   if (!is.null(class)) {
-    if (!all(vlapply(p, inherits, what = class))) {
+    if (!all(vlapply(x, inherits, what = class))) {
       stop(sprintf("Elements of '%s' must be in '%s'", name,
            str_collapse(class)), call. = FALSE)
     }

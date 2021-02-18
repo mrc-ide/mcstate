@@ -69,12 +69,14 @@ pmcmc_state <- R6::R6Class(
     },
 
     run_filter = function(p) {
-      filter <- private$filter
-      if (!inherits(filter, "list")) {
-        filter <- list(filter)
-      }
-      vnapply(seq(length(filter)),
-             function(i) filter[[i]]$run(private$pars$model(p)[[i]],
+      private$filter$run(private$pars$model(p),
+                         private$control$save_trajectories,
+                         private$control$save_restart)
+    },
+
+    run_filter_nested = function(p) {
+      vnapply(seq(length(private$filter)),
+             function(i) private$filter[[i]]$run(private$pars$model(p)[[i]],
                                private$control$save_trajectories,
                                private$control$save_restart))
     },
@@ -84,7 +86,7 @@ pmcmc_state <- R6::R6Class(
       if (length(r6_private(private$pars)$fixed_parameters) > 0) {
         prop_pars <- private$pars$propose(private$curr_pars, type = "fixed")
         prop_lprior <- private$pars$prior(prop_pars)
-        prop_llik <- private$run_filter(prop_pars)
+        prop_llik <- private$run_filter_nested(prop_pars)
         prop_lpost <- prop_lprior + prop_llik
 
         if (runif(1) < exp(sum(prop_lpost) - sum(private$curr_lpost))) {
@@ -101,7 +103,7 @@ pmcmc_state <- R6::R6Class(
       if (length(r6_private(private$pars)$varied_parameters) > 0) {
         prop_pars <- private$pars$propose(private$curr_pars, type = "varied")
         prop_lprior <- private$pars$prior(prop_pars)
-        prop_llik <- private$run_filter(prop_pars)
+        prop_llik <- private$run_filter_nested(prop_pars)
         prop_lpost <- prop_lprior + prop_llik
 
         which <- runif(length(prop_lpost)) <
@@ -132,18 +134,20 @@ pmcmc_state <- R6::R6Class(
       private$curr_step <- 0L
       private$curr_pars <- initial
       private$curr_lprior <- private$pars$prior(private$curr_pars)
-      private$curr_llik <- private$run_filter(private$curr_pars)
-      private$curr_lpost <- private$curr_lprior + private$curr_llik
 
       private$tick <- pmcmc_progress(control$n_steps, control$progress)
 
       private$history_pars$add(private$curr_pars)
       if (inherits(pars, "pmcmc_parameters_nested")) {
+        private$curr_llik <- private$run_filter_nested(private$curr_pars)
+        private$curr_lpost <- private$curr_lprior + private$curr_llik
         private$history_probabilities$add(
           matrix(c(private$curr_lprior, private$curr_llik, private$curr_lpost),
                  ncol = 3, byrow = TRUE))
         private$update_history_nested()
       } else {
+        private$curr_llik <- private$run_filter(private$curr_pars)
+        private$curr_lpost <- private$curr_lprior + private$curr_llik
         private$history_probabilities$add(c(private$curr_lprior,
                                           private$curr_llik,
                                           private$curr_lpost))
@@ -223,7 +227,7 @@ pmcmc_state <- R6::R6Class(
         private$tick()
 
         if (i %% private$control$rerun_every == 0) {
-          private$curr_llik <- private$run_filter(private$curr_pars)
+          private$curr_llik <- private$run_filter_nested(private$curr_pars)
           private$curr_lpost <- private$curr_lprior + private$curr_llik
           private$update_history_nested()
         }

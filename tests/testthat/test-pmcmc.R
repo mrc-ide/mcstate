@@ -716,7 +716,7 @@ test_that("pmcmc nested Uniform on unit square", {
 
 test_that("pmcmc nested multivariate gaussian", {
   dat <- example_mvnorm_shared()
-  control <- pmcmc_control(1000, save_state = FALSE, save_trajectories = FALSE)
+  control <- pmcmc_control(2000, save_state = FALSE, save_trajectories = FALSE)
 
   set.seed(1)
   testthat::try_again(5, {
@@ -762,11 +762,5 @@ test_that("pmcmc nested sir", {
                          prior = function(p) log(1e-10))),
     proposal_fixed = proposal_fixed, proposal_varied = proposal_varied)
 
-  set.seed(1)
-  res <- pmcmc(pars, p, control = control)
-
-  res$pars
-  res$probabilities
-  res$state
-  res$predict
+  expect_silent(pmcmc(pars, p, control = control))
 })
