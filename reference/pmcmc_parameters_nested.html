@@ -85,7 +85,7 @@ how it can be used." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.4.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.4.8</span>
       </span>
     </div>
 
@@ -265,26 +265,22 @@ matrix and the variance-covariance matrices of the proposal
 kernels, discretises any discrete values, and reflects bounded
 parameters until they lie within <code>min</code>:<code>max</code>. Returns matrix with rows
 corresponding to populations and columns to parameters.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
-<p><div class="r"></p><pre><span class='va'>pmcmc_parameters_nested</span><span class='op'>$</span><span class='fu'>propose</span><span class='op'>(</span>
-  <span class='va'>theta</span>,
-  scale <span class='op'>=</span> <span class='fl'>1</span>,
-  type <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"fixed"</span>, <span class='st'>"varied"</span>, <span class='st'>"both"</span><span class='op'>)</span>
-<span class='op'>)</span></pre><p></div></p>
+<p><div class="r"></p><pre><span class='va'>pmcmc_parameters_nested</span><span class='op'>$</span><span class='fu'>propose</span><span class='op'>(</span><span class='va'>theta</span>, <span class='va'>type</span>, scale <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span></pre><p></div></p>
 
 <h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>theta</code></dt><dd><p>a parameter matrix with columns in the same order as
 <code>$names()</code> and rows in the same order as <code>$populations()</code>.</p></dd>
 
-<dt><code>scale</code></dt><dd><p>an optional scaling factor to apply to the
-proposal distribution. This may be useful in sampling starting
-points. The parameter is equivalent to a multiplicative factor
-applied to the variance covariance matrix.</p></dd>
-
 <dt><code>type</code></dt><dd><p>specifies which type of parameters should be proposed,
 either fixed parameters only ("fixed"), varied only ("varied"), or
 both ("both") types. For 'fixed' and 'varied', parameters of the
 other type are left unchanged.</p></dd>
+
+<dt><code>scale</code></dt><dd><p>an optional scaling factor to apply to the
+proposal distribution. This may be useful in sampling starting
+points. The parameter is equivalent to a multiplicative factor
+applied to the variance covariance matrix.</p></dd>
 
 </dl><p></div></p>
 <p><hr>
@@ -332,10 +328,10 @@ reduce the dimensionality of your system.</p><h4 class='hasAnchor' id='arguments
 #&gt; p1 2 2 3 4
 #&gt; p2 2 2 3 4</div><div class='input'>
 <span class='co'># Propose a new parameter point</span>
-<span class='va'>pars</span><span class='op'>$</span><span class='fu'>propose</span><span class='op'>(</span><span class='va'>p</span><span class='op'>)</span>
-</div><div class='output co'>#&gt;    a b        c      d
-#&gt; p1 2 2 3.964718 4.0117
-#&gt; p2 2 2 3.964718 4.0117</div><div class='input'>
+<span class='va'>pars</span><span class='op'>$</span><span class='fu'>propose</span><span class='op'>(</span><span class='va'>p</span>, type <span class='op'>=</span> <span class='st'>"both"</span><span class='op'>)</span>
+</div><div class='output co'>#&gt;           a         b        c      d
+#&gt; p1 3.702449 5.5432693 3.964718 4.0117
+#&gt; p2 2.213161 0.8248715 3.964718 4.0117</div><div class='input'>
 <span class='co'># Information about parameters:</span>
 <span class='va'>pars</span><span class='op'>$</span><span class='fu'>names</span><span class='op'>(</span><span class='op'>)</span>
 </div><div class='output co'>#&gt; [1] "a" "b" "c" "d"</div><div class='input'><span class='va'>pars</span><span class='op'>$</span><span class='fu'>summary</span><span class='op'>(</span><span class='op'>)</span>
