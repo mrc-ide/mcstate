@@ -120,12 +120,12 @@ pmcmc_single_chain <- function(pars, initial, filter, control, seed = NULL) {
 pmcmc_single_chain_nested <- function(pars, initial, filter, control,
                                       seed = NULL) {
   if (!is.null(seed)) {
-    ## This will be triggered where control$use_parallel_seed is TRUE
+    ## FIXME - Is this okay? i.e. using same seed for all filters
     set.seed(seed$r)
-    # FIXME - UPDATE FOR LIST OF FILTERS
-    filter <- particle_filter_from_inputs(filter$inputs(), seed$dust)
+    filter <- lapply(filter,
+                     function(x) particle_filter_from_inputs(x$inputs(),
+                                                             seed$dust))
   }
-  # FIXME - UPDATE FOR LIST OF FILTERS
   obj <- pmcmc_state$new(pars, initial, filter, control)
   obj$run_nested()
   obj$finish_nested()
@@ -134,21 +134,34 @@ pmcmc_single_chain_nested <- function(pars, initial, filter, control,
 
 pmcmc_multiple_series <- function(pars, initial, filter, control) {
   if (control$use_parallel_seed) {
-    # FIXME - UPDATE FOR LIST OF FILTERS
-    seed <- make_seeds(control$n_chains, filter$inputs()$seed)
+    if (inherits(filter, "list")) {
+      ## FIXME - See above
+      seed <- make_seeds(control$n_chains, filter[[1]]$inputs()$seed)
+    } else {
+      seed <- make_seeds(control$n_chains, filter$inputs()$seed)
+    }
   } else {
     seed <- NULL
   }
   if (!is.null(control$n_threads_total)) {
-    # FIXME - UPDATE FOR LIST OF FILTERS
-    filter$set_n_threads(control$n_threads_total)
+    if (inherits(filter, "list")) {
+      lapply(filter, function(x) x$set_n_threads(control$n_threads_total))
+    } else {
+      filter$set_n_threads(control$n_threads_total)
+    }
   }
   samples <- vector("list", control$n_chains)
+
   for (i in seq_along(samples)) {
     if (control$progress) {
       message(sprintf("Running chain %d / %d", i, control$n_chains))
     }
     if (inherits(pars, "pmcmc_parameters_nested")) {
+      # if (is.null(seed)) {
+      #   i_seed <- NULL
+      # } else {
+      #   i_seed <- lapply(seed, "[[", i)
+      # }
       samples[[i]] <- pmcmc_single_chain_nested(pars, initial[, , i], filter,
                                                 control, seed[[i]])
     } else {

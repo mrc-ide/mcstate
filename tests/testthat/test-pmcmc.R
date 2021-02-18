@@ -750,7 +750,8 @@ test_that("pmcmc nested sir", {
     particle_filter$new(dat$data[[2]], dat$model, 100, dat$compare,
                         index = dat$index))
   control <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE,
-                           save_restart = TRUE, rerun_every = 10)
+                           save_restart = TRUE, rerun_every = 10,
+                            n_threads_total = 2, use_parallel_seed = TRUE)
   proposal_fixed <- matrix(0.00026)
   proposal_varied <- matrix(0.00057)
 
@@ -762,7 +763,11 @@ test_that("pmcmc nested sir", {
                          prior = function(p) log(1e-10))),
     proposal_fixed = proposal_fixed, proposal_varied = proposal_varied)
 
-  expect_silent(pmcmc(pars, p, control = control))
+  set.seed(1)
+  res1 <- pmcmc(pars, p, control = control)
+  set.seed(1)
+  res2 <- pmcmc(pars, p, control = control)
+  expect_equal(res1, res2)
 })
 
 test_that("pmcmc error on wrong pars", {
