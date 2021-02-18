@@ -66,7 +66,6 @@ particle_filter <- R6::R6Class(
     data = NULL,
     data_split = NULL,
     steps = NULL,
-    pars_multi = NULL,
     ## Functions used for initial conditions, data comparisons and indices
     index = NULL,
     initial = NULL,
@@ -158,7 +157,7 @@ particle_filter <- R6::R6Class(
     ##' initialisation with `seed = NULL`.
     initialize = function(data, model, n_particles, compare,
                           index = NULL, initial = NULL,
-                          n_threads = 1L, seed = NULL, pars_multi = FALSE) {
+                          n_threads = 1L, seed = NULL) {
       if (!is_dust_generator(model)) {
         stop("'model' must be a dust_generator")
       }
@@ -172,7 +171,6 @@ particle_filter <- R6::R6Class(
 
       self$model <- model
       private$data <- data
-      private$pars_multi <- assert_logical(pars_multi)
       if (is.null(compare)) {
         private$data_split <- dust::dust_data(private$data, "step_end")
       } else {
@@ -254,7 +252,7 @@ particle_filter <- R6::R6Class(
         pars, self$model, private$last_model, private$data, private$data_split,
         private$steps, self$n_particles, private$n_threads,
         private$initial, private$index, private$compare, private$seed,
-        save_history, save_restart, private$pars_multi)
+        save_history, save_restart)
     },
 
     ##' @description Extract the current model state, optionally filtering.
