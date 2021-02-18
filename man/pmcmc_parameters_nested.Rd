@@ -28,7 +28,7 @@ p <- pars$initial()
 p
 
 # Propose a new parameter point
-pars$propose(p)
+pars$propose(p, type = "both")
 
 # Information about parameters:
 pars$names()
@@ -181,11 +181,7 @@ kernels, discretises any discrete values, and reflects bounded
 parameters until they lie within \code{min}:\code{max}. Returns matrix with rows
 corresponding to populations and columns to parameters.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters_nested$propose(
-  theta,
-  scale = 1,
-  type = c("fixed", "varied", "both")
-)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters_nested$propose(theta, type, scale = 1)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -194,15 +190,15 @@ corresponding to populations and columns to parameters.
 \item{\code{theta}}{a parameter matrix with columns in the same order as
 \verb{$names()} and rows in the same order as \verb{$populations()}.}
 
-\item{\code{scale}}{an optional scaling factor to apply to the
-proposal distribution. This may be useful in sampling starting
-points. The parameter is equivalent to a multiplicative factor
-applied to the variance covariance matrix.}
-
 \item{\code{type}}{specifies which type of parameters should be proposed,
 either fixed parameters only ("fixed"), varied only ("varied"), or
 both ("both") types. For 'fixed' and 'varied', parameters of the
 other type are left unchanged.}
+
+\item{\code{scale}}{an optional scaling factor to apply to the
+proposal distribution. This may be useful in sampling starting
+points. The parameter is equivalent to a multiplicative factor
+applied to the variance covariance matrix.}
 }
 \if{html}{\out{</div>}}
 }
