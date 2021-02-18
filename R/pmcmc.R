@@ -157,11 +157,6 @@ pmcmc_multiple_series <- function(pars, initial, filter, control) {
       message(sprintf("Running chain %d / %d", i, control$n_chains))
     }
     if (inherits(pars, "pmcmc_parameters_nested")) {
-      # if (is.null(seed)) {
-      #   i_seed <- NULL
-      # } else {
-      #   i_seed <- lapply(seed, "[[", i)
-      # }
       samples[[i]] <- pmcmc_single_chain_nested(pars, initial[, , i], filter,
                                                 control, seed[[i]])
     } else {
