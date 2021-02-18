@@ -559,8 +559,8 @@ test_that("pmcmc_parameters_nested fix", {
       base_transform(base)
     })
 
-  expect_equal(with(set.seed(1), fix_p$propose(fix_p$initial())),
-              with(set.seed(1), fixed_p$propose(fixed_p$initial())))
+  expect_equal(with(set.seed(1), fix_p$propose(fix_p$initial(), "both")),
+              with(set.seed(1), fixed_p$propose(fixed_p$initial(), "both")))
 
 
 
@@ -592,8 +592,10 @@ test_that("pmcmc_parameters_nested fixed - 1 fix 1 var 1 pop - fix vary", {
       base_transform(base)
     })
 
-  expect_equal(with(set.seed(1), fix_p$propose(fix_p$initial())),
-               with(set.seed(1), fixed_p$propose(fixed_p$initial())))
+  expect_equal(
+    with(set.seed(1), fix_p$propose(fix_p$initial(), type = "both")),
+    with(set.seed(1), fixed_p$propose(fixed_p$initial(), type = "both"))
+  )
 
 
   init <- fix_p$initial()
@@ -625,8 +627,8 @@ test_that("pmcmc_parameters_nested fixed - 1 fix 1 var 1 pop - fix fixed", {
   r6_private(r6_private(fix_p)$varied_parameters$p1)$proposal_kernel
   r6_private(r6_private(fixed_p)$varied_parameters$p1)$proposal_kernel
 
-  expect_equal(with(set.seed(1), fix_p$propose(fix_p$initial())),
-               with(set.seed(1), fixed_p$propose(fixed_p$initial())))
+  expect_equal(with(set.seed(1), fix_p$propose(fix_p$initial(), "both")),
+               with(set.seed(1), fixed_p$propose(fixed_p$initial(), "both")))
 
   init <- fix_p$initial()
   expect_identical(fix_p$model(init),
