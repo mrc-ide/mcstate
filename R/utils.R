@@ -194,3 +194,17 @@ set_layernames <- function(m, nms) {
   layernames(m) <- nms
   m
 }
+
+lbind <- function(arrays) {
+  assert_list(arrays)
+  nr <- unique(viapply(arrays, NROW))
+  nc <- unique(viapply(arrays, NCOL))
+  if (length(nr) > 1) {
+    stop("Not all arrays have same number of rows")
+  }
+  if (length(nc) > 1) {
+    stop("Not all arrays have same number of columns")
+  }
+  nl <- sum(viapply(arrays, NLAYER))
+  array(do.call(c, arrays), dim = c(nr, nc, nl))
+}

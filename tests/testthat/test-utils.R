@@ -100,3 +100,10 @@ test_that("set_layernames", {
   expect_equal(set_layernames(array(1, c(1, 1, 1), list("a", "b", NULL)), "c"),
                               x)
 })
+
+test_that("lbind", {
+  expect_error(lbind(array(1, c(1, 2, 1)), array(1, c(1, 3, 1))),
+               "number of columns")
+  expect_error(lbind(array(1, c(1, 2, 1)), array(1, c(2, 2, 1))),
+               "number of rows")
+})

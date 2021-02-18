@@ -672,11 +672,11 @@ test_that("pmcmc nested Uniform on unit square - fixed only", {
   testthat::try_again(5, {
     res <- pmcmc(dat$pars, dat$filter, control = control)
     expect_s3_class(res, "mcstate_pmcmc")
-    expect_true(all(acceptance_rate(t(res$pars["p1", , ])) == 0.5))
-    expect_true(all(acceptance_rate(t(res$pars["p2", , ])) == 0.5))
-    expect_true(all(acceptance_rate(t(res$pars["p3", , ])) == 0.5))
-    expect_true(abs(mean(res$pars[, "a", ]) - 0.5) < 0.05)
-    expect_true(abs(mean(res$pars[, "b", ]) - 0.5) < 0.05)
+    expect_true(all(acceptance_rate(t(res$pars[, "p1", ])) == 0.5))
+    expect_true(all(acceptance_rate(t(res$pars[, "p2", ])) == 0.5))
+    expect_true(all(acceptance_rate(t(res$pars[, "p3", ])) == 0.5))
+    expect_true(abs(mean(res$pars["a", , ]) - 0.5) < 0.05)
+    expect_true(abs(mean(res$pars["b", , ]) - 0.5) < 0.05)
   })
 })
 
@@ -688,11 +688,11 @@ test_that("pmcmc nested Uniform on unit square - varied only", {
   testthat::try_again(5, {
     res <- pmcmc(dat$pars, dat$filter, control = control)
     expect_s3_class(res, "mcstate_pmcmc")
-    expect_true(all(acceptance_rate(t(res$pars["p1", , ])) == 0.5))
-    expect_true(all(acceptance_rate(t(res$pars["p2", , ])) == 0.5))
-    expect_true(all(acceptance_rate(t(res$pars["p3", , ])) == 0.5))
-    expect_true(abs(mean(res$pars[, "c", ]) - 0.5) < 0.05)
-    expect_true(abs(mean(res$pars[, "d", ]) - 0.5) < 0.05)
+    expect_true(all(acceptance_rate(t(res$pars[, "p1", ])) == 0.5))
+    expect_true(all(acceptance_rate(t(res$pars[, "p2", ])) == 0.5))
+    expect_true(all(acceptance_rate(t(res$pars[, "p3", ])) == 0.5))
+    expect_true(abs(mean(res$pars["c", , ]) - 0.5) < 0.05)
+    expect_true(abs(mean(res$pars["d", , ]) - 0.5) < 0.05)
   })
 })
 
@@ -704,13 +704,13 @@ test_that("pmcmc nested Uniform on unit square", {
   testthat::try_again(5, {
     res <- pmcmc(dat$pars, dat$filter, control = control)
     expect_s3_class(res, "mcstate_pmcmc")
-    expect_true(all(acceptance_rate(t(res$pars["p1", , ])) == 0.5))
-    expect_true(all(acceptance_rate(t(res$pars["p2", , ])) == 0.5))
-    expect_true(all(acceptance_rate(t(res$pars["p3", , ])) == 0.5))
-    expect_true(abs(mean(res$pars[, "a", ]) - 0.5) < 0.05)
-    expect_true(abs(mean(res$pars[, "b", ]) - 0.5) < 0.05)
-    expect_true(abs(mean(res$pars[, "c", ]) - 0.5) < 0.05)
-    expect_true(abs(mean(res$pars[, "d", ]) - 0.5) < 0.05)
+    expect_true(all(acceptance_rate(t(res$pars[, "p1", ])) == 0.5))
+    expect_true(all(acceptance_rate(t(res$pars[, "p2", ])) == 0.5))
+    expect_true(all(acceptance_rate(t(res$pars[, "p3", ])) == 0.5))
+    expect_true(abs(mean(res$pars["a", , ]) - 0.5) < 0.05)
+    expect_true(abs(mean(res$pars["b", , ]) - 0.5) < 0.05)
+    expect_true(abs(mean(res$pars["c", , ]) - 0.5) < 0.05)
+    expect_true(abs(mean(res$pars["d", , ]) - 0.5) < 0.05)
   })
 })
 
@@ -724,53 +724,25 @@ test_that("pmcmc nested multivariate gaussian", {
     i <- seq(1, 1000, by = 20)
     expect_s3_class(res, "mcstate_pmcmc")
     ks_test <- function(x, y) suppressWarnings(ks.test(x, y))
-    expect_gt(ks_test(res$pars[1, "a", i], "pnorm")$p.value, 0.05)
-    expect_gt(ks_test(res$pars[2, "a", i], "pnorm")$p.value, 0.05)
-    expect_gt(ks_test(res$pars[3, "a", i], "pnorm")$p.value, 0.05)
-    expect_gt(ks_test(res$pars[1, "b", i], "pnorm")$p.value, 0.05)
-    expect_gt(ks_test(res$pars[2, "b", i], "pnorm")$p.value, 0.05)
-    expect_gt(ks_test(res$pars[3, "b", i], "pnorm")$p.value, 0.05)
-    expect_gt(ks_test(res$pars[1, "c", i], "pnorm")$p.value, 0.05)
-    expect_gt(ks_test(res$pars[2, "c", i], "pnorm")$p.value, 0.05)
-    expect_gt(ks_test(res$pars[3, "c", i], "pnorm")$p.value, 0.05)
-    expect_gt(ks_test(res$pars[1, "d", i], "pnorm")$p.value, 0.05)
-    expect_gt(ks_test(res$pars[2, "d", i], "pnorm")$p.value, 0.05)
-    expect_gt(ks_test(res$pars[3, "d", i], "pnorm")$p.value, 0.05)
-    expect_lt(abs(cov(res$pars[1, , ])[1, 2]), 0.1)
-    expect_lt(abs(cov(res$pars[2, , ])[1, 2]), 0.1)
-    expect_lt(abs(cov(res$pars[3, , ])[1, 2]), 0.1)
+    expect_gt(ks_test(res$pars["a", 1, i], "pnorm")$p.value, 0.05)
+    expect_gt(ks_test(res$pars["a", 2, i], "pnorm")$p.value, 0.05)
+    expect_gt(ks_test(res$pars["a", 3, i], "pnorm")$p.value, 0.05)
+    expect_gt(ks_test(res$pars["b", 1, i], "pnorm")$p.value, 0.05)
+    expect_gt(ks_test(res$pars["b", 2, i], "pnorm")$p.value, 0.05)
+    expect_gt(ks_test(res$pars["b", 3, i], "pnorm")$p.value, 0.05)
+    expect_gt(ks_test(res$pars["c", 1, i], "pnorm")$p.value, 0.05)
+    expect_gt(ks_test(res$pars["c", 2, i], "pnorm")$p.value, 0.05)
+    expect_gt(ks_test(res$pars["c", 3, i], "pnorm")$p.value, 0.05)
+    expect_gt(ks_test(res$pars["d", 1, i], "pnorm")$p.value, 0.05)
+    expect_gt(ks_test(res$pars["d", 2, i], "pnorm")$p.value, 0.05)
+    expect_gt(ks_test(res$pars["d", 3, i], "pnorm")$p.value, 0.05)
+    expect_lt(abs(cov(res$pars[, 1, ])[1, 2]), 0.1)
+    expect_lt(abs(cov(res$pars[, 2, ])[1, 2]), 0.1)
+    expect_lt(abs(cov(res$pars[, 3, ])[1, 2]), 0.1)
   })
 })
 
-test_that("pmcmc nested sir", {
-  dat <- example_sir_shared()
-  p <- list(
-    particle_filter$new(dat$data[[1]], dat$model, 100, dat$compare,
-                        index = dat$index),
-    particle_filter$new(dat$data[[2]], dat$model, 100, dat$compare,
-                        index = dat$index))
-  control <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE,
-                           save_restart = TRUE, rerun_every = 10,
-                            n_threads_total = 2, use_parallel_seed = TRUE)
-  proposal_fixed <- matrix(0.00026)
-  proposal_varied <- matrix(0.00057)
-
-  pars <- pmcmc_parameters_nested$new(
-    list(pmcmc_varied_parameter("beta", letters[1:2], c(0.2, 0.3),
-                                min = 0, max = 1,
-                                prior = function(p) log(1e-10)),
-         pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
-                         prior = function(p) log(1e-10))),
-    proposal_fixed = proposal_fixed, proposal_varied = proposal_varied)
-
-  set.seed(1)
-  res1 <- pmcmc(pars, p, control = control)
-  set.seed(1)
-  res2 <- pmcmc(pars, p, control = control)
-  expect_equal(res1, res2)
-})
-
-test_that("pmcmc nested sir", {
+test_that("pmcmc nested sir - 1 chain", {
   dat <- example_sir_shared()
   p <- list(
     particle_filter$new(dat$data[[1]], dat$model, 100, dat$compare,
@@ -780,7 +752,7 @@ test_that("pmcmc nested sir", {
   control <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE,
                            save_restart = TRUE, rerun_every = 10,
                             n_threads_total = 2, use_parallel_seed = TRUE,
-                            n_workers = 2L, n_chains = 2L)
+                            n_chains = 1L)
   proposal_fixed <- matrix(0.00026)
   proposal_varied <- matrix(0.00057)
 
@@ -797,6 +769,69 @@ test_that("pmcmc nested sir", {
   set.seed(1)
   res2 <- pmcmc(pars, p, control = control)
   expect_equal(res1, res2)
+})
+
+
+test_that("pmcmc nested sir - 2 chains", {
+  dat <- example_sir_shared()
+  p <- list(
+    particle_filter$new(dat$data[[1]], dat$model, 50, dat$compare,
+                        index = dat$index),
+    particle_filter$new(dat$data[[2]], dat$model, 50, dat$compare,
+                        index = dat$index))
+
+  proposal_fixed <- matrix(0.00026)
+  proposal_varied <- matrix(0.00057)
+
+  pars <- pmcmc_parameters_nested$new(
+    list(pmcmc_varied_parameter("beta", letters[1:2], c(0.2, 0.3),
+                                min = 0, max = 1,
+                                prior = function(p) log(1e-10)),
+         pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
+                         prior = function(p) log(1e-10))),
+    proposal_fixed = proposal_fixed, proposal_varied = proposal_varied)
+
+  control1 <- pmcmc_control(50, save_state = FALSE, n_chains = 1,
+                            use_parallel_seed = TRUE)
+  control2 <- pmcmc_control(50, n_chains = 3,
+                            use_parallel_seed = TRUE, save_state = TRUE,
+                            save_restart = TRUE, save_trajectories = TRUE)
+
+  set.seed(1)
+  res1 <- pmcmc(pars, p, control = control1)
+  expect_s3_class(res1, "mcstate_pmcmc")
+  expect_null(res1$chain)
+
+  set.seed(1)
+  res3 <- pmcmc(pars, p, control = control2)
+  expect_s3_class(res3, "mcstate_pmcmc")
+  expect_equal(res3$chain, rep(1:3, each = 51))
+
+  # FIXME - This only passes if `use_parallel_seed = TRUE`, is this expected?
+  expect_equal(res1$pars, res3$pars[, , 1:51])
+})
+
+
+test_that("error parallel nested", {
+  dat <- example_sir_shared()
+  p <- list(
+    particle_filter$new(dat$data[[1]], dat$model, 100, dat$compare,
+                        index = dat$index),
+    particle_filter$new(dat$data[[2]], dat$model, 100, dat$compare,
+                        index = dat$index))
+  control <- pmcmc_control(30, n_workers = 2L, n_chains = 2L)
+  proposal_fixed <- matrix(0.00026)
+  proposal_varied <- matrix(0.00057)
+
+  pars <- pmcmc_parameters_nested$new(
+    list(pmcmc_varied_parameter("beta", letters[1:2], c(0.2, 0.3),
+                                min = 0, max = 1,
+                                prior = function(p) log(1e-10)),
+         pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
+                         prior = function(p) log(1e-10))),
+    proposal_fixed = proposal_fixed, proposal_varied = proposal_varied)
+
+  expect_error(pmcmc(pars, p, control = control), "not currently")
 })
 
 test_that("pmcmc error on wrong pars", {

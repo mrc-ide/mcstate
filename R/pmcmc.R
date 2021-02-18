@@ -167,13 +167,19 @@ pmcmc_multiple_series <- function(pars, initial, filter, control) {
   if (length(samples) == 1) {
     samples[[1L]]
   } else {
-    pmcmc_combine(samples = samples)
+    if (inherits(filter, "list")) {
+      pmcmc_combine_nested(samples = samples)
+    } else {
+      pmcmc_combine(samples = samples)
+    }
   }
 }
 
 
 pmcmc_multiple_parallel <- function(pars, initial, filter, control) {
-  # FIXME - UPDATE FOR LIST OF FILTERS AND SHARED PARAMS
+  if (inherits(filter, "list")) {
+    stop("Parallel pmcmc not currently supported for nested parameters.")
+  }
   obj <- pmcmc_orchestrator$new(pars, initial, filter, control)
   obj$run()
   obj$finish()

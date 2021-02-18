@@ -307,15 +307,17 @@ pmcmc_state <- R6::R6Class(
     },
 
     finish_nested = function() {
-      # pop x param x mcmc
+      ## param x pop x step
       pars_array <- list_to_array(private$history_pars$get())
-      dimnames(pars_array)[1:2] <- dimnames(private$curr_pars)
+      pars_array <- aperm(pars_array, c(2, 1, 3))
+      dimnames(pars_array)[c(2, 1)] <- dimnames(private$curr_pars)
 
-      # pop x var x mcmc
+      ## var x pop x step
       probabilities <- list_to_array(private$history_probabilities$get())
-      dimnames(probabilities)[1:2] <- list(rownames(private$curr_pars),
-                                        c("log_prior", "log_likelihood",
-                                          "log_posterior"))
+      probabilities <- aperm(probabilities, c(2, 1, 3))
+      dimnames(probabilities)[1:2] <- list(c("log_prior", "log_likelihood",
+                                               "log_posterior"),
+                                               rownames(private$curr_pars))
 
       predict <- state <- restart <- trajectories <- NULL
 
@@ -331,28 +333,24 @@ pmcmc_state <- R6::R6Class(
       }
 
       if (private$control$save_state) {
-        # pop x state x mcmc
+        # [state x pop x time]
         state <- list_to_array(private$history_state$get())
-        rownames(state) <- rownames(private$curr_pars)
+        state <- aperm(state, c(2, 1, 3))
+        colnames(state) <- rownames(private$curr_pars)
       }
 
       if (length(private$control$save_restart) > 0) {
-        ## Permute state from [state x save point x mcmc_sample]
-        ## to [state x mcmc_sample x save point] to match the predicted state)
+        ## [state x pop x time]
         restart_state  <-
-          aperm(list_to_array(private$history_restart$get()), c(1, 3, 2))
+          aperm(list_to_array(private$history_restart$get()), c(2, 1, 3))
         restart <- list(time = private$control$save_restart,
                         state = restart_state)
       }
 
       if (private$control$save_trajectories) {
-        ## Permute trajectories from [state x particle x population x mcmc] to
-        ## [state x particle x mcmc x population]
-
-        # FIXME - DOUBLE CHECK ORDERING AND NAMES
+        ## [state x particle x population x step]
         trajectories_state <-
-          aperm(list_to_array(private$history_trajectories$get()),
-                c(1, 2, 4, 3))
+          list_to_array(private$history_trajectories$get())
         # index is same for all filters, select 1 arbitrarily
         stopifnot(all(predict[[1]]$index == predict[[length(predict)]]$index))
         rownames(trajectories_state) <- predict[[1]]$index
@@ -360,7 +358,7 @@ pmcmc_state <- R6::R6Class(
         trajectories <- lapply(seq_along(private$filter), function(i) {
           data <- private$filter[[i]]$inputs()$data
           step <- c(data$step_start[[i]], data$step_end)
-          mcstate_trajectories(step, predict$rate, trajectories_state[, , , i],
+          mcstate_trajectories(step, predict$rate, trajectories_state[, , i, ],
                                FALSE)
         })
       }

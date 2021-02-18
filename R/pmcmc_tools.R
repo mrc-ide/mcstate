@@ -157,8 +157,97 @@ pmcmc_combine <- function(..., samples = list(...)) {
                 predict, chain, iteration)
 }
 
+pmcmc_combine_nested <- function(..., samples = list(...)) {
+  if (!all(vlapply(samples, inherits, "mcstate_pmcmc"))) {
+    stop("All elements of '...' must be 'mcstate_pmcmc' objects")
+  }
+  if (any(!vlapply(samples, function(x) is.null(x$chain)))) {
+    stop("Chains have already been combined")
+  }
+  if (length(samples) < 2) {
+    stop("At least 2 samples objects must be provided")
+  }
+  if (length(unique(lapply(samples, function(x) colnames(x$pars)))) != 1L) {
+    stop("All parameters must have the same names")
+  }
+  if (length(unique(vnapply(samples, function(x) nrow(x$pars)))) != 1L) {
+    stop("All chains must have the same length")
+  }
+
+  iteration <- lapply(samples, "[[", "iteration")
+  if (length(unique(iteration)) != 1L) {
+    stop("All chains must have the same iterations")
+  }
+  iteration <- unlist(iteration, FALSE, FALSE)
+
+  chain <- rep(seq_along(samples), each = nlayer(samples[[1]]$pars))
+
+  pars <- lbind(lapply(samples, "[[", "pars"))
+  dimnames(pars)[1:2] <- dimnames(samples[[1]]$pars)[1:2]
+  probabilities <- lbind(lapply(samples, "[[", "probabilities"))
+
+  state <- lapply(samples, "[[", "state")
+  if (!all_or_none(vlapply(state, is.null))) {
+    stop("If 'state' is present for any samples, it must be present for all")
+  }
+  if (is.null(state[[1]])) {
+    state <- NULL
+  } else {
+    state <- lbind(lapply(samples, "[[", "state"))
+  }
+
+  trajectories <- lapply(samples, "[[", "trajectories")
+  if (!all_or_none(vlapply(trajectories, is.null))) {
+    stop(paste("If 'trajectories' is present for any samples, it must be",
+               "present for all"))
+  }
+  if (is.null(trajectories[[1]])) {
+    trajectories <- NULL
+  } else {
+    trajectories <- combine_state_nested(trajectories)
+  }
+
+  restart <- lapply(samples, "[[", "restart")
+  if (!all_or_none(vlapply(restart, is.null))) {
+    stop("If 'restart' is present for any samples, it must be present for all")
+  }
+  if (is.null(restart[[1]])) {
+    restart <- NULL
+  } else {
+    restart <- combine_state_nested(restart)
+  }
+
+  ## Use the last state for predict as that will probably have most
+  ## advanced seed.
+  ##
+  ## We might check index, rate and step here though.
+  predict <- last(samples)$predict
+
+  mcstate_pmcmc(pars, probabilities, state, trajectories, restart,
+                predict, chain, iteration)
+}
+
 
 combine_state <- function(x) {
+  base <- lapply(x, function(el) el[names(el) != "state"])
+  if (length(unique(base)) != 1L) {
+    stop(sprintf("%s data is inconsistent", deparse(substitute(x))))
+  }
+
+  state <- lapply(x, function(el) aperm(el$state, c(1, 3, 2)))
+  state <- array(
+    unlist(state),
+    dim(state[[1]]) * c(1, 1, length(x)))
+  state <- aperm(state, c(1, 3, 2))
+  rownames(state) <- rownames(x[[1]]$state)
+
+  ret <- x[[1]]
+  ret$state <- state
+  ret
+}
+
+combine_state_nested <- function(x) {
+  browser()
   base <- lapply(x, function(el) el[names(el) != "state"])
   if (length(unique(base)) != 1L) {
     stop(sprintf("%s data is inconsistent", deparse(substitute(x))))
