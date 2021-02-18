@@ -38,10 +38,45 @@ pmcmc_state <- R6::R6Class(
       }
     },
 
+    update_history_nested = function() {
+      is <- viapply(private$filter, function(x) sample.int(x$n_particles, 1))
+      if (private$control$save_trajectories) {
+        # state x particles x population
+        private$curr_trajectories <-
+          simplify2array(
+            lapply(seq_along(is),
+                   function(i) sample_trajectory(
+                    private$filter[[i]]$history(is[[i]]))))
+      }
+      if (private$control$save_state) {
+        # population x state
+        private$curr_state <- t(simplify2array(
+          lapply(seq_along(is),
+                 function(i)
+                  private$filter[[i]]$state()[, is[[i]], drop = TRUE])))
+      }
+      if (length(private$control$save_restart) > 0) {
+        # population x state
+        private$curr_restart <-
+          t(vapply(seq_along(is),
+                   function(i) {
+                    x <- private$filter[[i]]$restart_state(is[[i]])
+                    dim(x) <- dim(x)[-2L]
+                    x
+                   },
+                  numeric(ncol(private$curr_state))))
+      }
+    },
+
     run_filter = function(p) {
-      private$filter$run(private$pars$model(p),
-                         private$control$save_trajectories,
-                         private$control$save_restart)
+      filter <- private$filter
+      if (!inherits(filter, "list")) {
+        filter <- list(filter)
+      }
+      vnapply(seq(length(filter)),
+             function(i) filter[[i]]$run(private$pars$model(p)[[i]],
+                               private$control$save_trajectories,
+                               private$control$save_restart))
     },
 
 
@@ -57,7 +92,7 @@ pmcmc_state <- R6::R6Class(
           private$curr_lprior <- prop_lprior
           private$curr_llik <- prop_llik
           private$curr_lpost <- prop_lpost
-          private$update_history()
+          private$update_history_nested()
         }
       }
     },
@@ -76,7 +111,7 @@ pmcmc_state <- R6::R6Class(
           private$curr_lprior[which] <- prop_lprior[which]
           private$curr_llik[which] <- prop_llik[which]
           private$curr_lpost[which] <- prop_lpost[which]
-          private$update_history()
+          private$update_history_nested()
         }
       }
     }
@@ -100,21 +135,25 @@ pmcmc_state <- R6::R6Class(
       private$curr_llik <- private$run_filter(private$curr_pars)
       private$curr_lpost <- private$curr_lprior + private$curr_llik
 
+      private$tick <- pmcmc_progress(control$n_steps, control$progress)
+
       private$history_pars$add(private$curr_pars)
       if (inherits(pars, "pmcmc_parameters_nested")) {
         private$history_probabilities$add(
           matrix(c(private$curr_lprior, private$curr_llik, private$curr_lpost),
                  ncol = 3, byrow = TRUE))
+        private$update_history_nested()
       } else {
         private$history_probabilities$add(c(private$curr_lprior,
                                           private$curr_llik,
                                           private$curr_lpost))
+        private$update_history()
       }
 
-      private$tick <- pmcmc_progress(control$n_steps, control$progress)
+
 
       ## Initial version of the history
-      private$update_history()
+
       if (private$control$save_trajectories) {
         private$history_trajectories$add(private$curr_trajectories)
       }
@@ -186,7 +225,7 @@ pmcmc_state <- R6::R6Class(
         if (i %% private$control$rerun_every == 0) {
           private$curr_llik <- private$run_filter(private$curr_pars)
           private$curr_lpost <- private$curr_lprior + private$curr_llik
-          private$update_history()
+          private$update_history_nested()
         }
 
         if (i %% 2) {
@@ -264,9 +303,11 @@ pmcmc_state <- R6::R6Class(
     },
 
     finish_nested = function() {
+      # pop x param x mcmc
       pars_array <- list_to_array(private$history_pars$get())
       dimnames(pars_array)[1:2] <- dimnames(private$curr_pars)
 
+      # pop x var x mcmc
       probabilities <- list_to_array(private$history_probabilities$get())
       dimnames(probabilities)[1:2] <- list(rownames(private$curr_pars),
                                         c("log_prior", "log_likelihood",
@@ -275,17 +316,20 @@ pmcmc_state <- R6::R6Class(
       predict <- state <- restart <- trajectories <- NULL
 
       if (private$control$save_state || private$control$save_trajectories) {
-        ## Do we *definitely* need step and rate here?
-        data <- private$filter$inputs()$data
-        predict <- list(transform = r6_private(private$pars)$transform,
-                        index = r6_private(private$filter)$last_history$index,
-                        step = last(data$step_end),
-                        rate = attr(data, "rate", exact = TRUE),
-                        filter = private$filter$inputs())
+        predict <- lapply(private$filter, function(x) {
+          data <- x$inputs()$data
+          list(transform = r6_private(private$pars)$transform,
+               index = r6_private(x)$last_history$index,
+               step = last(data$step_end),
+               rate = attr(data, "rate", exact = TRUE),
+               filter = x$inputs())
+        })
       }
 
       if (private$control$save_state) {
-        state <- t(list_to_matrix(private$history_state$get()))
+        # pop x state x mcmc
+        state <- list_to_array(private$history_state$get())
+        rownames(state) <- rownames(private$curr_pars)
       }
 
       if (length(private$control$save_restart) > 0) {
@@ -298,16 +342,23 @@ pmcmc_state <- R6::R6Class(
       }
 
       if (private$control$save_trajectories) {
-        ## Permute trajectories from [state x mcmc x particle] to
-        ## [state x particle x mcmc] so that they match the ones that we
-        ## will generate with predict
+        ## Permute trajectories from [state x particle x population x mcmc] to
+        ## [state x particle x mcmc x population]
+
+        # FIXME - DOUBLE CHECK ORDERING AND NAMES
         trajectories_state <-
-          aperm(list_to_array(private$history_trajectories$get()), c(1, 3, 2))
-        rownames(trajectories_state) <- names(predict$index)
-        data <- private$filter$inputs()$data
-        step <- c(data$step_start[[1]], data$step_end)
-        trajectories <- mcstate_trajectories(step, predict$rate,
-                                             trajectories_state, FALSE)
+          aperm(list_to_array(private$history_trajectories$get()),
+                c(1, 2, 4, 3))
+        # index is same for all filters, select 1 arbitrarily
+        stopifnot(all(predict[[1]]$index == predict[[length(predict)]]$index))
+        rownames(trajectories_state) <- predict[[1]]$index
+
+        trajectories <- lapply(seq_along(private$filter), function(i) {
+          data <- private$filter[[i]]$inputs()$data
+          step <- c(data$step_start[[i]], data$step_end)
+          mcstate_trajectories(step, predict$rate, trajectories_state[, , , i],
+                               FALSE)
+        })
       }
 
       mcstate_pmcmc(pars_array, probabilities, state, trajectories, restart,

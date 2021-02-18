@@ -769,3 +769,29 @@ test_that("particle filter with nested parameters", {
   p1 <- particle_filter$new(dat$data, model, n_particles, dat$compare,
                            index = dat$index, seed = 1L)
 })
+
+
+test_that("run particle filter on nested sir model", {
+  dat <- example_sir_shared()
+  n_particles <- 42
+  set.seed(1)
+  p1 <- particle_filter$new(dat$data[[1]], dat$model, n_particles, dat$compare,
+                           index = dat$index)
+  p2 <- particle_filter$new(dat$data[[1]], dat$model, n_particles, dat$compare,
+                           index = dat$index)
+
+  res1 <- p1$run()
+  res2 <- p2$run()
+
+  expect_is(res1, "numeric")
+  expect_is(res2, "numeric")
+
+  state1 <- p1$state()
+  state2 <- p2$state()
+
+  expect_is(state1, "matrix")
+  expect_equal(dim(state1), c(5, n_particles))
+
+  expect_is(state2, "matrix")
+  expect_equal(dim(state2), c(5, n_particles))
+})

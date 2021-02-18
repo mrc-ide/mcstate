@@ -18,7 +18,8 @@
 ##'   information about parameters (ranges, priors, proposal kernel,
 ##'   translation functions for use with the particle filter).
 ##'
-##' @param filter A [`particle_filter`] object
+##' @param filter A [`particle_filter`] object or list a list of particle
+##' filters if 'pars' inherits from [`pmcmc_parameters_nested`].
 ##'
 ##' @param n_steps Deprecated: use [mcstate::pmcmc_control] instead
 ##'
@@ -62,8 +63,15 @@ pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
                   save_trajectories = FALSE, progress = FALSE,
                   n_chains = 1, initial = NULL, rerun_every = Inf,
                   control = NULL) {
-  assert_is(pars, c("pmcmc_parameters", "pmcmc_parameters_nested"))
-  assert_is(filter, "particle_filter")
+  if (inherits(pars, "pmcmc_parameters")) {
+    assert_is(filter, "particle_filter")
+  } else if (inherits(pars, "pmcmc_parameters_nested")) {
+    assert_list(filter, class = "particle_filter")
+  } else {
+    stop("'pars' should inherit from 'pmcmc_parameters_nested' or
+    'pmcmc_parameters_nested'")
+  }
+
   if (is.null(control)) {
     warning("Please update your code to use pmcmc::pmcmc_control()",
             immediate. = TRUE)
@@ -114,8 +122,10 @@ pmcmc_single_chain_nested <- function(pars, initial, filter, control,
   if (!is.null(seed)) {
     ## This will be triggered where control$use_parallel_seed is TRUE
     set.seed(seed$r)
+    # FIXME - UPDATE FOR LIST OF FILTERS
     filter <- particle_filter_from_inputs(filter$inputs(), seed$dust)
   }
+  # FIXME - UPDATE FOR LIST OF FILTERS
   obj <- pmcmc_state$new(pars, initial, filter, control)
   obj$run_nested()
   obj$finish_nested()
@@ -124,11 +134,13 @@ pmcmc_single_chain_nested <- function(pars, initial, filter, control,
 
 pmcmc_multiple_series <- function(pars, initial, filter, control) {
   if (control$use_parallel_seed) {
+    # FIXME - UPDATE FOR LIST OF FILTERS
     seed <- make_seeds(control$n_chains, filter$inputs()$seed)
   } else {
     seed <- NULL
   }
   if (!is.null(control$n_threads_total)) {
+    # FIXME - UPDATE FOR LIST OF FILTERS
     filter$set_n_threads(control$n_threads_total)
   }
   samples <- vector("list", control$n_chains)
@@ -153,6 +165,7 @@ pmcmc_multiple_series <- function(pars, initial, filter, control) {
 
 
 pmcmc_multiple_parallel <- function(pars, initial, filter, control) {
+  # FIXME - UPDATE FOR LIST OF FILTERS AND SHARED PARAMS
   obj <- pmcmc_orchestrator$new(pars, initial, filter, control)
   obj$run()
   obj$finish()

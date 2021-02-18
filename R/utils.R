@@ -13,6 +13,11 @@ vnapply <- function(x, fun, ...) {
 }
 
 
+viapply <- function(x, fun, ...) {
+  vapply(x, fun, integer(1), ...)
+}
+
+
 vcapply <- function(x, fun, ...) {
   vapply(x, fun, character(1), ...)
 }
