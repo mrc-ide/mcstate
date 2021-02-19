@@ -12,6 +12,7 @@ vnapply <- function(x, fun, ...) {
   vapply(x, fun, numeric(1), ...)
 }
 
+
 viapply <- function(x, fun, ...) {
   vapply(x, fun, integer(1), ...)
 }
@@ -111,14 +112,17 @@ set_into <- function(x, at, value) {
   x
 }
 
+
 set_names <- function(x, nms) {
   names(x) <- nms
   x
 }
 
+
 str_collapse <- function(x) {
   paste0("{", paste0(x, collapse = ", "), "}")
 }
+
 
 recycle <- function(x, n, name = deparse(substitute(x))) {
   if (length(x) == n) {
@@ -130,6 +134,87 @@ recycle <- function(x, n, name = deparse(substitute(x))) {
   }
 }
 
+
+is_3d_array <- function(x) {
+  !is.na(nlayer(x))
+}
+
+
+## Copied from ncol
 nlayer <- function(x) {
   dim(x)[[3L]]
+}
+
+
+## Copied from NCOL
+NLAYER <- function(x) { # nolint
+  d <- dim(x)
+  if (length(d) > 2L) {
+    d[3L]
+  } else {
+    1L
+  }
+}
+
+
+## Copied from colnames
+layernames <- function(x, do.NULL = TRUE, prefix = "layer") { # nolint
+    dn <- dimnames(x)
+    if (!is.null(dn[[3L]]))
+        dn[[3L]]
+    else {
+      if (do.NULL) {
+        NULL
+      } else {
+        paste0(prefix, seq_len(NLAYER(x)))
+      }
+    }
+}
+
+
+## Copied from colnames<-
+`layernames<-` <- function(x, value) { # nolint
+  dn <- dimnames(x)
+  if (is.null(dn)) {
+    if (is.null(value)) {
+      return(x)
+    }
+    nd <- length(dim(x))
+    if (nd < 3L) {
+      stop("attempt to set 'layernames' on an object with less than three
+      dimensions")
+    }
+      dn <- vector("list", nd)
+  }
+  if (length(dn) < 3L) {
+    stop("attempt to set 'colnames' on an object with less than three
+    dimensions")
+  }
+  if (is.null(value)) {
+    dn[3L] <- list(NULL)
+  } else {
+    dn[[3L]] <- value
+  }
+  dimnames(x) <- dn
+  x
+}
+
+
+set_layernames <- function(m, nms) {
+  layernames(m) <- nms
+  m
+}
+
+lbind <- function(arrays) {
+  assert_list(arrays)
+  nr <- unique(viapply(arrays, NROW))
+  nc <- unique(viapply(arrays, NCOL))
+  if (length(nr) > 1) {
+    stop("Not all arrays have same number of rows")
+  }
+  if (length(nc) > 1) {
+    stop("Not all arrays have same number of columns")
+  }
+  nl <- sum(viapply(arrays, NLAYER))
+  array(do.call(c, arrays), dim = c(nr, nc, nl))
 }
