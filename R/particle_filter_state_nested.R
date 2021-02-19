@@ -63,7 +63,7 @@ particle_filter_state_nested <- R6::R6Class(
                           seed, save_history, save_restart) {
       ## NOTE: this will generate a warning when updating docs but
       ## that's ok; see https://github.com/r-lib/roxygen2/issues/1067
-      browser()
+
       if (is.null(model)) {
         model <- generator$new(pars = pars, step = steps[[1L]],
                                n_particles = n_particles, n_threads = n_threads,

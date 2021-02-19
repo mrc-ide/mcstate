@@ -90,28 +90,22 @@ test_that("particle filter data with populations creates data - equal", {
                   stringsAsFactors = TRUE)
   res <- particle_filter_data(d, "day", 10, population = "population")
 
-  expect_equal(names(res), letters[1:2])
   expect_s3_class(res, "particle_filter_data_nested")
-  expect_s3_class(res[[1]], "particle_filter_data")
-  expect_s3_class(res[[2]], "particle_filter_data")
 
   expect_setequal(
-    names(res[[1]]),
-    c("day_start", "day_end", "step_start", "step_end", "data"))
-  expect_equal(res[[1]]$day_start, 0:10)
-  expect_equal(res[[1]]$day_end, 1:11)
-  expect_equal(res[[1]]$step_start, 0:10 * 10)
-  expect_equal(res[[1]]$step_end, 1:11 * 10)
-  expect_equal(res[[1]]$data, d$data[1:11])
+    names(res),
+    c("day_start", "day_end", "step_start", "step_end", "population", "data"))
+  expect_equal(res$day_start[1:11], 0:10)
+  expect_equal(res$day_end[1:11], 1:11)
+  expect_equal(res$step_start[1:11], 0:10 * 10)
+  expect_equal(res$step_end[1:11], 1:11 * 10)
+  expect_equal(res$data[1:11], d$data[1:11])
 
-  expect_setequal(
-    names(res[[2]]),
-    c("day_start", "day_end", "step_start", "step_end", "data"))
-  expect_equal(res[[2]]$day_start, 0:10)
-  expect_equal(res[[2]]$day_end, 1:11)
-  expect_equal(res[[2]]$step_start, 0:10 * 10)
-  expect_equal(res[[2]]$step_end, 1:11 * 10)
-  expect_equal(res[[2]]$data, d$data[1:11])
+  expect_equal(res$day_start[12:22], 0:10)
+  expect_equal(res$day_end[12:22], 1:11)
+  expect_equal(res$step_start[12:22], 0:10 * 10)
+  expect_equal(res$step_end[12:22], 1:11 * 10)
+  expect_equal(res$data[12:22], d$data[1:11])
 })
 
 test_that("particle filter data with populations creates data - unequal", {
@@ -127,36 +121,34 @@ test_that("particle filter data with populations creates data - unequal", {
                               error_on_unequal = FALSE)
 
   expect_s3_class(res, "particle_filter_data_nested")
-  expect_s3_class(res[[1]], "particle_filter_data")
-  expect_s3_class(res[[2]], "particle_filter_data")
 
   expect_setequal(
-    names(res[[1]]),
-    c("day_start", "day_end", "step_start", "step_end", "data1", "data2"))
-  expect_equal(res[[1]]$day_start, 0:9)
-  expect_equal(res[[1]]$day_end, 1:10)
-  expect_equal(res[[1]]$step_start, 0:9 * 10)
-  expect_equal(res[[1]]$step_end, 1:10 * 10)
-  expect_equal(subset(res[[1]], day_end %in% d$day[1:5])[, "data1"],
+    names(res),
+    c("day_start", "day_end", "step_start", "step_end", "population", "data1",
+      "data2"))
+  expect_equal(res$day_start[1:10], 0:9)
+  expect_equal(res$day_end[1:10], 1:10)
+  expect_equal(res$step_start[1:10], 0:9 * 10)
+  expect_equal(res$step_end[1:10], 1:10 * 10)
+  expect_equal(subset(res[1:10, ], day_end %in% d$day[1:5])[, "data1"],
                d$data1[1:5])
-  expect_equal(subset(res[[1]], !(day_end %in% d$day[1:5]))[, "data1"],
+  expect_equal(subset(res[1:10, ], !(day_end %in% d$day[1:5]))[, "data1"],
                rep(NA_integer_, 5))
-  expect_equal(subset(res[[1]], day_end %in% d$day[1:5])[, "data2"],
+  expect_equal(subset(res[1:10, ], day_end %in% d$day[1:5])[, "data2"],
                d$data2[1:5])
-  expect_equal(subset(res[[1]], !(day_end %in% d$day[1:5]))[, "data2"],
+  expect_equal(subset(res[1:10, ], !(day_end %in% d$day[1:5]))[, "data2"],
                rep(NA_integer_, 5))
 
-  expect_setequal(
-    names(res[[2]]),
-    c("day_start", "day_end", "step_start", "step_end", "data1", "data2"))
-  expect_equal(res[[2]]$day_start, 0:9)
-  expect_equal(res[[2]]$day_end, 1:10)
-  expect_equal(res[[2]]$step_start, 0:9 * 10)
-  expect_equal(res[[2]]$step_end, 1:10 * 10)
-  expect_equal(res[[2]]$data1, d$data1[6:15])
-  expect_equal(res[[2]]$data2, d$data2[6:15])
+  expect_equal(res$day_start[11:20], 0:9)
+  expect_equal(res$day_end[11:20], 1:10)
+  expect_equal(res$step_start[11:20], 0:9 * 10)
+  expect_equal(res$step_end[11:20], 1:10 * 10)
+  expect_equal(res$data1[11:20], d$data1[6:15])
+  expect_equal(res$data2[11:20], d$data2[6:15])
 })
 
-test_that("particle_filter_data_multi - error on NULL", {
-  expect_error(particle_filter_data_multi(population = NULL), "must be non")
+test_that("particle_filter_data_multi - errors", {
+  expect_error(particle_filter_data_nested(population = NULL), "must be non")
+  expect_error(particle_filter_data_nested(
+    data.frame(a = 1), population = "a"), "factor")
 })

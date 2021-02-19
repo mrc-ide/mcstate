@@ -114,13 +114,16 @@ particle_filter_data <- function(data, time, rate, initial_time = NULL,
 
 particle_filter_data_nested <- function(data, time, rate, initial_time,
                                        population, error_on_unequal) {
-
   # catch impossible user call
   if (is.null(population)) {
     stop("'population' must be non-NULL")
   }
 
-  data$population <- factor(data$population)
+  if (!is.factor(data[[population]])) {
+    stop(sprintf("Column '%s' must be a factor", population))
+  }
+
+  groups <- unique(data[[population]])
 
   assert_logical(error_on_unequal)
 
@@ -134,7 +137,6 @@ particle_filter_data_nested <- function(data, time, rate, initial_time,
     } else {
       ## assumed quicker handling one matrix then re-splitting than lapply
       times <- as.integer(sort(unique(unlist(lapply(split_data, "[[", time)))))
-      groups <- unique(data[[population]])
       split_data <- lapply(split_data, function(x) {
         df <- data.frame(matrix(ncol = ncol(x) - 1, nrow = length(times)))
         colnames(df) <- colnames(x)[-ncol(x)]
@@ -146,23 +148,22 @@ particle_filter_data_nested <- function(data, time, rate, initial_time,
   }
 
   rate <- assert_scalar_positive_integer(rate)
+  ## times now equal so select first arbitrarily
   t <- clean_pf_times(split_data[[1]][[time]], initial_time, data)
 
-  out <- lapply(split_data, function(x) {
-    ret <- data.frame(time_start = t$time_start,
-                      time_end = t$time_end,
-                      step_start = t$time_start * rate,
-                      step_end = t$time_end * rate,
-                      x[vars])
-    names(ret)[1:2] <- paste0(time, c("_start", "_end"))
-    attr(ret, "rate") <- rate
-    attr(ret, "time") <- time
-    class(ret) <- c("particle_filter_data", "data.frame")
-    ret
-  })
+  data <- do.call(rbind, split_data)
 
-  class(out) <- c("particle_filter_data_nested", "list")
-  out
+  ret <- data.frame(time_start = t$time_start,
+                    time_end = t$time_end,
+                    step_start = t$time_start * rate,
+                    step_end = t$time_end * rate,
+                    population = rep(groups, each = length(t$time_start)),
+                    data[vars])
+  names(ret)[1:2] <- paste0(time, c("_start", "_end"))
+  attr(ret, "rate") <- rate
+  attr(ret, "time") <- time
+  class(ret) <- c("particle_filter_data_nested", "data.frame")
+  ret
 }
 
 clean_pf_times <- function(times, initial_time, data) {
