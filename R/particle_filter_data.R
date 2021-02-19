@@ -31,11 +31,22 @@
 ##'   must be at most equal to the first value of the `time`
 ##'   column, minus 1 (i.e., `data[[time]] - 1`).
 ##'
-##' @return A data.frame with new columns `step_start` and
-##'   `step_end` (required by [`particle_filter`]),
+##' @param population Optionally, the name of a column within `data` that
+##'   represents different populations. This column must be coercable to
+##'   factor.
+##'
+##' @param error_on_unequal If `population` is not NULL and time-points are not
+##'   equal between populations, then `TRUE` (default) will cause the code to
+##'   error, otherwise FALSE will add equal time-points to all populations and
+##'   fill missing data with NAs.
+##'
+##' @return If `population` is NULL, a data.frame with new columns
+##'   `step_start` and `step_end` (required by [`particle_filter`]),
 ##'   along side all previous data except for the time variable, which
 ##'   is replaced by new `<time>_start` and `<time>_end`
-##'   columns.
+##'   columns. If `population` is not NULL then a named list of data.frames as
+##'   described above where each element represents populations in the order
+##'   specified in the data.
 ##'
 ##' @export
 ##' @examples
@@ -45,12 +56,24 @@
 ##' # If providing an initial day, then the first epoch of simulation
 ##' # will be longer (see the first row)
 ##' mcstate::particle_filter_data(d, "day", 4, 0)
-particle_filter_data <- function(data, time, rate, initial_time = NULL) {
+particle_filter_data <- function(data, time, rate, initial_time = NULL,
+                                 population = NULL, error_on_unequal = TRUE) {
+
   assert_is(data, "data.frame")
   if (!(time %in% names(data))) {
     stop(sprintf("Did not find column '%s', representing time, in data",
                  time))
   }
+
+  if (!is.null(population)) {
+    if (!(population %in% names(data))) {
+      stop(sprintf("Did not find column '%s', representing population, in
+                   data", population))
+    }
+    return(particle_filter_data_multi(data, time, rate, initial_time,
+                                      population, error_on_unequal))
+  }
+
 
   t <- assert_integer(data[[time]])
   if (!all(diff(t) == 1)) {
@@ -69,6 +92,90 @@ particle_filter_data <- function(data, time, rate, initial_time = NULL) {
   }
 
   rate <- assert_scalar_positive_integer(rate)
+  t <- clean_pf_times(t, initial_time, data)
+
+  ret <- data.frame(time_start = t$time_start,
+                    time_end = t$time_end,
+                    step_start = t$time_start * rate,
+                    step_end = t$time_end * rate,
+                    data[names(data) != time])
+  names(ret)[1:2] <- paste0(time, c("_start", "_end"))
+  attr(ret, "rate") <- rate
+  attr(ret, "time") <- time
+  class(ret) <- c("particle_filter_data", "data.frame")
+
+  ret
+}
+
+particle_filter_data_multi <- function(data, time, rate, initial_time,
+                                       population, error_on_unequal) {
+
+  # catch impossible user call
+  if (is.null(population)) {
+    stop("'population' must be non-NULL")
+  }
+
+  data$population <- factor(data$population)
+
+  assert_logical(error_on_unequal)
+
+  split_data <- split(data[names(data) != population], data[[population]])
+  vars <- names(data)[!(names(data) %in% c(time, population))]
+
+  nr <- viapply(split_data, nrow)
+  if (length(unique(nr)) > 1) {
+    if (error_on_unequal) {
+      stop("Unequal time between populations")
+    } else {
+      ## assumed quicker handling one matrix then re-splitting than lapply
+      times <- as.integer(sort(unique(unlist(lapply(split_data, "[[", time)))))
+      groups <- unique(data[[population]])
+      split_data <- lapply(split_data, function(x) {
+        df <- data.frame(matrix(ncol = ncol(x) - 1, nrow = length(times)))
+        colnames(df) <- colnames(x)[-ncol(x)]
+        df[[time]] <- times
+        df[match(x[[time]], times), vars] <- as.matrix(x[, vars])
+        df
+      })
+    }
+  }
+
+  rate <- assert_scalar_positive_integer(rate)
+  t <- clean_pf_times(split_data[[1]][[time]], initial_time, data)
+
+  out <- lapply(split_data, function(x) {
+    ret <- data.frame(time_start = t$time_start,
+                      time_end = t$time_end,
+                      step_start = t$time_start * rate,
+                      step_end = t$time_end * rate,
+                      x[vars])
+    names(ret)[1:2] <- paste0(time, c("_start", "_end"))
+    attr(ret, "rate") <- rate
+    attr(ret, "time") <- time
+    class(ret) <- c("particle_filter_data", "data.frame")
+    ret
+  })
+
+  out
+}
+
+clean_pf_times <- function(times, initial_time, data) {
+  t <- assert_integer(times)
+
+  if (!all(diff(t) == 1)) {
+    ## It's possible that we can make this work ok for irregular time
+    ## units, but we make this assumption below when working out the
+    ## start and end step (i.e., that we assume that the data
+    stop("Expected each time difference to be one unit")
+  }
+  if (t[[1L]] < 1) {
+    stop(sprintf(
+      "The first time must be at least 1 (but was given %d)", t[[1L]]))
+  }
+
+  if (nrow(data) < 2) {
+    stop("Expected at least two time windows")
+  }
 
   time_end <- t
   time_start <- t - 1L
@@ -84,15 +191,5 @@ particle_filter_data <- function(data, time, rate, initial_time = NULL) {
     time_start[[1L]] <- initial_time
   }
 
-  ret <- data.frame(time_start = time_start,
-                    time_end = time_end,
-                    step_start = time_start * rate,
-                    step_end = time_end * rate,
-                    data[names(data) != time])
-  names(ret)[1:2] <- paste0(time, c("_start", "_end"))
-  attr(ret, "rate") <- rate
-  attr(ret, "time") <- time
-  class(ret) <- c("particle_filter_data", "data.frame")
-
-  ret
+  list(time_start = time_start, time_end = time_end)
 }
