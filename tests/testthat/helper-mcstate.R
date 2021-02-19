@@ -1,7 +1,7 @@
 example_sir <- function() {
   set.seed(1)
   model <- dust::dust_example("sir")
-  sir <- model$new(pars = list(), step = 0, n_particles = 1)
+  sir <- model$new(pars = list(), step = 2, n_particles = 1)
   y0 <- sir$state()
 
   compare <- function(state, observed, pars = NULL) {
@@ -82,7 +82,7 @@ example_sir_shared <- function() {
   data_raw <- apply(incidence, 1,
                     function(x) data.frame(day = day, incidence = x))
   data_raw <- do.call(rbind, data_raw)
-  data_raw$populations <- rep(letters[1:2], each = nrow(data_raw)/2)
+  data_raw$populations <- factor(rep(letters[1:2], each = nrow(data_raw) / 2))
 
   data <- particle_filter_data(data_raw, time = "day", rate = 4,
                                population = "populations")

@@ -81,6 +81,15 @@ df_to_list_of_lists <- function(x) {
   lapply(unname(split(x, seq_len(nrow(x)))), as.list)
 }
 
+groupeddf_to_list_of_lists <- function(x, group) {
+  ## largely copied from dust::dust_data
+  rows <- lapply(seq_len(nrow(x)), function(i) as.list(x[i, ]))
+  group <- x[[group]]
+  rows_grouped <- unname(split(rows, group))
+  lapply(seq_len(nrow(x) / length(unique(group))),
+         function(i) lapply(rows_grouped, "[[", i))
+}
+
 
 all_or_none <- function(x) {
   all(x) || !any(x)
@@ -119,4 +128,8 @@ recycle <- function(x, n, name = deparse(substitute(x))) {
   } else {
     stop(sprintf("Invalid length for '%s', expected 1 or %d", name, n))
   }
+}
+
+nlayer <- function(x) {
+  dim(x)[[3L]]
 }

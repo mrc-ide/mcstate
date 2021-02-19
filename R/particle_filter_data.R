@@ -159,6 +159,7 @@ particle_filter_data_nested <- function(data, time, rate, initial_time,
                     step_end = t$time_end * rate,
                     population = rep(groups, each = length(t$time_start)),
                     data[vars])
+  rownames(ret) <- NULL
   names(ret)[1:2] <- paste0(time, c("_start", "_end"))
   attr(ret, "rate") <- rate
   attr(ret, "time") <- time

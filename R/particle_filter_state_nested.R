@@ -63,6 +63,10 @@ particle_filter_state_nested <- R6::R6Class(
                           seed, save_history, save_restart) {
       ## NOTE: this will generate a warning when updating docs but
       ## that's ok; see https://github.com/r-lib/roxygen2/issues/1067
+      if (length(pars) != length(unique(data$population))) {
+        stop(sprintf("'pars' should be same length as 'data$population' (%d)",
+                    length(unique(data$population))))
+      }
 
       if (is.null(model)) {
         model <- generator$new(pars = pars, step = steps[[1L]],
@@ -132,7 +136,7 @@ particle_filter_state_nested <- R6::R6Class(
 
       ## Variable (see also history)
       self$model <- model
-      self$log_likelihood <- 0.0
+      self$log_likelihood <- rep(0.0, length(pars))
     },
 
     ##' @description Run the particle filter to the end of the data. This is
@@ -200,7 +204,13 @@ particle_filter_state_nested <- R6::R6Class(
         if (is.null(compare)) {
           log_weights <- model$compare_data()
         } else {
-          log_weights <- compare(state, data_split[[t]], pars)
+          log_weights <- vapply(seq_len(nlayer(state)),
+                                function(i) {
+                                  compare(array(state[, , i],
+                                          c(nrow(state), ncol(state))),
+                                          data_split[[t]][[i]], pars)
+                                }, numeric(ncol(state)))
+
         }
 
         if (is.null(log_weights)) {
@@ -209,14 +219,16 @@ particle_filter_state_nested <- R6::R6Class(
           }
           log_likelihood_step <- NA_real_
         } else {
-          weights <- scale_log_weights(log_weights)
-          log_likelihood_step <- weights$average
+          weights <- apply(log_weights, 2, scale_log_weights)
+          log_likelihood_step <- vnapply(weights, "[[", "average")
           log_likelihood <- log_likelihood + log_likelihood_step
-          if (log_likelihood == -Inf) {
+          ## FIXME - IS THIS CORRECT? ALL VS ANY
+          if (any(log_likelihood == -Inf)) {
             break
           }
 
-          kappa <- particle_resample(weights$weights)
+          kappa <- vapply(weights, function(x) particle_resample(x$weights),
+                          numeric(length(weights[[1]]$weights)))
           model$reorder(kappa)
           if (save_history) {
             history_order[, t + 1L] <- kappa

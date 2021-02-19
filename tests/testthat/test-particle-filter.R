@@ -760,14 +760,18 @@ test_that("run particle filter on sir model", {
   dat <- example_sir_shared()
   n_particles <- 42
   set.seed(1)
+
+  pars <- list(list(beta = 0.2, gamma = 0.1),
+                               list(beta = 0.3, gamma = 0.1))
+
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index)
-  res <- p$run()
+  res <- p$run(pars)
   expect_is(res, "numeric")
 
   state <- p$state()
-  expect_is(state, "matrix")
-  expect_equal(dim(state), c(5, n_particles))
+  expect_is(state, "array")
+  expect_equal(dim(state), c(5, n_particles, 2))
 
   expect_error(
     p$history(),

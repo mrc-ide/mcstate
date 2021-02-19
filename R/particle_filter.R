@@ -168,16 +168,13 @@ particle_filter <- R6::R6Class(
         stop("'initial' must be function if not NULL")
       }
       assert_is(data, c("particle_filter_data", "particle_filter_data_nested"))
-browser()
+
       self$model <- model
       private$data <- data
       if (is.null(compare)) {
         if (inherits(data, "particle_filter_data_nested")) {
-          x <- do.call(rbind, private$data)
-          x$populations <- factor(rep(letters[1:2],
-                                      each = nrow(private$data[[1]])))
-          private$data_split <- dust::dust_data(x, "step_end",
-                                                multi = "populations")
+          private$data_split <- dust::dust_data(data, "step_end",
+                                                multi = "population")
         } else {
           private$data_split <- dust::dust_data(private$data, "step_end")
         }
@@ -187,9 +184,19 @@ browser()
         ## function a little or otherwise requires logic near to where
         ## the comparison function is used (many times) rather than
         ## once here.
-        private$data_split <- df_to_list_of_lists(x)
+        if (inherits(data, "particle_filter_data_nested")) {
+          private$data_split <- groupeddf_to_list_of_lists(data, "population")
+          private$steps <- unname(
+            as.matrix(
+              split(data, data$population)[[1]][c("step_start", "step_end")]
+              )
+            )
+        } else {
+          private$data_split <- df_to_list_of_lists(data)
+          private$steps <- unname(as.matrix(data[c("step_start", "step_end")]))
+        }
       }
-      private$steps <- unname(as.matrix(data[c("step_start", "step_end")]))
+
       if (is.null(compare) && !model$public_methods$has_compare()) {
         stop("Your model does not have a built-in 'compare' function")
       }
@@ -256,11 +263,19 @@ browser()
     ##' `step` and `end`. This interface is still subject to change.
     run_begin = function(pars = list(), save_history = FALSE,
                          save_restart = NULL) {
-      particle_filter_state$new(
-        pars, self$model, private$last_model, private$data, private$data_split,
-        private$steps, self$n_particles, private$n_threads,
-        private$initial, private$index, private$compare, private$seed,
-        save_history, save_restart)
+      if (inherits(private$data, "particle_filter_data_nested")) {
+        particle_filter_state_nested$new(
+          pars, self$model, private$last_model, private$data,
+          private$data_split, private$steps, self$n_particles,
+          private$n_threads, private$initial, private$index, private$compare,
+          private$seed, save_history, save_restart)
+      } else {
+        particle_filter_state$new(
+          pars, self$model, private$last_model, private$data,
+          private$data_split, private$steps, self$n_particles,
+          private$n_threads, private$initial, private$index, private$compare,
+          private$seed, save_history, save_restart)
+      }
     },
 
     ##' @description Extract the current model state, optionally filtering.
