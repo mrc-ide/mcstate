@@ -71,4 +71,9 @@ mcstate::particle_filter_data(d, "day", 4)
 # If providing an initial day, then the first epoch of simulation
 # will be longer (see the first row)
 mcstate::particle_filter_data(d, "day", 4, 0)
+
+# If including populations:
+d <- data.frame(day = 5:20, y = runif(16),
+                population = rep(letters[1:2], each = 16))
+mcstate::particle_filter_data(d, "day", 4, 0, "population")
 }

@@ -755,3 +755,21 @@ test_that("Can fork a particle_filter_state object", {
   expect_identical(res$log_likelihood, cmp$log_likelihood)
   expect_identical(res$history, cmp$history)
 })
+
+test_that("run particle filter on sir model", {
+  dat <- example_sir_shared()
+  n_particles <- 42
+  set.seed(1)
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
+  res <- p$run()
+  expect_is(res, "numeric")
+
+  state <- p$state()
+  expect_is(state, "matrix")
+  expect_equal(dim(state), c(5, n_particles))
+
+  expect_error(
+    p$history(),
+    "Can't get history as model was run with save_history = FALSE")
+})

@@ -167,8 +167,8 @@ particle_filter <- R6::R6Class(
       if (!is.null(initial) && !is.function(initial)) {
         stop("'initial' must be function if not NULL")
       }
-      assert_is(data, "particle_filter_data")
-
+      assert_is(data, c("particle_filter_data", "particle_filter_data_nested"))
+browser()
       self$model <- model
       private$data <- data
       if (is.null(compare)) {

@@ -56,6 +56,11 @@
 ##' # If providing an initial day, then the first epoch of simulation
 ##' # will be longer (see the first row)
 ##' mcstate::particle_filter_data(d, "day", 4, 0)
+##'
+##' # If including populations:
+##' d <- data.frame(day = 5:20, y = runif(16),
+##'                 population = rep(letters[1:2], each = 16))
+##' mcstate::particle_filter_data(d, "day", 4, 0, "population")
 particle_filter_data <- function(data, time, rate, initial_time = NULL,
                                  population = NULL, error_on_unequal = TRUE) {
 
@@ -70,7 +75,7 @@ particle_filter_data <- function(data, time, rate, initial_time = NULL,
       stop(sprintf("Did not find column '%s', representing population, in
                    data", population))
     }
-    return(particle_filter_data_multi(data, time, rate, initial_time,
+    return(particle_filter_data_nested(data, time, rate, initial_time,
                                       population, error_on_unequal))
   }
 
@@ -107,7 +112,7 @@ particle_filter_data <- function(data, time, rate, initial_time = NULL,
   ret
 }
 
-particle_filter_data_multi <- function(data, time, rate, initial_time,
+particle_filter_data_nested <- function(data, time, rate, initial_time,
                                        population, error_on_unequal) {
 
   # catch impossible user call
@@ -156,6 +161,7 @@ particle_filter_data_multi <- function(data, time, rate, initial_time,
     ret
   })
 
+  class(out) <- c("particle_filter_data_nested", "list")
   out
 }
 

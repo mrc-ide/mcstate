@@ -91,6 +91,9 @@ test_that("particle filter data with populations creates data - equal", {
   res <- particle_filter_data(d, "day", 10, population = "population")
 
   expect_equal(names(res), letters[1:2])
+  expect_s3_class(res, "particle_filter_data_nested")
+  expect_s3_class(res[[1]], "particle_filter_data")
+  expect_s3_class(res[[2]], "particle_filter_data")
 
   expect_setequal(
     names(res[[1]]),
@@ -122,6 +125,10 @@ test_that("particle filter data with populations creates data - unequal", {
 
   res <- particle_filter_data(d, "day", 10, population = "population",
                               error_on_unequal = FALSE)
+
+  expect_s3_class(res, "particle_filter_data_nested")
+  expect_s3_class(res[[1]], "particle_filter_data")
+  expect_s3_class(res[[2]], "particle_filter_data")
 
   expect_setequal(
     names(res[[1]]),
