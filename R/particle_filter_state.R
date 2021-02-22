@@ -151,7 +151,10 @@ particle_filter_state <- R6::R6Class(
     ##' the data provided to the filter). It is an error to provide
     ##' a value here that is lower than the current step index, or past
     ##' the end of the data.
-    step = function(step_index) {
+    ##'
+    ##' @param partial Logical, indicating if we should return the partial
+    ##' likelihood, due to this step, rather than the full likelihood so far.
+    step = function(step_index, partial = FALSE) {
       steps <- private$steps
       n_steps <- private$n_steps
       curr <- private$current_step_index
@@ -242,7 +245,11 @@ particle_filter_state <- R6::R6Class(
         self$restart_state <- restart_state
       }
 
-      log_likelihood
+      if (partial) {
+        log_likelihood_step
+      } else {
+        log_likelihood
+      }
     },
 
     ##' @description Create a new `particle_filter_state` object based

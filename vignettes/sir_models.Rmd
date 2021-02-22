@@ -78,7 +78,7 @@ The anatomy of an mcstate particle filter, as noted above, consists of three mai
 To demonstrate this, we will attempt to infer the parameters $\beta$ and $\gamma$ using daily case counts. In reality these counts would be measured, but here we have generated them from a single run of the model with `seed = 2L`, and added some constant noise proportional to the epidemic size:
 
 ```{r}
-incidence <- read.table("sir_incidence_data.csv", header = TRUE, sep = ",")
+incidence <- read.csv(system.file("sir_incidence.csv", package = "mcstate"))
 ```
 
 This can then be processed with `mcstate::particle_filter_data()` as follows, taking four update steps between every observation so that `rate = 4`. Generally increasing the rate will improve resolution, especially if rates of change between partitions are high, though at the expense of extra computation time. We also define a time interval between each update $dt = \frac{1}{\mathrm(rate)}$:

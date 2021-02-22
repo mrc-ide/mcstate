@@ -27,7 +27,7 @@ To illustrate this problem and the solution we will use a much simpler model whi
 ## Setup
 
 ```{r}
-incidence <- read.csv("sir_incidence_data.csv")
+incidence <- read.csv(system.file("sir_incidence.csv", package = "mcstate"))
 plot(cases ~ day, incidence,
      type = "o", xlab = "Day", ylab = "New cases", pch = 19)
 ```

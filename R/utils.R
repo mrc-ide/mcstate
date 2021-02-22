@@ -134,7 +134,6 @@ recycle <- function(x, n, name = deparse(substitute(x))) {
   }
 }
 
-
 is_3d_array <- function(x) {
   length(dim(x)) == 3
 }
@@ -217,4 +216,7 @@ lbind <- function(arrays) {
   }
   nl <- sum(viapply(arrays, NLAYER))
   array(do.call(c, arrays), dim = c(nr, nc, nl))
+
+normalise <- function(x) {
+  x / sum(x)
 }

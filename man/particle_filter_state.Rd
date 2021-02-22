@@ -94,7 +94,7 @@ the particle filter forward one step within the \emph{data} (which
 may correspond to more than one step with your model) and
 returns the likelihood so far.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_filter_state$step(step_index)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter_state$step(step_index, partial = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -105,6 +105,9 @@ as the model step, nor time, so be careful (it's the index within
 the data provided to the filter). It is an error to provide
 a value here that is lower than the current step index, or past
 the end of the data.}
+
+\item{\code{partial}}{Logical, indicating if we should return the partial
+likelihood, due to this step, rather than the full likelihood so far.}
 }
 \if{html}{\out{</div>}}
 }
