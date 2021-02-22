@@ -6,9 +6,7 @@ test_that("run particle filter on sir model", {
   set.seed(1)
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index, seed = 1L)
-  res1 <- p$run()
   res <- p$run()
-  expect_equal(res1, res2)
   expect_is(res, "numeric")
 
   state <- p$state()
