@@ -88,3 +88,14 @@ assert_scalar_character <- function(x, name = deparse(substitute(x))) {
   assert_character(x, name)
   invisible(x)
 }
+
+assert_list_of <- function(x, class, name = deparse(substitute(x))) {
+  if (!(is.list(x))) {
+    stop(sprintf("'%s' must be a list", name), call. = FALSE)
+  }
+  if (!all(vlapply(x, inherits, what = class))) {
+    stop(sprintf("Elements of '%s' must be in '%s'", name,
+                 str_collapse(class)), call. = FALSE)
+  }
+  invisible(x)
+}

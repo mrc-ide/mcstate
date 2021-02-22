@@ -48,7 +48,7 @@ array_bind <- function(..., arrays = list(...)) {
     err <- which(d_diff, TRUE)
     err <- vcapply(split(unname(err[, 1]), err[, 2]), paste, collapse = ", ")
     detail <- paste(sprintf("array %s (dimension %s)", names(err), unname(err)),
-                 collapse = ", ")
+                    collapse = ", ")
     stop(paste("Incompatible dimension arrays:", detail))
   }
 

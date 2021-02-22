@@ -70,7 +70,8 @@ test_that("particle filter can offset initial data", {
                     b = d$b)
   attr(cmp, "rate") <- 4
   attr(cmp, "time") <- "hour"
-  class(cmp) <- c("particle_filter_data", "data.frame")
+  class(cmp) <- c("particle_filter_data_single", "particle_filter_data",
+                  "data.frame")
   expect_equal(res, cmp)
 })
 
@@ -82,4 +83,83 @@ test_that("require more than one observation", {
     "Expected at least two time windows")
   expect_silent(
     particle_filter_data(d, "hour", 10))
+})
+
+test_that("particle filter data with populations creates data - equal", {
+  d <- data.frame(day = 1:11, data = seq(0, 1, by = 0.1),
+                  population = rep(letters[1:2], each = 11),
+                  stringsAsFactors = TRUE)
+  res <- particle_filter_data(d, "day", 10, population = "population")
+
+  expect_s3_class(res, "particle_filter_data_nested")
+
+  expect_setequal(
+    names(res),
+    c("day_start", "day_end", "step_start", "step_end", "population", "data"))
+  expect_equal(res$day_start[1:11], 0:10)
+  expect_equal(res$day_end[1:11], 1:11)
+  expect_equal(res$step_start[1:11], 0:10 * 10)
+  expect_equal(res$step_end[1:11], 1:11 * 10)
+  expect_equal(res$data[1:11], d$data[1:11])
+
+  expect_equal(res$day_start[12:22], 0:10)
+  expect_equal(res$day_end[12:22], 1:11)
+  expect_equal(res$step_start[12:22], 0:10 * 10)
+  expect_equal(res$step_end[12:22], 1:11 * 10)
+  expect_equal(res$data[12:22], d$data[1:11])
+})
+
+test_that("particle filter data with populations creates data - unequal", {
+  d <- data.frame(day = c(seq.int(1, 10, 2), 1:10),
+                  data1 = c(runif(5), runif(10)),
+                  data2 = c(runif(5), runif(10)),
+                  population = rep(letters[1:2], times = c(5, 10)),
+                  stringsAsFactors = TRUE)
+  expect_error(particle_filter_data(d, "day", 10, population = "population",
+                                    allow_unequal_times = FALSE), "Unequal")
+
+  res <- particle_filter_data(d, "day", 10, population = "population",
+                              allow_unequal_times = TRUE)
+
+  expect_s3_class(res, "particle_filter_data_nested")
+
+  expect_setequal(
+    names(res),
+    c("day_start", "day_end", "step_start", "step_end", "population", "data1",
+      "data2"))
+  expect_equal(res$day_start[1:10], 0:9)
+  expect_equal(res$day_end[1:10], 1:10)
+  expect_equal(res$step_start[1:10], 0:9 * 10)
+  expect_equal(res$step_end[1:10], 1:10 * 10)
+  expect_equal(subset(res[1:10, ], day_end %in% d$day[1:5])[, "data1"],
+               d$data1[1:5])
+  expect_equal(subset(res[1:10, ], !(day_end %in% d$day[1:5]))[, "data1"],
+               rep(NA_integer_, 5))
+  expect_equal(subset(res[1:10, ], day_end %in% d$day[1:5])[, "data2"],
+               d$data2[1:5])
+  expect_equal(subset(res[1:10, ], !(day_end %in% d$day[1:5]))[, "data2"],
+               rep(NA_integer_, 5))
+
+  expect_equal(res$day_start[11:20], 0:9)
+  expect_equal(res$day_end[11:20], 1:10)
+  expect_equal(res$step_start[11:20], 0:9 * 10)
+  expect_equal(res$step_end[11:20], 1:10 * 10)
+  expect_equal(res$data1[11:20], d$data1[6:15])
+  expect_equal(res$data2[11:20], d$data2[6:15])
+})
+
+test_that("particle_filter_data_multi - errors", {
+  expect_error(particle_filter_data_nested(population = NULL), "must be non")
+  expect_error(particle_filter_data_nested(
+    data.frame(a = 1), population = "a"), "factor")
+  expect_error(
+    particle_filter_data(data.frame(time = 1, a = factor("a")), "time", 1,
+                         population = "c"),
+    "not find")
+})
+
+test_that("clean_pf_times", {
+  expect_error(clean_pf_times(seq.int(1, 10, 2)), "Expected each")
+  expect_error(clean_pf_times(-1:5), "first time")
+  expect_error(clean_pf_times(1, 1, matrix(1)), "at least")
 })

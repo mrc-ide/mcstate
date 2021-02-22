@@ -113,6 +113,7 @@ test_that("make seeds with long raw retains size", {
 
 
 test_that("noop operations with a null thread pool", {
+  skip_if_not_installed("mockery")
   mock_remote <- list2env(
     list(n_threads = 5,
          set_n_threads = mockery::mock()))
