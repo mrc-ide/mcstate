@@ -63,4 +63,6 @@ test_that("assert_character", {
 
 test_that("assert_list_of", {
   expect_error(assert_list_of(list("a"), "numeric"), "Elements of")
+  expect_error(assert_list_of("a"), "must be")
+  expect_equal(assert_list_of(list("a"), "character"), list("a"))
 })
