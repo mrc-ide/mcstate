@@ -2,7 +2,7 @@
 % Please edit documentation in R/particle_filter_state_nested.R
 \name{particle_filter_state_nested}
 \alias{particle_filter_state_nested}
-\title{Particle filter state}
+\title{Nested particle filter state}
 \description{
 Nested particle filter internal state. This object is not
 ordinarily constructed directly by users, but via the
@@ -26,7 +26,7 @@ re-bound)}
 
 \item{\code{restart_state}}{Full model state at a series of points in
 time, if the model was created with non-\code{NULL} \code{save_restart}.
-This is a 3d array as described in \link{particle_filter}}
+This is a 4d array as described in \link{particle_filter}}
 
 \item{\code{log_likelihood}}{The log-likelihood so far. This starts at
 0 when initialised and accumulates value for each step taken.}

@@ -1029,7 +1029,7 @@ test_that("stop simulation when likelihood is impossible", {
   expect_true(all(is.na(history[, , 1, i])))
 })
 
-test_that("we do not reorder particles when compare is NULL - nested", {
+test_that("compare NULL - nested", {
   dat <- example_sir_shared()
   n_particles <- 42
 
@@ -1037,8 +1037,9 @@ test_that("we do not reorder particles when compare is NULL - nested", {
                                list(beta = 0.3, gamma = 0.1))
   p <- particle_filter$new(dat$data, dat$model, n_particles,
                            function(...) NULL, index = dat$index)
-  res <- p$run(pars)
+  res <- p$run(pars, save_history = TRUE)
   expect_equal(res, c(0, 0))
+  expect_equal(dim(p$history()), c(3, 42, 2, 101))
 })
 
 test_that("nested particle filter initial not list", {

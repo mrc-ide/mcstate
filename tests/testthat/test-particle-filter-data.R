@@ -70,7 +70,8 @@ test_that("particle filter can offset initial data", {
                     b = d$b)
   attr(cmp, "rate") <- 4
   attr(cmp, "time") <- "hour"
-  class(cmp) <- c("particle_filter_data", "data.frame")
+  class(cmp) <- c("particle_filter_data_single", "particle_filter_data",
+                  "data.frame")
   expect_equal(res, cmp)
 })
 
@@ -115,10 +116,10 @@ test_that("particle filter data with populations creates data - unequal", {
                   population = rep(letters[1:2], times = c(5, 10)),
                   stringsAsFactors = TRUE)
   expect_error(particle_filter_data(d, "day", 10, population = "population",
-                                    error_on_unequal = TRUE), "Unequal")
+                                    allow_unequal_times = FALSE), "Unequal")
 
   res <- particle_filter_data(d, "day", 10, population = "population",
-                              error_on_unequal = FALSE)
+                              allow_unequal_times = TRUE)
 
   expect_s3_class(res, "particle_filter_data_nested")
 

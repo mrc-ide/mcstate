@@ -1,4 +1,4 @@
-##' @title Particle filter state
+##' @title Nested particle filter state
 ##'
 ##' @description Nested particle filter internal state. This object is not
 ##'   ordinarily constructed directly by users, but via the
@@ -43,7 +43,7 @@ particle_filter_state_nested <- R6::R6Class(
 
     ##' @field restart_state Full model state at a series of points in
     ##'   time, if the model was created with non-`NULL` `save_restart`.
-    ##'   This is a 3d array as described in [mcstate::particle_filter]
+    ##'   This is a 4d array as described in [mcstate::particle_filter]
     restart_state = NULL,
 
     ##' @field log_likelihood The log-likelihood so far. This starts at
@@ -64,8 +64,8 @@ particle_filter_state_nested <- R6::R6Class(
       ## NOTE: this will generate a warning when updating docs but
       ## that's ok; see https://github.com/r-lib/roxygen2/issues/1067
       if (length(pars) < length(unique(data$population))) {
-        stop(sprintf("'pars' should be at least the length of
-                     'data$population' (%d)",
+        stop(sprintf("'pars' must be at least the length of
+                     'data$population', %d",
                      length(unique(data$population))))
       }
 

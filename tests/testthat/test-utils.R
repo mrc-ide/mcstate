@@ -59,9 +59,7 @@ test_that("NLAYER", {
 })
 
 test_that("layernames", {
-  expect_equal(layernames(array(1, c(2, 2, 2)), do.NULL = TRUE), NULL)
-  expect_equal(layernames(array(1, c(1, 1, 2)), do.NULL = FALSE),
-               paste0("layer", 1:2))
+  expect_equal(layernames(array(1, c(2, 2, 2))), NULL)
   expect_equal(layernames(array(1, c(1, 1, 1), as.list(letters[1:3]))), "c")
 })
 
@@ -70,17 +68,12 @@ test_that("layernames<-", {
   expect_error({
     layernames(x) <- "a"
   },
-  "attempt to set")
-
-  x <- matrix(1, dimnames = as.list(letters[1:2]))
-  expect_error({
-    layernames(x) <- "a"
-  },
-  "attempt to set")
+  "less than")
 
   x1 <- x2 <- array(1, c(1, 1, 1))
-  layernames(x2) <- NULL
-  expect_equal(x1, x2)
+  expect_error({
+    layernames(x2) <- NULL
+  }, "cannot be")
 
   x <- array(1, c(1, 1, 1))
   layernames(x) <- "a"
@@ -99,15 +92,6 @@ test_that("set_layernames", {
   x <- (array(1, c(1, 1, 1), as.list(letters[1:3])))
   expect_equal(set_layernames(array(1, c(1, 1, 1), list("a", "b", NULL)), "c"),
                x)
-})
-
-test_that("lbind", {
-  expect_error(lbind(list(array(1, c(1, 2, 1)), array(1, c(1, 3, 1)))),
-               "number of columns")
-  expect_error(lbind(list(array(1, c(1, 2, 1)), array(1, c(2, 2, 1)))),
-               "number of rows")
-  expect_equal(lbind(list(array(1, c(1, 1, 1)), array(2, c(1, 1, 1)))),
-               array(1:2, c(1, 1, 2)))
 })
 
 test_that("is_3d_array", {

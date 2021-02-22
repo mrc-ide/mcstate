@@ -32,13 +32,12 @@
 ##'   column, minus 1 (i.e., `data[[time]] - 1`).
 ##'
 ##' @param population Optionally, the name of a column within `data` that
-##'   represents different populations. This column must be coercable to
-##'   factor.
+##'   represents different populations. Must be a factor.
 ##'
-##' @param error_on_unequal If `population` is not NULL and time-points are not
-##'   equal between populations, then `TRUE` (default) will cause the code to
-##'   error, otherwise FALSE will add equal time-points to all populations and
-##'   fill missing data with NAs.
+##' @param allow_unequal_times If `population` is not NULL and time-points are
+##'   not equal between populations, then `TRUE` will cause the code to
+##'   error, otherwise FALSE (default) will add equal time-points to all
+##'   populations and fill missing data with NAs.
 ##'
 ##' @return If `population` is NULL, a data.frame with new columns
 ##'   `step_start` and `step_end` (required by [`particle_filter`]),
@@ -62,7 +61,8 @@
 ##'                 population = factor(rep(letters[1:2], each = 16)))
 ##' mcstate::particle_filter_data(d, "day", 4, 0, "population")
 particle_filter_data <- function(data, time, rate, initial_time = NULL,
-                                 population = NULL, error_on_unequal = TRUE) {
+                                 population = NULL,
+                                 allow_unequal_times = FALSE) {
 
   assert_is(data, "data.frame")
   if (!(time %in% names(data))) {
@@ -76,7 +76,7 @@ particle_filter_data <- function(data, time, rate, initial_time = NULL,
                    data", population))
     }
     return(particle_filter_data_nested(data, time, rate, initial_time,
-                                       population, error_on_unequal))
+                                       population, allow_unequal_times))
   }
 
 
@@ -107,14 +107,15 @@ particle_filter_data <- function(data, time, rate, initial_time = NULL,
   names(ret)[1:2] <- paste0(time, c("_start", "_end"))
   attr(ret, "rate") <- rate
   attr(ret, "time") <- time
-  class(ret) <- c("particle_filter_data", "data.frame")
+  class(ret) <- c("particle_filter_data_single", "particle_filter_data",
+                  "data.frame")
 
   ret
 }
 
 particle_filter_data_nested <- function(data, time, rate, initial_time,
-                                        population, error_on_unequal) {
-  # catch impossible user call
+                                        population, allow_unequal_times) {
+  # catch invalid user call
   if (is.null(population)) {
     stop("'population' must be non-NULL")
   }
@@ -125,16 +126,14 @@ particle_filter_data_nested <- function(data, time, rate, initial_time,
 
   groups <- unique(data[[population]])
 
-  assert_logical(error_on_unequal)
+  assert_logical(allow_unequal_times)
 
   split_data <- split(data[names(data) != population], data[[population]])
   vars <- names(data)[!(names(data) %in% c(time, population))]
 
   nr <- viapply(split_data, nrow)
   if (length(unique(nr)) > 1) {
-    if (error_on_unequal) {
-      stop("Unequal time between populations")
-    } else {
+    if (allow_unequal_times) {
       ## assumed quicker handling one matrix then re-splitting than lapply
       times <- as.integer(sort(unique(unlist(lapply(split_data, "[[", time)))))
       split_data <- lapply(split_data, function(x) {
@@ -144,6 +143,8 @@ particle_filter_data_nested <- function(data, time, rate, initial_time,
         df[match(x[[time]], times), vars] <- as.matrix(x[, vars])
         df
       })
+    } else {
+      stop("Unequal time between populations")
     }
   }
 
@@ -163,7 +164,8 @@ particle_filter_data_nested <- function(data, time, rate, initial_time,
   names(ret)[1:2] <- paste0(time, c("_start", "_end"))
   attr(ret, "rate") <- rate
   attr(ret, "time") <- time
-  class(ret) <- c("particle_filter_data_nested", "data.frame")
+  class(ret) <- c("particle_filter_data_nested", "particle_filter_data",
+                  "data.frame")
   ret
 }
 

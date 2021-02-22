@@ -10,7 +10,7 @@ particle_filter_data(
   rate,
   initial_time = NULL,
   population = NULL,
-  error_on_unequal = TRUE
+  allow_unequal_times = FALSE
 )
 }
 \arguments{
@@ -31,13 +31,12 @@ must be at most equal to the first value of the \code{time}
 column, minus 1 (i.e., \code{data[[time]] - 1}).}
 
 \item{population}{Optionally, the name of a column within \code{data} that
-represents different populations. This column must be coercable to
-factor.}
+represents different populations. Must be a factor.}
 
-\item{error_on_unequal}{If \code{population} is not NULL and time-points are not
-equal between populations, then \code{TRUE} (default) will cause the code to
-error, otherwise FALSE will add equal time-points to all populations and
-fill missing data with NAs.}
+\item{allow_unequal_times}{If \code{population} is not NULL and time-points are
+not equal between populations, then \code{TRUE} will cause the code to
+error, otherwise FALSE (default) will add equal time-points to all
+populations and fill missing data with NAs.}
 }
 \value{
 If \code{population} is NULL, a data.frame with new columns
