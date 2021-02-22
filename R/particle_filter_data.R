@@ -59,7 +59,7 @@
 ##'
 ##' # If including populations:
 ##' d <- data.frame(day = 5:20, y = runif(16),
-##'                 population = rep(letters[1:2], each = 16))
+##'                 population = factor(rep(letters[1:2], each = 16)))
 ##' mcstate::particle_filter_data(d, "day", 4, 0, "population")
 particle_filter_data <- function(data, time, rate, initial_time = NULL,
                                  population = NULL, error_on_unequal = TRUE) {

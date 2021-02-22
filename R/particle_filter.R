@@ -391,8 +391,10 @@ particle_filter <- R6::R6Class(
     ##' that were saved with the `save_restart` argument to
     ##' `$run()`. If available, this will return a 3d array, with
     ##' dimensions representing (1) particle state, (2) particle index,
-    ##' (3) time point. This could be quite large, especially if you
-    ##' are using the `index` argument to create the particle filter
+    ##' (3) time point. If nested parameters are used then returns a 4d array,
+    ##' with dimensions representing (1) particle state, (2) particle index,
+    ##' (3) population, (4) time point. This could be quite large, especially
+    ##' if you are using the `index` argument to create the particle filter
     ##' and return a subset of all state generally. It is also
     ##' different to the saved trajectories returned by `$history()`
     ##' because earlier saved state is not filtered by later filtering
