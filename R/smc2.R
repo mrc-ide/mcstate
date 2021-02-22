@@ -25,6 +25,7 @@
 ##'    the simulation). The `effort` field is a rough calculation of the
 ##'    number of particle-filter runs that this run was worth.
 ##' @export
+##' @example man-roxygen/example-smc2.R
 smc2 <- function(pars, filter, control) {
   assert_is(pars, "smc2_parameters")
   assert_is(filter, "particle_filter")

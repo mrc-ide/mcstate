@@ -10,3 +10,4 @@
 ^scripts$
 ^tests/testthat/Rplots\.pdf$
 ^\.github$
+^man-roxygen$
