@@ -180,16 +180,16 @@ particle_filter <- R6::R6Class(
         } else {
           private$data_split <- groupeddf_to_list_of_lists(data, "population")
         }
-          private$steps <- unname(
-            as.matrix(
-              split(data, data$population)[[1]][c("step_start", "step_end")]
-              )
-            )
+        private$steps <- unname(
+          as.matrix(
+            split(data, data$population)[[1]][c("step_start", "step_end")]
+          )
+        )
       } else {
         if (is.null(compare)) {
           private$data_split <- dust::dust_data(private$data, "step_end")
         } else {
-           ## NOTE: it might be tidiest if we always used
+          ## NOTE: it might be tidiest if we always used
           ## dust::dust_data, really, but that changes our comparison
           ## function a little or otherwise requires logic near to where
           ## the comparison function is used (many times) rather than
@@ -357,8 +357,8 @@ particle_filter <- R6::R6Class(
         ret <- array(NA, c(ny, np, npop, nt))
         for (i in seq_len(npop)) {
           cidx <- cbind(seq_len(ny),
-                      rep(idx[, i, ], each = ny),
-                      rep(seq_len(nt), each = ny * np))
+                        rep(idx[, i, ], each = ny),
+                        rep(seq_len(nt), each = ny * np))
           ret[, , i, ] <- history_value[, , i, ][cidx]
         }
         rownames(ret) <- names(history_index)

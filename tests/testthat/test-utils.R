@@ -68,15 +68,15 @@ test_that("layernames", {
 test_that("layernames<-", {
   x <- matrix(1)
   expect_error({
-      layernames(x) <- "a"
-    },
-    "attempt to set")
+    layernames(x) <- "a"
+  },
+  "attempt to set")
 
   x <- matrix(1, dimnames = as.list(letters[1:2]))
   expect_error({
-      layernames(x) <- "a"
-    },
-    "attempt to set")
+    layernames(x) <- "a"
+  },
+  "attempt to set")
 
   x1 <- x2 <- array(1, c(1, 1, 1))
   layernames(x2) <- NULL
@@ -98,7 +98,7 @@ test_that("layernames<-", {
 test_that("set_layernames", {
   x <- (array(1, c(1, 1, 1), as.list(letters[1:3])))
   expect_equal(set_layernames(array(1, c(1, 1, 1), list("a", "b", NULL)), "c"),
-                              x)
+               x)
 })
 
 test_that("lbind", {

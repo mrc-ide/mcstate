@@ -76,7 +76,7 @@ particle_filter_data <- function(data, time, rate, initial_time = NULL,
                    data", population))
     }
     return(particle_filter_data_nested(data, time, rate, initial_time,
-                                      population, error_on_unequal))
+                                       population, error_on_unequal))
   }
 
 
@@ -113,7 +113,7 @@ particle_filter_data <- function(data, time, rate, initial_time = NULL,
 }
 
 particle_filter_data_nested <- function(data, time, rate, initial_time,
-                                       population, error_on_unequal) {
+                                        population, error_on_unequal) {
   # catch impossible user call
   if (is.null(population)) {
     stop("'population' must be non-NULL")

@@ -66,7 +66,7 @@ particle_filter_state_nested <- R6::R6Class(
       if (length(pars) < length(unique(data$population))) {
         stop(sprintf("'pars' should be at least the length of
                      'data$population' (%d)",
-                      length(unique(data$population))))
+                     length(unique(data$population))))
       }
 
       if (is.null(model)) {
@@ -208,17 +208,17 @@ particle_filter_state_nested <- R6::R6Class(
           log_weights <- model$compare_data()
         } else {
           ok <- !is.null(compare(array(state[, , 1],
-                                    c(nrow(state), ncol(state))),
-                              data_split[[t]][[1]], pars))
+                                       c(nrow(state), ncol(state))),
+                                 data_split[[t]][[1]], pars))
           if (!ok) {
             log_weights <- NULL
           } else {
             log_weights <- vapply(seq_len(nlayer(state)),
                                   function(i) {
-                                  compare(array(state[, , i],
-                                          c(nrow(state), ncol(state))),
-                                          data_split[[t]][[i]], pars)
-                                }, numeric(ncol(state)))
+                                    compare(array(state[, , i],
+                                                  c(nrow(state), ncol(state))),
+                                            data_split[[t]][[i]], pars)
+                                  }, numeric(ncol(state)))
           }
 
         }

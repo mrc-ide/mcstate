@@ -96,7 +96,7 @@ assert_list <- function(x, class = NULL, name = deparse(substitute(x))) {
   if (!is.null(class)) {
     if (!all(vlapply(x, inherits, what = class))) {
       stop(sprintf("Elements of '%s' must be in '%s'", name,
-           str_collapse(class)), call. = FALSE)
+                   str_collapse(class)), call. = FALSE)
     }
   }
   invisible(x)
