@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Particle filter state — particle_filter_state • mcstate</title>
+<title>Nested particle filter state — particle_filter_state_nested • mcstate</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -46,8 +46,8 @@
 
 
 
-<meta property="og:title" content="Particle filter state — particle_filter_state" />
-<meta property="og:description" content="Particle filter internal state. This object is not
+<meta property="og:title" content="Nested particle filter state — particle_filter_state_nested" />
+<meta property="og:description" content="Nested particle filter internal state. This object is not
 ordinarily constructed directly by users, but via the
 $run_begin method to particle_filter. It provides
 an advanced interface to the particle filter that allows
@@ -148,13 +148,13 @@ them, but don't)." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Particle filter state</h1>
-    <small class="dont-index">Source: <a href='https://github.com/mrc-ide/mcstate/blob/master/R/particle_filter_state.R'><code>R/particle_filter_state.R</code></a></small>
-    <div class="hidden name"><code>particle_filter_state.Rd</code></div>
+    <h1>Nested particle filter state</h1>
+    <small class="dont-index">Source: <a href='https://github.com/mrc-ide/mcstate/blob/master/R/particle_filter_state_nested.R'><code>R/particle_filter_state_nested.R</code></a></small>
+    <div class="hidden name"><code>particle_filter_state_nested.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Particle filter internal state. This object is not
+    <p>Nested particle filter internal state. This object is not
 ordinarily constructed directly by users, but via the
 <code>$run_begin</code> method to <a href='particle_filter.html'>particle_filter</a>. It provides
 an advanced interface to the particle filter that allows
@@ -178,7 +178,7 @@ re-bound)</p></dd>
 
 <dt><code>restart_state</code></dt><dd><p>Full model state at a series of points in
 time, if the model was created with non-<code>NULL</code> <code>save_restart</code>.
-This is a 3d array as described in <a href='particle_filter.html'>particle_filter</a></p></dd>
+This is a 4d array as described in <a href='particle_filter.html'>particle_filter</a></p></dd>
 
 <dt><code>log_likelihood</code></dt><dd><p>The log-likelihood so far. This starts at
 0 when initialised and accumulates value for each step taken.</p></dd>
@@ -194,17 +194,17 @@ last call to <code>$step()</code>.</p></dd>
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Public methods</h3>
 
 <ul>
-<li><p><a href='#method-new'><code>particle_filter_state$new()</code></a></p></li>
-<li><p><a href='#method-run'><code>particle_filter_state$run()</code></a></p></li>
-<li><p><a href='#method-step'><code>particle_filter_state$step()</code></a></p></li>
-<li><p><a href='#method-fork'><code>particle_filter_state$fork()</code></a></p></li>
+<li><p><a href='#method-new'><code>particle_filter_state_nested$new()</code></a></p></li>
+<li><p><a href='#method-run'><code>particle_filter_state_nested$run()</code></a></p></li>
+<li><p><a href='#method-step'><code>particle_filter_state_nested$step()</code></a></p></li>
+<li><p><a href='#method-fork'><code>particle_filter_state_nested$fork()</code></a></p></li>
 </ul>
 <p><hr>
 <a id="method-new"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>new()</code></h3>
 <p>Initialise the particle filter state. Ordinarily
 this should not be called by users, and so arguments are not
 documented.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
-<p><div class="r"></p><pre><span class='va'>particle_filter_state</span><span class='op'>$</span><span class='fu'>new</span><span class='op'>(</span>
+<p><div class="r"></p><pre><span class='va'>particle_filter_state_nested</span><span class='op'>$</span><span class='fu'>new</span><span class='op'>(</span>
   <span class='va'>pars</span>,
   <span class='va'>generator</span>,
   <span class='va'>model</span>,
@@ -226,7 +226,7 @@ documented.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arg
 <p>Run the particle filter to the end of the data. This is
 a convenience function around <code>$step()</code> which provides the correct
 value of <code>step_index</code></p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
-<p><div class="r"></p><pre><span class='va'>particle_filter_state</span><span class='op'>$</span><span class='fu'>run</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
+<p><div class="r"></p><pre><span class='va'>particle_filter_state_nested</span><span class='op'>$</span><span class='fu'>run</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
 <p><hr>
 <a id="method-step"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code><a href='https://rdrr.io/r/stats/step.html'>step()</a></code></h3>
@@ -234,7 +234,7 @@ value of <code>step_index</code></p><h4 class='hasAnchor' id='arguments'><a clas
 the particle filter forward one step within the <em>data</em> (which
 may correspond to more than one step with your model) and
 returns the likelihood so far.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
-<p><div class="r"></p><pre><span class='va'>particle_filter_state</span><span class='op'>$</span><span class='fu'>step</span><span class='op'>(</span><span class='va'>step_index</span>, partial <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span></pre><p></div></p>
+<p><div class="r"></p><pre><span class='va'>particle_filter_state_nested</span><span class='op'>$</span><span class='fu'>step</span><span class='op'>(</span><span class='va'>step_index</span><span class='op'>)</span></pre><p></div></p>
 
 <h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
@@ -244,21 +244,18 @@ the data provided to the filter). It is an error to provide
 a value here that is lower than the current step index, or past
 the end of the data.</p></dd>
 
-<dt><code>partial</code></dt><dd><p>Logical, indicating if we should return the partial
-likelihood, due to this step, rather than the full likelihood so far.</p></dd>
-
 </dl><p></div></p>
 <p><hr>
 <a id="method-fork"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>fork()</code></h3>
-<p>Create a new <code>particle_filter_state</code> object based
+<p>Create a new <code>particle_filter_state_nested</code> object based
 on this one (same model, position in time within the data) but
 with new parameters. To do this, we create a new
-<code>particle_filter_state</code> with new parameters at the beginning of
+<code>particle_filter_state_nested</code> with new parameters at the beginning of
 the simulation (corresponding to the start of your data or the
 <code>initial</code> argument to <a href='particle_filter.html'>particle_filter</a>) with your new
 <code>pars</code>, and then run the filter foward in time until it reaches
 the same step as the parent model.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
-<p><div class="r"></p><pre><span class='va'>particle_filter_state</span><span class='op'>$</span><span class='fu'>fork</span><span class='op'>(</span><span class='va'>pars</span><span class='op'>)</span></pre><p></div></p>
+<p><div class="r"></p><pre><span class='va'>particle_filter_state_nested</span><span class='op'>$</span><span class='fu'>fork</span><span class='op'>(</span><span class='va'>pars</span><span class='op'>)</span></pre><p></div></p>
 
 <h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
