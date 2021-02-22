@@ -115,6 +115,7 @@ particle_filter_state_nested <- R6::R6Class(
         self$restart_state <- array(NA_real_,
                                     c(model$n_state(),
                                       n_particles,
+                                      length(pars),
                                       length(save_restart)))
       } else {
         self$restart_state <- NULL
@@ -240,7 +241,7 @@ particle_filter_state_nested <- R6::R6Class(
         if (save_restart) {
           i_restart <- match(step_end, save_restart_step)
           if (!is.na(i_restart)) {
-            restart_state[, , i_restart] <- model$state()
+            restart_state[, , , i_restart] <- model$state()
           }
         }
       }

@@ -815,3 +815,41 @@ test_that("can save history - nested", {
     drop(p$history(10:20)),
     res[, 10:20, , ])
 })
+
+test_that("Can extract state from the model - nested", {
+  dat <- example_sir_shared()
+  n_particles <- 42
+  set.seed(1)
+  pars <- list(list(beta = 0.2, gamma = 0.1),
+                               list(beta = 0.3, gamma = 0.1))
+  seed <- 100
+  index <- function(info) {
+    list(run = 5L, state = 1:3)
+  }
+
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, seed = seed)
+
+  end <- c(20, 40, 60)
+  res <- p$run(pars, save_restart = end)
+
+  s <- p$restart_state()
+  expect_equal(dim(s), c(5, n_particles, 2, length(end)))
+
+  f <- function(n) {
+    set.seed(1)
+    d <- dat$data[dat$data$day_end <= n, ]
+    p <- particle_filter$new(d, dat$model, n_particles, dat$compare,
+                             index = index, seed = seed)
+    p$run(pars)
+    p$state()
+  }
+
+  cmp <- lapply(end, f)
+  expect_equal(s[, , , 1], cmp[[1]])
+  expect_equal(s[, , , 2], cmp[[2]])
+  expect_equal(s[, , , 3], cmp[[3]])
+
+  expect_equal(p$restart_state(1), s[, 1, , , drop = FALSE])
+  expect_equal(p$restart_state(c(10, 3, 3, 6)), s[, c(10, 3, 3, 6), , ])
+})

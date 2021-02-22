@@ -413,7 +413,11 @@ particle_filter <- R6::R6Class(
         stop("Can't get history as model was run with save_restart = NULL")
       }
       if (!is.null(index_particle)) {
-        restart_state <- restart_state[, index_particle, , drop = FALSE]
+        if (length(dim(restart_state)) == 4) {
+          restart_state <- restart_state[, index_particle, , , drop = FALSE]
+        } else {
+          restart_state <- restart_state[, index_particle, , drop = FALSE]
+        }
       }
       restart_state
     },
@@ -535,7 +539,7 @@ check_save_restart <- function(save_restart, data) {
     return(integer(0))
   }
   assert_strictly_increasing(save_restart)
-  assert_is(data, "particle_filter_data")
+  assert_is(data, c("particle_filter_data", "particle_filter_data_nested"))
   nm <- attr(data, "time")
   i <- match(save_restart, data[[paste0(nm, "_end")]])
   err <- is.na(i)
