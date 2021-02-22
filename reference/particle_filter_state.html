@@ -88,7 +88,7 @@ them, but don't)." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.4.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.0</span>
       </span>
     </div>
 
@@ -234,7 +234,7 @@ value of <code>step_index</code></p><h4 class='hasAnchor' id='arguments'><a clas
 the particle filter forward one step within the <em>data</em> (which
 may correspond to more than one step with your model) and
 returns the likelihood so far.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
-<p><div class="r"></p><pre><span class='va'>particle_filter_state</span><span class='op'>$</span><span class='fu'>step</span><span class='op'>(</span><span class='va'>step_index</span><span class='op'>)</span></pre><p></div></p>
+<p><div class="r"></p><pre><span class='va'>particle_filter_state</span><span class='op'>$</span><span class='fu'>step</span><span class='op'>(</span><span class='va'>step_index</span>, partial <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span></pre><p></div></p>
 
 <h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
@@ -243,6 +243,9 @@ as the model step, nor time, so be careful (it's the index within
 the data provided to the filter). It is an error to provide
 a value here that is lower than the current step index, or past
 the end of the data.</p></dd>
+
+<dt><code>partial</code></dt><dd><p>Logical, indicating if we should return the partial
+likelihood, due to this step, rather than the full likelihood so far.</p></dd>
 
 </dl><p></div></p>
 <p><hr>

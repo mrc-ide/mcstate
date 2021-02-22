@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Bind arrays by last dimension — array_bind • mcstate</title>
+<title>Describe single pmcmc parameter — smc2_parameter • mcstate</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -46,10 +46,11 @@
 
 
 
-<meta property="og:title" content="Bind arrays by last dimension — array_bind" />
-<meta property="og:description" content="Bind a number of arrays by their last dimension. This is useful
-for binding together the sorts of arrays produced by dust and
-mcstate's simulation functions." />
+<meta property="og:title" content="Describe single pmcmc parameter — smc2_parameter" />
+<meta property="og:description" content="Describe a single parameter for use within the SMC^2. Note that
+the name is not set here, but will end up being naturally defined
+when used with smc2_parameters, which collects
+these together for use with smc2()." />
 <meta property="og:image" content="/logo.png" />
 
 
@@ -142,55 +143,90 @@ mcstate's simulation functions." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Bind arrays by last dimension</h1>
-    <small class="dont-index">Source: <a href='https://github.com/mrc-ide/mcstate/blob/master/R/arrays.R'><code>R/arrays.R</code></a></small>
-    <div class="hidden name"><code>array_bind.Rd</code></div>
+    <h1>Describe single pmcmc parameter</h1>
+    <small class="dont-index">Source: <a href='https://github.com/mrc-ide/mcstate/blob/master/R/smc2_parameters.R'><code>R/smc2_parameters.R</code></a></small>
+    <div class="hidden name"><code>smc2_parameter.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Bind a number of arrays by their last dimension. This is useful
-for binding together the sorts of arrays produced by dust and
-mcstate's simulation functions.</p>
+    <p>Describe a single parameter for use within the SMC^2. Note that
+the name is not set here, but will end up being naturally defined
+when used with <code><a href='smc2_parameters.html'>smc2_parameters</a></code>, which collects
+these together for use with <code><a href='smc2.html'>smc2()</a></code>.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>array_bind</span><span class='op'>(</span><span class='va'>...</span>, arrays <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='va'>...</span><span class='op'>)</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>smc2_parameter</span><span class='op'>(</span><span class='va'>name</span>, <span class='va'>sample</span>, <span class='va'>prior</span>, min <span class='op'>=</span> <span class='op'>-</span><span class='cn'>Inf</span>, max <span class='op'>=</span> <span class='cn'>Inf</span>, discrete <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>...</th>
-      <td><p>Any number of arrays. All dimensions must the the same,
-except for the final one (representing time) which may vary.</p></td>
+      <th>name</th>
+      <td><p>Name for the parameter (a string)</p></td>
     </tr>
     <tr>
-      <th>arrays</th>
-      <td><p>As an alternative to using <code>...</code> you can provide a
-list directly. This is often nicer to program with.</p></td>
+      <th>sample</th>
+      <td><p>A sampling function; it must take a single argument
+representing the number of sampled to be returned. Typically
+this will be a <code>r</code> probability function corresponding to the
+sampling version of your prior (e.g., you might use <code>runif</code> and
+<code>dunif</code> for <code>sample</code> and <code>prior</code>). If you provide <code>min</code>, <code>max</code>
+or <code>discrete</code> you <em>must</em> ensure that your function returns
+values that satisfy these constraints, as this is not (yet)
+checked.</p></td>
+    </tr>
+    <tr>
+      <th>prior</th>
+      <td><p>A prior function. It must be a function that takes a
+single argument, being the value of this parameter.</p></td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td><p>Optional minimum value for the parameter (otherwise
+<code>-Inf</code>). If given, then <code>initial</code> must be at least this
+value.</p></td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td><p>Optional max value for the parameter (otherwise
+<code>Inf</code>). If given, then <code>initial</code> must be at most this
+value.</p></td>
+    </tr>
+    <tr>
+      <th>discrete</th>
+      <td><p>Logical, indicating if this parameter is
+discrete. If <code>TRUE</code> then the parameter will be rounded
+after a new parameter is proposed.</p></td>
     </tr>
     </table>
 
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
-
-    <p>A single array object</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='co'># Consider two matricies; this is equivalent to rbind and is</span>
-<span class='co'># pretty trivial</span>
-<span class='va'>m1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/matrix.html'>matrix</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>4</span>, <span class='fl'>5</span><span class='op'>)</span>
-<span class='va'>m2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/matrix.html'>matrix</a></span><span class='op'>(</span><span class='fl'>2</span>, <span class='fl'>4</span>, <span class='fl'>2</span><span class='op'>)</span>
-<span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'>array_bind</span><span class='op'>(</span><span class='va'>m1</span>, <span class='va'>m2</span><span class='op'>)</span>
-</div><div class='output co'>#&gt;      [,1] [,2] [,3] [,4] [,5] [,6] [,7]
-#&gt; [1,]    1    1    1    1    1    2    2
-#&gt; [2,]    1    1    1    1    1    2    2
-#&gt; [3,]    1    1    1    1    1    2    2
-#&gt; [4,]    1    1    1    1    1    2    2</div><div class='input'>
-<span class='co'># For a 4d array though it's less obvious</span>
-<span class='va'>a1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/array.html'>array</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>2</span>, <span class='fl'>3</span>, <span class='fl'>4</span>, <span class='fl'>5</span><span class='op'>)</span><span class='op'>)</span>
-<span class='va'>a2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/array.html'>array</a></span><span class='op'>(</span><span class='fl'>2</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>2</span>, <span class='fl'>3</span>, <span class='fl'>4</span>, <span class='fl'>1</span><span class='op'>)</span><span class='op'>)</span>
-<span class='va'>a3</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/array.html'>array</a></span><span class='op'>(</span><span class='fl'>3</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>2</span>, <span class='fl'>3</span>, <span class='fl'>4</span>, <span class='fl'>3</span><span class='op'>)</span><span class='op'>)</span>
-<span class='fu'><a href='https://rdrr.io/r/base/dim.html'>dim</a></span><span class='op'>(</span><span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'>array_bind</span><span class='op'>(</span><span class='va'>a1</span>, <span class='va'>a2</span>, <span class='va'>a3</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; [1] 2 3 4 9</div></pre>
+    <pre class="examples"><div class='input'><span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'>smc2_parameter</span><span class='op'>(</span><span class='st'>"a"</span>,
+                        <span class='kw'>function</span><span class='op'>(</span><span class='va'>n</span><span class='op'>)</span> <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span><span class='op'>(</span><span class='va'>n</span><span class='op'>)</span>,
+                        <span class='kw'>function</span><span class='op'>(</span><span class='va'>x</span><span class='op'>)</span> <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>dnorm</a></span><span class='op'>(</span><span class='va'>n</span>, log <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; $name
+#&gt; [1] "a"
+#&gt; 
+#&gt; $sample
+#&gt; function(n) rnorm(n)
+#&gt; &lt;environment: 0x7facce1637b0&gt;
+#&gt; 
+#&gt; $prior
+#&gt; function(x) dnorm(n, log = TRUE)
+#&gt; &lt;environment: 0x7facce1637b0&gt;
+#&gt; 
+#&gt; $min
+#&gt; [1] -Inf
+#&gt; 
+#&gt; $max
+#&gt; [1] Inf
+#&gt; 
+#&gt; $discrete
+#&gt; [1] FALSE
+#&gt; 
+#&gt; attr(,"class")
+#&gt; [1] "smc2_parameter"</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Bind arrays by last dimension — array_bind • mcstate</title>
+<title>Control for SMC2 — smc2_control • mcstate</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -46,10 +46,12 @@
 
 
 
-<meta property="og:title" content="Bind arrays by last dimension — array_bind" />
-<meta property="og:description" content="Bind a number of arrays by their last dimension. This is useful
-for binding together the sorts of arrays produced by dust and
-mcstate's simulation functions." />
+<meta property="og:title" content="Control for SMC2 — smc2_control" />
+<meta property="og:description" content="Control for smc2. This function constructs a list of options and
+does some basic validation to ensure that the options will work
+well together. Do not manually change the values in this
+object. Do not refer to any argument except n_parameter_sets by
+position as the order of the arguments may change in future." />
 <meta property="og:image" content="/logo.png" />
 
 
@@ -142,55 +144,81 @@ mcstate's simulation functions." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Bind arrays by last dimension</h1>
-    <small class="dont-index">Source: <a href='https://github.com/mrc-ide/mcstate/blob/master/R/arrays.R'><code>R/arrays.R</code></a></small>
-    <div class="hidden name"><code>array_bind.Rd</code></div>
+    <h1>Control for SMC2</h1>
+    <small class="dont-index">Source: <a href='https://github.com/mrc-ide/mcstate/blob/master/R/smc2_control.R'><code>R/smc2_control.R</code></a></small>
+    <div class="hidden name"><code>smc2_control.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Bind a number of arrays by their last dimension. This is useful
-for binding together the sorts of arrays produced by dust and
-mcstate's simulation functions.</p>
+    <p>Control for <a href='smc2.html'>smc2</a>. This function constructs a list of options and
+does some basic validation to ensure that the options will work
+well together. Do not manually change the values in this
+object. Do not refer to any argument except <code>n_parameter_sets</code> by
+position as the order of the arguments may change in future.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>array_bind</span><span class='op'>(</span><span class='va'>...</span>, arrays <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='va'>...</span><span class='op'>)</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>smc2_control</span><span class='op'>(</span>
+  <span class='va'>n_parameter_sets</span>,
+  degeneracy_threshold <span class='op'>=</span> <span class='fl'>0.5</span>,
+  covariance_scaling <span class='op'>=</span> <span class='fl'>0.5</span>,
+  progress <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  save_trajectories <span class='op'>=</span> <span class='cn'>FALSE</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>...</th>
-      <td><p>Any number of arrays. All dimensions must the the same,
-except for the final one (representing time) which may vary.</p></td>
+      <th>n_parameter_sets</th>
+      <td><p>The number of replicate parameter sets to
+simulate at once.</p></td>
     </tr>
     <tr>
-      <th>arrays</th>
-      <td><p>As an alternative to using <code>...</code> you can provide a
-list directly. This is often nicer to program with.</p></td>
+      <th>degeneracy_threshold</th>
+      <td><p>The degeneracy threshold. Once the
+effective sample size drops below <code>degeneracy_threshold * n_parameter_sets</code> the algorithm will rerun simulations from the
+beginning of the data and use these to replenish the particles.</p></td>
+    </tr>
+    <tr>
+      <th>covariance_scaling</th>
+      <td><p>A scaling factor to update variance
+covariance matrix of sampled parameters by</p></td>
+    </tr>
+    <tr>
+      <th>progress</th>
+      <td><p>Logical, indicating if a progress bar should be
+displayed, using <code><a href='https://rdrr.io/pkg/progress/man/progress_bar.html'>progress::progress_bar</a></code>.</p></td>
+    </tr>
+    <tr>
+      <th>save_trajectories</th>
+      <td><p>Logical, indicating if particle
+trajectories should be saved during the simulation.</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A single array object</p>
+    <p>A <code>smc2_control</code> object, which should not be modified once created.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='co'># Consider two matricies; this is equivalent to rbind and is</span>
-<span class='co'># pretty trivial</span>
-<span class='va'>m1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/matrix.html'>matrix</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>4</span>, <span class='fl'>5</span><span class='op'>)</span>
-<span class='va'>m2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/matrix.html'>matrix</a></span><span class='op'>(</span><span class='fl'>2</span>, <span class='fl'>4</span>, <span class='fl'>2</span><span class='op'>)</span>
-<span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'>array_bind</span><span class='op'>(</span><span class='va'>m1</span>, <span class='va'>m2</span><span class='op'>)</span>
-</div><div class='output co'>#&gt;      [,1] [,2] [,3] [,4] [,5] [,6] [,7]
-#&gt; [1,]    1    1    1    1    1    2    2
-#&gt; [2,]    1    1    1    1    1    2    2
-#&gt; [3,]    1    1    1    1    1    2    2
-#&gt; [4,]    1    1    1    1    1    2    2</div><div class='input'>
-<span class='co'># For a 4d array though it's less obvious</span>
-<span class='va'>a1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/array.html'>array</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>2</span>, <span class='fl'>3</span>, <span class='fl'>4</span>, <span class='fl'>5</span><span class='op'>)</span><span class='op'>)</span>
-<span class='va'>a2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/array.html'>array</a></span><span class='op'>(</span><span class='fl'>2</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>2</span>, <span class='fl'>3</span>, <span class='fl'>4</span>, <span class='fl'>1</span><span class='op'>)</span><span class='op'>)</span>
-<span class='va'>a3</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/array.html'>array</a></span><span class='op'>(</span><span class='fl'>3</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>2</span>, <span class='fl'>3</span>, <span class='fl'>4</span>, <span class='fl'>3</span><span class='op'>)</span><span class='op'>)</span>
-<span class='fu'><a href='https://rdrr.io/r/base/dim.html'>dim</a></span><span class='op'>(</span><span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'>array_bind</span><span class='op'>(</span><span class='va'>a1</span>, <span class='va'>a2</span>, <span class='va'>a3</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; [1] 2 3 4 9</div></pre>
+    <pre class="examples"><div class='input'><span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'>smc2_control</span><span class='op'>(</span><span class='fl'>100</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; $n_parameter_sets
+#&gt; [1] 100
+#&gt; 
+#&gt; $degeneracy_threshold
+#&gt; [1] 0.5
+#&gt; 
+#&gt; $covariance_scaling
+#&gt; [1] 0.5
+#&gt; 
+#&gt; $save_trajectories
+#&gt; [1] FALSE
+#&gt; 
+#&gt; $progress
+#&gt; [1] TRUE
+#&gt; 
+#&gt; attr(,"class")
+#&gt; [1] "smc2_control"</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
