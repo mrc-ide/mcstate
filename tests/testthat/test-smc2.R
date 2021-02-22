@@ -34,15 +34,15 @@ test_that("Can run smc2", {
     c("ess", "acceptance_rate", "n_particles", "n_parameter_sets", "n_steps",
       "effort"))
 
-  p <- predict.smc2_result(res)
+  p <- predict(res)
   expect_equal(dim(p), dim(res$pars))
   expect_equal(dimnames(p), dimnames(res$pars))
 
-  p <- predict.smc2_result(res, 100)
+  p <- predict(res, 100)
   expect_equal(dim(p), c(100, 2))
   expect_equal(dimnames(p), dimnames(res$pars))
 
-  p <- predict.smc2_result(res, 1) # corner case
+  p <- predict(res, 1) # corner case
   expect_equal(dim(p), c(1, 2))
   expect_equal(dimnames(p), dimnames(res$pars))
 
