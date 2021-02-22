@@ -1,3 +1,7 @@
+# mcstate 0.5.1
+
+* Added `particle_filter_state_nested` and extended `particle_filter` to handle `pmcmc_parameters_nested` objects.
+
 # mcstate 0.5.0
 
 * Basic SMC^2 implementation (`smc2()`) as an alternative to pmcmc. This is very embryonic and the interface will change over future versions to support things like restarting and saving trajectories (#13)
