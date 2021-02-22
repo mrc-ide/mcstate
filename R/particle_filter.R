@@ -158,6 +158,7 @@ particle_filter <- R6::R6Class(
     initialize = function(data, model, n_particles, compare,
                           index = NULL, initial = NULL,
                           n_threads = 1L, seed = NULL) {
+
       if (!is_dust_generator(model)) {
         stop("'model' must be a dust_generator")
       }
@@ -171,30 +172,31 @@ particle_filter <- R6::R6Class(
 
       self$model <- model
       private$data <- data
-      if (is.null(compare)) {
-        if (inherits(data, "particle_filter_data_nested")) {
-          private$data_split <- dust::dust_data(data, "step_end",
+
+      if (inherits(data, "particle_filter_data_nested")) {
+        if (is.null(compare)) {
+          private$data_split <- dust::dust_data(private$data, "step_end",
                                                 multi = "population")
         } else {
-          private$data_split <- dust::dust_data(private$data, "step_end")
-        }
-      } else {
-        ## NOTE: it might be tidiest if we always used
-        ## dust::dust_data, really, but that changes our comparison
-        ## function a little or otherwise requires logic near to where
-        ## the comparison function is used (many times) rather than
-        ## once here.
-        if (inherits(data, "particle_filter_data_nested")) {
           private$data_split <- groupeddf_to_list_of_lists(data, "population")
+        }
           private$steps <- unname(
             as.matrix(
               split(data, data$population)[[1]][c("step_start", "step_end")]
               )
             )
+      } else {
+        if (is.null(compare)) {
+          private$data_split <- dust::dust_data(private$data, "step_end")
         } else {
+           ## NOTE: it might be tidiest if we always used
+          ## dust::dust_data, really, but that changes our comparison
+          ## function a little or otherwise requires logic near to where
+          ## the comparison function is used (many times) rather than
+          ## once here.
           private$data_split <- df_to_list_of_lists(data)
-          private$steps <- unname(as.matrix(data[c("step_start", "step_end")]))
         }
+        private$steps <- unname(as.matrix(data[c("step_start", "step_end")]))
       }
 
       if (is.null(compare) && !model$public_methods$has_compare()) {

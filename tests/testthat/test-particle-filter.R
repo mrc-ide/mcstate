@@ -756,7 +756,7 @@ test_that("Can fork a particle_filter_state object", {
   expect_identical(res$history, cmp$history)
 })
 
-test_that("run particle filter on sir model", {
+test_that("run particle filter on shared sir model", {
   dat <- example_sir_shared()
   n_particles <- 42
   set.seed(1)
