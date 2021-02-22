@@ -60,3 +60,8 @@ test_that("assert_character", {
   expect_error(assert_character(1), "must be a character")
   expect_error(assert_character(TRUE), "must be a character")
 })
+
+test_that("assert_list", {
+  expect_error(assert_list(1), "must be a list")
+  expect_error(assert_list(list("a"), "numeric"), "Elements of")
+})
