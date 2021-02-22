@@ -99,8 +99,9 @@ particle_filter_state_nested <- R6::R6Class(
         len <- nrow(steps) + 1L
         state <- model$state(index_data$state)
         history_value <- array(NA_real_, c(dim(state), len))
-        history_value[, , 1] <- state
-        history_order <- matrix(seq_len(n_particles), n_particles, len)
+        history_value[, , , 1] <- state
+        history_order <- array(seq_len(n_particles),
+                               c(n_particles, nlayer(state), len))
         self$history <- list(
           value = history_value,
           order = history_order,
@@ -198,7 +199,7 @@ particle_filter_state_nested <- R6::R6Class(
         state <- model$run(step_end)
 
         if (save_history) {
-          history_value[, , t + 1L] <- model$state(save_history_index)
+          history_value[, , , t + 1L] <- model$state(save_history_index)
         }
 
         if (is.null(compare)) {
@@ -215,7 +216,7 @@ particle_filter_state_nested <- R6::R6Class(
 
         if (is.null(log_weights)) {
           if (save_history) {
-            history_order[, t + 1L] <- seq_len(n_particles)
+            history_order[, , t + 1L] <- seq_len(n_particles)
           }
           log_likelihood_step <- NA_real_
         } else {
@@ -230,8 +231,9 @@ particle_filter_state_nested <- R6::R6Class(
           kappa <- vapply(weights, function(x) particle_resample(x$weights),
                           numeric(length(weights[[1]]$weights)))
           model$reorder(kappa)
+
           if (save_history) {
-            history_order[, t + 1L] <- kappa
+            history_order[, , t + 1L] <- kappa
           }
         }
 

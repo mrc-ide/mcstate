@@ -5,8 +5,10 @@ test_that("run particle filter on sir model", {
   n_particles <- 42
   set.seed(1)
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                           index = dat$index)
+                           index = dat$index, seed = 1L)
+  res1 <- p$run()
   res <- p$run()
+  expect_equal(res1, res2)
   expect_is(res, "numeric")
 
   state <- p$state()
@@ -768,6 +770,7 @@ test_that("run particle filter on shared sir model", {
                            index = dat$index)
   res <- p$run(pars)
   expect_is(res, "numeric")
+  expect_equal(length(res), 2)
 
   state <- p$state()
   expect_is(state, "array")
@@ -776,4 +779,39 @@ test_that("run particle filter on shared sir model", {
   expect_error(
     p$history(),
     "Can't get history as model was run with save_history = FALSE")
+})
+
+test_that("can save history - nested", {
+  dat <- example_sir_shared()
+  n_particles <- 42
+  set.seed(1)
+
+  pars <- list(list(beta = 0.2, gamma = 0.1),
+                               list(beta = 0.3, gamma = 0.1))
+
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
+  p$run(pars, save_history = TRUE)
+  res <- p$history()
+
+  expect_equal(dim(res), c(3, 42, 2, 101))
+  expect_equal(dim(p$history(1)), c(3, 1, 2, 101))
+
+  ## If we have correctly sampled trajectories, then we'll have
+  ## monotonic S and R within a particle:
+  expect_true(all(diff(t(res[1, , 1, ])) <= 0))
+  expect_true(all(diff(t(res[1, , 2, ])) <= 0))
+  expect_true(all(diff(t(res[3, , 1, ])) >= 0))
+  expect_true(all(diff(t(res[3, , 2, ])) >= 0))
+
+  ## Can get just a few histories
+  expect_equal(
+    drop(p$history(1)),
+    res[, 1, , ])
+  expect_equal(
+    drop(p$history(10)),
+    res[, 10, , ])
+  expect_equal(
+    drop(p$history(10:20)),
+    res[, 10:20, , ])
 })

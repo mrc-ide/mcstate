@@ -302,9 +302,14 @@ particle_filter <- R6::R6Class(
     ##' TRUE`. Returns a 3d array with dimensions corresponding to (1)
     ##' model state, filtered by `index$run` if provided, (2)
     ##' particle (following `index_particle` if provided), (3)
-    ##' time point.
+    ##' time point. If nested parameters used then returns a 4d array with
+    ##' dimensions corresponding to (1) model state, (2) particle, (3)
+    ##' population, (4) time point.
     ##'
     ##' @param index_particle Optional vector of particle indices to return.
+    ##' If nested parameters used then a vector will be replicated to a matrix
+    ##' with number of columns equal to number of populations, otherwise a
+    ##' matrix can be supplied.
     ##' If `NULL` we return all particles' histories.
     history = function(index_particle = NULL) {
       if (is.null(private$last_model)) {
@@ -313,28 +318,71 @@ particle_filter <- R6::R6Class(
       if (is.null(private$last_history)) {
         stop("Can't get history as model was run with save_history = FALSE")
       }
+
       history_value <- private$last_history$value
       history_order <- private$last_history$order
       history_index <- private$last_history$index
 
-      if (is.null(index_particle)) {
-        index_particle <- seq_len(ncol(history_value))
-      }
-
       ny <- nrow(history_value)
-      np <- length(index_particle)
-      nt <- ncol(history_order)
 
-      idx <- matrix(NA_integer_, np, nt)
-      for (i in rev(seq_len(ncol(idx)))) {
-        index_particle <- idx[, i] <- history_order[index_particle, i]
+      if (length(dim(history_value)) == 4) {
+        npop <- ncol(history_order)
+        nt <- nlayer(history_order)
+
+        if (is.null(index_particle)) {
+          index_particle <- matrix(seq_len(ncol(history_value)),
+                                   ncol(history_value), npop)
+        } else {
+          if (is.matrix(index_particle)) {
+            if (!ncol(index_particle) == npop) {
+              stop(sprintf("'index_particle' should have %d columns", npop))
+            }
+          } else {
+            index_particle <- matrix(index_particle,
+                                     nrow = length(index_particle),
+                                     ncol = npop)
+          }
+        }
+
+        np <- nrow(index_particle)
+
+        idx <- array(NA_integer_, c(np, npop, nt))
+        for (i in rev(seq_len(nlayer(idx)))) {
+          for (j in seq_len(npop)) {
+            idx[, j, i] <- history_order[, j, i][index_particle[, j]]
+          }
+          index_particle <- matrix(idx[, , i], nrow = np, ncol = npop)
+        }
+
+        ret <- array(NA, c(ny, np, npop, nt))
+        for (i in seq_len(npop)) {
+          cidx <- cbind(seq_len(ny),
+                      rep(idx[, i, ], each = ny),
+                      rep(seq_len(nt), each = ny * np))
+          ret[, , i, ] <- history_value[, , i, ][cidx]
+        }
+        rownames(ret) <- names(history_index)
+      } else {
+        if (is.null(index_particle)) {
+          index_particle <- seq_len(ncol(history_value))
+        }
+
+        np <- length(index_particle)
+
+        nt <- ncol(history_order)
+
+        idx <- matrix(NA_integer_, np, nt)
+        for (i in rev(seq_len(ncol(idx)))) {
+          index_particle <- idx[, i] <- history_order[index_particle, i]
+        }
+
+        cidx <- cbind(seq_len(ny),
+                      rep(idx, each = ny),
+                      rep(seq_len(nt), each = ny * np))
+        ret <- array(history_value[cidx], c(ny, np, nt))
+        rownames(ret) <- names(history_index)
       }
 
-      cidx <- cbind(seq_len(ny),
-                    rep(idx, each = ny),
-                    rep(seq_len(nt), each = ny * np))
-      ret <- array(history_value[cidx], c(ny, np, nt))
-      rownames(ret) <- names(history_index)
       ret
     },
 
