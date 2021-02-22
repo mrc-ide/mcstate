@@ -207,12 +207,19 @@ particle_filter_state_nested <- R6::R6Class(
         if (is.null(compare)) {
           log_weights <- model$compare_data()
         } else {
-          log_weights <- vapply(seq_len(nlayer(state)),
-                                function(i) {
+          ok <- !is.null(compare(array(state[, , 1],
+                                    c(nrow(state), ncol(state))),
+                              data_split[[t]][[1]], pars))
+          if (!ok) {
+            log_weights <- NULL
+          } else {
+            log_weights <- vapply(seq_len(nlayer(state)),
+                                  function(i) {
                                   compare(array(state[, , i],
                                           c(nrow(state), ncol(state))),
                                           data_split[[t]][[i]], pars)
                                 }, numeric(ncol(state)))
+          }
 
         }
 

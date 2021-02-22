@@ -962,3 +962,92 @@ test_that("Can fork a particle_filter_state_nested object", {
   expect_identical(res$log_likelihood, cmp$log_likelihood)
   expect_identical(res$history, cmp$history)
 })
+
+test_that("particle filter state nested - error steps", {
+  dat <- example_sir_shared()
+  n_particles <- 42
+
+  pars <- list(list(beta = 0.2, gamma = 0.1),
+                               list(beta = 0.3, gamma = 0.1))
+
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, seed = 1L)
+  set.seed(1)
+  obj <- p$run_begin(pars)
+  n <- nrow(dat$data)
+  obj$run()
+  expect_error(obj$run(),
+               "Particle filter has reached the end of the data")
+  expect_error(obj$step(n),
+               "Particle filter has reached the end of the data")
+  expect_error(obj$step(n + 1),
+               "Particle filter has reached the end of the data")
+
+  obj <- p$run_begin(pars)
+  obj$step(10)
+  expect_error(
+    obj$step(10),
+    "Particle filter has already run step index 10 (to model step 40)",
+    fixed = TRUE)
+  expect_error(
+    obj$step(5),
+    "Particle filter has already run step index 5 (to model step 20)",
+    fixed = TRUE)
+
+  expect_error(
+    obj$step(n + 1),
+    "step_index 201 is beyond the length of the data (max 100)",
+    fixed = TRUE)
+})
+
+test_that("stop simulation when likelihood is impossible", {
+  dat <- example_sir_shared()
+  n_particles <- 42
+
+  pars <- list(list(beta = 0.2, gamma = 0.1),
+                               list(beta = 0.3, gamma = 0.1))
+
+  n_particles <- 42
+  steps <- nrow(dat$data) / 2 + 1
+
+  compare <- function(state, observed, pars) {
+    ret <- dat$compare(state, observed, pars)
+    if (observed$incidence > 15) {
+      ret[] <- -Inf
+    }
+    ret
+  }
+
+  p <- particle_filter$new(dat$data, dat$model, n_particles, compare,
+                           index = dat$index)
+  res <- p$run(pars, save_history = TRUE)
+  expect_true(-Inf %in% res)
+
+  i <- (which(dat$data$incidence[1:100] > 15)[[1]] + 2):steps
+  history <- p$history()
+  expect_false(any(is.na(history[, , 1, !i])))
+  expect_true(all(is.na(history[, , 1, i])))
+})
+
+test_that("we do not reorder particles when compare is NULL - nested", {
+  dat <- example_sir_shared()
+  n_particles <- 42
+
+  pars <- list(list(beta = 0.2, gamma = 0.1),
+                               list(beta = 0.3, gamma = 0.1))
+  p <- particle_filter$new(dat$data, dat$model, n_particles,
+                           function(...) NULL, index = dat$index)
+  res <- p$run(pars)
+  expect_equal(res, c(0, 0))
+})
+
+test_that("nested particle filter initial not list", {
+  dat <- example_sir_shared()
+  n_particles <- 42
+  initial <- function(...) NULL
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, initial = initial, seed = 100)
+  pars <- list(list(beta = 0.2, gamma = 0.1),
+               list(beta = 0.3, gamma = 0.1))
+  expect_is(p$run(pars), "numeric")
+})
