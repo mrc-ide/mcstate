@@ -66,6 +66,7 @@ particle_filter <- R6::R6Class(
     data = NULL,
     data_split = NULL,
     steps = NULL,
+    nested = FALSE,
     ## Functions used for initial conditions, data comparisons and indices
     index = NULL,
     initial = NULL,
@@ -174,17 +175,19 @@ particle_filter <- R6::R6Class(
       private$data <- data
 
       if (inherits(data, "particle_filter_data_nested")) {
+        private$nested <- TRUE
+      }
+
+      if (private$nested) {
         if (is.null(compare)) {
           private$data_split <- dust::dust_data(private$data, "step_end",
                                                 multi = "population")
         } else {
           private$data_split <- groupeddf_to_list_of_lists(data, "population")
         }
-        private$steps <- unname(
-          as.matrix(
-            split(data, data$population)[[1]][c("step_start", "step_end")]
-          )
-        )
+        private$steps <- unname(as.matrix(subset(data,
+                                population == levels(data$population)[[1]],
+                                select = c("step_start", "step_end"))))
       } else {
         if (is.null(compare)) {
           private$data_split <- dust::dust_data(private$data, "step_end")
@@ -265,7 +268,7 @@ particle_filter <- R6::R6Class(
     ##' `step` and `end`. This interface is still subject to change.
     run_begin = function(pars = list(), save_history = FALSE,
                          save_restart = NULL) {
-      if (inherits(private$data, "particle_filter_data_nested")) {
+      if (private$nested) {
         particle_filter_state_nested$new(
           pars, self$model, private$last_model, private$data,
           private$data_split, private$steps, self$n_particles,
@@ -489,7 +492,7 @@ check_save_restart <- function(save_restart, data) {
     return(integer(0))
   }
   assert_strictly_increasing(save_restart)
-  assert_is(data, c("particle_filter_data", "particle_filter_data_nested"))
+  assert_is(data, "particle_filter_data")
   nm <- attr(data, "time")
   i <- match(save_restart, data[[paste0(nm, "_end")]])
   err <- is.na(i)
