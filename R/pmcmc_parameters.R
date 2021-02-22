@@ -75,7 +75,7 @@ pmcmc_parameter <- function(name, initial, min = -Inf, max = Inf,
 ##'
 ##' @export
 ##' @examples
-##' #Construct an object with two parameters:
+##' # Construct an object with two parameters:
 ##' pars <- mcstate::pmcmc_parameters$new(
 ##'   list(mcstate::pmcmc_parameter("a", 0.1, min = 0, max = 1,
 ##'                                 prior = function(a) log(a)),

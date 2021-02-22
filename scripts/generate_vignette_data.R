@@ -38,10 +38,7 @@ incidence <- unlist(lapply(incidence, max, 0))
 incidence_data <- data.frame(cases = incidence, day = seq_len(n_steps))
 
 # Save outputs
-write.table(incidence_data, "vignettes/sir_incidence_data.csv",
-            sep = ",",
-            quote = F,
-            row.names = FALSE)
+write.csv(incidence_data, "inst/sir_incidence.csv", row.names = FALSE)
 saveRDS(true_history, "vignettes/sir_true_history.rds", version = 2)
 
 ##
@@ -85,8 +82,5 @@ death_data <- data.frame(cases = incidence,
                          day = seq_len(n_steps))
 
 ## Save outputs
-write.table(death_data, "vignettes/death_data.csv",
-            sep = ",",
-            quote = F,
-            row.names = FALSE)
+write.csv(death_data, "vignettes/death_data.csv", row.names = FALSE)
 saveRDS(true_history_deaths, "vignettes/deaths_true_history.rds", version = 2)

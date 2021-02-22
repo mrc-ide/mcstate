@@ -1,3 +1,7 @@
+# mcstate 0.5.0
+
+* Basic SMC^2 implementation (`smc2()`) as an alternative to pmcmc. This is very embryonic and the interface will change over future versions to support things like restarting and saving trajectories (#13)
+
 # mcstate 0.4.8
 
 * Bug fixes in `$proposal` method of `pmcmc_parameters_nested` for discrete and bounded parameters.
