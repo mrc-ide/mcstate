@@ -216,6 +216,7 @@ lbind <- function(arrays) {
   }
   nl <- sum(viapply(arrays, NLAYER))
   array(do.call(c, arrays), dim = c(nr, nc, nl))
+}
 
 normalise <- function(x) {
   x / sum(x)
