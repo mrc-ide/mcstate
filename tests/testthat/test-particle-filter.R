@@ -759,13 +759,13 @@ test_that("Can fork a particle_filter_state object", {
 test_that("run particle filter on shared sir model", {
   dat <- example_sir_shared()
   n_particles <- 42
-  set.seed(1)
 
   pars <- list(list(beta = 0.2, gamma = 0.1),
                                list(beta = 0.3, gamma = 0.1))
 
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index)
+  set.seed(1)
   res <- p$run(pars)
   expect_is(res, "numeric")
   expect_equal(length(res), 2)
@@ -777,6 +777,11 @@ test_that("run particle filter on shared sir model", {
   expect_error(
     p$history(),
     "Can't get history as model was run with save_history = FALSE")
+
+  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
+  set.seed(1)
+  expect_identical(res, p2$run(pars))
 })
 
 test_that("can save history - nested", {
@@ -794,6 +799,7 @@ test_that("can save history - nested", {
 
   expect_equal(dim(res), c(3, 42, 2, 101))
   expect_equal(dim(p$history(1)), c(3, 1, 2, 101))
+  expect_error(p$history(matrix(1, ncol = 3)), "2 columns")
 
   ## If we have correctly sampled trajectories, then we'll have
   ## monotonic S and R within a particle:
@@ -850,4 +856,109 @@ test_that("Can extract state from the model - nested", {
 
   expect_equal(p$restart_state(1), s[, 1, , , drop = FALSE])
   expect_equal(p$restart_state(c(10, 3, 3, 6)), s[, c(10, 3, 3, 6), , ])
+})
+
+test_that("use compiled compare function - nested", {
+  dat <- example_sir_shared()
+  n_particles <- 42
+  set.seed(1)
+
+  pars <- list(list(beta = 0.2, gamma = 0.1),
+                               list(beta = 0.3, gamma = 0.1))
+
+  model <- dust::dust_example("sir")
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index)
+  p2 <- particle_filter$new(dat$data, model, n_particles, NULL,
+                            index = dat$index)
+
+  y1 <- replicate(50, p1$run(pars))
+  y2 <- replicate(50, p2$run(pars))
+  expect_equal(mean(y1), mean(y2), tolerance = 0.01)
+})
+
+test_that("particle filter state nested - errors", {
+  dat <- example_sir_shared()
+  n_particles <- 42
+  set.seed(1)
+
+  pars <- list(list(beta = 0.2, gamma = 0.1),
+                               list(beta = 0.3, gamma = 0.1))
+
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
+
+  expect_error(p$run(pars[1]), "the length")
+})
+
+test_that("nested pf with initial", {
+  initial <- function(info, n_particles, pars) {
+    list(step = pars[[2]]$initial)
+  }
+
+  dat <- example_sir_shared()
+  n_particles <- 42
+  data <- dat$data
+  offset <- 400
+  data[c("step_start", "step_end")] <-
+    data[c("step_start", "step_end")] + offset
+  data$step_start[c(1, 101)] <- 0
+
+  pars <- list(list(beta = 0.2, gamma = 0.1),
+                               list(beta = 0.3, gamma = 0.1))
+
+  ## The usual version:
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index)
+  set.seed(1)
+  ll1 <- p1$run(pars)
+
+  ## Tuning the start date
+  p2 <- particle_filter$new(data, dat$model, n_particles, dat$compare,
+                            index = dat$index, initial = initial)
+  set.seed(1)
+  pars <- list(list(beta = 0.2, gamma = 0.1, initial = as.integer(offset)),
+               list(beta = 0.3, gamma = 0.1, initial = as.integer(offset)))
+  ll2 <- p2$run(pars)
+  expect_identical(ll1, ll2)
+
+  ## Running from the beginning is much worse:
+  set.seed(1)
+  ll3 <- p2$run(list(pars, list(initial = 0L)))
+  expect_true(all(ll3 < ll1))
+})
+
+test_that("Can fork a particle_filter_state_nested object", {
+  dat <- example_sir_shared()
+  n_particles <- 42
+
+  pars <- list(list(beta = 0.2, gamma = 0.1),
+                               list(beta = 0.3, gamma = 0.1))
+
+  set.seed(1)
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, seed = 1L)
+
+  ans <- matrix(nrow = nrow(dat$data), ncol = 2)
+  obj <- p1$run_begin(pars, save_history = TRUE)
+
+  for (i in seq_len(10)) {
+    ans[i, ] <- obj$step(i)
+  }
+
+  tmp <- obj$model$rng_state()
+
+  set.seed(1)
+  res <- obj$fork(pars)
+  expect_identical(res$model$rng_state(), obj$model$rng_state())
+  expect_false(identical(obj$model$rng_state(), tmp))
+
+  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = tmp)
+  set.seed(1)
+  cmp <- p2$run_begin(pars, save_history = TRUE)
+  cmp$step(10)
+
+  expect_identical(res$log_likelihood, cmp$log_likelihood)
+  expect_identical(res$history, cmp$history)
 })

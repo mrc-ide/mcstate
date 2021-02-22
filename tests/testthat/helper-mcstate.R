@@ -20,6 +20,7 @@ example_sir <- function() {
       rexp(n = length(incidence_modelled), rate = exp_noise)
     dpois(x = incidence_observed, lambda = lambda, log = TRUE)
   }
+
   inv_dt <- 4
   day <- seq(1, 100)
   incidence <- rep(NA, length(day))

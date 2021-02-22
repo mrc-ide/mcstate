@@ -151,4 +151,14 @@ test_that("particle_filter_data_multi - errors", {
   expect_error(particle_filter_data_nested(population = NULL), "must be non")
   expect_error(particle_filter_data_nested(
     data.frame(a = 1), population = "a"), "factor")
+  expect_error(
+    particle_filter_data(data.frame(time = 1, a = factor("a")), "time", 1,
+                         population = "c"),
+    "not find")
+})
+
+test_that("clean_pf_times", {
+  expect_error(clean_pf_times(seq.int(1, 10, 2)), "Expected each")
+  expect_error(clean_pf_times(-1:5), "first time")
+  expect_error(clean_pf_times(1, 1, matrix(1)), "at least")
 })

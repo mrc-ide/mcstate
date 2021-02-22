@@ -136,7 +136,7 @@ recycle <- function(x, n, name = deparse(substitute(x))) {
 
 
 is_3d_array <- function(x) {
-  !is.na(nlayer(x))
+  length(dim(x)) == 3
 }
 
 

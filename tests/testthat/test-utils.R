@@ -106,4 +106,11 @@ test_that("lbind", {
                "number of columns")
   expect_error(lbind(list(array(1, c(1, 2, 1)), array(1, c(2, 2, 1)))),
                "number of rows")
+  expect_equal(lbind(list(array(1, c(1, 1, 1)), array(2, c(1, 1, 1)))),
+               array(1:2, c(1, 1, 2)))
+})
+
+test_that("is_3d_array", {
+  expect_true(is_3d_array(array(1, c(1, 1, 1))))
+  expect_false(is_3d_array(matrix(1, 2, 2)))
 })

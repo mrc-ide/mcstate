@@ -63,9 +63,10 @@ particle_filter_state_nested <- R6::R6Class(
                           seed, save_history, save_restart) {
       ## NOTE: this will generate a warning when updating docs but
       ## that's ok; see https://github.com/r-lib/roxygen2/issues/1067
-      if (length(pars) != length(unique(data$population))) {
-        stop(sprintf("'pars' should be same length as 'data$population' (%d)",
-                    length(unique(data$population))))
+      if (length(pars) < length(unique(data$population))) {
+        stop(sprintf("'pars' should be at least the length of
+                     'data$population' (%d)",
+                      length(unique(data$population))))
       }
 
       if (is.null(model)) {
