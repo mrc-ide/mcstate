@@ -18,7 +18,7 @@
 ##'   information about parameters (ranges, priors, proposal kernel,
 ##'   translation functions for use with the particle filter).
 ##'
-##' @param filter A [`particle_filter`] object.
+##' @param filter A [`particle_filter`] object
 ##'
 ##' @param n_steps Deprecated: use [mcstate::pmcmc_control] instead
 ##'
