@@ -165,7 +165,8 @@ pmcmc_remote <- R6::R6Class(
     },
 
     continue = function() {
-      if (inherits(r6_private(obj)$pars, "pmcmc_parameters_nested")) {
+      if (inherits(r6_private(.GlobalEnv$obj)$pars,
+                  "pmcmc_parameters_nested")) {
         self$session$call(function() .GlobalEnv$obj$run_nested())
       } else {
         self$session$call(function() .GlobalEnv$obj$run())
@@ -193,7 +194,8 @@ pmcmc_remote <- R6::R6Class(
 
     ## This one is synchronous
     finish = function() {
-      if (inherits(r6_private(obj)$pars, "pmcmc_parameters_nested")) {
+      if (inherits(r6_private(.GlobalEnv$obj)$pars,
+                   "pmcmc_parameters_nested")) {
         list(index = self$index,
              data = self$session$run(function()
               .GlobalEnv$obj$finish_nested()))
