@@ -159,9 +159,6 @@ pmcmc_multiple_series <- function(pars, initial, filter, control) {
 
 
 pmcmc_multiple_parallel <- function(pars, initial, filter, control) {
-  # if (inherits(pars, "pmcmc_parameters_nested")) {
-  #   stop("Parallel pmcmc not currently supported for nested parameters.")
-  # }
   obj <- pmcmc_orchestrator$new(pars, initial, filter, control)
   obj$run()
   obj$finish()
