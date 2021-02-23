@@ -365,7 +365,7 @@ test_that("nested example_sir_nested_pmcmc require the same iterations", {
     "All chains must have the same iterations")
 })
 
-test_that("require consistent data", {
+test_that("require consistent nested data", {
   results <- example_sir_nested_pmcmc()$results
   a <- results[[1]]
   b <- results[[2]]
@@ -403,6 +403,12 @@ test_that("Can't combine nested chains that differ in if they have state", {
     "If 'state' is present for any samples, it must be present for all")
 })
 
+test_that("Can combine nested chains without save state", {
+  results <- example_sir_nested_pmcmc()$results
+  results[[1]]$state <- NULL
+  results[[2]]$state <- NULL
+  expect_equal(pmcmc_combine_nested(results[[1]], results[[2]])$state, NULL)
+})
 
 test_that("Can't combine nested chains that differ if have trajectories", {
   results <- example_sir_nested_pmcmc()$results
@@ -414,7 +420,7 @@ test_that("Can't combine nested chains that differ if have trajectories", {
 })
 
 
-test_that("Can't combine chains that differ in if they have restart", {
+test_that("Can't combine nested chains that differ in if they have restart", {
   results <- example_sir_nested_pmcmc()$results
   a <- results[[1]]
   a$restart <- NULL
@@ -424,7 +430,7 @@ test_that("Can't combine chains that differ in if they have restart", {
 })
 
 
-test_that("Can't combine inconsistent trajectories", {
+test_that("Can't combine inconsistent nested trajectories", {
   results <- example_sir_nested_pmcmc()$results
   a <- results[[1]]
   a$trajectories$rate <- a$trajectories$rate + 1
