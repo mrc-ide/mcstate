@@ -272,5 +272,5 @@ test_that("basic parallel operation nested", {
   cmp <- pmcmc_combine_nested(samples = samples)
 
   expect_equal(cmp$pars, ans$pars)
-  expect_equal(cmp, ans)
+  expect_equal(cmp$state, ans$state)
 })
