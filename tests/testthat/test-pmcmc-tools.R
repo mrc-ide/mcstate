@@ -365,6 +365,16 @@ test_that("nested example_sir_nested_pmcmc require the same iterations", {
     "All chains must have the same iterations")
 })
 
+test_that("require consistent data", {
+  results <- example_sir_nested_pmcmc()$results
+  a <- results[[1]]
+  b <- results[[2]]
+  expect_error(
+    pmcmc_combine_nested(a, pmcmc_thin(b, burnin = 1)),
+    "All chains must have the same length")
+})
+
+
 test_that("discarding burnin drops beginnings of nested chain", {
   results <- example_sir_nested_pmcmc()$results[[1]]
   res <- pmcmc_thin(results, 10)
@@ -382,4 +392,43 @@ test_that("can sample from a nested mcmc", {
   sub <- pmcmc_sample(results, 10, burnin = 10)
   expect_equal(nlayer(sub$pars), 10)
   expect_true(all(sub$iteration >= 10))
+})
+
+test_that("Can't combine nested chains that differ in if they have state", {
+  results <- example_sir_nested_pmcmc()$results
+  a <- results[[1]]
+  a$state <- NULL
+  expect_error(
+    pmcmc_combine_nested(a, results[[2]]),
+    "If 'state' is present for any samples, it must be present for all")
+})
+
+
+test_that("Can't combine nested chains that differ if have trajectories", {
+  results <- example_sir_nested_pmcmc()$results
+  a <- results[[1]]
+  a$trajectories <- NULL
+  expect_error(
+    pmcmc_combine_nested(a, results[[2]]),
+    "If 'trajectories' is present for any samples, it must be present for all")
+})
+
+
+test_that("Can't combine chains that differ in if they have restart", {
+  results <- example_sir_nested_pmcmc()$results
+  a <- results[[1]]
+  a$restart <- NULL
+  expect_error(
+    pmcmc_combine_nested(a, results[[2]]),
+    "If 'restart' is present for any samples, it must be present for all")
+})
+
+
+test_that("Can't combine inconsistent trajectories", {
+  results <- example_sir_nested_pmcmc()$results
+  a <- results[[1]]
+  a$trajectories$rate <- a$trajectories$rate + 1
+  expect_error(
+    pmcmc_combine_nested(a, results[[2]]),
+    "trajectories data is inconsistent")
 })

@@ -196,7 +196,7 @@ pmcmc_combine_nested <- function(..., samples = list(...)) {
   if (length(unique(lapply(samples, function(x) colnames(x$pars)))) != 1L) {
     stop("All parameters must have the same names")
   }
-  if (length(unique(vnapply(samples, function(x) nrow(x$pars)))) != 1L) {
+  if (length(unique(vnapply(samples, function(x) nlayer(x$pars)))) != 1L) {
     stop("All chains must have the same length")
   }
 
