@@ -4,7 +4,14 @@
 \alias{particle_filter_data}
 \title{Prepare data for use with particle filter}
 \usage{
-particle_filter_data(data, time, rate, initial_time = NULL)
+particle_filter_data(
+  data,
+  time,
+  rate,
+  initial_time = NULL,
+  population = NULL,
+  allow_unequal_times = FALSE
+)
 }
 \arguments{
 \item{data}{A \code{\link[=data.frame]{data.frame()}} of data}
@@ -22,13 +29,23 @@ there is a long period with no data at the beginning of the
 simulation.  If provided, it must be a non-negative integer and
 must be at most equal to the first value of the \code{time}
 column, minus 1 (i.e., \code{data[[time]] - 1}).}
+
+\item{population}{Optionally, the name of a column within \code{data} that
+represents different populations. Must be a factor.}
+
+\item{allow_unequal_times}{If \code{population} is not NULL and time-points are
+not equal between populations, then \code{TRUE} will cause the code to
+error, otherwise FALSE (default) will add equal time-points to all
+populations and fill missing data with NAs.}
 }
 \value{
-A data.frame with new columns \code{step_start} and
-\code{step_end} (required by \code{\link{particle_filter}}),
+If \code{population} is NULL, a data.frame with new columns
+\code{step_start} and \code{step_end} (required by \code{\link{particle_filter}}),
 along side all previous data except for the time variable, which
 is replaced by new \verb{<time>_start} and \verb{<time>_end}
-columns.
+columns. If \code{population} is not NULL then a named list of data.frames as
+described above where each element represents populations in the order
+specified in the data.
 }
 \description{
 Prepare data for use with the \code{\link{particle_filter}}.  This
@@ -53,4 +70,9 @@ mcstate::particle_filter_data(d, "day", 4)
 # If providing an initial day, then the first epoch of simulation
 # will be longer (see the first row)
 mcstate::particle_filter_data(d, "day", 4, 0)
+
+# If including populations:
+d <- data.frame(day = 5:20, y = runif(16),
+                population = factor(rep(letters[1:2], each = 16)))
+mcstate::particle_filter_data(d, "day", 4, 0, "population")
 }

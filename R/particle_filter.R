@@ -66,6 +66,7 @@ particle_filter <- R6::R6Class(
     data = NULL,
     data_split = NULL,
     steps = NULL,
+    nested = FALSE,
     ## Functions used for initial conditions, data comparisons and indices
     index = NULL,
     initial = NULL,
@@ -158,6 +159,7 @@ particle_filter <- R6::R6Class(
     initialize = function(data, model, n_particles, compare,
                           index = NULL, initial = NULL,
                           n_threads = 1L, seed = NULL) {
+
       if (!is_dust_generator(model)) {
         stop("'model' must be a dust_generator")
       }
@@ -171,17 +173,35 @@ particle_filter <- R6::R6Class(
 
       self$model <- model
       private$data <- data
-      if (is.null(compare)) {
-        private$data_split <- dust::dust_data(private$data, "step_end")
-      } else {
-        ## NOTE: it might be tidiest if we always used
-        ## dust::dust_data, really, but that changes our comparison
-        ## function a little or otherwise requires logic near to where
-        ## the comparison function is used (many times) rather than
-        ## once here.
-        private$data_split <- df_to_list_of_lists(data)
+
+      if (inherits(data, "particle_filter_data_nested")) {
+        private$nested <- TRUE
       }
-      private$steps <- unname(as.matrix(data[c("step_start", "step_end")]))
+
+      if (private$nested) {
+        if (is.null(compare)) {
+          private$data_split <- dust::dust_data(private$data, "step_end",
+                                                multi = "population")
+        } else {
+          private$data_split <- groupeddf_to_list_of_lists(data, "population")
+        }
+        private$steps <- unname(as.matrix(subset(data,
+                                population == levels(data$population)[[1]],
+                                select = c("step_start", "step_end"))))
+      } else {
+        if (is.null(compare)) {
+          private$data_split <- dust::dust_data(private$data, "step_end")
+        } else {
+          ## NOTE: it might be tidiest if we always used
+          ## dust::dust_data, really, but that changes our comparison
+          ## function a little or otherwise requires logic near to where
+          ## the comparison function is used (many times) rather than
+          ## once here.
+          private$data_split <- df_to_list_of_lists(data)
+        }
+        private$steps <- unname(as.matrix(data[c("step_start", "step_end")]))
+      }
+
       if (is.null(compare) && !model$public_methods$has_compare()) {
         stop("Your model does not have a built-in 'compare' function")
       }
@@ -248,11 +268,19 @@ particle_filter <- R6::R6Class(
     ##' `step` and `end`. This interface is still subject to change.
     run_begin = function(pars = list(), save_history = FALSE,
                          save_restart = NULL) {
-      particle_filter_state$new(
-        pars, self$model, private$last_model, private$data, private$data_split,
-        private$steps, self$n_particles, private$n_threads,
-        private$initial, private$index, private$compare, private$seed,
-        save_history, save_restart)
+      if (private$nested) {
+        particle_filter_state_nested$new(
+          pars, self$model, private$last_model, private$data,
+          private$data_split, private$steps, self$n_particles,
+          private$n_threads, private$initial, private$index, private$compare,
+          private$seed, save_history, save_restart)
+      } else {
+        particle_filter_state$new(
+          pars, self$model, private$last_model, private$data,
+          private$data_split, private$steps, self$n_particles,
+          private$n_threads, private$initial, private$index, private$compare,
+          private$seed, save_history, save_restart)
+      }
     },
 
     ##' @description Extract the current model state, optionally filtering.
@@ -277,9 +305,14 @@ particle_filter <- R6::R6Class(
     ##' TRUE`. Returns a 3d array with dimensions corresponding to (1)
     ##' model state, filtered by `index$run` if provided, (2)
     ##' particle (following `index_particle` if provided), (3)
-    ##' time point.
+    ##' time point. If nested parameters used then returns a 4d array with
+    ##' dimensions corresponding to (1) model state, (2) particle, (3)
+    ##' population, (4) time point.
     ##'
     ##' @param index_particle Optional vector of particle indices to return.
+    ##' If nested parameters used then a vector will be replicated to a matrix
+    ##' with number of columns equal to number of populations, otherwise a
+    ##' matrix can be supplied.
     ##' If `NULL` we return all particles' histories.
     history = function(index_particle = NULL) {
       if (is.null(private$last_model)) {
@@ -288,29 +321,20 @@ particle_filter <- R6::R6Class(
       if (is.null(private$last_history)) {
         stop("Can't get history as model was run with save_history = FALSE")
       }
+
       history_value <- private$last_history$value
       history_order <- private$last_history$order
       history_index <- private$last_history$index
 
-      if (is.null(index_particle)) {
-        index_particle <- seq_len(ncol(history_value))
-      }
-
       ny <- nrow(history_value)
-      np <- length(index_particle)
-      nt <- ncol(history_order)
 
-      idx <- matrix(NA_integer_, np, nt)
-      for (i in rev(seq_len(ncol(idx)))) {
-        index_particle <- idx[, i] <- history_order[index_particle, i]
+      if (length(dim(history_value)) == 4) {
+        history_nested(history_value, history_order, history_index,
+                       index_particle)
+      } else {
+        history_single(history_value, history_order, history_index,
+                       index_particle)
       }
-
-      cidx <- cbind(seq_len(ny),
-                    rep(idx, each = ny),
-                    rep(seq_len(nt), each = ny * np))
-      ret <- array(history_value[cidx], c(ny, np, nt))
-      rownames(ret) <- names(history_index)
-      ret
     },
 
     ##' @description
@@ -318,8 +342,10 @@ particle_filter <- R6::R6Class(
     ##' that were saved with the `save_restart` argument to
     ##' `$run()`. If available, this will return a 3d array, with
     ##' dimensions representing (1) particle state, (2) particle index,
-    ##' (3) time point. This could be quite large, especially if you
-    ##' are using the `index` argument to create the particle filter
+    ##' (3) time point. If nested parameters are used then returns a 4d array,
+    ##' with dimensions representing (1) particle state, (2) particle index,
+    ##' (3) population, (4) time point. This could be quite large, especially
+    ##' if you are using the `index` argument to create the particle filter
     ##' and return a subset of all state generally. It is also
     ##' different to the saved trajectories returned by `$history()`
     ##' because earlier saved state is not filtered by later filtering
@@ -340,7 +366,11 @@ particle_filter <- R6::R6Class(
         stop("Can't get history as model was run with save_restart = NULL")
       }
       if (!is.null(index_particle)) {
-        restart_state <- restart_state[, index_particle, , drop = FALSE]
+        if (length(dim(restart_state)) == 4) {
+          restart_state <- restart_state[, index_particle, , , drop = FALSE]
+        } else {
+          restart_state <- restart_state[, index_particle, , drop = FALSE]
+        }
       }
       restart_state
     },
@@ -472,4 +502,74 @@ check_save_restart <- function(save_restart, data) {
   }
 
   data$step_end[i]
+}
+
+
+history_single <- function(history_value, history_order, history_index,
+                           index_particle) {
+
+  ny <- nrow(history_value)
+
+  if (is.null(index_particle)) {
+    index_particle <- seq_len(ncol(history_value))
+  }
+
+  np <- length(index_particle)
+
+  nt <- ncol(history_order)
+
+  idx <- matrix(NA_integer_, np, nt)
+  for (i in rev(seq_len(ncol(idx)))) {
+    index_particle <- idx[, i] <- history_order[index_particle, i]
+  }
+
+  cidx <- cbind(seq_len(ny),
+                rep(idx, each = ny),
+                rep(seq_len(nt), each = ny * np))
+  ret <- array(history_value[cidx], c(ny, np, nt))
+  rownames(ret) <- names(history_index)
+  ret
+}
+
+history_nested <- function(history_value, history_order, history_index,
+                           index_particle) {
+  ny <- nrow(history_value)
+  npop <- ncol(history_order)
+  nt <- nlayer(history_order)
+
+
+  if (is.null(index_particle)) {
+    index_particle <- matrix(seq_len(ncol(history_value)),
+                             ncol(history_value), npop)
+  } else {
+    if (is.matrix(index_particle)) {
+      if (!ncol(index_particle) == npop) {
+        stop(sprintf("'index_particle' should have %d columns", npop))
+      }
+    } else {
+      index_particle <- matrix(index_particle,
+                               nrow = length(index_particle),
+                               ncol = npop)
+    }
+  }
+
+  np <- nrow(index_particle)
+
+  idx <- array(NA_integer_, c(np, npop, nt))
+  for (i in rev(seq_len(nlayer(idx)))) {
+    for (j in seq_len(npop)) {
+      idx[, j, i] <- history_order[, j, i][index_particle[, j]]
+    }
+    index_particle <- matrix(idx[, , i], nrow = np, ncol = npop)
+  }
+
+  ret <- array(NA, c(ny, np, npop, nt))
+  for (i in seq_len(npop)) {
+    cidx <- cbind(seq_len(ny),
+                  rep(idx[, i, ], each = ny),
+                  rep(seq_len(nt), each = ny * np))
+    ret[, , i, ] <- history_value[, , i, ][cidx]
+  }
+  rownames(ret) <- names(history_index)
+  ret
 }

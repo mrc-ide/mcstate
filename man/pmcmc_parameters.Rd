@@ -11,7 +11,7 @@ construct this object, but see the examples for how it can be
 used.
 }
 \examples{
-#Construct an object with two parameters:
+# Construct an object with two parameters:
 pars <- mcstate::pmcmc_parameters$new(
   list(mcstate::pmcmc_parameter("a", 0.1, min = 0, max = 1,
                                 prior = function(a) log(a)),

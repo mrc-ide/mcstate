@@ -1,6 +1,6 @@
-##' @title Particle filter state
+##' @title Nested particle filter state
 ##'
-##' @description Particle filter internal state. This object is not
+##' @description Nested particle filter internal state. This object is not
 ##'   ordinarily constructed directly by users, but via the
 ##'   `$run_begin` method to [mcstate::particle_filter]. It provides
 ##'   an advanced interface to the particle filter that allows
@@ -10,8 +10,8 @@
 ##' This state object has a number of public fields that you can read
 ##'   but must not write (they are not read-only so you *could* write
 ##'   them, but don't).
-particle_filter_state <- R6::R6Class(
-  "particle_filter_state",
+particle_filter_state_nested <- R6::R6Class(
+  "particle_filter_state_nested",
   cloneable = FALSE,
 
   private = list(
@@ -43,7 +43,7 @@ particle_filter_state <- R6::R6Class(
 
     ##' @field restart_state Full model state at a series of points in
     ##'   time, if the model was created with non-`NULL` `save_restart`.
-    ##'   This is a 3d array as described in [mcstate::particle_filter]
+    ##'   This is a 4d array as described in [mcstate::particle_filter]
     restart_state = NULL,
 
     ##' @field log_likelihood The log-likelihood so far. This starts at
@@ -63,10 +63,16 @@ particle_filter_state <- R6::R6Class(
                           seed, save_history, save_restart) {
       ## NOTE: this will generate a warning when updating docs but
       ## that's ok; see https://github.com/r-lib/roxygen2/issues/1067
+      if (length(pars) < length(unique(data$population))) {
+        stop(sprintf("'pars' must be at least the length of
+                     'data$population', %d",
+                     length(unique(data$population))))
+      }
+
       if (is.null(model)) {
         model <- generator$new(pars = pars, step = steps[[1L]],
                                n_particles = n_particles, n_threads = n_threads,
-                               seed = seed)
+                               seed = seed, pars_multi = TRUE)
         if (is.null(compare)) {
           model$set_index(integer(0))
           model$set_data(data_split)
@@ -94,8 +100,9 @@ particle_filter_state <- R6::R6Class(
         len <- nrow(steps) + 1L
         state <- model$state(index_data$state)
         history_value <- array(NA_real_, c(dim(state), len))
-        history_value[, , 1] <- state
-        history_order <- matrix(seq_len(n_particles), n_particles, len)
+        history_value[, , , 1] <- state
+        history_order <- array(seq_len(n_particles),
+                               c(n_particles, nlayer(state), len))
         self$history <- list(
           value = history_value,
           order = history_order,
@@ -109,6 +116,7 @@ particle_filter_state <- R6::R6Class(
         self$restart_state <- array(NA_real_,
                                     c(model$n_state(),
                                       n_particles,
+                                      length(pars),
                                       length(save_restart)))
       } else {
         self$restart_state <- NULL
@@ -131,7 +139,7 @@ particle_filter_state <- R6::R6Class(
 
       ## Variable (see also history)
       self$model <- model
-      self$log_likelihood <- 0.0
+      self$log_likelihood <- rep(0.0, length(pars))
     },
 
     ##' @description Run the particle filter to the end of the data. This is
@@ -151,10 +159,7 @@ particle_filter_state <- R6::R6Class(
     ##' the data provided to the filter). It is an error to provide
     ##' a value here that is lower than the current step index, or past
     ##' the end of the data.
-    ##'
-    ##' @param partial Logical, indicating if we should return the partial
-    ##' likelihood, due to this step, rather than the full likelihood so far.
-    step = function(step_index, partial = FALSE) {
+    step = function(step_index) {
       steps <- private$steps
       n_steps <- private$n_steps
       curr <- private$current_step_index
@@ -196,39 +201,55 @@ particle_filter_state <- R6::R6Class(
         state <- model$run(step_end)
 
         if (save_history) {
-          history_value[, , t + 1L] <- model$state(save_history_index)
+          history_value[, , , t + 1L] <- model$state(save_history_index)
         }
 
         if (is.null(compare)) {
           log_weights <- model$compare_data()
         } else {
-          log_weights <- compare(state, data_split[[t]], pars)
+          ok <- !is.null(compare(array(state[, , 1],
+                                       c(nrow(state), ncol(state))),
+                                 data_split[[t]][[1]], pars))
+          if (!ok) {
+            log_weights <- NULL
+          } else {
+            log_weights <- vapply(seq_len(nlayer(state)),
+                                  function(i) {
+                                    compare(array(state[, , i],
+                                                  c(nrow(state), ncol(state))),
+                                            data_split[[t]][[i]], pars)
+                                  }, numeric(ncol(state)))
+          }
+
         }
 
         if (is.null(log_weights)) {
           if (save_history) {
-            history_order[, t + 1L] <- seq_len(n_particles)
+            history_order[, , t + 1L] <- seq_len(n_particles)
           }
           log_likelihood_step <- NA_real_
         } else {
-          weights <- scale_log_weights(log_weights)
-          log_likelihood_step <- weights$average
+          weights <- apply(log_weights, 2, scale_log_weights)
+          log_likelihood_step <- vnapply(weights, "[[", "average")
           log_likelihood <- log_likelihood + log_likelihood_step
-          if (log_likelihood == -Inf) {
+          ## FIXME - IS THIS CORRECT? ALL VS ANY
+          if (any(log_likelihood == -Inf)) {
             break
           }
 
-          kappa <- particle_resample(weights$weights)
+          kappa <- vapply(weights, function(x) particle_resample(x$weights),
+                          numeric(length(weights[[1]]$weights)))
           model$reorder(kappa)
+
           if (save_history) {
-            history_order[, t + 1L] <- kappa
+            history_order[, , t + 1L] <- kappa
           }
         }
 
         if (save_restart) {
           i_restart <- match(step_end, save_restart_step)
           if (!is.na(i_restart)) {
-            restart_state[, , i_restart] <- model$state()
+            restart_state[, , , i_restart] <- model$state()
           }
         }
       }
@@ -245,17 +266,13 @@ particle_filter_state <- R6::R6Class(
         self$restart_state <- restart_state
       }
 
-      if (partial) {
-        log_likelihood_step
-      } else {
-        log_likelihood
-      }
+      log_likelihood
     },
 
-    ##' @description Create a new `particle_filter_state` object based
+    ##' @description Create a new `particle_filter_state_nested` object based
     ##' on this one (same model, position in time within the data) but
     ##' with new parameters. To do this, we create a new
-    ##' `particle_filter_state` with new parameters at the beginning of
+    ##' `particle_filter_state_nested` with new parameters at the beginning of
     ##' the simulation (corresponding to the start of your data or the
     ##' `initial` argument to [mcstate::particle_filter]) with your new
     ##' `pars`, and then run the filter foward in time until it reaches
@@ -265,7 +282,7 @@ particle_filter_state <- R6::R6Class(
     fork = function(pars) {
       seed <- self$model$rng_state()
       save_history <- !is.null(self$history)
-      ret <- particle_filter_state$new(
+      ret <- particle_filter_state_nested$new(
         pars, private$generator, NULL, private$data, private$data_split,
         private$steps, private$n_particles, private$n_threads,
         private$initial, private$index, private$compare, seed,

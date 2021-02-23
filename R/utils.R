@@ -81,6 +81,15 @@ df_to_list_of_lists <- function(x) {
   lapply(unname(split(x, seq_len(nrow(x)))), as.list)
 }
 
+groupeddf_to_list_of_lists <- function(x, group) {
+  ## largely copied from dust::dust_data
+  rows <- lapply(seq_len(nrow(x)), function(i) as.list(x[i, ]))
+  group <- x[[group]]
+  rows_grouped <- unname(split(rows, group))
+  lapply(seq_len(nrow(x) / length(unique(group))),
+         function(i) lapply(rows_grouped, "[[", i))
+}
+
 
 all_or_none <- function(x) {
   all(x) || !any(x)
@@ -124,15 +133,14 @@ recycle <- function(x, n, name = deparse(substitute(x))) {
   }
 }
 
-
 is_3d_array <- function(x) {
-  !is.na(nlayer(x))
+  length(dim(x)) == 3
 }
 
 
 ## Copied from ncol
 nlayer <- function(x) {
-  dim(x)[3L]
+  dim(x)[[3L]]
 }
 
 
@@ -147,45 +155,37 @@ NLAYER <- function(x) { # nolint
 }
 
 
-## Copied from colnames
-layernames <- function(x, do.NULL = TRUE, prefix = "layer") { # nolint
-    dn <- dimnames(x)
-    if (!is.null(dn[[3L]]))
-        dn[[3L]]
-    else {
-      if (do.NULL) {
-        NULL
-      } else {
-        paste0(prefix, seq_len(NLAYER(x)))
-      }
-    }
+layernames <- function(x) {
+  nms <- dimnames(x)
+  if (!is.null(nms[[3L]])) {
+    nms[[3L]]
+  } else {
+    NULL
+  }
 }
 
 
-## Copied from colnames<-
 `layernames<-` <- function(x, value) { # nolint
-  dn <- dimnames(x)
-  if (is.null(dn)) {
+  if (length(dim(x)) < 3) {
+    stop("'x' has less than three dimensions")
+  }
+
+  nms <- dimnames(x)
+
+  if (is.null(nms)) {
     if (is.null(value)) {
-      return(x)
+      stop("'value' cannot be NULL if 'dimnames(x)' is NULL")
     }
-    nd <- length(dim(x))
-    if (nd < 3L) {
-      stop("attempt to set 'layernames' on an object with less than three
-      dimensions")
-    }
-      dn <- vector("list", nd)
+    nms <- vector("list", length(dim(x)))
   }
-  if (length(dn) < 3L) {
-    stop("attempt to set 'colnames' on an object with less than three
-    dimensions")
-  }
+
   if (is.null(value)) {
-    dn[3L] <- list(NULL)
+    nms[3L] <- list(NULL)
   } else {
-    dn[[3L]] <- value
+    nms[[3L]] <-  assert_scalar_character(value)
   }
-  dimnames(x) <- dn
+
+  dimnames(x) <- nms
   x
 }
 
@@ -195,16 +195,6 @@ set_layernames <- function(m, nms) {
   m
 }
 
-lbind <- function(arrays) {
-  assert_list(arrays)
-  nr <- unique(viapply(arrays, NROW))
-  nc <- unique(viapply(arrays, NCOL))
-  if (length(nr) > 1) {
-    stop("Not all arrays have same number of rows")
-  }
-  if (length(nc) > 1) {
-    stop("Not all arrays have same number of columns")
-  }
-  nl <- sum(viapply(arrays, NLAYER))
-  array(do.call(c, arrays), dim = c(nr, nc, nl))
+normalise <- function(x) {
+  x / sum(x)
 }

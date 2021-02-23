@@ -20,6 +20,7 @@ example_sir <- function() {
       rexp(n = length(incidence_modelled), rate = exp_noise)
     dpois(x = incidence_observed, lambda = lambda, log = TRUE)
   }
+
   inv_dt <- 4
   day <- seq(1, 100)
   incidence <- rep(NA, length(day))
@@ -81,7 +82,11 @@ example_sir_shared <- function() {
 
   data_raw <- apply(incidence, 1,
                     function(x) data.frame(day = day, incidence = x))
-  data <- lapply(data_raw, particle_filter_data, time = "day", rate = 4)
+  data_raw <- do.call(rbind, data_raw)
+  data_raw$populations <- factor(rep(letters[1:2], each = nrow(data_raw) / 2))
+
+  data <- particle_filter_data(data_raw, time = "day", rate = 4,
+                               population = "populations")
 
   index <- function(info) {
     list(run = 5L, state = 1:3)
