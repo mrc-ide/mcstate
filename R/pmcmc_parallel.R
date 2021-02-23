@@ -130,9 +130,7 @@ pmcmc_remote <- R6::R6Class(
       private$inputs <- inputs
       private$control <- control
       private$seed <- seed
-      if (inherits(pars, "pmcmc_parameters_nested")) {
-        private$nested <- TRUE
-      }
+        private$nested <- inherits(pars, "pmcmc_parameters_nested")
 
       lockBinding("session", self)
     },
