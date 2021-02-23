@@ -11,7 +11,8 @@ pmcmc_orchestrator <- R6::R6Class(
     status = NULL,
     results = NULL,
     thread_pool = NULL,
-    progress = NULL
+    progress = NULL,
+    nested = FALSE
   ),
 
   public = list(
@@ -29,6 +30,9 @@ pmcmc_orchestrator <- R6::R6Class(
       private$sessions <- vector("list", control$n_workers)
       private$status <- vector("list", control$n_chains)
       private$results <- vector("list", control$n_chains)
+      if (inherits(pars, "pmcmc_parameters_nested")) {
+        private$nested <- TRUE
+      }
 
       ## First stage starts the process, but this is async...
       for (i in seq_len(control$n_workers)) {
@@ -91,7 +95,11 @@ pmcmc_orchestrator <- R6::R6Class(
     },
 
     finish = function() {
-      pmcmc_combine(samples = private$results)
+      if (private$nested) {
+        pmcmc_combine_nested(samples = private$results)
+      } else {
+        pmcmc_combine(samples = private$results)
+      }
     }
   ))
 

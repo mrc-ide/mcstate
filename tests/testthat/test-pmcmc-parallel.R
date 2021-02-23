@@ -269,7 +269,7 @@ test_that("basic parallel operation nested", {
   }
 
   samples <- lapply(seq_along(s), f)
-  cmp <- pmcmc_combine(samples = samples)
+  cmp <- pmcmc_combine_nested(samples = samples)
 
   expect_equal(cmp$pars, ans$pars)
   expect_equal(cmp, ans)

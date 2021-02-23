@@ -20,7 +20,7 @@ test_that("discarding burnin drops beginnings of chain", {
 
 
 test_that("thinning drops all over chain", {
-  results <- example_sir_pmcmc()[[1]]$pmcmc
+  results <- example_sir_pmcmc()$pmcmc
   res <- pmcmc_thin(results, thin = 4)
   i <- seq(1, 31, by = 4)
   expect_identical(res$pars, results$pars[i, ])
@@ -340,7 +340,7 @@ test_that("nested combining requires at least one run", {
   results <- example_sir_nested_pmcmc()$results
   expect_error(pmcmc_combine_nested(),
                "At least 2 samples objects must be provided")
-  expect_error(pmcmc_combine_nested(samples = NULL),
+  expect_error(pmcmc_combine_nested(samples = list()),
                "At least 2 samples objects must be provided")
   expect_error(pmcmc_combine_nested(results[[1]]),
                "At least 2 samples objects must be provided")
