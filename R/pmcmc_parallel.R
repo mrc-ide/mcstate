@@ -30,9 +30,7 @@ pmcmc_orchestrator <- R6::R6Class(
       private$sessions <- vector("list", control$n_workers)
       private$status <- vector("list", control$n_chains)
       private$results <- vector("list", control$n_chains)
-      if (inherits(pars, "pmcmc_parameters_nested")) {
-        private$nested <- TRUE
-      }
+      private$nested <- inherits(pars, "pmcmc_parameters_nested")
 
       ## First stage starts the process, but this is async...
       for (i in seq_len(control$n_workers)) {
