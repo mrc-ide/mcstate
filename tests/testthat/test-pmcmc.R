@@ -716,12 +716,12 @@ test_that("pmcmc nested Uniform on unit square", {
 
 test_that("pmcmc nested multivariate gaussian", {
   dat <- example_mvnorm_shared()
-  control <- pmcmc_control(2000, save_state = FALSE, save_trajectories = FALSE)
+  control <- pmcmc_control(500, save_state = FALSE, save_trajectories = FALSE)
 
   set.seed(1)
-  testthat::try_again(5, {
+  testthat::try_again(10, {
     res <- pmcmc(dat$pars, dat$filter, control = control)
-    i <- seq(1, 1000, by = 20)
+    i <- seq(1, 500, by = 20)
     expect_s3_class(res, "mcstate_pmcmc")
     ks_test <- function(x, y) suppressWarnings(ks.test(x, y))
     expect_gt(ks_test(res$pars["a", 1, i], "pnorm")$p.value, 0.05)

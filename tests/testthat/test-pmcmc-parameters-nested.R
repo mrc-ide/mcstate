@@ -414,14 +414,14 @@ test_that("pmcmc_parameters_nested model/transform", {
   proposal_varied <- diag(2) + 1
   p <- pmcmc_parameters_nested$new(parameters, proposal_varied, proposal_fixed)
 
-  expect_equal(p$model(p$initial()), apply(p$initial(), 1, as.list))
+  expect_equal(p$model(p$initial()), unname(apply(p$initial(), 1, as.list)))
 
   p <- pmcmc_parameters_nested$new(parameters, proposal_varied, proposal_fixed,
                                    transform = function(x)
                                      apply(x, 1, function(y) as.list(log(y))))
 
   expect_equal(p$model(p$initial()),
-               apply(p$initial(), 1, function(x) as.list(log(x))))
+               unname(apply(p$initial(), 1, function(x) as.list(log(x)))))
 })
 
 test_that("pmcmc_parameters_nested propose", {
@@ -566,8 +566,8 @@ test_that("pmcmc_parameters_nested fix", {
 
   init <- fix_p$initial()
   expect_identical(fix_p$model(init),
-                   list(p1 = list(a = 1, b = 2, c = 3, d = 5, e = 3, f = 6),
-                        p2 = list(a = 1, b = 2, c = 4, d = 5, e = 4, f = 6))
+                   list(list(a = 1, b = 2, c = 3, d = 5, e = 3, f = 6),
+                        list(a = 1, b = 2, c = 4, d = 5, e = 4, f = 6))
   )
 })
 
@@ -600,7 +600,7 @@ test_that("pmcmc_parameters_nested fixed - 1 fix 1 var 1 pop - fix vary", {
 
   init <- fix_p$initial()
   expect_identical(fix_p$model(init),
-                   list(p1 = list(a = 1, b = 1))
+                   list(list(a = 1, b = 1))
   )
 })
 
@@ -632,7 +632,7 @@ test_that("pmcmc_parameters_nested fixed - 1 fix 1 var 1 pop - fix fixed", {
 
   init <- fix_p$initial()
   expect_identical(fix_p$model(init),
-                   list(p1 = list(a = 1, b = 3))
+                   list(list(a = 1, b = 3))
   )
 })
 

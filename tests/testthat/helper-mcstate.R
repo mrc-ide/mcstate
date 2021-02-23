@@ -160,19 +160,21 @@ example_uniform <- function(proposal_kernel = NULL) {
 example_uniform_shared <- function(varied = TRUE, fixed = TRUE,
                                    proposal_varied = NULL,
                                    proposal_fixed = NULL) {
-  target <- function(p, ...) {
-    1
-  }
+
   if (!varied || !fixed) {
     n_par <- 2
   } else {
     n_par <- 4
   }
-  filter <- rep(list(structure(list(run = target,
-                           n_particles = 10,
-                           state = function() matrix(1, n_par, 10),
-                           trajectories = function(i) matrix(1, n_par, 10)),
-                      class = "particle_filter")), 3)
+
+  target <- function(p, ...) {
+    rep(1, 3)
+  }
+
+
+  filter <- structure(list(run = target,
+                           n_particles = 10),
+                      class = "particle_filter")
 
   pars <- list()
   pops <- paste0("p", 1:3)
@@ -236,18 +238,16 @@ example_mvnorm_shared <- function(varied = TRUE, fixed = TRUE,
                                    proposal_varied = NULL,
                                    proposal_fixed = NULL) {
   target <- function(p, ...) {
-    mvtnorm::dmvnorm(unlist(p), log = TRUE)
+    vnapply(p, function(x) mvtnorm::dmvnorm(unlist(x), log = TRUE))
   }
   if (!varied || !fixed) {
     n_par <- 2
   } else {
     n_par <- 4
   }
-  filter <- rep(list(structure(list(run = target,
-                           n_particles = 10,
-                           state = function() matrix(1, n_par, 10),
-                           trajectories = function(i) matrix(1, n_par, 10)),
-                      class = "particle_filter")), 3)
+  filter <- structure(list(run = target,
+                           n_particles = 10),
+                      class = "particle_filter")
 
   pars <- list()
   pops <- paste0("p", 1:3)

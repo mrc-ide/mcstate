@@ -22,7 +22,7 @@ pmcmc(
 information about parameters (ranges, priors, proposal kernel,
 translation functions for use with the particle filter).}
 
-\item{filter}{A \code{\link{particle_filter}} object}
+\item{filter}{A \code{\link{particle_filter}} object.}
 
 \item{n_steps}{Deprecated: use \link{pmcmc_control} instead}
 
