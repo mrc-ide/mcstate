@@ -803,32 +803,3 @@ test_that("pmcmc nested sir - 2 chains", {
 
   expect_equal(res1$pars, res3$pars[, , 1:51])
 })
-
-test_that("error parallel nested", {
-  dat <- example_sir_shared()
-  p <- particle_filter$new(dat$data, dat$model, 100, dat$compare,
-                           dat$index, seed = 1L)
-  proposal_fixed <- matrix(0.00026)
-  proposal_varied <- matrix(0.00057)
-
-  pars <- pmcmc_parameters_nested$new(
-    list(pmcmc_varied_parameter("beta", letters[1:2], c(0.2, 0.3),
-                                min = 0, max = 1,
-                                prior = function(p) log(1e-10)),
-         pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
-                         prior = function(p) log(1e-10))),
-    proposal_fixed = proposal_fixed, proposal_varied = proposal_varied)
-
-  control <- pmcmc_control(30, n_workers = 2L, n_chains = 2L)
-
- res <- pmcmc(pars, p, control = control)
-
-
-
-  expect_error(pmcmc(pars, p, control = control), "not currently")
-})
-
-test_that("pmcmc error on wrong pars", {
-  expect_error(pmcmc(1, structure(class = "particle_filter")),
-               "'pars' should inherit")
-})

@@ -153,7 +153,11 @@ pmcmc_remote <- R6::R6Class(
         filter <- particle_filter_from_inputs(inputs, seed$dust)
         control$progress <- FALSE
         .GlobalEnv$obj <- pmcmc_state$new(pars, initial, filter, control)
-        .GlobalEnv$obj$run()
+        if (inherits(pars, "pmcmc_parameters_nested")) {
+          .GlobalEnv$obj$run_nested()
+        } else {
+          .GlobalEnv$obj$run()
+        }
       }, args, package = "mcstate")
       self$index <- index
       self$n_threads <- private$inputs$n_threads
@@ -161,12 +165,16 @@ pmcmc_remote <- R6::R6Class(
     },
 
     continue = function() {
-      self$session$call(function() .GlobalEnv$obj$run())
+      if (inherits(r6_private(obj)$pars, "pmcmc_parameters_nested")) {
+        self$session$call(function() .GlobalEnv$obj$run_nested())
+      } else {
+        self$session$call(function() .GlobalEnv$obj$run())
+      }
     },
 
     read = function() {
       data <- self$session$read()
-      if (!is.null(data$error)) {
+      if (!is.null(data$errreador)) {
         ## NOTE: We have to use this non-exported function to get the
         ## same nice error handling as Gabor has set up in the
         ## package, and depending on any of the details of the
@@ -185,8 +193,14 @@ pmcmc_remote <- R6::R6Class(
 
     ## This one is synchronous
     finish = function() {
-      list(index = self$index,
-           data = self$session$run(function() .GlobalEnv$obj$finish()))
+      if (inherits(r6_private(obj)$pars, "pmcmc_parameters_nested")) {
+        list(index = self$index,
+             data = self$session$run(function()
+              .GlobalEnv$obj$finish_nested()))
+      } else {
+        list(index = self$index,
+            data = self$session$run(function() .GlobalEnv$obj$finish()))
+      }
     }
   ))
 
