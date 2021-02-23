@@ -202,8 +202,7 @@ test_that("run multiple chains", {
   dat <- example_uniform()
 
   control1 <- pmcmc_control(100, save_state = FALSE, n_chains = 1)
-  control2 <- pmcmc_control(100, save_state = FALSE, n_chains = 3,
-  save_trajectories = T, save_restart = T)
+  control2 <- pmcmc_control(100, save_state = FALSE, n_chains = 3)
 
   set.seed(1)
   res1 <- pmcmc(dat$pars, dat$filter, control = control1)
@@ -502,7 +501,7 @@ test_that("Can save intermediate state to restart", {
   control2 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE,
                             save_restart = 20)
   control3 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE,
-                            save_restart = c(20, 30, 40), n_chains = 3L)
+                            save_restart = c(20, 30))
   set.seed(1)
   res1 <- pmcmc(dat$pars, p1, control = control1)
   set.seed(1)

@@ -236,7 +236,7 @@ test_that("progress bar creates progress_bar when progress = TRUE", {
 })
 
 
-test_that("error parallel nested", {
+test_that("basic parallel operation nested", {
   dat <- example_sir_shared()
   n_particles <- 42
   n_steps <- 30

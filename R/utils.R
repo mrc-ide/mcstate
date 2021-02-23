@@ -72,6 +72,7 @@ set_colnames <- function(m, nms) {
   m
 }
 
+
 last <- function(x) {
   x[[length(x)]]
 }
@@ -194,6 +195,7 @@ set_layernames <- function(m, nms) {
   layernames(m) <- nms
   m
 }
+
 
 normalise <- function(x) {
   x / sum(x)
