@@ -478,12 +478,12 @@ test_that("Can override thread count via control", {
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index, seed = 1L, n_threads = 4)
   res <- pmcmc(dat$pars, p,
-                   control = pmcmc_control(5, n_threads_total = 2))
+               control = pmcmc_control(5, n_threads_total = 2))
   expect_equal(res$predict$filter$n_threads, 2)
 
   p$set_n_threads(4)
   res <- pmcmc(dat$pars, p,
-                   control = pmcmc_control(5, n_threads_total = NULL))
+               control = pmcmc_control(5, n_threads_total = NULL))
   expect_equal(res$predict$filter$n_threads, 4)
 })
 
@@ -492,11 +492,11 @@ test_that("Can save intermediate state to restart", {
   dat <- example_sir()
   n_particles <- 42
   p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                           index = dat$index)
+                            index = dat$index)
   p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                           index = dat$index)
+                            index = dat$index)
   p3 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                           index = dat$index)
+                            index = dat$index)
   control1 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE)
   control2 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE,
                             save_restart = 20)
@@ -590,7 +590,7 @@ test_that("pmcmc_check_initial_nested - silent null initial", {
   expect_equal(
     pmcmc_check_initial_nested(NULL, dat$pars, 2),
     array(dat$pars$initial(), c(3, 4, 2),
-      dimnames = list(c("p1", "p2", "p3"), letters[1:4]))
+          dimnames = list(c("p1", "p2", "p3"), letters[1:4]))
   )
 })
 
@@ -625,13 +625,16 @@ test_that("pmcmc_check_initial_nested - error array initial", {
     "Expected an array with 3 rows"
   )
   expect_error(
-    pmcmc_check_initial_nested(array(dim = c(3, 4, 2),
-      dimnames = list(letters[1:3], letters[1:4], NULL)), dat$pars, 2),
+    pmcmc_check_initial_nested(
+      array(dim = c(3, 4, 2),
+            dimnames = list(letters[1:3], letters[1:4], NULL)), dat$pars, 2),
     "has rownames"
   )
   expect_error(
-    pmcmc_check_initial_nested(array(dim = c(3, 4, 2),
-      dimnames = list(paste0("p", 1:3), letters[10:13], NULL)), dat$pars, 2),
+    pmcmc_check_initial_nested(
+      array(dim = c(3, 4, 2),
+            dimnames = list(paste0("p", 1:3), letters[10:13], NULL)),
+      dat$pars, 2),
     "has colnames"
   )
   expect_error(
@@ -651,13 +654,15 @@ test_that("pmcmc_check_initial_nested - error matrix initial", {
     "Expected a matrix with 3 rows"
   )
   expect_error(
-    pmcmc_check_initial_nested(matrix(nrow = 3, ncol = 4,
-      dimnames = list(letters[1:3], letters[1:4])), dat$pars, 2),
+    pmcmc_check_initial_nested(
+      matrix(nrow = 3, ncol = 4,
+             dimnames = list(letters[1:3], letters[1:4])), dat$pars, 2),
     "has rownames"
   )
   expect_error(
-    pmcmc_check_initial_nested(matrix(nrow = 3, ncol = 4,
-      dimnames = list(paste0("p", 1:3), letters[10:13])), dat$pars, 2),
+    pmcmc_check_initial_nested(
+      matrix(nrow = 3, ncol = 4,
+             dimnames = list(paste0("p", 1:3), letters[10:13])), dat$pars, 2),
     "has colnames"
   )
   expect_error(pmcmc_check_initial_nested(matrix(2, 3, 4), dat$pars, 2),
@@ -748,8 +753,8 @@ test_that("pmcmc nested sir - 1 chain", {
                            dat$index)
   control <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE,
                            save_restart = TRUE, rerun_every = 10,
-                            n_threads_total = 2, use_parallel_seed = TRUE,
-                            n_chains = 1L)
+                           n_threads_total = 2, use_parallel_seed = TRUE,
+                           n_chains = 1L)
   proposal_fixed <- matrix(0.00026)
   proposal_varied <- matrix(0.00057)
 
@@ -772,9 +777,9 @@ test_that("pmcmc nested sir - 1 chain", {
 test_that("pmcmc nested sir - 2 chains", {
   dat <- example_sir_shared()
   p1 <- particle_filter$new(dat$data, dat$model, 100, dat$compare,
-                           dat$index, seed = 1L)
+                            dat$index, seed = 1L)
   p2 <- particle_filter$new(dat$data, dat$model, 100, dat$compare,
-                           dat$index, seed = 1L)
+                            dat$index, seed = 1L)
   proposal_fixed <- matrix(0.00026)
   proposal_varied <- matrix(0.00057)
 

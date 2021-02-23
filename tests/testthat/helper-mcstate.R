@@ -64,7 +64,7 @@ example_sir_shared <- function() {
   model <- dust::dust_example("sir")
   sir <- model$new(pars = list(list(beta = 0.2, gamma = 0.1),
                                list(beta = 0.3, gamma = 0.1)),
-                    step = 0, n_particles = 1, pars_multi = TRUE)
+                   step = 0, n_particles = 1, pars_multi = TRUE)
   y0 <- sir$state()
 
   inv_dt <- 4
@@ -185,12 +185,12 @@ example_uniform_shared <- function(varied = TRUE, fixed = TRUE,
       row.names(proposal_fixed) <- colnames(proposal_fixed) <- c("a", "b")
     }
     pars <- c(pars,
-    list(
-      pmcmc_parameter("a", 0.5, min = 0, max = 1,
-                         prior = function(p) dunif(p, log = TRUE)),
-      pmcmc_parameter("b", 0.5, min = 0, max = 1,
-                         prior = function(p) dunif(p, log = TRUE))
-    ))
+              list(
+                pmcmc_parameter("a", 0.5, min = 0, max = 1,
+                                prior = function(p) dunif(p, log = TRUE)),
+                pmcmc_parameter("b", 0.5, min = 0, max = 1,
+                                prior = function(p) dunif(p, log = TRUE))
+              ))
   }
 
   if (varied) {
@@ -199,12 +199,13 @@ example_uniform_shared <- function(varied = TRUE, fixed = TRUE,
       row.names(proposal_varied) <- colnames(proposal_varied) <- c("c", "d")
     }
     pars <- c(pars,
-    list(
-      pmcmc_varied_parameter("c", pops, 0.5, min = 0, max = 1,
-                         prior = function(p) dunif(p, log = TRUE)),
-      pmcmc_varied_parameter("d", pops, 0.5, min = 0, max = 1,
-                         prior = function(p) dunif(p, log = TRUE))
-    ))
+              list(
+                pmcmc_varied_parameter("c", pops, 0.5, min = 0, max = 1,
+                                       prior = function(p) dunif(p,
+                                                                 log = TRUE)),
+                pmcmc_varied_parameter("d", pops, 0.5, min = 0, max = 1,
+                                       prior = function(p) dunif(p, log = TRUE))
+              ))
   }
 
   pars <- pmcmc_parameters_nested$new(pars, proposal_varied, proposal_fixed,
@@ -235,8 +236,8 @@ example_mvnorm <- function() {
 }
 
 example_mvnorm_shared <- function(varied = TRUE, fixed = TRUE,
-                                   proposal_varied = NULL,
-                                   proposal_fixed = NULL) {
+                                  proposal_varied = NULL,
+                                  proposal_fixed = NULL) {
   target <- function(p, ...) {
     vnapply(p, function(x) mvtnorm::dmvnorm(unlist(x), log = TRUE))
   }

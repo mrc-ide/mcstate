@@ -200,10 +200,10 @@ pmcmc_remote <- R6::R6Class(
       if (private$nested) {
         list(index = self$index,
              data = self$session$run(function()
-              .GlobalEnv$obj$finish_nested()))
+               .GlobalEnv$obj$finish_nested()))
       } else {
         list(index = self$index,
-            data = self$session$run(function() .GlobalEnv$obj$finish()))
+             data = self$session$run(function() .GlobalEnv$obj$finish()))
       }
     }
   ))

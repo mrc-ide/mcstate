@@ -185,9 +185,9 @@ particle_filter <- R6::R6Class(
         } else {
           private$data_split <- groupeddf_to_list_of_lists(data, "population")
         }
-        private$steps <- unname(as.matrix(subset(data,
-                                population == levels(data$population)[[1]],
-                                select = c("step_start", "step_end"))))
+        private$steps <- unname(
+          as.matrix(subset(data, population == levels(data$population)[[1]],
+                           select = c("step_start", "step_end"))))
       } else {
         if (is.null(compare)) {
           private$data_split <- dust::dust_data(private$data, "step_end")

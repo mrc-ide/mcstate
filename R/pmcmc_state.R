@@ -94,7 +94,7 @@ pmcmc_state <- R6::R6Class(
         prop_lpost <- prop_lprior + prop_llik
 
         which <- runif(length(prop_lpost)) <
-                  exp(prop_lpost - private$curr_lpost)
+          exp(prop_lpost - private$curr_lpost)
         if (any(which)) {
           private$curr_pars[which, ] <- prop_pars[which, ]
           private$curr_lprior[which] <- prop_lprior[which]
@@ -136,8 +136,8 @@ pmcmc_state <- R6::R6Class(
         private$curr_llik <- private$run_filter(private$curr_pars)
         private$curr_lpost <- private$curr_lprior + private$curr_llik
         private$history_probabilities$add(c(private$curr_lprior,
-                                          private$curr_llik,
-                                          private$curr_lpost))
+                                            private$curr_llik,
+                                            private$curr_lpost))
         private$update_history()
       }
 
@@ -305,8 +305,8 @@ pmcmc_state <- R6::R6Class(
       probabilities <- list_to_array(private$history_probabilities$get())
       probabilities <- aperm(probabilities, c(2, 1, 3))
       dimnames(probabilities)[1:2] <- list(c("log_prior", "log_likelihood",
-                                               "log_posterior"),
-                                               rownames(private$curr_pars))
+                                             "log_posterior"),
+                                           rownames(private$curr_pars))
 
       predict <- state <- restart <- trajectories <- NULL
 

@@ -514,9 +514,9 @@ test_that("pmcmc_parameters_nested fix errors", {
                                    populations = letters[1:2])
   expect_error(p$fix(matrix(1)), "should have rownames")
   expect_error(p$fix(matrix(1, nrow = 2, dimnames = list(letters[1:2], "a"))),
-              "Fixed parameters")
+               "Fixed parameters")
   expect_error(p$fix(matrix(1, nrow = 2, dimnames = list(letters[1:2], "b"))),
-              "Cannot fix")
+               "Cannot fix")
 
   parameters <- list(
     pmcmc_parameter("a", 1, prior = dexp),
@@ -524,7 +524,7 @@ test_that("pmcmc_parameters_nested fix errors", {
   p <- pmcmc_parameters_nested$new(parameters, NULL, diag(2),
                                    populations = letters[1:2])
   expect_error(p$fix(matrix(1, nrow = 2, dimnames = list(c("c", "b"), "a"))),
-              "Rownames of")
+               "Rownames of")
 })
 
 test_that("pmcmc_parameters_nested fix", {
@@ -560,7 +560,7 @@ test_that("pmcmc_parameters_nested fix", {
     })
 
   expect_equal(with(set.seed(1), fix_p$propose(fix_p$initial(), "both")),
-              with(set.seed(1), fixed_p$propose(fixed_p$initial(), "both")))
+               with(set.seed(1), fixed_p$propose(fixed_p$initial(), "both")))
 
 
 
@@ -673,8 +673,8 @@ test_that("pmcmc_parameters_nested - discrete proposal, 1 fix 1 pop", {
 test_that("pmcmc_parameters_nested - discrete proposal, 1 var 1 pop", {
   parameters <- list(
     a =  pmcmc_varied_parameter("a", c("p1", "p2"), 1:2,
-                               prior = list(function(x) 1, function(x) 2),
-                               discrete = TRUE))
+                                prior = list(function(x) 1, function(x) 2),
+                                discrete = TRUE))
   proposal <- diag(1) * 0.1
   p <- pmcmc_parameters_nested$new(parameters, proposal)
 

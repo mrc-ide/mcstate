@@ -17,7 +17,7 @@ test_that("basic parallel operation", {
   f <- function(idx) {
     set.seed(s[[idx]]$r)
     p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                              index = dat$index, seed = s[[idx]]$dust)
+                             index = dat$index, seed = s[[idx]]$dust)
     pmcmc(dat$pars, p, control = pmcmc_control(n_steps))
   }
 
@@ -83,7 +83,7 @@ test_that("throw from callr operation", {
 test_that("running pmcmc with progress = TRUE prints messages", {
   dat <- example_sir()
   p <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
-                            index = dat$index, seed = 1L)
+                           index = dat$index, seed = 1L)
   control <- pmcmc_control(10, n_chains = 2, n_workers = 2L, progress = TRUE)
   expect_message(
     pmcmc(dat$pars, p, control = control),
@@ -264,7 +264,7 @@ test_that("basic parallel operation nested", {
   f <- function(idx) {
     set.seed(s[[idx]]$r)
     p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                              index = dat$index, seed = s[[idx]]$dust)
+                             index = dat$index, seed = s[[idx]]$dust)
     pmcmc(dat$pars, p, control = pmcmc_control(n_steps))
   }
 
