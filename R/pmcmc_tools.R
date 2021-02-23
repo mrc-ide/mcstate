@@ -182,9 +182,9 @@ pmcmc_combine_nested <- function(..., samples = list(...)) {
 
   chain <- rep(seq_along(samples), each = nlayer(samples[[1]]$pars))
 
-  pars <- lbind(lapply(samples, "[[", "pars"))
+  pars <- array_bind(arrays = lapply(samples, "[[", "pars"))
   dimnames(pars)[1:2] <- dimnames(samples[[1]]$pars)[1:2]
-  probabilities <- lbind(lapply(samples, "[[", "probabilities"))
+  probabilities <- array_bind(arrays = lapply(samples, "[[", "probabilities"))
 
   state <- lapply(samples, "[[", "state")
   if (!all_or_none(vlapply(state, is.null))) {
@@ -193,7 +193,7 @@ pmcmc_combine_nested <- function(..., samples = list(...)) {
   if (is.null(state[[1]])) {
     state <- NULL
   } else {
-    state <- lbind(lapply(samples, "[[", "state"))
+    state <- array_bind(arrays = lapply(samples, "[[", "state"))
   }
 
   trajectories <- lapply(samples, "[[", "trajectories")
@@ -201,6 +201,7 @@ pmcmc_combine_nested <- function(..., samples = list(...)) {
     stop(paste("If 'trajectories' is present for any samples, it must be",
                "present for all"))
   }
+
   if (is.null(trajectories[[1]])) {
     trajectories <- NULL
   } else {
@@ -247,17 +248,16 @@ combine_state <- function(x) {
 }
 
 combine_state_nested <- function(x) {
-  browser()
   base <- lapply(x, function(el) el[names(el) != "state"])
   if (length(unique(base)) != 1L) {
     stop(sprintf("%s data is inconsistent", deparse(substitute(x))))
   }
 
-  state <- lapply(x, function(el) aperm(el$state, c(1, 3, 2)))
+  state <- lapply(x, function(el) aperm(el$state, c(1, 4, 3, 2)))
   state <- array(
     unlist(state),
-    dim(state[[1]]) * c(1, 1, length(x)))
-  state <- aperm(state, c(1, 3, 2))
+    dim(state[[1]]) * c(1, 1, 1, length(x)))
+  state <- aperm(state, c(1, 4, 3, 2))
   rownames(state) <- rownames(x[[1]]$state)
 
   ret <- x[[1]]

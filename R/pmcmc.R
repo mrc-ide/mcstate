@@ -63,14 +63,9 @@ pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
                   save_trajectories = FALSE, progress = FALSE,
                   n_chains = 1, initial = NULL, rerun_every = Inf,
                   control = NULL) {
-  if (inherits(pars, "pmcmc_parameters")) {
-    assert_is(filter, "particle_filter")
-  } else if (inherits(pars, "pmcmc_parameters_nested")) {
-    assert_list(filter, class = "particle_filter")
-  } else {
-    stop("'pars' should inherit from 'pmcmc_parameters_nested' or
-    'pmcmc_parameters_nested'")
-  }
+
+  assert_is(pars, c("pmcmc_parameters", "pmcmc_parameters_nested"))
+  assert_is(filter, "particle_filter")
 
   if (is.null(control)) {
     warning("Please update your code to use pmcmc::pmcmc_control()",
@@ -120,11 +115,7 @@ pmcmc_single_chain <- function(pars, initial, filter, control, seed = NULL) {
 pmcmc_single_chain_nested <- function(pars, initial, filter, control,
                                       seed = NULL) {
   if (!is.null(seed)) {
-    ## FIXME - Is this okay? i.e. using same seed for all filters
-    set.seed(seed$r)
-    filter <- lapply(filter,
-                     function(x) particle_filter_from_inputs(x$inputs(),
-                                                             seed$dust))
+    filter <- particle_filter_from_inputs(filter$inputs(), seed$dust)
   }
   obj <- pmcmc_state$new(pars, initial, filter, control)
   obj$run_nested()
@@ -134,21 +125,12 @@ pmcmc_single_chain_nested <- function(pars, initial, filter, control,
 
 pmcmc_multiple_series <- function(pars, initial, filter, control) {
   if (control$use_parallel_seed) {
-    if (inherits(filter, "list")) {
-      ## FIXME - See above
-      seed <- make_seeds(control$n_chains, filter[[1]]$inputs()$seed)
-    } else {
-      seed <- make_seeds(control$n_chains, filter$inputs()$seed)
-    }
+    seed <- make_seeds(control$n_chains, filter$inputs()$seed)
   } else {
     seed <- NULL
   }
   if (!is.null(control$n_threads_total)) {
-    if (inherits(filter, "list")) {
-      lapply(filter, function(x) x$set_n_threads(control$n_threads_total))
-    } else {
-      filter$set_n_threads(control$n_threads_total)
-    }
+    filter$set_n_threads(control$n_threads_total)
   }
   samples <- vector("list", control$n_chains)
 
@@ -167,7 +149,7 @@ pmcmc_multiple_series <- function(pars, initial, filter, control) {
   if (length(samples) == 1) {
     samples[[1L]]
   } else {
-    if (inherits(filter, "list")) {
+    if (inherits(pars, "pmcmc_parameters_nested")) {
       pmcmc_combine_nested(samples = samples)
     } else {
       pmcmc_combine(samples = samples)
@@ -177,9 +159,9 @@ pmcmc_multiple_series <- function(pars, initial, filter, control) {
 
 
 pmcmc_multiple_parallel <- function(pars, initial, filter, control) {
-  if (inherits(filter, "list")) {
-    stop("Parallel pmcmc not currently supported for nested parameters.")
-  }
+  # if (inherits(pars, "pmcmc_parameters_nested")) {
+  #   stop("Parallel pmcmc not currently supported for nested parameters.")
+  # }
   obj <- pmcmc_orchestrator$new(pars, initial, filter, control)
   obj$run()
   obj$finish()

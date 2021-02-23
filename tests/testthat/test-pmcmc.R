@@ -202,7 +202,8 @@ test_that("run multiple chains", {
   dat <- example_uniform()
 
   control1 <- pmcmc_control(100, save_state = FALSE, n_chains = 1)
-  control2 <- pmcmc_control(100, save_state = FALSE, n_chains = 3)
+  control2 <- pmcmc_control(100, save_state = FALSE, n_chains = 3,
+  save_trajectories = T, save_restart = T)
 
   set.seed(1)
   res1 <- pmcmc(dat$pars, dat$filter, control = control1)
@@ -501,7 +502,7 @@ test_that("Can save intermediate state to restart", {
   control2 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE,
                             save_restart = 20)
   control3 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE,
-                            save_restart = c(20, 30))
+                            save_restart = c(20, 30, 40), n_chains = 3L)
   set.seed(1)
   res1 <- pmcmc(dat$pars, p1, control = control1)
   set.seed(1)
@@ -744,11 +745,8 @@ test_that("pmcmc nested multivariate gaussian", {
 
 test_that("pmcmc nested sir - 1 chain", {
   dat <- example_sir_shared()
-  p <- list(
-    particle_filter$new(dat$data[[1]], dat$model, 100, dat$compare,
-                        index = dat$index),
-    particle_filter$new(dat$data[[2]], dat$model, 100, dat$compare,
-                        index = dat$index))
+  p <- particle_filter$new(dat$data, dat$model, 100, dat$compare,
+                           dat$index)
   control <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE,
                            save_restart = TRUE, rerun_every = 10,
                             n_threads_total = 2, use_parallel_seed = TRUE,
@@ -774,12 +772,10 @@ test_that("pmcmc nested sir - 1 chain", {
 
 test_that("pmcmc nested sir - 2 chains", {
   dat <- example_sir_shared()
-  p <- list(
-    particle_filter$new(dat$data[[1]], dat$model, 50, dat$compare,
-                        index = dat$index),
-    particle_filter$new(dat$data[[2]], dat$model, 50, dat$compare,
-                        index = dat$index))
-
+  p1 <- particle_filter$new(dat$data, dat$model, 100, dat$compare,
+                           dat$index, seed = 1L)
+  p2 <- particle_filter$new(dat$data, dat$model, 100, dat$compare,
+                           dat$index, seed = 1L)
   proposal_fixed <- matrix(0.00026)
   proposal_varied <- matrix(0.00057)
 
@@ -791,35 +787,27 @@ test_that("pmcmc nested sir - 2 chains", {
                          prior = function(p) log(1e-10))),
     proposal_fixed = proposal_fixed, proposal_varied = proposal_varied)
 
-  control1 <- pmcmc_control(50, save_state = FALSE, n_chains = 1,
-                            use_parallel_seed = TRUE)
-  control2 <- pmcmc_control(50, n_chains = 3,
-                            use_parallel_seed = TRUE, save_state = TRUE,
+  control1 <- pmcmc_control(50, save_state = FALSE, n_chains = 1)
+  control2 <- pmcmc_control(50, n_chains = 3, save_state = TRUE,
                             save_restart = TRUE, save_trajectories = TRUE)
 
   set.seed(1)
-  res1 <- pmcmc(pars, p, control = control1)
+  res1 <- pmcmc(pars, p1, control = control1)
   expect_s3_class(res1, "mcstate_pmcmc")
   expect_null(res1$chain)
 
   set.seed(1)
-  res3 <- pmcmc(pars, p, control = control2)
+  res3 <- pmcmc(pars, p2, control = control2)
   expect_s3_class(res3, "mcstate_pmcmc")
   expect_equal(res3$chain, rep(1:3, each = 51))
 
-  # FIXME - This only passes if `use_parallel_seed = TRUE`, is this expected?
   expect_equal(res1$pars, res3$pars[, , 1:51])
 })
 
-
 test_that("error parallel nested", {
   dat <- example_sir_shared()
-  p <- list(
-    particle_filter$new(dat$data[[1]], dat$model, 100, dat$compare,
-                        index = dat$index),
-    particle_filter$new(dat$data[[2]], dat$model, 100, dat$compare,
-                        index = dat$index))
-  control <- pmcmc_control(30, n_workers = 2L, n_chains = 2L)
+  p <- particle_filter$new(dat$data, dat$model, 100, dat$compare,
+                           dat$index, seed = 1L)
   proposal_fixed <- matrix(0.00026)
   proposal_varied <- matrix(0.00057)
 
@@ -830,6 +818,12 @@ test_that("error parallel nested", {
          pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
                          prior = function(p) log(1e-10))),
     proposal_fixed = proposal_fixed, proposal_varied = proposal_varied)
+
+  control <- pmcmc_control(30, n_workers = 2L, n_chains = 2L)
+
+ res <- pmcmc(pars, p, control = control)
+
+
 
   expect_error(pmcmc(pars, p, control = control), "not currently")
 })

@@ -141,7 +141,12 @@ pmcmc_remote <- R6::R6Class(
     ## is *capable* of starting every chain but we do the allocation
     ## dynamically.
     init = function(index) {
-      args <- list(private$pars, private$initial[, index], private$inputs,
+      if (is_3d_array(private$initial)) {
+        initial <- private$initial[, , index]
+      } else {
+        initial <- private$initial[, index]
+      }
+      args <- list(private$pars, initial, private$inputs,
                    private$control, private$seed[[index]])
       self$session$call(function(pars, initial, inputs, control, seed) {
         set.seed(seed$r)
