@@ -59,6 +59,7 @@ example_sir <- function() {
        index = index, pars = pars)
 }
 
+
 example_sir_shared <- function() {
   set.seed(1)
   model <- dust::dust_example("sir")
@@ -157,6 +158,7 @@ example_uniform <- function(proposal_kernel = NULL) {
   list(target = target, filter = filter, pars = pars)
 }
 
+
 example_uniform_shared <- function(varied = TRUE, fixed = TRUE,
                                    proposal_varied = NULL,
                                    proposal_fixed = NULL) {
@@ -234,6 +236,7 @@ example_mvnorm <- function() {
 
   list(target = target, filter = filter, pars = pars)
 }
+
 
 example_mvnorm_shared <- function(varied = TRUE, fixed = TRUE,
                                   proposal_varied = NULL,
@@ -335,6 +338,28 @@ example_sir_pmcmc2 <- function() {
     test_cache$example_sir_pmcmc2 <- dat
   }
   test_cache$example_sir_pmcmc2
+}
+
+
+example_sir_nested_pmcmc <- function() {
+  if (is.null(test_cache$example_sir_nested_pmcmc)) {
+    dat <- example_sir_shared()
+
+    n_particles <- 10
+    p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            dat$index, seed = 1L)
+    set.seed(1)
+
+    control <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE,
+                             save_restart = 40)
+
+    dat$results <- list(
+      pmcmc(dat$pars, p, control = control),
+      pmcmc(dat$pars, p, control = control),
+      pmcmc(dat$pars, p, control = control))
+    test_cache$example_sir_nested_pmcmc <- dat
+  }
+  test_cache$example_sir_nested_pmcmc
 }
 
 

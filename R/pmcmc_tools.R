@@ -51,26 +51,53 @@ pmcmc_thin <- function(object, burnin = NULL, thin = NULL) {
 ##' @rdname pmcmc_thin
 pmcmc_sample <- function(object, n_sample, burnin = NULL) {
   object <- pmcmc_thin(object, burnin)
-  i <- sample.int(nrow(object$pars), n_sample, replace = TRUE)
+  if (is_3d_array(object$pars)) {
+    i <- sample.int(nlayer(object$pars), n_sample, replace = TRUE)
+  } else {
+    i <- sample.int(nrow(object$pars), n_sample, replace = TRUE)
+  }
   pmcmc_filter(object, i)
 }
 
 
 pmcmc_filter <- function(object, i) {
+
   if (!is.null(object$chain)) {
     object$chain <- object$chain[i]
   }
   object$iteration <- object$iteration[i]
-  object$pars <- object$pars[i, , drop = FALSE]
-  object$probabilities <- object$probabilities[i, , drop = FALSE]
+
+  if (is_3d_array(object$pars)) {
+    pmcmc_filter_nested(object, i)
+  } else {
+    object$pars <- object$pars[i, , drop = FALSE]
+    object$probabilities <- object$probabilities[i, , drop = FALSE]
+    if (!is.null(object$state)) {
+      object$state <- object$state[, i, drop = FALSE]
+    }
+    if (!is.null(object$trajectories)) {
+      object$trajectories$state <-
+        object$trajectories$state[, i, , drop = FALSE]
+    }
+    if (!is.null(object$restart)) {
+      object$restart$state <- object$restart$state[, i, , drop = FALSE]
+    }
+    object
+  }
+}
+
+pmcmc_filter_nested <- function(object, i) {
+  object$pars <- object$pars[, , i, drop = FALSE]
+  object$probabilities <- object$probabilities[, , i, drop = FALSE]
   if (!is.null(object$state)) {
-    object$state <- object$state[, i, drop = FALSE]
+    object$state <- object$state[, , i, drop = FALSE]
   }
   if (!is.null(object$trajectories)) {
-    object$trajectories$state <- object$trajectories$state[, i, , drop = FALSE]
+    object$trajectories$state <-
+      object$trajectories$state[, , , i, drop = FALSE]
   }
   if (!is.null(object$restart)) {
-    object$restart$state <- object$restart$state[, i, , drop = FALSE]
+    object$restart$state <- object$restart$state[, , , i, drop = FALSE]
   }
   object
 }
@@ -158,9 +185,8 @@ pmcmc_combine <- function(..., samples = list(...)) {
 }
 
 pmcmc_combine_nested <- function(..., samples = list(...)) {
-  if (!all(vlapply(samples, inherits, "mcstate_pmcmc"))) {
-    stop("All elements of '...' must be 'mcstate_pmcmc' objects")
-  }
+  assert_list_of(samples, "mcstate_pmcmc")
+
   if (any(!vlapply(samples, function(x) is.null(x$chain)))) {
     stop("Chains have already been combined")
   }
@@ -178,7 +204,7 @@ pmcmc_combine_nested <- function(..., samples = list(...)) {
   if (length(unique(iteration)) != 1L) {
     stop("All chains must have the same iterations")
   }
-  iteration <- unlist(iteration, FALSE, FALSE)
+  iteration <- iteration[[1]]
 
   chain <- rep(seq_along(samples), each = nlayer(samples[[1]]$pars))
 

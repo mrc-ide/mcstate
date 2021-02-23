@@ -807,3 +807,8 @@ test_that("pmcmc nested sir - 2 chains", {
 
   expect_equal(res1$pars, res3$pars[, , 1:51])
 })
+
+test_that("sample_trajectory_nested single state", {
+  expect_equal(sample_trajectory_nested(array(1, c(1, 1, 1, 1))),
+               array(1, c(1, 1, 1)))
+})

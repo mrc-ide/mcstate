@@ -20,7 +20,7 @@ test_that("discarding burnin drops beginnings of chain", {
 
 
 test_that("thinning drops all over chain", {
-  results <- example_sir_pmcmc()$pmcmc
+  results <- example_sir_pmcmc()[[1]]$pmcmc
   res <- pmcmc_thin(results, thin = 4)
   i <- seq(1, 31, by = 4)
   expect_identical(res$pars, results$pars[i, ])
@@ -317,4 +317,69 @@ test_that("combining chains keeps rownames", {
 
   expect_equal(rownames(res$state), nms_s)
   expect_equal(rownames(res$trajectories$state), nms_t)
+})
+
+test_that("Can't combine inconsistent nested trajectories", {
+  results <- example_sir_nested_pmcmc()$results
+  a <- results[[1]]
+  a$trajectories$rate <- a$trajectories$rate + 1
+  expect_error(
+    pmcmc_combine_nested(a, results[[2]]),
+    "trajectories data is inconsistent")
+})
+
+test_that("can't recombine nested chains", {
+  results <- example_sir_nested_pmcmc()$results
+  expect_error(
+    pmcmc_combine_nested(results[[1]],
+                         pmcmc_combine_nested(results[[2]], results[[3]])),
+    "Chains have already been combined")
+})
+
+test_that("nested combining requires at least one run", {
+  results <- example_sir_nested_pmcmc()$results
+  expect_error(pmcmc_combine_nested(),
+               "At least 2 samples objects must be provided")
+  expect_error(pmcmc_combine_nested(samples = NULL),
+               "At least 2 samples objects must be provided")
+  expect_error(pmcmc_combine_nested(results[[1]]),
+               "At least 2 samples objects must be provided")
+})
+
+test_that("can't combine nested chains with different parameters", {
+  results <- example_sir_nested_pmcmc()$results
+  a <- results[[1]]
+  a$pars <- cbind(a$pars, zeta = 1)
+  expect_error(
+    pmcmc_combine_nested(a, results[[2]]),
+    "All parameters must have the same names")
+})
+
+
+test_that("nested example_sir_nested_pmcmc require the same iterations", {
+  results <- example_sir_nested_pmcmc()$results
+  a <- results[[1]]
+  a$iteration <- a$iteration + 1
+  expect_error(
+    pmcmc_combine_nested(a, results[[2]]),
+    "All chains must have the same iterations")
+})
+
+test_that("discarding burnin drops beginnings of nested chain", {
+  results <- example_sir_nested_pmcmc()$results[[1]]
+  res <- pmcmc_thin(results, 10)
+  i <- 11:31
+  expect_identical(res$pars, results$pars[, , i])
+  expect_identical(res$probabilities, results$probabilities[, , i])
+  expect_identical(res$state, results$state[, , i])
+  expect_identical(res$trajectories$state, results$trajectories$state[, , , i])
+  expect_identical(res$restart$state,
+                   results$restart$state[, , , i, drop = FALSE])
+})
+
+test_that("can sample from a nested mcmc", {
+  results <- example_sir_nested_pmcmc()$results[[1]]
+  sub <- pmcmc_sample(results, 10, burnin = 10)
+  expect_equal(nlayer(sub$pars), 10)
+  expect_true(all(sub$iteration >= 10))
 })
