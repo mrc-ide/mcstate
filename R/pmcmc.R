@@ -148,11 +148,7 @@ pmcmc_multiple_series <- function(pars, initial, filter, control) {
   if (length(samples) == 1) {
     samples[[1L]]
   } else {
-    if (inherits(pars, "pmcmc_parameters_nested")) {
-      pmcmc_combine(samples = samples)
-    } else {
-      pmcmc_combine(samples = samples)
-    }
+    pmcmc_combine(samples = samples)
   }
 }
 
