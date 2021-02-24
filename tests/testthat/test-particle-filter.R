@@ -643,11 +643,6 @@ test_that("Can get history with compiled particle filter", {
   p2 <- particle_filter$new(dat$data, model, n_particles, NULL,
                             index = dat$index)
 
-  ## Proving these are the same is tricky to do in a sensible amount
-  ## of time but if we run 1000 replicates with 400 particles it's
-  ## easy to see that these are the same (this just takes the best
-  ## part of a minute and replicates the unit tests available
-  ## elsewhere)
   p1$run(save_history = TRUE)
   p2$run(save_history = TRUE)
 
@@ -890,7 +885,7 @@ test_that("use compiled compare function - nested", {
   set.seed(1)
 
   pars <- list(list(beta = 0.2, gamma = 0.1),
-                               list(beta = 0.3, gamma = 0.1))
+               list(beta = 0.3, gamma = 0.1))
 
   model <- dust::dust_example("sir")
   p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
@@ -902,6 +897,34 @@ test_that("use compiled compare function - nested", {
   y2 <- replicate(50, p2$run(pars))
   expect_equal(mean(y1), mean(y2), tolerance = 0.01)
 })
+
+
+test_that("can get history with compiled particle filter on nested model", {
+  dat <- example_sir_shared()
+  n_particles <- 42
+  set.seed(1)
+
+  pars <- list(list(beta = 0.2, gamma = 0.1),
+                               list(beta = 0.3, gamma = 0.1))
+
+  model <- dust::dust_example("sir")
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index)
+  p2 <- particle_filter$new(dat$data, model, n_particles, NULL,
+                            index = dat$index)
+
+  ## TODO: p1$run(save_history = TRUE) does not work but does in the
+  ## unnested case.
+  p1$run(pars, save_history = TRUE)
+  p2$run(pars, save_history = TRUE)
+
+  expect_equal(dim(p1$history()), dim(p2$history()))
+  expect_true(all(diff(t(p2$history()[3, , 1, ])) >= 0))
+  expect_true(all(diff(t(p2$history()[3, , 2, ])) >= 0))
+  expect_equal(dim(p1$history(1L)), dim(p2$history(1L)))
+  expect_equal(dim(p1$history(1:5)), dim(p2$history(1:5)))
+})
+
 
 test_that("particle filter state nested - errors", {
   dat <- example_sir_shared()

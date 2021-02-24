@@ -549,41 +549,48 @@ history_nested <- function(history_value, history_order, history_index,
   npop <- ncol(history_order)
   nt <- nlayer(history_order)
 
-  if (is.null(history_index)) {
-    browser()
-  }
-
-  if (is.null(index_particle)) {
-    index_particle <- matrix(seq_len(ncol(history_value)),
-                             ncol(history_value), npop)
-  } else {
-    if (is.matrix(index_particle)) {
-      if (!ncol(index_particle) == npop) {
-        stop(sprintf("'index_particle' should have %d columns", npop))
-      }
+  if (is.null(history_order)) {
+    npop <- nlayer(history_value)
+    if (is.null(index_particle)) {
+      ret <- history_value
+    } else if (!is.matrix(index_particle)) {
+      ret <- history_value[, index_particle, , , drop = FALSE]
     } else {
-      index_particle <- matrix(index_particle,
-                               nrow = length(index_particle),
-                               ncol = npop)
+      stop("WRITEME")
     }
-  }
-
-  np <- nrow(index_particle)
-
-  idx <- array(NA_integer_, c(np, npop, nt))
-  for (i in rev(seq_len(nlayer(idx)))) {
-    for (j in seq_len(npop)) {
-      idx[, j, i] <- history_order[, j, i][index_particle[, j]]
+  } else {
+    if (is.null(index_particle)) {
+      index_particle <- matrix(seq_len(ncol(history_value)),
+                               ncol(history_value), npop)
+    } else {
+      if (is.matrix(index_particle)) {
+        if (!ncol(index_particle) == npop) {
+          stop(sprintf("'index_particle' should have %d columns", npop))
+        }
+      } else {
+        index_particle <- matrix(index_particle,
+                                 nrow = length(index_particle),
+                                 ncol = npop)
+      }
     }
-    index_particle <- matrix(idx[, , i], nrow = np, ncol = npop)
-  }
 
-  ret <- array(NA, c(ny, np, npop, nt))
-  for (i in seq_len(npop)) {
-    cidx <- cbind(seq_len(ny),
-                  rep(idx[, i, ], each = ny),
-                  rep(seq_len(nt), each = ny * np))
-    ret[, , i, ] <- history_value[, , i, ][cidx]
+    np <- nrow(index_particle)
+
+    idx <- array(NA_integer_, c(np, npop, nt))
+    for (i in rev(seq_len(nlayer(idx)))) {
+      for (j in seq_len(npop)) {
+        idx[, j, i] <- history_order[, j, i][index_particle[, j]]
+      }
+      index_particle <- matrix(idx[, , i], nrow = np, ncol = npop)
+    }
+
+    ret <- array(NA, c(ny, np, npop, nt))
+    for (i in seq_len(npop)) {
+      cidx <- cbind(seq_len(ny),
+                    rep(idx[, i, ], each = ny),
+                    rep(seq_len(nt), each = ny * np))
+      ret[, , i, ] <- history_value[, , i, ][cidx]
+    }
   }
   rownames(ret) <- names(history_index)
   ret
