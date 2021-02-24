@@ -459,19 +459,6 @@ test_that("can change the number of threads mid-run", {
 })
 
 
-test_that("Warn if using deprecated interface", {
-  dat <- example_uniform()
-  expect_warning(
-    pmcmc(dat$pars, dat$filter, 100, save_state = FALSE),
-    "Please update your code to use pmcmc::pmcmc_control()",
-    fixed = TRUE)
-  expect_error(
-    pmcmc(dat$pars, dat$filter, progress = TRUE,
-          control = pmcmc_control(100, save_state = FALSE)),
-    "Do not use deprecated arguments duplicated in pmcmc_control")
-})
-
-
 test_that("Can override thread count via control", {
   dat <- example_sir()
   n_particles <- 30

@@ -4,18 +4,7 @@
 \alias{pmcmc}
 \title{Run a pmcmc sampler}
 \usage{
-pmcmc(
-  pars,
-  filter,
-  n_steps,
-  save_state = TRUE,
-  save_trajectories = FALSE,
-  progress = FALSE,
-  n_chains = 1,
-  initial = NULL,
-  rerun_every = Inf,
-  control = NULL
-)
+pmcmc(pars, filter, initial = NULL, control = NULL)
 }
 \arguments{
 \item{pars}{A \code{\link{pmcmc_parameters}} object containing
@@ -24,16 +13,6 @@ translation functions for use with the particle filter).}
 
 \item{filter}{A \code{\link{particle_filter}} object}
 
-\item{n_steps}{Deprecated: use \link{pmcmc_control} instead}
-
-\item{save_state}{Deprecated: use \link{pmcmc_control} instead}
-
-\item{save_trajectories}{Deprecated: use \link{pmcmc_control} instead}
-
-\item{progress}{Deprecated: use \link{pmcmc_control} instead}
-
-\item{n_chains}{Deprecated: use \link{pmcmc_control} instead}
-
 \item{initial}{Optional initial starting point. If given, it must
 be compatible with the parameters given in \code{pars}, and must be
 valid against your prior. You can use this to override the
@@ -41,8 +20,6 @@ initial conditions saved in your \code{pars} object. You can provide
 either a vector of initial conditions, or a matrix with
 \code{n_chains} columns to use a different starting point for each
 chain.}
-
-\item{rerun_every}{Deprecated: use \link{pmcmc_control} instead}
 
 \item{control}{A \link{pmcmc_control} object which will set
 parameters. This will become the primary way of specifying

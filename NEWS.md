@@ -1,3 +1,7 @@
+# mcstate 0.5.4
+
+* Remove deprecated arguments to `pmcmc` (these were deprecated in 0.3.0) (#114)
+
 # mcstate 0.5.3
 
 * Bugfix in `index` for nested particle filters.

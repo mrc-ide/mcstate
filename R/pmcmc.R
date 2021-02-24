@@ -20,16 +20,6 @@
 ##'
 ##' @param filter A [`particle_filter`] object
 ##'
-##' @param n_steps Deprecated: use [mcstate::pmcmc_control] instead
-##'
-##' @param save_state Deprecated: use [mcstate::pmcmc_control] instead
-##'
-##' @param save_trajectories Deprecated: use [mcstate::pmcmc_control] instead
-##'
-##' @param progress Deprecated: use [mcstate::pmcmc_control] instead
-##'
-##' @param n_chains Deprecated: use [mcstate::pmcmc_control] instead
-##'
 ##' @param initial Optional initial starting point. If given, it must
 ##'   be compatible with the parameters given in `pars`, and must be
 ##'   valid against your prior. You can use this to override the
@@ -37,8 +27,6 @@
 ##'   either a vector of initial conditions, or a matrix with
 ##'   `n_chains` columns to use a different starting point for each
 ##'   chain.
-##'
-##' @param rerun_every Deprecated: use [mcstate::pmcmc_control] instead
 ##'
 ##' @param control A [mcstate::pmcmc_control] object which will set
 ##'   parameters. This will become the primary way of specifying
@@ -58,32 +46,10 @@
 ##'   simulation (if `return_trajectories` was `TRUE`).
 ##'
 ##' @export
-pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
-                  save_trajectories = FALSE, progress = FALSE,
-                  n_chains = 1, initial = NULL, rerun_every = Inf,
-                  control = NULL) {
-
+pmcmc <- function(pars, filter, initial = NULL, control = NULL) {
   assert_is(pars, c("pmcmc_parameters", "pmcmc_parameters_nested"))
   assert_is(filter, "particle_filter")
-
-  if (is.null(control)) {
-    warning("Please update your code to use pmcmc::pmcmc_control()",
-            immediate. = TRUE)
-    control <- pmcmc_control(n_steps,
-                             n_chains = n_chains,
-                             rerun_every = rerun_every,
-                             save_state = save_state,
-                             save_trajectories = save_trajectories,
-                             progress = progress)
-  } else {
-    assert_is(control, "pmcmc_control")
-    ok <- missing(n_steps) && missing(save_state) &&
-      missing(save_trajectories) && missing(progress) && missing(n_chains) &&
-      missing(rerun_every)
-    if (!ok) {
-      stop("Do not use deprecated arguments duplicated in pmcmc_control")
-    }
-  }
+  assert_is(control, "pmcmc_control")
 
   if (inherits(pars, "pmcmc_parameters_nested")) {
     initial <- pmcmc_check_initial_nested(initial, pars, control$n_chains)
