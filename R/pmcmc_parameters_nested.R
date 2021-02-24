@@ -464,7 +464,7 @@ clean_proposals <- function(proposal_varied, proposal_fixed, populations,
     len_pop <- length(populations)
     dim_names_var <- dimnames(proposal_varied)
 
-    assert_is(proposal_varied, "array")
+    assert_is(proposal_varied, c("array", "matrix"))
 
     if (is.na(dim(proposal_varied)[3])) {
       proposal_varied <- array(proposal_varied,
