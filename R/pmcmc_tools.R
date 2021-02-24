@@ -116,132 +116,55 @@ pmcmc_filter_nested <- function(object, i) {
 ##'
 ##' @export
 pmcmc_combine <- function(..., samples = list(...)) {
-  if (!all(vlapply(samples, inherits, "mcstate_pmcmc"))) {
-    stop("All elements of '...' must be 'mcstate_pmcmc' objects")
-  }
-  if (any(!vlapply(samples, function(x) is.null(x$chain)))) {
-    stop("Chains have already been combined")
-  }
-  if (length(samples) < 2) {
-    stop("At least 2 samples objects must be provided")
-  }
-  if (length(unique(lapply(samples, function(x) colnames(x$pars)))) != 1L) {
-    stop("All parameters must have the same names")
-  }
-  if (length(unique(vnapply(samples, function(x) nrow(x$pars)))) != 1L) {
-    stop("All chains must have the same length")
-  }
-
-  iteration <- lapply(samples, "[[", "iteration")
-  if (length(unique(iteration)) != 1L) {
-    stop("All chains must have the same iterations")
-  }
-  iteration <- unlist(iteration, FALSE, FALSE)
-
-  chain <- rep(seq_along(samples), each = nrow(samples[[1]]$pars))
-
-  pars <- do.call(rbind, lapply(samples, "[[", "pars"))
-  probabilities <- do.call(rbind, lapply(samples, "[[", "probabilities"))
-
-  state <- lapply(samples, "[[", "state")
-  if (!all_or_none(vlapply(state, is.null))) {
-    stop("If 'state' is present for any samples, it must be present for all")
-  }
-  if (is.null(state[[1]])) {
-    state <- NULL
-  } else {
-    state <- do.call(cbind, lapply(samples, "[[", "state"))
-  }
-
-  trajectories <- lapply(samples, "[[", "trajectories")
-  if (!all_or_none(vlapply(trajectories, is.null))) {
-    stop(paste("If 'trajectories' is present for any samples, it must be",
-               "present for all"))
-  }
-  if (is.null(trajectories[[1]])) {
-    trajectories <- NULL
-  } else {
-    trajectories <- combine_state(trajectories)
-  }
-
-  restart <- lapply(samples, "[[", "restart")
-  if (!all_or_none(vlapply(restart, is.null))) {
-    stop("If 'restart' is present for any samples, it must be present for all")
-  }
-  if (is.null(restart[[1]])) {
-    restart <- NULL
-  } else {
-    restart <- combine_state(restart)
-  }
-
-  ## Use the last state for predict as that will probably have most
-  ## advanced seed.
-  ##
-  ## We might check index, rate and step here though.
-  predict <- last(samples)$predict
-
-  mcstate_pmcmc(pars, probabilities, state, trajectories, restart,
-                predict, chain, iteration)
-}
-
-pmcmc_combine_nested <- function(..., samples = list(...)) {
   assert_list_of(samples, "mcstate_pmcmc")
 
-  if (any(!vlapply(samples, function(x) is.null(x$chain)))) {
-    stop("Chains have already been combined")
-  }
-  if (length(samples) < 2) {
-    stop("At least 2 samples objects must be provided")
-  }
-  if (length(unique(lapply(samples, function(x) colnames(x$pars)))) != 1L) {
-    stop("All parameters must have the same names")
-  }
-  if (length(unique(vnapply(samples, function(x) nlayer(x$pars)))) != 1L) {
-    stop("All chains must have the same length")
-  }
-
   iteration <- lapply(samples, "[[", "iteration")
-  if (length(unique(iteration)) != 1L) {
-    stop("All chains must have the same iterations")
-  }
-  iteration <- iteration[[1]]
-
-  chain <- rep(seq_along(samples), each = nlayer(samples[[1]]$pars))
-
-  pars <- array_bind(arrays = lapply(samples, "[[", "pars"))
-  dimnames(pars)[1:2] <- dimnames(samples[[1]]$pars)[1:2]
-  probabilities <- array_bind(arrays = lapply(samples, "[[", "probabilities"))
-
   state <- lapply(samples, "[[", "state")
-  if (!all_or_none(vlapply(state, is.null))) {
-    stop("If 'state' is present for any samples, it must be present for all")
-  }
-  if (is.null(state[[1]])) {
-    state <- NULL
-  } else {
-    state <- array_bind(arrays = lapply(samples, "[[", "state"))
-  }
-
   trajectories <- lapply(samples, "[[", "trajectories")
-  if (!all_or_none(vlapply(trajectories, is.null))) {
-    stop(paste("If 'trajectories' is present for any samples, it must be",
-               "present for all"))
+  restart <- lapply(samples, "[[", "restart")
+
+  check_combine(samples, iteration, state, trajectories, restart)
+
+  if (is_3d_array(samples[[1]]$pars)) {
+    iteration <- iteration[[1]]
+    chain <- rep(seq_along(samples), each = nlayer(samples[[1]]$pars))
+    pars <- array_bind(arrays = lapply(samples, "[[", "pars"))
+    dimnames(pars)[1:2] <- dimnames(samples[[1]]$pars)[1:2]
+    probabilities <- array_bind(arrays = lapply(samples, "[[",
+                                                "probabilities"))
+
+    if (is.null(state[[1]])) {
+      state <- NULL
+    } else {
+      state <- array_bind(arrays = lapply(samples, "[[", "state"))
+    }
+
+    combiner <- combine_state_nested
+  } else {
+    iteration <- unlist(iteration, FALSE, FALSE)
+    chain <- rep(seq_along(samples), each = nrow(samples[[1]]$pars))
+    pars <- do.call(rbind, lapply(samples, "[[", "pars"))
+    probabilities <- do.call(rbind, lapply(samples, "[[", "probabilities"))
+
+    if (is.null(state[[1]])) {
+      state <- NULL
+    } else {
+      state <- do.call(cbind, lapply(samples, "[[", "state"))
+    }
+
+    combiner <- combine_state
   }
 
   if (is.null(trajectories[[1]])) {
     trajectories <- NULL
   } else {
-    trajectories <- combine_state_nested(trajectories)
+    trajectories <- combiner(trajectories)
   }
 
-  restart <- lapply(samples, "[[", "restart")
-  if (!all_or_none(vlapply(restart, is.null))) {
-    stop("If 'restart' is present for any samples, it must be present for all")
-  }
   if (is.null(restart[[1]])) {
     restart <- NULL
   } else {
-    restart <- combine_state_nested(restart)
+    restart <- combiner(restart)
   }
 
   ## Use the last state for predict as that will probably have most
@@ -254,6 +177,38 @@ pmcmc_combine_nested <- function(..., samples = list(...)) {
                 predict, chain, iteration)
 }
 
+check_combine <- function(samples, iteration, state, trajectories, restart) {
+  if (any(!vlapply(samples, function(x) is.null(x$chain)))) {
+    stop("Chains have already been combined")
+  }
+  if (length(samples) < 2) {
+    stop("At least 2 samples objects must be provided")
+  }
+  if (length(unique(lapply(samples, function(x) dimnames(x$pars)))) != 1L) {
+    stop("All parameters must have the same dimension names")
+  }
+
+  nok <- length(unique(viapply(samples, function(x) NLAYER(x$pars)))) != 1L ||
+          length(unique(viapply(samples, function(x) nrow(x$pars)))) != 1L
+  if (nok) {
+    stop("All chains must have the same length")
+  }
+  if (length(unique(iteration)) != 1L) {
+    stop("All chains must have the same iterations")
+  }
+  if (!all_or_none(vlapply(state, is.null))) {
+    stop("If 'state' is present for any samples, it must be present for all")
+  }
+  if (!all_or_none(vlapply(trajectories, is.null))) {
+    stop(paste(
+      "If 'trajectories' is present for any samples, it must be",
+      "present for all"
+    ))
+  }
+  if (!all_or_none(vlapply(restart, is.null))) {
+    stop("If 'restart' is present for any samples, it must be present for all")
+  }
+}
 
 combine_state <- function(x) {
   base <- lapply(x, function(el) el[names(el) != "state"])
