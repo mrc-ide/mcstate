@@ -196,6 +196,7 @@ set_layernames <- function(m, nms) {
   m
 }
 
+
 normalise <- function(x) {
   x / sum(x)
 }

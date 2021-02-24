@@ -17,7 +17,7 @@ test_that("basic parallel operation", {
   f <- function(idx) {
     set.seed(s[[idx]]$r)
     p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                              index = dat$index, seed = s[[idx]]$dust)
+                             index = dat$index, seed = s[[idx]]$dust)
     pmcmc(dat$pars, p, control = pmcmc_control(n_steps))
   }
 
@@ -83,7 +83,7 @@ test_that("throw from callr operation", {
 test_that("running pmcmc with progress = TRUE prints messages", {
   dat <- example_sir()
   p <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
-                            index = dat$index, seed = 1L)
+                           index = dat$index, seed = 1L)
   control <- pmcmc_control(10, n_chains = 2, n_workers = 2L, progress = TRUE)
   expect_message(
     pmcmc(dat$pars, p, control = control),
@@ -233,4 +233,44 @@ test_that("progress bar creates progress_bar when progress = TRUE", {
     p(list(list(step = 100, finished = TRUE),
            list(step = 33, finished = FALSE))),
     "\\[.\\] \\[\\#\\+\\] ETA .* \\| 00:00:[0-9]{2} so far \\(33%\\)")
+})
+
+
+test_that("basic parallel operation nested", {
+  dat <- example_sir_shared()
+  n_particles <- 42
+  n_steps <- 30
+  n_chains <- 3
+
+  proposal_fixed <- matrix(0.00026)
+  proposal_varied <- matrix(0.00057)
+
+  pars <- pmcmc_parameters_nested$new(
+    list(pmcmc_varied_parameter("beta", letters[1:2], c(0.2, 0.3),
+                                min = 0, max = 1,
+                                prior = function(p) log(1e-10)),
+         pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
+                         prior = function(p) log(1e-10))),
+    proposal_fixed = proposal_fixed, proposal_varied = proposal_varied)
+
+  p0 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  control <- pmcmc_control(n_steps, n_chains = n_chains, n_workers = 2L,
+                           n_steps_each = 20L)
+  ans <- pmcmc(pars, p0, control = control)
+
+  ## Run two chains manually with a given pair of seeds:
+  s <- make_seeds(n_chains, 1L)
+  f <- function(idx) {
+    set.seed(s[[idx]]$r)
+    p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                             index = dat$index, seed = s[[idx]]$dust)
+    pmcmc(dat$pars, p, control = pmcmc_control(n_steps))
+  }
+
+  samples <- lapply(seq_along(s), f)
+  cmp <- pmcmc_combine(samples = samples)
+
+  expect_equal(cmp$pars, ans$pars)
+  expect_equal(cmp$state, ans$state)
 })

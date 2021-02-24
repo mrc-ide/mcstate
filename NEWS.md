@@ -1,3 +1,7 @@
+# mcstate 0.5.2
+
+* Extend support of `pmcmc` to `pmcmc_parameters_nested` objects.
+
 # mcstate 0.5.1
 
 * Added `particle_filter_state_nested` and extended `particle_filter` to handle `pmcmc_parameters_nested` objects.

@@ -59,12 +59,13 @@ example_sir <- function() {
        index = index, pars = pars)
 }
 
+
 example_sir_shared <- function() {
   set.seed(1)
   model <- dust::dust_example("sir")
   sir <- model$new(pars = list(list(beta = 0.2, gamma = 0.1),
                                list(beta = 0.3, gamma = 0.1)),
-                    step = 0, n_particles = 1, pars_multi = TRUE)
+                   step = 0, n_particles = 1, pars_multi = TRUE)
   y0 <- sir$state()
 
   inv_dt <- 4
@@ -157,22 +158,25 @@ example_uniform <- function(proposal_kernel = NULL) {
   list(target = target, filter = filter, pars = pars)
 }
 
+
 example_uniform_shared <- function(varied = TRUE, fixed = TRUE,
                                    proposal_varied = NULL,
                                    proposal_fixed = NULL) {
-  target <- function(p, ...) {
-    1
-  }
+
   if (!varied || !fixed) {
     n_par <- 2
   } else {
     n_par <- 4
   }
-  filter <- rep(list(structure(list(run = target,
-                           n_particles = 10,
-                           state = function() matrix(1, n_par, 10),
-                           trajectories = function(i) matrix(1, n_par, 10)),
-                      class = "particle_filter")), 3)
+
+  target <- function(p, ...) {
+    rep(1, 3)
+  }
+
+
+  filter <- structure(list(run = target,
+                           n_particles = 10),
+                      class = "particle_filter")
 
   pars <- list()
   pops <- paste0("p", 1:3)
@@ -183,12 +187,12 @@ example_uniform_shared <- function(varied = TRUE, fixed = TRUE,
       row.names(proposal_fixed) <- colnames(proposal_fixed) <- c("a", "b")
     }
     pars <- c(pars,
-    list(
-      pmcmc_parameter("a", 0.5, min = 0, max = 1,
-                         prior = function(p) dunif(p, log = TRUE)),
-      pmcmc_parameter("b", 0.5, min = 0, max = 1,
-                         prior = function(p) dunif(p, log = TRUE))
-    ))
+              list(
+                pmcmc_parameter("a", 0.5, min = 0, max = 1,
+                                prior = function(p) dunif(p, log = TRUE)),
+                pmcmc_parameter("b", 0.5, min = 0, max = 1,
+                                prior = function(p) dunif(p, log = TRUE))
+              ))
   }
 
   if (varied) {
@@ -197,12 +201,13 @@ example_uniform_shared <- function(varied = TRUE, fixed = TRUE,
       row.names(proposal_varied) <- colnames(proposal_varied) <- c("c", "d")
     }
     pars <- c(pars,
-    list(
-      pmcmc_varied_parameter("c", pops, 0.5, min = 0, max = 1,
-                         prior = function(p) dunif(p, log = TRUE)),
-      pmcmc_varied_parameter("d", pops, 0.5, min = 0, max = 1,
-                         prior = function(p) dunif(p, log = TRUE))
-    ))
+              list(
+                pmcmc_varied_parameter("c", pops, 0.5, min = 0, max = 1,
+                                       prior = function(p) dunif(p,
+                                                                 log = TRUE)),
+                pmcmc_varied_parameter("d", pops, 0.5, min = 0, max = 1,
+                                       prior = function(p) dunif(p, log = TRUE))
+              ))
   }
 
   pars <- pmcmc_parameters_nested$new(pars, proposal_varied, proposal_fixed,
@@ -232,22 +237,21 @@ example_mvnorm <- function() {
   list(target = target, filter = filter, pars = pars)
 }
 
+
 example_mvnorm_shared <- function(varied = TRUE, fixed = TRUE,
-                                   proposal_varied = NULL,
-                                   proposal_fixed = NULL) {
+                                  proposal_varied = NULL,
+                                  proposal_fixed = NULL) {
   target <- function(p, ...) {
-    mvtnorm::dmvnorm(unlist(p), log = TRUE)
+    vnapply(p, function(x) mvtnorm::dmvnorm(unlist(x), log = TRUE))
   }
   if (!varied || !fixed) {
     n_par <- 2
   } else {
     n_par <- 4
   }
-  filter <- rep(list(structure(list(run = target,
-                           n_particles = 10,
-                           state = function() matrix(1, n_par, 10),
-                           trajectories = function(i) matrix(1, n_par, 10)),
-                      class = "particle_filter")), 3)
+  filter <- structure(list(run = target,
+                           n_particles = 10),
+                      class = "particle_filter")
 
   pars <- list()
   pops <- paste0("p", 1:3)
@@ -334,6 +338,28 @@ example_sir_pmcmc2 <- function() {
     test_cache$example_sir_pmcmc2 <- dat
   }
   test_cache$example_sir_pmcmc2
+}
+
+
+example_sir_nested_pmcmc <- function() {
+  if (is.null(test_cache$example_sir_nested_pmcmc)) {
+    dat <- example_sir_shared()
+
+    n_particles <- 10
+    p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            dat$index, seed = 1L)
+    set.seed(1)
+
+    control <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE,
+                             save_restart = 40)
+
+    dat$results <- list(
+      pmcmc(dat$pars, p, control = control),
+      pmcmc(dat$pars, p, control = control),
+      pmcmc(dat$pars, p, control = control))
+    test_cache$example_sir_nested_pmcmc <- dat
+  }
+  test_cache$example_sir_nested_pmcmc
 }
 
 

@@ -61,6 +61,7 @@ particle_filter_state_nested <- R6::R6Class(
     initialize = function(pars, generator, model, data, data_split, steps,
                           n_particles, n_threads, initial, index, compare,
                           seed, save_history, save_restart) {
+
       ## NOTE: this will generate a warning when updating docs but
       ## that's ok; see https://github.com/r-lib/roxygen2/issues/1067
       if (length(pars) < length(unique(data$population))) {

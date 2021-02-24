@@ -299,7 +299,7 @@ pmcmc_parameters_nested <- R6::R6Class(
     ##' @param theta a parameter matrix with columns in the same order as
     ##' `$names()` and rows in the same order as `$populations()`.
     model = function(theta) {
-      private$transform(theta)
+      unname(private$transform(theta))
     },
 
     ##' @description Set some parameters to fixed values. Use this to
