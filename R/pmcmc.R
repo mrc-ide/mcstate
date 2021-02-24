@@ -220,13 +220,13 @@ pmcmc_check_initial_nested <- function(initial, pars, n_chains) {
     initial <- pars$initial()
   }
   if (is_3d_array(initial)) {
-    if (NLAYER(initial) != n_chains) {
+    if (nlayer(initial) != n_chains) {
       stop(sprintf("Expected an array with %d layers for 'initial'", n_chains))
     }
-    if (NCOL(initial) != n_pars) {
+    if (ncol(initial) != n_pars) {
       stop(sprintf("Expected an array with %d columns for 'initial'", n_pars))
     }
-    if (NROW(initial) != n_pops) {
+    if (nrow(initial) != n_pops) {
       stop(sprintf("Expected an array with %d rows for 'initial'", n_pops))
     }
     if (!is.null(rownames(initial)) && !identical(rownames(initial), pops)) {
