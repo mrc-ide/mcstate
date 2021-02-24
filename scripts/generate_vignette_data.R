@@ -8,7 +8,7 @@ set.seed(0)
 gen_sir <- dust::dust_example("sir")
 dt <- 0.25
 inv_dt <- 1 / dt
-sir <- gen_sir$new(data = list(dt = dt, S_ini = 1000, I_ini = 10,
+sir <- gen_sir$new(pars = list(dt = dt, S_ini = 1000, I_ini = 10,
                                beta = 0.2, gamma = 0.1),
                    step = 0,
                    n_particles = 1L,
@@ -84,3 +84,45 @@ death_data <- data.frame(cases = incidence,
 ## Save outputs
 write.csv(death_data, "vignettes/death_data.csv", row.names = FALSE)
 saveRDS(true_history_deaths, "vignettes/deaths_true_history.rds", version = 2)
+
+##
+## Nested SIR model
+##
+
+set.seed(2L)
+model <- dust::dust_example("sir")
+sir <- model$new(pars = list(list(dt = dt, S_ini = 1000, I_ini = 10,
+                                  beta = 0.2, gamma = 0.1),
+                             list(dt = dt, S_ini = 1000, I_ini = 10,
+                                  beta = 0.2, gamma = 0.05)),
+                 step = 0, n_particles = 1, pars_multi = TRUE)
+
+
+n_steps <- 100
+inv_dt <- 4
+incidence <- matrix(NA, n_steps, 2)
+true_history <- array(NA_real_, c(length(sir$info()[[1]]$vars), 1, 2, n_steps + 1))
+true_history[, 1, , 1] <- sir$state()[, 1, ]
+for (t in seq_len(n_steps)) {
+  state_start <- sir$state()
+  state_end <- sir$run(t * inv_dt)
+  true_history[, 1, , t + 1] <- state_end[, 1, ]
+  incidence[t, ] <- state_start[1, 1, ] - state_end[1, 1, ]
+}
+true_history <- true_history[, 1, ,]
+
+noise <- round(
+  rnorm(mean = 0, n = 200,
+        sd = 0.1 * sqrt(as.numeric(t(true_history[3,,-1])))))
+noise <- matrix(noise, ncol = 2)
+
+incidence <- incidence + noise
+
+incidence[incidence < 0] <- 0
+incidence_data <- data.frame(cases = as.numeric(incidence),
+                             day = rep(seq_len(n_steps), 2),
+                             population = rep(c("A", "B"), each = 100))
+
+# Save outputs
+write.csv(incidence_data, "inst/nested_sir_incidence.csv", row.names = FALSE)
+saveRDS(true_history, "vignettes/nested_sir_true_history.rds", version = 2)
