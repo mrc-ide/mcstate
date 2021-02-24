@@ -3,8 +3,9 @@ pkgdown: 1.6.1
 pkgdown_sha: ~
 articles:
   kalman: kalman.html
+  nested_sir_models: nested_sir_models.html
   parallelisation: parallelisation.html
   restart: restart.html
   sir_models: sir_models.html
-last_built: 2021-02-24T11:29Z
+last_built: 2021-02-24T17:26Z
 

@@ -83,7 +83,7 @@ these together for use with pmcmc()." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.3</span>
       </span>
     </div>
 
@@ -107,6 +107,9 @@ these together for use with pmcmc()." />
   <ul class="dropdown-menu" role="menu">
     <li>
       <a href="../articles/kalman.html">Validation of SMC using a Kalman filter</a>
+    </li>
+    <li>
+      <a href="../articles/nested_sir_models.html">Nested SIR Models</a>
     </li>
     <li>
       <a href="../articles/parallelisation.html">Parallelisation of inference</a>
@@ -244,7 +247,7 @@ populations.</p></td>
 #&gt; $prior
 #&gt; function (x, mean = 0, sd = 1, log = FALSE) 
 #&gt; .Call(C_dnorm, x, mean, sd, log)
-#&gt; &lt;bytecode: 0x7fb8fb989190&gt;
+#&gt; &lt;bytecode: 0x7f8b0dbd0720&gt;
 #&gt; &lt;environment: namespace:stats&gt;
 #&gt; 
 #&gt; attr(,"class")
@@ -269,7 +272,7 @@ populations.</p></td>
 #&gt; $prior
 #&gt; function (x, rate = 1, log = FALSE) 
 #&gt; .Call(C_dexp, x, 1/rate, log)
-#&gt; &lt;bytecode: 0x7fb8f9f669d8&gt;
+#&gt; &lt;bytecode: 0x7f8b0a3c8428&gt;
 #&gt; &lt;environment: namespace:stats&gt;
 #&gt; 
 #&gt; attr(,"class")
