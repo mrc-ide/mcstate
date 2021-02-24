@@ -38,7 +38,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.4</span>
       </span>
     </div>
 
@@ -231,7 +231,7 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <p>We can now run the particle filter forward, which will run and resample 100 trajectories, and return the final likelihood. It is important to set the correct time-step <code>dt</code> here, as we are using 0.25, rather than the default value of 1 defined in the odin model. We will also save the history, which allows us to plot the particle trajectories, as well as use the likelihood:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">filter</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span>save_history <span class="op">=</span> <span class="cn">TRUE</span>, pars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>dt <span class="op">=</span> <span class="va">dt</span><span class="op">)</span><span class="op">)</span>
-<span class="co">#&gt; [1] -245.4608</span></code></pre></div>
+<span class="co">#&gt; [1] -245.0339</span></code></pre></div>
 <p>If we plot these along with the data, we can see compared to above that only trajectories consistent with the data are kept, and the variance between particles has been reduced compared to the simulations shown in the <code>odin.dust</code> vignette:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">plot_particle_filter</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">history</span>, <span class="va">true_history</span>, <span class="va">times</span>, <span class="va">obs_end</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span>
@@ -257,7 +257,7 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <p>Doing the same with a <span class="math inline">\(\beta\)</span> and <span class="math inline">\(\gamma\)</span> which are further from the truth yields a lower likelihood:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">filter</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span>save_history <span class="op">=</span> <span class="cn">TRUE</span>, pars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>dt <span class="op">=</span> <span class="va">dt</span>, beta <span class="op">=</span> <span class="fl">0.4</span>, gamma <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span><span class="op">)</span>
-<span class="co">#&gt; [1] -257.671</span>
+<span class="co">#&gt; [1] -259.5569</span>
 <span class="fu">plot_particle_filter</span><span class="op">(</span><span class="va">filter</span><span class="op">$</span><span class="fu">history</span><span class="op">(</span><span class="op">)</span>, <span class="va">true_history</span>, <span class="va">incidence</span><span class="op">$</span><span class="va">day</span><span class="op">)</span></code></pre></div>
 <p><img src="sir_models_files/figure-html/unnamed-chunk-11-1.png" width="672"></p>
 <p>You can use the <code>run()</code> function of the particle filter directly, but for parameter inference, or forecasting after parameter inference, you should usually use the functions below to infer parameters.</p>
@@ -284,7 +284,7 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
     progress <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
 <span class="va">pmcmc_run</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc.html">pmcmc</a></span><span class="op">(</span><span class="va">mcmc_pars</span>, <span class="va">filter</span>, control <span class="op">=</span> <span class="va">control</span><span class="op">)</span>
 <span class="co">#&gt; Running chain 1 / 1</span>
-<span class="co">#&gt; Finished 500 steps in 11 secs</span>
+<span class="co">#&gt; Finished 500 steps in 12 secs</span>
 <span class="fu">plot_particle_filter</span><span class="op">(</span><span class="va">pmcmc_run</span><span class="op">$</span><span class="va">trajectories</span><span class="op">$</span><span class="va">state</span>, <span class="va">true_history</span>, <span class="va">incidence</span><span class="op">$</span><span class="va">day</span><span class="op">)</span></code></pre></div>
 <p><img src="sir_models_files/figure-html/pmcmc_combined-1.png" width="672"></p>
 <p>We also provide some basic tools for dealing with this output, before running prediction (see below). We can remove burn-in and thin the four chains as follows:</p>
@@ -293,7 +293,7 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span class="va">parameter_mean_hpd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html">apply</a></span><span class="op">(</span><span class="va">processed_chains</span><span class="op">$</span><span class="va">pars</span>, <span class="fl">2</span>, <span class="va">mean</span><span class="op">)</span>
 <span class="va">parameter_mean_hpd</span>
 <span class="co">#&gt;      beta     gamma </span>
-<span class="co">#&gt; 0.1972431 0.1032164</span></code></pre></div>
+<span class="co">#&gt; 0.1927150 0.1036676</span></code></pre></div>
 <p>The resulting objects can also be analysed in a typical MCMC analysis package such as <a href="https://cran.r-project.org/web/packages/coda/index.html"><code>coda</code></a>. We will need to combine the two parts of the object which contain the probabilities and parameter values across the iterations:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">mcmc1</span> <span class="op">&lt;-</span> <span class="fu">coda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/coda/man/mcmc.html">as.mcmc</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html">cbind</a></span><span class="op">(</span><span class="va">pmcmc_run</span><span class="op">$</span><span class="va">probabilities</span>, <span class="va">pmcmc_run</span><span class="op">$</span><span class="va">pars</span><span class="op">)</span><span class="op">)</span>
@@ -309,20 +309,20 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span class="co">#&gt;    plus standard error of the mean:</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt;                     Mean      SD  Naive SE Time-series SE</span>
-<span class="co">#&gt; log_prior         1.0848 0.07481 0.0033425       0.032826</span>
-<span class="co">#&gt; log_likelihood -244.0358 1.13365 0.0506475       0.547276</span>
-<span class="co">#&gt; log_posterior  -242.9511 1.10863 0.0495298       0.526143</span>
-<span class="co">#&gt; beta              0.2037 0.02294 0.0010251       0.009539</span>
-<span class="co">#&gt; gamma             0.1049 0.01496 0.0006685       0.006565</span>
+<span class="co">#&gt; log_prior         1.0544 0.09831 0.0043923       0.035669</span>
+<span class="co">#&gt; log_likelihood -244.9569 1.09264 0.0488156       0.504790</span>
+<span class="co">#&gt; log_posterior  -243.9025 1.11911 0.0499983       0.515893</span>
+<span class="co">#&gt; beta              0.2028 0.02503 0.0011181       0.009280</span>
+<span class="co">#&gt; gamma             0.1110 0.01966 0.0008785       0.007134</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt; 2. Quantiles for each variable:</span>
 <span class="co">#&gt; </span>
-<span class="co">#&gt;                      2.5%       25%       50%       75%     97.5%</span>
-<span class="co">#&gt; log_prior         0.91571    1.0410    1.0798    1.0999    1.2315</span>
-<span class="co">#&gt; log_likelihood -246.18684 -245.2277 -243.8050 -243.3910 -242.7211</span>
-<span class="co">#&gt; log_posterior  -245.07740 -244.0981 -242.7051 -242.3113 -241.6801</span>
-<span class="co">#&gt; beta              0.16941    0.1924    0.2041    0.2082    0.2692</span>
-<span class="co">#&gt; gamma             0.07558    0.1019    0.1059    0.1137    0.1387</span>
+<span class="co">#&gt;                      2.5%        25%       50%       75%     97.5%</span>
+<span class="co">#&gt; log_prior         0.76189    1.00301    1.0623    1.1415    1.1665</span>
+<span class="co">#&gt; log_likelihood -246.92180 -245.66218 -245.0651 -244.3099 -242.7653</span>
+<span class="co">#&gt; log_posterior  -245.81236 -244.65916 -243.8986 -243.2476 -241.6736</span>
+<span class="co">#&gt; beta              0.17135    0.18711    0.2000    0.2068    0.2749</span>
+<span class="co">#&gt; gamma             0.08859    0.09358    0.1094    0.1213    0.1695</span>
 <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">mcmc1</span><span class="op">)</span></code></pre></div>
 <p><img src="sir_models_files/figure-html/coda_plots-1.png" width="1344"><img src="sir_models_files/figure-html/coda_plots-2.png" width="1344"></p>
 </div>
@@ -334,10 +334,10 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu">coda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/coda/man/effectiveSize.html">effectiveSize</a></span><span class="op">(</span><span class="va">mcmc1</span><span class="op">)</span>
 <span class="co">#&gt;      log_prior log_likelihood  log_posterior           beta          gamma </span>
-<span class="co">#&gt;       5.194311       4.290836       4.439809       5.785444       5.194311</span>
+<span class="co">#&gt;       7.597115       4.685255       4.705750       7.273445       7.597115</span>
 <span class="fl">1</span> <span class="op">-</span> <span class="fu">coda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/coda/man/rejectionRate.html">rejectionRate</a></span><span class="op">(</span><span class="va">mcmc1</span><span class="op">)</span>
 <span class="co">#&gt;      log_prior log_likelihood  log_posterior           beta          gamma </span>
-<span class="co">#&gt;          0.018          0.018          0.018          0.018          0.018</span></code></pre></div>
+<span class="co">#&gt;          0.034          0.034          0.034          0.034          0.034</span></code></pre></div>
 <p>Clearly the acceptance rate is too low. Generally a target of 0.5, reducing to 0.234 as the number of parameters increases, <a href="https://dx.doi.org/10.1016/j.spa.2007.12.005">is thought to be optimal</a>. The proposal distribution needs to be modified, in this case reducing the variance of the jump sizes. One option to automate this process is to run a chain for a bit, as above, then use the covariance of the state as the proposal matrix:</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">proposal_matrix</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html">cov</a></span><span class="op">(</span><span class="va">pmcmc_run</span><span class="op">$</span><span class="va">pars</span><span class="op">)</span>
@@ -346,8 +346,8 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
   <span class="va">proposal_matrix</span><span class="op">)</span>
 <span class="va">proposal_matrix</span>
 <span class="co">#&gt;               beta        gamma</span>
-<span class="co">#&gt; beta  0.0005264307 0.0003173478</span>
-<span class="co">#&gt; gamma 0.0003173478 0.0002238886</span></code></pre></div>
+<span class="co">#&gt; beta  0.0006263297 0.0004428983</span>
+<span class="co">#&gt; gamma 0.0004428983 0.0003866152</span></code></pre></div>
 <p>Let’s now run four independent chains with these proposals:</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">control</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_control.html">pmcmc_control</a></span><span class="op">(</span>
@@ -360,9 +360,9 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span class="co">#&gt; Running chain 1 / 4</span>
 <span class="co">#&gt; Finished 500 steps in 12 secs</span>
 <span class="co">#&gt; Running chain 2 / 4</span>
-<span class="co">#&gt; Finished 500 steps in 11 secs</span>
+<span class="co">#&gt; Finished 500 steps in 12 secs</span>
 <span class="co">#&gt; Running chain 3 / 4</span>
-<span class="co">#&gt; Finished 500 steps in 11 secs</span>
+<span class="co">#&gt; Finished 500 steps in 12 secs</span>
 <span class="co">#&gt; Running chain 4 / 4</span>
 <span class="co">#&gt; Finished 500 steps in 11 secs</span>
 
@@ -380,27 +380,27 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span class="co">#&gt;    plus standard error of the mean:</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt;                     Mean      SD  Naive SE Time-series SE</span>
-<span class="co">#&gt; log_prior         1.0496 0.09185 0.0020519       0.009855</span>
-<span class="co">#&gt; log_likelihood -244.5130 1.28482 0.0287007       0.097597</span>
-<span class="co">#&gt; log_posterior  -243.4634 1.30103 0.0290629       0.106578</span>
-<span class="co">#&gt; beta              0.2116 0.02551 0.0005698       0.002394</span>
-<span class="co">#&gt; gamma             0.1120 0.01837 0.0004104       0.001971</span>
+<span class="co">#&gt; log_prior         1.0409 0.09703 0.0021674       0.007965</span>
+<span class="co">#&gt; log_likelihood -244.8222 1.47293 0.0329029       0.133152</span>
+<span class="co">#&gt; log_posterior  -243.7813 1.50193 0.0335505       0.136814</span>
+<span class="co">#&gt; beta              0.2141 0.02660 0.0005942       0.002435</span>
+<span class="co">#&gt; gamma             0.1137 0.01941 0.0004335       0.001593</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt; 2. Quantiles for each variable:</span>
 <span class="co">#&gt; </span>
-<span class="co">#&gt;                      2.5%        25%       50%       75%     97.5%</span>
-<span class="co">#&gt; log_prior         0.86342    0.99215    1.0608    1.1118    1.2001</span>
-<span class="co">#&gt; log_likelihood -247.44030 -245.21636 -244.4197 -243.6083 -242.6076</span>
-<span class="co">#&gt; log_posterior  -246.38441 -244.16412 -243.3957 -242.5366 -241.6224</span>
-<span class="co">#&gt; beta              0.16925    0.19443    0.2088    0.2270    0.2654</span>
-<span class="co">#&gt; gamma             0.08186    0.09953    0.1097    0.1235    0.1492</span>
+<span class="co">#&gt;                      2.5%       25%       50%       75%     97.5%</span>
+<span class="co">#&gt; log_prior         0.81860    0.9848    1.0518    1.1049    1.1994</span>
+<span class="co">#&gt; log_likelihood -247.95744 -245.6727 -244.6480 -243.7458 -242.6074</span>
+<span class="co">#&gt; log_posterior  -247.05875 -244.6015 -243.5943 -242.6842 -241.5641</span>
+<span class="co">#&gt; beta              0.16986    0.1963    0.2101    0.2278    0.2772</span>
+<span class="co">#&gt; gamma             0.08201    0.1009    0.1115    0.1249    0.1582</span>
 <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">mcmc2</span><span class="op">)</span></code></pre></div>
 <p><img src="sir_models_files/figure-html/unnamed-chunk-16-1.png" width="1344"><img src="sir_models_files/figure-html/unnamed-chunk-16-2.png" width="1344"></p>
 <p>Looking again at the effective sample size and rejection rate, these chains were a lot more efficient, and have a much better effective sample size thanks for the four chains:</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu">coda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/coda/man/effectiveSize.html">effectiveSize</a></span><span class="op">(</span><span class="va">mcmc2</span><span class="op">)</span>
 <span class="co">#&gt;      log_prior log_likelihood  log_posterior           beta          gamma </span>
-<span class="co">#&gt;       86.87141      173.30409      149.01867      113.52290       86.87141</span>
+<span class="co">#&gt;       148.4058       122.3698       120.5139       119.4005       148.4058</span>
 <span class="fl">1</span> <span class="op">-</span> <span class="fu">coda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/coda/man/rejectionRate.html">rejectionRate</a></span><span class="op">(</span><span class="va">mcmc2</span><span class="op">)</span>
 <span class="co">#&gt;      log_prior log_likelihood  log_posterior           beta          gamma </span>
 <span class="co">#&gt;      0.3215177      0.3215177      0.3215177      0.3215177      0.3215177</span></code></pre></div>
@@ -545,7 +545,7 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
                                        index <span class="op">=</span> <span class="va">index</span>,
                                        seed <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span>
 <span class="va">filter</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span>save_history <span class="op">=</span> <span class="cn">FALSE</span>, pars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>dt <span class="op">=</span> <span class="va">dt</span><span class="op">)</span><span class="op">)</span>
-<span class="co">#&gt; [1] -1186.213</span></code></pre></div>
+<span class="co">#&gt; [1] -1348.854</span></code></pre></div>
 <p>and this can be used to run the <code><a href="../reference/pmcmc.html">pmcmc()</a></code> method, as above.</p>
 </div>
 </div>

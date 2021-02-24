@@ -80,7 +80,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.4</span>
       </span>
     </div>
 
@@ -152,18 +152,7 @@
     <p>Run a pmcmc sampler</p>
     </div>
 
-    <pre class="usage"><span class='fu'>pmcmc</span><span class='op'>(</span>
-  <span class='va'>pars</span>,
-  <span class='va'>filter</span>,
-  <span class='va'>n_steps</span>,
-  save_state <span class='op'>=</span> <span class='cn'>TRUE</span>,
-  save_trajectories <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  progress <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  n_chains <span class='op'>=</span> <span class='fl'>1</span>,
-  initial <span class='op'>=</span> <span class='cn'>NULL</span>,
-  rerun_every <span class='op'>=</span> <span class='cn'>Inf</span>,
-  control <span class='op'>=</span> <span class='cn'>NULL</span>
-<span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>pmcmc</span><span class='op'>(</span><span class='va'>pars</span>, <span class='va'>filter</span>, initial <span class='op'>=</span> <span class='cn'>NULL</span>, control <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -179,26 +168,6 @@ translation functions for use with the particle filter).</p></td>
       <td><p>A <code><a href='particle_filter.html'>particle_filter</a></code> object</p></td>
     </tr>
     <tr>
-      <th>n_steps</th>
-      <td><p>Deprecated: use <a href='pmcmc_control.html'>pmcmc_control</a> instead</p></td>
-    </tr>
-    <tr>
-      <th>save_state</th>
-      <td><p>Deprecated: use <a href='pmcmc_control.html'>pmcmc_control</a> instead</p></td>
-    </tr>
-    <tr>
-      <th>save_trajectories</th>
-      <td><p>Deprecated: use <a href='pmcmc_control.html'>pmcmc_control</a> instead</p></td>
-    </tr>
-    <tr>
-      <th>progress</th>
-      <td><p>Deprecated: use <a href='pmcmc_control.html'>pmcmc_control</a> instead</p></td>
-    </tr>
-    <tr>
-      <th>n_chains</th>
-      <td><p>Deprecated: use <a href='pmcmc_control.html'>pmcmc_control</a> instead</p></td>
-    </tr>
-    <tr>
       <th>initial</th>
       <td><p>Optional initial starting point. If given, it must
 be compatible with the parameters given in <code>pars</code>, and must be
@@ -207,10 +176,6 @@ initial conditions saved in your <code>pars</code> object. You can provide
 either a vector of initial conditions, or a matrix with
 <code>n_chains</code> columns to use a different starting point for each
 chain.</p></td>
-    </tr>
-    <tr>
-      <th>rerun_every</th>
-      <td><p>Deprecated: use <a href='pmcmc_control.html'>pmcmc_control</a> instead</p></td>
     </tr>
     <tr>
       <th>control</th>
