@@ -81,7 +81,7 @@ case_compare <- function(state, observed, pars = NULL) {
     return(NULL)
   }
   exp_noise <- 1e6
-  incidence_modelled <- state[1, , drop = TRUE]
+  incidence_modelled <- state[5, , drop = TRUE]
   incidence_observed <- observed$cases
   lambda <- incidence_modelled +
     rexp(n = length(incidence_modelled), rate = exp_noise)
@@ -148,7 +148,7 @@ control <- mcstate::pmcmc_control(500, save_trajectories = TRUE,
 res <- mcstate::pmcmc(mcmc_pars, filter, control = control)
 ```
 
-Here's the trajectories showing the number of people infected
+We can now continue visualisation and further analysis as in the un-nested case, just be careful to include the additional dimension of population.
 
 ```{r}
 t <- 0:100
