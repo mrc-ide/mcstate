@@ -338,7 +338,7 @@ pmcmc_state <- R6::R6Class(
         trajectories_state <-
           list_to_array(private$history_trajectories$get())
         trajectories_state <- aperm(trajectories_state, c(1, 3, 2, 4))
-        rownames(trajectories_state) <- predict$index
+        rownames(trajectories_state) <- names(predict$index)
 
         data <- private$filter$inputs()$data
         step <- c(data$step_start[[1]], data$step_end)

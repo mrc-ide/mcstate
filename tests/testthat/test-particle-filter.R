@@ -1052,3 +1052,19 @@ test_that("nested particle filter initial not list", {
                list(beta = 0.3, gamma = 0.1))
   expect_is(p$run(pars), "numeric")
 })
+
+test_that("return names on nested history, if present", {
+  dat <- example_sir_shared()
+  n_particles <- 42
+  index <- function(info) {
+    list(run = 4L, state = c(S = 1L, I = 2L, R = 3L))
+  }
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+    index = index, seed = 100
+  )
+  pars <- list(list(beta = 0.2, gamma = 0.1),
+               list(beta = 0.3, gamma = 0.1))
+  p$run(pars, save_history = TRUE)
+  res <- p$history()
+  expect_equal(rownames(res), c("S", "I", "R"))
+})

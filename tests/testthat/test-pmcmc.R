@@ -812,3 +812,40 @@ test_that("sample_trajectory_nested single state", {
   expect_equal(sample_trajectory_nested(array(1, c(1, 1, 1, 1))),
                array(1, c(1, 1, 1)))
 })
+
+
+test_that("return names on nested pmcmc output", {
+  dat <- example_sir_shared()
+  p1 <- particle_filter$new(dat$data, dat$model, 100, dat$compare,
+                            dat$index, seed = 1L)
+
+  proposal_fixed <- matrix(0.00026)
+  proposal_varied <- matrix(0.00057)
+
+  pars <- pmcmc_parameters_nested$new(
+    list(pmcmc_varied_parameter("beta", letters[1:2], c(0.2, 0.3),
+                                min = 0, max = 1,
+                                prior = function(p) log(1e-10)),
+         pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
+                         prior = function(p) log(1e-10))),
+    proposal_fixed = proposal_fixed, proposal_varied = proposal_varied)
+
+  control1 <- pmcmc_control(50, save_state = FALSE, n_chains = 1)
+
+  n_particles <- 10
+  index2 <- function(info) list(run = 4L, state = c(a = 1, b = 2, c = 3))
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index)
+  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = index2)
+
+  control <- pmcmc_control(5, save_state = TRUE, save_trajectories = TRUE)
+
+  set.seed(1)
+  results1 <- pmcmc(pars, p1, control = control)
+  set.seed(1)
+  results2 <- pmcmc(pars, p2, control = control)
+
+  expect_null(rownames(results1$trajectories$state))
+  expect_equal(rownames(results2$trajectories$state), c("a", "b", "c"))
+})
