@@ -1,3 +1,7 @@
+# mcstate 0.5.3
+
+* Bugfix in `index` for nested particle filters.
+
 # mcstate 0.5.2
 
 * Extend support of `pmcmc` to `pmcmc_parameters_nested` objects.
