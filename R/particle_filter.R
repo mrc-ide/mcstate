@@ -513,26 +513,32 @@ check_save_restart <- function(save_restart, data) {
 
 history_single <- function(history_value, history_order, history_index,
                            index_particle) {
-
   ny <- nrow(history_value)
 
-  if (is.null(index_particle)) {
-    index_particle <- seq_len(ncol(history_value))
+  if (is.null(history_order)) {
+    if (is.null(index_particle)) {
+      ret <- history_value
+    } else {
+      ret <- history_value[, index_particle, , drop = FALSE]
+    }
+  } else {
+    if (is.null(index_particle)) {
+      index_particle <- seq_len(ncol(history_value))
+    }
+
+    np <- length(index_particle)
+    nt <- ncol(history_order)
+
+    idx <- matrix(NA_integer_, np, nt)
+    for (i in rev(seq_len(ncol(idx)))) {
+      index_particle <- idx[, i] <- history_order[index_particle, i]
+    }
+
+    cidx <- cbind(seq_len(ny),
+                  rep(idx, each = ny),
+                  rep(seq_len(nt), each = ny * np))
+    ret <- array(history_value[cidx], c(ny, np, nt))
   }
-
-  np <- length(index_particle)
-
-  nt <- ncol(history_order)
-
-  idx <- matrix(NA_integer_, np, nt)
-  for (i in rev(seq_len(ncol(idx)))) {
-    index_particle <- idx[, i] <- history_order[index_particle, i]
-  }
-
-  cidx <- cbind(seq_len(ny),
-                rep(idx, each = ny),
-                rep(seq_len(nt), each = ny * np))
-  ret <- array(history_value[cidx], c(ny, np, nt))
   rownames(ret) <- names(history_index)
   ret
 }
@@ -543,6 +549,9 @@ history_nested <- function(history_value, history_order, history_index,
   npop <- ncol(history_order)
   nt <- nlayer(history_order)
 
+  if (is.null(history_index)) {
+    browser()
+  }
 
   if (is.null(index_particle)) {
     index_particle <- matrix(seq_len(ncol(history_value)),

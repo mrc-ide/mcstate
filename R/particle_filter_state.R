@@ -172,11 +172,7 @@ particle_filter_state <- R6::R6Class(
       }
 
       model <- self$model
-
       compare <- private$compare
-      steps <- private$steps
-      data_split <- private$data_split
-      pars <- private$pars
 
       restart_state <- self$restart_state
       save_restart_step <- private$save_restart_step
@@ -190,6 +186,29 @@ particle_filter_state <- R6::R6Class(
 
       log_likelihood <- self$log_likelihood
       n_particles <- private$n_particles
+
+      if (is.null(compare)) {
+        ## Each of these is a feature that needs implementing, mostly in dust
+        if (!save_restart && curr == 0L && step_index == n_steps && !partial) {
+          if (save_history) {
+            model$set_index(save_history_index)
+            on.exit(model$set_index(integer(0)))
+          }
+          ret <- model$filter(save_history)
+          self$log_likelihood_step <- NA_real_
+          self$log_likelihood <- ret$log_likelihood
+          private$current_step_index <- step_index
+          if (save_history) {
+            self$history <- list(value = ret$history,
+                                 index = save_history_index)
+          }
+          return(ret$log_likelihood)
+        }
+      }
+
+      steps <- private$steps
+      data_split <- private$data_split
+      pars <- private$pars
 
       for (t in seq(curr + 1L, step_index)) {
         step_end <- steps[t, 2L]
