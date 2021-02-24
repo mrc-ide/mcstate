@@ -101,7 +101,8 @@ sir <- model$new(pars = list(list(dt = dt, S_ini = 1000, I_ini = 10,
 n_steps <- 100
 inv_dt <- 4
 incidence <- matrix(NA, n_steps, 2)
-true_history <- array(NA_real_, c(length(sir$info()[[1]]$vars), 1, 2, n_steps + 1))
+true_history <- array(NA_real_,
+                      c(length(sir$info()[[1]]$vars), 1, 2, n_steps + 1))
 true_history[, 1, , 1] <- sir$state()[, 1, ]
 for (t in seq_len(n_steps)) {
   state_start <- sir$state()
@@ -109,11 +110,11 @@ for (t in seq_len(n_steps)) {
   true_history[, 1, , t + 1] <- state_end[, 1, ]
   incidence[t, ] <- state_start[1, 1, ] - state_end[1, 1, ]
 }
-true_history <- true_history[, 1, ,]
+true_history <- true_history[, 1, , ]
 
 noise <- round(
   rnorm(mean = 0, n = 200,
-        sd = 0.1 * sqrt(as.numeric(t(true_history[3,,-1])))))
+        sd = 0.1 * sqrt(as.numeric(t(true_history[3, , -1])))))
 noise <- matrix(noise, ncol = 2)
 
 incidence <- incidence + noise

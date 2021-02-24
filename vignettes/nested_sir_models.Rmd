@@ -2,7 +2,7 @@
 title: "Nested SIR Models"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{nested_sir}
+  %\VignetteIndexEntry{Nested SIR Models}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -22,7 +22,7 @@ r_output <- function(x) lang_output(x, "r")
 
 This vignette extends the SIR model in `vignette("sir_models")` to a "nested" model over multiple populations. 
 
-A simple definition of a nested SIR model is extended from the [odin documentation](https://mrc-ide.github.io/odin/articles/discrete.html) as:
+A simple definition of $M$ SIR models is extended from the [odin documentation](https://mrc-ide.github.io/odin/articles/discrete.html) as:
 $$\begin{align*}
 \frac{dS_i}{dt} &= -\beta_i \frac{S_iI_i}{N_i} \\
 \frac{dI_i}{dt} &= \beta_i \frac{S_iI_i}{N_i} - \gamma_i I_i \\
@@ -43,11 +43,11 @@ $$\begin{align*}
 \frac{dR_B}{dt} = \gamma_B I_B \\
 \end{align*}$$
 
-We will model this example in by extending the example  from the `vignette("sir_models")` vignette.
+We will model this below by extending the example from the `vignette("sir_models")` vignette.
 
 ## Model data
 
-As with the `vignette("sir_models")` vignette, the daily counts have been generated from a single run of the model with `seed = 3L`.
+As with the `vignette("sir_models")` vignette, the daily counts have been generated from a single run of the model.
 
 ```{r}
 incidence <- read.csv(system.file("nested_sir_incidence.csv",
@@ -55,7 +55,7 @@ incidence <- read.csv(system.file("nested_sir_incidence.csv",
                       stringsAsFactors = TRUE)
 ```
 
-Note that in contrast to regular SIR models, data for nested models should be in a long format and should include a factor column for populations. This is passed to `mcstate::particle_filter_data()`, which includes an argument for specifying which column includes the population identifier. 
+Note that in contrast to regular SIR models, data for nested models should be in a long format and should include a factor column for populations. This is passed to `mcstate::particle_filter_data()`, which includes an argument, `population`, for specifying which column includes the population identifier. 
 
 ```{r paged.print=TRUE, layout="l-body-outset", fig.height=5, fig.width=7}
 dt <- 0.25
@@ -67,8 +67,8 @@ rmarkdown::paged_table(sir_data)
 plot(cases ~ day, incidence[incidence$population == "B", ],
      type = "o", xlab = "Day", ylab = "New cases", pch = 19)
 lines(cases ~ day, incidence[incidence$population == "A", ],
-     type = "o", xlab = "Day", ylab = "New cases", pch = 19, col = 2)
-legend("topright", col = 2:1, legend = c("a", "b"), lwd = 1)
+      type = "o", xlab = "Day", ylab = "New cases", pch = 19, col = 2)
+legend("topright", col = 2:1, legend = c("A", "B"), lwd = 1)
 ```
 
 ## Comparison, model and particle filter
@@ -101,26 +101,35 @@ filter <- mcstate::particle_filter$new(data = sir_data,
 
 ## Nested parameters
 
-The biggest difference between the two cases lies in the `mcstate::pmcmc_parameters_nested()` and associated `mcstate::pmcmc_varied_parameter()` function. We will separately look at the new function and then the object but first in the usual case where a parameter is *fixed* and does not vary between populations, then the usual `mcstate::pmcmc_parameter()` function can be used:
+The biggest difference between the two cases lies in the `mcstate::pmcmc_parameters_nested` object and associated `mcstate::pmcmc_varied_parameter()` function. We will separately look at the new function and then the object.
+
+But first, in the usual case where a parameter is *fixed* (does not vary between populations), then the usual `mcstate::pmcmc_parameter()` function can be used:
 
 ```{r}
 beta <- mcstate::pmcmc_parameter("beta", 0.2, min = 0)
 ```
 
-For the gamma parameter, which varies between populations, we instead use `mcstate::pmcmc_parameter()`:
+For the gamma parameter, which varies between populations, we instead use `mcstate::pmcmc_varied_parameter()`:
 
 ```{r}
 gamma <- mcstate::pmcmc_varied_parameter(
   name = "gamma",
   populations = c("a", "b"),
   initial = c(0.1, 0.05),
+  prior = list(
+    function(p) dgamma(p, shape = 1, scale = 0.2, log = TRUE),
+    function(p) dgamma(p, shape = 1, scale = 0.25, log = TRUE)
+  ),
   min = 0
 )
 ```
 
-In this example the two populations have different initial values, but the same prior and range of values the parameter can take. Note that this function also takes the new argument `populations` to specify the names of the populations.
+In this example, the two populations have different initial values and priors, but the same range of values the parameter can take.
+Note that this function also takes the new argument `populations` to specify the names of the populations.
 
-Now we can create a `mcstate::pmcmc_parameters_nested()` object, as with the un-nested case we require a proposal matrix for parameters. However for this object we have one matrix for fixed parameters and one for varied parameters. Currently fixed/varied parameters are dependent on other fixed/varied parameters only and are independent of varied/fixed parameters.
+Now we can create a `mcstate::pmcmc_parameters_nested` object.
+As with the un-nested case we require a proposal matrix for parameters, however for this object we have one matrix for fixed parameters and one for varied parameters.
+Currently fixed/varied parameters are dependent on other fixed/varied parameters only and are independent of varied/fixed parameters.
 
 ```{r}
 proposal_fixed <- matrix(0.01)
@@ -135,20 +144,20 @@ mcmc_pars <- mcstate::pmcmc_parameters_nested$new(
 )
 ```
 
-Note that this final `populations` parameter is only strictly required if only fixed parameters are included in the object. Now we are ready to run the pMCMC.
+Note that this final `populations` parameter is only strictly required if no varied parameters are included in the object. Now we are ready to run the pMCMC.
 
 
-## All-in-one
+## pMCMC and Visualisations
 
-Run a pMCMC with 100 particles for the full length of the data. This means that we are fitting to the entire series.
+
+We can now continue as in the un-nested case, just be careful when analysing results to include the additional dimension of population.
 
 ```{r}
 control <- mcstate::pmcmc_control(500, save_trajectories = TRUE,
-                                   save_state = TRUE, save_restart = 40)
+                                  save_state = TRUE, save_restart = 40)
 res <- mcstate::pmcmc(mcmc_pars, filter, control = control)
 ```
 
-We can now continue visualisation and further analysis as in the un-nested case, just be careful to include the additional dimension of population.
 
 ```{r}
 t <- 0:100
@@ -179,17 +188,15 @@ par(mfrow = c(1, 1))
 ```
 
 ```{r}
-plot_particle_filter <- function(history, true_history, times, population, obs_end = NULL) {
+plot_particle_filter <- function(history, true_history, times, population, main) {
   times <- times[seq(length(times)/2)]
-  if (is.null(obs_end)) {
-    obs_end = max(times)
-  }
-
+  obs_end = max(times)
+  
   par(mar = c(4.1, 5.1, 0.5, 0.5), las = 1)
   cols <- c(S = "#8c8cd9", I = "#cc0044", R = "#999966")
   matplot(times, t(history[1, , population,  -1]), type = "l",
           xlab = "Time", ylab = "Number of individuals",
-          col = cols[["S"]], lty = 1, ylim = range(history))
+          col = cols[["S"]], lty = 1, ylim = range(history), main = main)
   matlines(times, t(history[2, , population, -1]), col = cols[["I"]], lty = 1)
   matlines(times, t(history[3, , population, -1]), col = cols[["R"]], lty = 1)
   matpoints(times[1:obs_end], t(true_history[1:3, population, -1]), pch = 19,
@@ -198,5 +205,6 @@ plot_particle_filter <- function(history, true_history, times, population, obs_e
 }
 
 true_history <- readRDS("nested_sir_true_history.rds")
-plot_particle_filter(filter$history(), true_history, incidence$day, 1L)
+plot_particle_filter(filter$history(), true_history, incidence$day, 1L, "Population A")
+plot_particle_filter(filter$history(), true_history, incidence$day, 2L, "Population B")
 ```
