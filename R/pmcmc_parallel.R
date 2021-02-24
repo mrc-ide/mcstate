@@ -93,11 +93,7 @@ pmcmc_orchestrator <- R6::R6Class(
     },
 
     finish = function() {
-      if (private$nested) {
-        pmcmc_combine(samples = private$results)
-      } else {
-        pmcmc_combine(samples = private$results)
-      }
+      pmcmc_combine(samples = private$results)
     }
   ))
 
