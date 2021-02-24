@@ -49,7 +49,7 @@ We will model this below by extending the example from the `vignette("sir_models
 
 As with the `vignette("sir_models")` vignette, the daily counts have been generated from a single run of the model.
 
-```{r}
+```{r incidence}
 incidence <- read.csv(system.file("nested_sir_incidence.csv",
                                   package = "mcstate"),
                       stringsAsFactors = TRUE)
@@ -57,7 +57,7 @@ incidence <- read.csv(system.file("nested_sir_incidence.csv",
 
 Note that in contrast to regular SIR models, data for nested models should be in a long format and should include a factor column for populations. This is passed to `mcstate::particle_filter_data()`, which includes an argument, `population`, for specifying which column includes the population identifier. 
 
-```{r paged.print=TRUE, layout="l-body-outset", fig.height=5, fig.width=7}
+```{r filter, paged.print=TRUE, layout="l-body-outset", fig.height=5, fig.width=7}
 dt <- 0.25
 sir_data <- mcstate::particle_filter_data(data = incidence,
                                           time = "day",
@@ -75,7 +75,7 @@ legend("topright", col = 2:1, legend = c("A", "B"), lwd = 1)
 
 The comparison function, model and particle filter are all identical to the un-nested case in the `vignette("sir_models")` vignette:
 
-```{r}
+```{r compare}
 case_compare <- function(state, observed, pars = NULL) {
   if (is.na(observed$cases)) {
     return(NULL)
@@ -105,20 +105,20 @@ The biggest difference between the two cases lies in the `mcstate::pmcmc_paramet
 
 But first, in the usual case where a parameter is *fixed* (does not vary between populations), then the usual `mcstate::pmcmc_parameter()` function can be used:
 
-```{r}
+```{r beta}
 beta <- mcstate::pmcmc_parameter("beta", 0.2, min = 0)
 ```
 
 For the gamma parameter, which varies between populations, we instead use `mcstate::pmcmc_varied_parameter()`:
 
-```{r}
+```{r gamma}
 gamma <- mcstate::pmcmc_varied_parameter(
   name = "gamma",
   populations = c("a", "b"),
   initial = c(0.1, 0.05),
   prior = list(
     function(p) dgamma(p, shape = 1, scale = 0.2, log = TRUE),
-    function(p) dgamma(p, shape = 1, scale = 0.25, log = TRUE)
+    function(p) dgamma(p, shape = 1, scale = 0.15, log = TRUE)
   ),
   min = 0
 )
@@ -131,7 +131,7 @@ Now we can create a `mcstate::pmcmc_parameters_nested` object.
 As with the un-nested case we require a proposal matrix for parameters, however for this object we have one matrix for fixed parameters and one for varied parameters.
 Currently fixed/varied parameters are dependent on other fixed/varied parameters only and are independent of varied/fixed parameters.
 
-```{r}
+```{r nested_pars}
 proposal_fixed <- matrix(0.01)
 row.names(proposal_fixed) <- colnames(proposal_fixed) <- "beta"
 proposal_varied <- matrix(0.01)
@@ -152,14 +152,15 @@ Note that this final `populations` parameter is only strictly required if no var
 
 We can now continue as in the un-nested case, just be careful when analysing results to include the additional dimension of population.
 
-```{r}
+```{r run}
 control <- mcstate::pmcmc_control(500, save_trajectories = TRUE,
                                   save_state = TRUE, save_restart = 40)
+set.seed(42L)
 res <- mcstate::pmcmc(mcmc_pars, filter, control = control)
 ```
 
 
-```{r}
+```{r plot_infected}
 t <- 0:100
 par(mfrow = c(1, 2))
 matplot(t, res$trajectories$state[2, , 1, ], type = "l", lty = 1,
@@ -172,7 +173,7 @@ par(mfrow = c(1, 1))
 
 And the daily incidence
 
-```{r}
+```{r plot_inc}
 par(mfrow = c(1, 2))
 matplot(t[-1], diff(res$trajectories$state[4, , 1, ]), type = "l",
         lty = 1, col = "#00000005", xlab = "Day", ylab = "Daily incidence",
@@ -187,7 +188,7 @@ points(cases ~ day, incidence[incidence$population == "B", ], col = "blue",
 par(mfrow = c(1, 1))
 ```
 
-```{r}
+```{r plot_sir}
 plot_particle_filter <- function(history, true_history, times, population, main) {
   times <- times[seq(length(times)/2)]
   obs_end = max(times)
