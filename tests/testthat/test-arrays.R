@@ -132,3 +132,35 @@ test_that("Prevent impossible drops", {
     "Can't drop dimensions (1, 3) as they are length (5, 10), not 1",
     fixed = TRUE)
 })
+
+
+test_that("flatten dimensions", {
+  x <- array(1:24, c(2, 3, 4))
+  expect_equal(array_flatten(x, 2:3),
+               matrix(1:24, c(2, 12)))
+  expect_equal(array_flatten(x, 1:2),
+               matrix(1:24, c(6, 4)))
+  expect_equal(array_flatten(x, 1:3),
+               1:24)
+})
+
+
+test_that("Prevent impossible flattening", {
+  x <- array(1:24, c(2, 3, 4))
+  expect_error(array_flatten(x, 1:2 + 0.4),
+               "'i' must be an integer")
+  expect_error(array_flatten(x, 3:4),
+               "Values of 'i' must be in [1, 3]",
+               fixed = TRUE)
+  expect_error(array_flatten(x, 4:6),
+               "Values of 'i' must be in [1, 3]",
+               fixed = TRUE)
+  expect_error(array_flatten(x, 2),
+               "i must be vector of at least length 2")
+  expect_error(array_flatten(x, c(1, 3)),
+               "All values of 'i' must be consecutive integers")
+  expect_error(array_flatten(x, 3:2),
+               "All values of 'i' must be consecutive integers")
+  expect_error(array_flatten(x, c(2, 2, 3)),
+               "All values of 'i' must be consecutive integers")
+})

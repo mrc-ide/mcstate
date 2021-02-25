@@ -1,3 +1,7 @@
+# mcstate 0.5.5
+
+* New array helper `mcstate::array_flatten` for unshaping an array
+
 # mcstate 0.5.4
 
 * Remove deprecated arguments to `pmcmc` (these were deprecated in 0.3.0) (#114)

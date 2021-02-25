@@ -36,3 +36,6 @@ m[1, ]
 res <- mcstate::array_reshape(m, 2, c(2, 3))
 res[1, , ]
 }
+\seealso{
+\link{array_flatten} which undoes this operation
+}
