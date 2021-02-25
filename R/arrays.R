@@ -83,6 +83,7 @@ array_bind <- function(..., arrays = list(...)) {
 ##'
 ##' @return A multidimensional array
 ##' @export
+##' @seealso [mcstate::array_flatten] which undoes this operation
 ##' @examples
 ##' # Suppose we had a 4 x 6 array of data:
 ##' m <- matrix(1:24, 4, 6)
@@ -177,5 +178,48 @@ array_drop <- function(x, i) {
   if (!is.null(dn)) {
     dimnames(x) <- dn[-i]
   }
+  x
+}
+
+
+##' Flatten array dimensions into a single dimension. This takes a
+##' multidimensional array and converts some dimensions of it into a
+##' vector. Use this to drop out "middle" dimensions of a structured
+##' array. This is conceptually the inverse of [mcstate::array_reshape]
+##'
+##' @title Flatten array dimensions
+##' @param x An array
+##'
+##' @param i An integer vector of dimensions to flatten
+##'
+##' @return A new array with at one or more dimensions removed
+##' @seealso [mcstate::array_flatten] which adds structure
+##' @export
+##' @examples
+##' x <- array(1:12, c(2, 3, 4))
+##' mcstate::array_flatten(x, 2:3)
+##'
+##' # array_flatten and array_reshape are each others' conceptual
+##' # opposites:
+##' y <- mcstate::array_flatten(x, 2:3)
+##' identical(mcstate::array_reshape(y, 2, c(3, 4)), x)
+array_flatten <- function(x, i) {
+  dx <- dim(x)
+  assert_integer(i)
+  if (any(i < 1 | i > length(dx))) {
+    stop(sprintf("Values of 'i' must be in [1, %d]", length(dx)))
+  }
+  if (length(i) < 2) {
+    stop("i must be vector of at least length 2")
+  }
+  if (any(diff(i) != 1)) {
+    stop("All values of 'i' must be consecutive integers")
+  }
+  dx[[i[[1L]]]] <- prod(dx[i])
+  dx_new <- dx[seq_along(dx)[-i[-1]]]
+  if (length(dx_new) == 1L) {
+    dx_new <- NULL
+  }
+  dim(x) <- dx_new
   x
 }
