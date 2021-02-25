@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Combine pmcmc samples — pmcmc_combine • mcstate</title>
+<title>Flatten array dimensions — array_flatten • mcstate</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -46,8 +46,11 @@
 
 
 
-<meta property="og:title" content="Combine pmcmc samples — pmcmc_combine" />
-<meta property="og:description" content="Combine multiple pmcmc() samples into one object" />
+<meta property="og:title" content="Flatten array dimensions — array_flatten" />
+<meta property="og:description" content="Flatten array dimensions into a single dimension. This takes a
+multidimensional array and converts some dimensions of it into a
+vector. Use this to drop out &quot;middle&quot; dimensions of a structured
+array. This is conceptually the inverse of array_reshape" />
 <meta property="og:image" content="/logo.png" />
 
 
@@ -143,34 +146,51 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Combine pmcmc samples</h1>
-    <small class="dont-index">Source: <a href='https://github.com/mrc-ide/mcstate/blob/master/R/pmcmc_tools.R'><code>R/pmcmc_tools.R</code></a></small>
-    <div class="hidden name"><code>pmcmc_combine.Rd</code></div>
+    <h1>Flatten array dimensions</h1>
+    <small class="dont-index">Source: <a href='https://github.com/mrc-ide/mcstate/blob/master/R/arrays.R'><code>R/arrays.R</code></a></small>
+    <div class="hidden name"><code>array_flatten.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Combine multiple <code><a href='pmcmc.html'>pmcmc()</a></code> samples into one object</p>
+    <p>Flatten array dimensions into a single dimension. This takes a
+multidimensional array and converts some dimensions of it into a
+vector. Use this to drop out "middle" dimensions of a structured
+array. This is conceptually the inverse of <a href='array_reshape.html'>array_reshape</a></p>
     </div>
 
-    <pre class="usage"><span class='fu'>pmcmc_combine</span><span class='op'>(</span><span class='va'>...</span>, samples <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='va'>...</span><span class='op'>)</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>array_flatten</span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>i</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>...</th>
-      <td><p>Arguments representing <code><a href='pmcmc.html'>pmcmc()</a></code> sample, i.e.,
-<code>mcstate_pmcmc</code> objects. Alternatively, pass a list as the
-argument <code>samples</code>. Names are ignored.</p></td>
+      <th>x</th>
+      <td><p>An array</p></td>
     </tr>
     <tr>
-      <th>samples</th>
-      <td><p>A list of <code>mcstate_pmcmc</code> objects. This is often
-more convenient for programming against than <code>...</code></p></td>
+      <th>i</th>
+      <td><p>An integer vector of dimensions to flatten</p></td>
     </tr>
     </table>
 
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
+    <p>A new array with at one or more dimensions removed</p>
+    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
+
+    <div class='dont-index'><p>array_flatten which adds structure</p></div>
+
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='va'>x</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/array.html'>array</a></span><span class='op'>(</span><span class='fl'>1</span><span class='op'>:</span><span class='fl'>12</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>2</span>, <span class='fl'>3</span>, <span class='fl'>4</span><span class='op'>)</span><span class='op'>)</span>
+<span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'>array_flatten</span><span class='op'>(</span><span class='va'>x</span>, <span class='fl'>2</span><span class='op'>:</span><span class='fl'>3</span><span class='op'>)</span>
+</div><div class='output co'>#&gt;      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10] [,11] [,12]
+#&gt; [1,]    1    3    5    7    9   11    1    3    5     7     9    11
+#&gt; [2,]    2    4    6    8   10   12    2    4    6     8    10    12</div><div class='input'>
+<span class='co'># array_flatten and array_reshape are each others' conceptual</span>
+<span class='co'># opposites:</span>
+<span class='va'>y</span> <span class='op'>&lt;-</span> <span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'>array_flatten</span><span class='op'>(</span><span class='va'>x</span>, <span class='fl'>2</span><span class='op'>:</span><span class='fl'>3</span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/r/base/identical.html'>identical</a></span><span class='op'>(</span><span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'><a href='array_reshape.html'>array_reshape</a></span><span class='op'>(</span><span class='va'>y</span>, <span class='fl'>2</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>3</span>, <span class='fl'>4</span><span class='op'>)</span><span class='op'>)</span>, <span class='va'>x</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; [1] TRUE</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
