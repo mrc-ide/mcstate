@@ -134,7 +134,7 @@ Currently fixed/varied parameters are dependent on other fixed/varied parameters
 ```{r nested_pars}
 proposal_fixed <- matrix(0.00017)
 row.names(proposal_fixed) <- colnames(proposal_fixed) <- "beta"
-proposal_varied <- array(c(0.0001023619, 9.448206e-05), c(1, 1, 2),
+proposal_varied <- array(c(0.0001, 0.000095), c(1, 1, 2),
                          dimnames = list("gamma", "gamma", c("a", "b")))
 row.names(proposal_varied) <- colnames(proposal_varied) <- "gamma"
 mcmc_pars <- mcstate::pmcmc_parameters_nested$new(
