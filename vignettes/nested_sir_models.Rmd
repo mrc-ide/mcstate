@@ -132,7 +132,7 @@ As with the un-nested case we require a proposal for parameters, however for thi
 Currently fixed/varied parameters are dependent on other fixed/varied parameters only and are independent of varied/fixed parameters.
 
 ```{r nested_pars}
-proposal_fixed <- matrix(0.0001690186)
+proposal_fixed <- matrix(0.00017)
 row.names(proposal_fixed) <- colnames(proposal_fixed) <- "beta"
 proposal_varied <- array(c(0.0001023619, 9.448206e-05), c(1, 1, 2),
                          dimnames = list("gamma", "gamma", c("a", "b")))
