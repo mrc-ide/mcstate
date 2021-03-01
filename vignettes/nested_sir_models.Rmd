@@ -95,7 +95,7 @@ filter <- mcstate::particle_filter$new(data = sir_data,
                                        model = gen_sir,
                                        n_particles = n_particles,
                                        compare = case_compare,
-                                       seed = 1L)
+                                       seed = 42L)
 ```
 
 
@@ -128,13 +128,14 @@ In this example, the two populations have different initial values and priors, b
 Note that this function also takes the new argument `populations` to specify the names of the populations.
 
 Now we can create a `mcstate::pmcmc_parameters_nested` object.
-As with the un-nested case we require a proposal matrix for parameters, however for this object we have one matrix for fixed parameters and one for varied parameters.
+As with the un-nested case we require a proposal for parameters, however for this object we have one matrix for fixed parameters and an array for varied parameters. Either a 3d array can be provided for varied proposals, in which case each layer (the third dimension) corresponds to a square matrix for a population, or a 2d matrix can be provided which is applied for all populations.
 Currently fixed/varied parameters are dependent on other fixed/varied parameters only and are independent of varied/fixed parameters.
 
 ```{r nested_pars}
-proposal_fixed <- matrix(0.01)
+proposal_fixed <- matrix(0.00017)
 row.names(proposal_fixed) <- colnames(proposal_fixed) <- "beta"
-proposal_varied <- matrix(0.01)
+proposal_varied <- array(c(0.0001, 0.000095), c(1, 1, 2),
+                         dimnames = list("gamma", "gamma", c("a", "b")))
 row.names(proposal_varied) <- colnames(proposal_varied) <- "gamma"
 mcmc_pars <- mcstate::pmcmc_parameters_nested$new(
   parameters = list(beta = beta, gamma = gamma),
@@ -193,7 +194,7 @@ plot_particle_filter <- function(history, true_history, times, population, main)
   times <- times[seq(length(times)/2)]
   obs_end = max(times)
   
-  par(mar = c(4.1, 5.1, 0.5, 0.5), las = 1)
+  par(mar = c(4.1, 5.1, 2.5, 0.5), las = 1)
   cols <- c(S = "#8c8cd9", I = "#cc0044", R = "#999966")
   matplot(times, t(history[1, , population,  -1]), type = "l",
           xlab = "Time", ylab = "Number of individuals",
