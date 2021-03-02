@@ -61,9 +61,11 @@ list_to_matrix <- function(data) {
 
 
 list_to_array <- function(data) {
-  len <- lengths(data)
-  stopifnot(all(len == len[[1L]]))
-  array(unlist(data, FALSE, FALSE), c(dim(data[[1L]]), length(data)))
+  if (!is.null(unlist(data))) {
+    len <- lengths(data)
+    stopifnot(all(len == len[[1L]]))
+    array(unlist(data, FALSE, FALSE), c(dim(data[[1L]]), length(data)))
+  }
 }
 
 

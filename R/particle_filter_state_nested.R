@@ -72,8 +72,9 @@ particle_filter_state_nested <- R6::R6Class(
 
       if (is.null(model)) {
         model <- generator$new(pars = pars, step = steps[[1L]],
-                               n_particles = n_particles, n_threads = n_threads,
-                               seed = seed, pars_multi = TRUE)
+                               n_particles = n_particles,
+                               n_threads = n_threads, seed = seed,
+                               pars_multi = TRUE)
         if (is.null(compare)) {
           model$set_index(integer(0))
           model$set_data(data_split)
@@ -83,12 +84,29 @@ particle_filter_state_nested <- R6::R6Class(
       }
 
       if (!is.null(initial)) {
-        initial_data <- initial(model$info(), n_particles, pars)
-        if (is.list(initial_data)) {
-          steps <- particle_steps(steps, initial_data$step)
-          model$set_state(initial_data$state, initial_data$step)
+        initial_data <- Map(initial,
+          info = model$info(),
+          pars = pars,
+          MoreArgs = list(n_particles = n_particles)
+        )
+        if (!is.null(unlist(initial_data))) {
+          if (any(c(c("step", "state") %in% names(initial_data[[1]])))) {
+            init_step <- unlist(lapply(initial_data, "[[", "step"))
+            if (length(init_step) != n_particles * length(pars)) {
+              init_step <- unique(init_step)
+              if (length(init_step) != 1) {
+                stop(sprintf("Expected 'step' to be scalar or length %d",
+                             n_particles * length(pars)))
+              }
+            }
+            init_state <- list_to_array(lapply(initial_data, "[[", "state"))
+            steps <- particle_steps(steps, init_step)
+            model$set_state(init_state, init_step)
+          } else {
+            model$set_state(list_to_array(initial_data))
+          }
         } else {
-          model$set_state(initial_data)
+          model$set_state(NULL)
         }
       }
 

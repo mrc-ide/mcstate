@@ -893,7 +893,7 @@ test_that("particle filter state nested - errors", {
 
 test_that("nested pf with initial", {
   initial <- function(info, n_particles, pars) {
-    list(step = pars[[2]]$initial)
+    list(step = pars$initial)
   }
 
   dat <- example_sir_shared()
@@ -1067,4 +1067,34 @@ test_that("return names on nested history, if present", {
   p$run(pars, save_history = TRUE)
   res <- p$history()
   expect_equal(rownames(res), c("S", "I", "R"))
+})
+
+
+test_that("initialise with complex state - nested", {
+  dat <- example_sir_shared()
+  n_particles <- 100
+
+  initial <- function(info, n_particles, pars) {
+    y <- matrix(0, 5, n_particles)
+    set.seed(1) # so that we can check below
+    i0 <- rpois(n_particles, pars$I0)
+    y[1, ] <- 1100 - i0
+    y[2, ] <- i0
+    y
+  }
+
+  ## Set the incidence to NA so that no shuffling occurs
+  dat$data$incidence <- NA
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, initial = initial)
+
+  pars <- list(list(I0 = 10, beta = 0.2, gamma = 0.1),
+               list(I0 = 10, beta = 0.3, gamma = 0.1))
+
+  set.seed(1)
+  ll <- p$run(pars, save_history = TRUE)
+  expect_equal(p$history()[, , 1, 1],
+               initial(NULL, n_particles, pars[[1]])[1:3, ])
+  expect_equal(p$history()[, , 2, 1],
+               initial(NULL, n_particles, pars[[2]])[1:3, ])
 })
