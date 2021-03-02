@@ -1053,10 +1053,21 @@ test_that("nested particle filter initial not list", {
   expect_is(p$run(pars), "numeric")
 })
 
+test_that("nested particle filter initial - silent length pop", {
+  dat <- example_sir_shared()
+  n_particles <- 42
+  initial <- function(...) list(step = 1)
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, initial = initial, seed = 100)
+  pars <- list(list(beta = 0.2, gamma = 0.1),
+               list(beta = 0.3, gamma = 0.1))
+  expect_silent(p$run(pars))
+})
+
 test_that("nested particle filter initial - error wrong length", {
   dat <- example_sir_shared()
   n_particles <- 42
-  initial <- function(...) list(step = 2:3)
+  initial <- function(...) list(step = 2:4)
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index, initial = initial, seed = 100)
   pars <- list(list(beta = 0.2, gamma = 0.1),

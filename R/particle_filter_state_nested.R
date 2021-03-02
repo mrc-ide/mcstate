@@ -93,13 +93,17 @@ particle_filter_state_nested <- R6::R6Class(
           if (any(c(c("step", "state") %in% names(initial_data[[1]])))) {
             init_step <- unlist(lapply(initial_data, "[[", "step"))
             if (length(init_step) != n_particles * length(pars)) {
-              init_step <- unique(init_step)
-              if (length(init_step) != 1) {
-                stop(sprintf("Expected 'step' to be scalar or length %d",
-                             n_particles * length(pars)))
+              if (length(init_step) == length(pars)) {
+                init_step <- rep(init_step, each = n_particles)
+              } else {
+                stop(sprintf("Expected 'step' to be length %d or %d",
+                             length(pars), n_particles * length(pars)))
               }
             }
-            init_state <- list_to_array(lapply(initial_data, "[[", "state"))
+            init_state <- unlist(lapply(initial_data, "[[", "state"))
+            if (!is.null(init_state)) {
+              init_state <- matrix(init_state, ncol = 2)
+            }
             steps <- particle_steps(steps, init_step)
             model$set_state(init_state, init_step)
           } else {
@@ -110,22 +114,29 @@ particle_filter_state_nested <- R6::R6Class(
         }
       }
 
-      index_data <- if (is.null(index)) NULL else index(model$info())
-      if (!is.null(compare) && !is.null(index_data$run)) {
-        model$set_index(index_data$run)
+      index_data <- if (is.null(index)) NULL else lapply(model$info(), index)
+      if (!is.null(compare) && !is.null(index_data[[1]]$run)) {
+        run <- index_data[[1]]$run
+        ok <- vlapply(index_data[-1], function(x) identical(x$run, run))
+        if (!all(ok)) {
+          stop("Populations should have the same run indices")
+        }
+        model$set_index(run)
       }
 
       if (save_history) {
         len <- nrow(steps) + 1L
-        state <- model$state(index_data$state)
+        index_state <- index_data[[1]]$state
+        state <- model$state(index_state)
         history_value <- array(NA_real_, c(dim(state), len))
         history_value[, , , 1] <- state
         history_order <- array(seq_len(n_particles),
                                c(n_particles, nlayer(state), len))
+
         self$history <- list(
           value = history_value,
           order = history_order,
-          index = index_data$state)
+          index = index_state)
       } else {
         self$history <- NULL
       }
@@ -226,18 +237,19 @@ particle_filter_state_nested <- R6::R6Class(
         if (is.null(compare)) {
           log_weights <- model$compare_data()
         } else {
-          ok <- !is.null(compare(array(state[, , 1],
-                                       c(nrow(state), ncol(state))),
-                                 data_split[[t]][[1]], pars))
+          ok <- !is.null(compare(
+            array_drop(state[, , 1, drop = FALSE], 3),
+            data_split[[t]][[1]], pars[[1]]))
+          
           if (!ok) {
             log_weights <- NULL
           } else {
-            log_weights <- vapply(seq_len(nlayer(state)),
-                                  function(i) {
-                                    compare(array(state[, , i],
-                                                  c(nrow(state), ncol(state))),
-                                            data_split[[t]][[i]], pars)
-                                  }, numeric(ncol(state)))
+            log_weights <- vapply(
+              seq_len(nlayer(state)),
+              function(i) {
+                compare(array_drop(state[, , i, drop = FALSE], 3),
+                        data_split[[t]][[i]], pars[[i]])
+              }, numeric(ncol(state)))
           }
 
         }
