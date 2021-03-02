@@ -924,7 +924,7 @@ test_that("nested pf with initial", {
 
   ## Running from the beginning is much worse:
   set.seed(1)
-  ll3 <- p2$run(list(pars, list(initial = 0L)))
+  ll3 <- p2$run(list(pars, list(initial = c(0L, 0L))))
   expect_true(all(ll3 < ll1))
 })
 
