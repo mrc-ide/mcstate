@@ -61,7 +61,6 @@ pmcmc_sample <- function(object, n_sample, burnin = NULL) {
 
 
 pmcmc_filter <- function(object, i) {
-
   if (!is.null(object$chain)) {
     object$chain <- object$chain[i]
   }
@@ -94,10 +93,10 @@ pmcmc_filter_nested <- function(object, i) {
   }
   if (!is.null(object$trajectories)) {
     object$trajectories$state <-
-      object$trajectories$state[, , , i, drop = FALSE]
+      object$trajectories$state[, i, , , drop = FALSE]
   }
   if (!is.null(object$restart)) {
-    object$restart$state <- object$restart$state[, , , i, drop = FALSE]
+    object$restart$state <- object$restart$state[, i, , , drop = FALSE]
   }
   object
 }
@@ -116,6 +115,7 @@ pmcmc_filter_nested <- function(object, i) {
 ##'
 ##' @export
 pmcmc_combine <- function(..., samples = list(...)) {
+
   assert_list_of(samples, "mcstate_pmcmc")
 
   iteration <- lapply(samples, "[[", "iteration")
@@ -125,8 +125,9 @@ pmcmc_combine <- function(..., samples = list(...)) {
 
   check_combine(samples, iteration, state, trajectories, restart)
 
+  iteration <- unlist(iteration, FALSE, FALSE)
+
   if (is_3d_array(samples[[1]]$pars)) {
-    iteration <- iteration[[1]]
     chain <- rep(seq_along(samples), each = nlayer(samples[[1]]$pars))
     pars <- array_bind(arrays = lapply(samples, "[[", "pars"))
     dimnames(pars)[1:2] <- dimnames(samples[[1]]$pars)[1:2]
@@ -136,12 +137,11 @@ pmcmc_combine <- function(..., samples = list(...)) {
     if (is.null(state[[1]])) {
       state <- NULL
     } else {
-      state <- array_bind(arrays = lapply(samples, "[[", "state"))
+      state <- array_bind(arrays = state)
     }
 
     combiner <- combine_state_nested
   } else {
-    iteration <- unlist(iteration, FALSE, FALSE)
     chain <- rep(seq_along(samples), each = nrow(samples[[1]]$pars))
     pars <- do.call(rbind, lapply(samples, "[[", "pars"))
     probabilities <- do.call(rbind, lapply(samples, "[[", "probabilities"))
@@ -234,12 +234,9 @@ combine_state_nested <- function(x) {
     stop(sprintf("%s data is inconsistent", deparse(substitute(x))))
   }
 
-  state <- lapply(x, function(el) aperm(el$state, c(1, 4, 3, 2)))
-  state <- array(
-    unlist(state),
-    dim(state[[1]]) * c(1, 1, 1, length(x)))
-  state <- aperm(state, c(1, 4, 3, 2))
-  rownames(state) <- rownames(x[[1]]$state)
+  state <- aperm(
+    array_bind(arrays = lapply(x, function(y) aperm(y$state, c(1, 4, 3, 2)))),
+    c(1, 4, 3, 2))
 
   ret <- x[[1]]
   ret$state <- state

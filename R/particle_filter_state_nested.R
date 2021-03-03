@@ -240,7 +240,7 @@ particle_filter_state_nested <- R6::R6Class(
           ok <- !is.null(compare(
             array_drop(state[, , 1, drop = FALSE], 3),
             data_split[[t]][[1]], pars[[1]]))
-          
+
           if (!ok) {
             log_weights <- NULL
           } else {

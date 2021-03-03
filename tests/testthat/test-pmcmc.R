@@ -778,9 +778,12 @@ test_that("pmcmc nested sir - 2 chains", {
                          prior = function(p) log(1e-10))),
     proposal_fixed = proposal_fixed, proposal_varied = proposal_varied)
 
-  control1 <- pmcmc_control(50, save_state = FALSE, n_chains = 1)
+  control1 <- pmcmc_control(50, save_state = TRUE, n_chains = 1,
+                            save_restart = c(10, 20, 30, 40),
+                            save_trajectories = TRUE)
   control2 <- pmcmc_control(50, n_chains = 3, save_state = TRUE,
-                            save_restart = TRUE, save_trajectories = TRUE)
+                            save_restart = c(10, 20, 30, 40),
+                            save_trajectories = TRUE)
 
   set.seed(1)
   res1 <- pmcmc(pars, p1, control = control1)
@@ -791,8 +794,12 @@ test_that("pmcmc nested sir - 2 chains", {
   res3 <- pmcmc(pars, p2, control = control2)
   expect_s3_class(res3, "mcstate_pmcmc")
   expect_equal(res3$chain, rep(1:3, each = 51))
+  expect_equal(dim(res3$trajectories$state), c(3, 153, 2, 101))
 
   expect_equal(res1$pars, res3$pars[, , 1:51])
+  expect_equal(res1$state, res3$state[, , 1:51])
+  expect_equal(res1$restart$state, res3$restart$state[, 1:51,,])
+  expect_equal(res1$trajectories$state, res3$trajectories$state[, 1:51, ,])
 })
 
 test_that("sample_trajectory_nested single state", {
@@ -835,4 +842,72 @@ test_that("return names on nested pmcmc output", {
 
   expect_null(rownames(results1$trajectories$state))
   expect_equal(rownames(results2$trajectories$state), c("a", "b", "c"))
+})
+
+
+
+test_that("run pmcmc with the particle filter and retain history", {
+  dat <- example_sir_shared()
+
+  proposal_fixed <- matrix(0.00026)
+  proposal_varied <- matrix(0.00057)
+
+  pars <- pmcmc_parameters_nested$new(
+    list(pmcmc_varied_parameter("beta", letters[1:2], c(0.2, 0.3),
+                                min = 0, max = 1,
+                                prior = function(p) log(1e-10)),
+         pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
+                         prior = function(p) log(1e-10))),
+    proposal_fixed = proposal_fixed, proposal_varied = proposal_varied)
+
+
+  n_particles <- 100
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index)
+  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index)
+
+  control1 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE)
+  control2 <- pmcmc_control(30, save_trajectories = FALSE, save_state = FALSE)
+
+  set.seed(1)
+  results1 <- pmcmc(pars, p1, control = control1)
+  set.seed(1)
+  results2 <- pmcmc(pars, p2, control = control2)
+
+  expect_setequal(
+    names(results1),
+    c("chain", "iteration",
+      "pars", "probabilities", "state", "trajectories", "restart", "predict"))
+
+  expect_null(results1$chain)
+  expect_equal(results1$iteration, 0:30)
+
+  ## Including or not the history does not change the mcmc trajectory:
+  expect_identical(names(results1), names(results2))
+  expect_equal(results1$pars, results2$pars)
+  expect_equal(results1$probabilities, results2$probabilities)
+
+  ## Parameters and probabilities have the expected shape
+  expect_equal(dim(results1$pars), c(2, 2, 31))
+  expect_equal(rownames(results1$pars), c("beta", "gamma"))
+  expect_equal(colnames(results1$pars), c("a", "b"))
+
+  expect_equal(dim(results1$probabilities), c(3, 2, 31))
+  expect_equal(rownames(results1$probabilities),
+               c("log_prior", "log_likelihood", "log_posterior"))
+
+  ## History, if returned, has the correct shape
+  expect_equal(dim(results1$state), c(5, 2, 31)) # state, mcmc
+
+  ## Trajectories, if returned, have the same shape
+  expect_s3_class(results1$trajectories, "mcstate_trajectories")
+  expect_equal(dim(results1$trajectories$state), c(3, 31, 2, 101))
+  expect_equal(results1$trajectories$step, seq(0, 400, by = 4))
+  expect_equal(results1$trajectories$rate, 4)
+
+  ## Additional information required to predict
+  expect_setequal(
+    names(results1$predict),
+    c("transform", "index", "rate", "step", "filter"))
 })

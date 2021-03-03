@@ -101,7 +101,7 @@ pmcmc_multiple_series <- function(pars, initial, filter, control) {
 
   for (i in seq_along(samples)) {
     if (control$progress) {
-      message(sprintf("Running chain %d / %d", i, control$n_chains))
+      message(sprintf("\nRunning chain %d / %d", i, control$n_chains))
     }
     if (inherits(pars, "pmcmc_parameters_nested")) {
       samples[[i]] <- pmcmc_single_chain_nested(pars, initial[, , i], filter,

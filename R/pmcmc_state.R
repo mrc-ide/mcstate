@@ -326,9 +326,9 @@ pmcmc_state <- R6::R6Class(
       }
 
       if (length(private$control$save_restart) > 0) {
-        ## [state x pop x time]
+        ## [state x sample x pop x time]
         restart_state  <-
-          list_to_array(private$history_restart$get())
+          aperm(list_to_array(private$history_restart$get()), c(1, 4, 2, 3))
         restart <- list(time = private$control$save_restart,
                         state = restart_state)
       }
@@ -337,11 +337,12 @@ pmcmc_state <- R6::R6Class(
         ## [state x particle x population x step]
         trajectories_state <-
           list_to_array(private$history_trajectories$get())
-        trajectories_state <- aperm(trajectories_state, c(1, 3, 2, 4))
+        trajectories_state <- aperm(trajectories_state, c(1, 4, 2, 3))
         rownames(trajectories_state) <- names(predict$index)
 
         data <- private$filter$inputs()$data
-        step <- c(data$step_start[[1]], data$step_end)
+        step_end <- data$step_end[seq_len(table(data$population)[1])]
+        step <- c(data$step_start[[1]], step_end)
         trajectories <- mcstate_trajectories(step, predict$rate,
                                              trajectories_state, FALSE)
       }
