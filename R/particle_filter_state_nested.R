@@ -117,10 +117,6 @@ particle_filter_state_nested <- R6::R6Class(
       index_data <- if (is.null(index)) NULL else lapply(model$info(), index)
       if (!is.null(compare) && !is.null(index_data[[1]]$run)) {
         run <- index_data[[1]]$run
-        ok <- vlapply(index_data[-1], function(x) identical(x$run, run))
-        if (!all(ok)) {
-          stop("Populations should have the same run indices")
-        }
         model$set_index(run)
       }
 
