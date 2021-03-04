@@ -139,3 +139,30 @@ test_that("names are copied from index into predictions", {
   expect_equal(rownames(y2$state), c("a", "b", "c"))
   expect_equal(rownames(y3$state), c("a", "b", "c"))
 })
+
+test_that("can run a prediction from a nested mcmc run", {
+  dat <- example_sir_shared()
+
+  n_particles <- 100
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index)
+
+  set.seed(1)
+  control <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE)
+  results <- pmcmc(dat$pars, p, control = control)
+
+  steps <- seq(tail(dat$data$step_end, 1), by = 4, length.out = 26)
+  y <- pmcmc_predict(results, steps)
+
+  expect_equal(y$step, steps)
+  expect_equal(y$rate, 4)
+  expect_equal(y$predicted, rep(TRUE, length(steps)))
+
+  expect_equal(dim(y$state), c(3, 31, 2, length(steps)))
+
+  ## Check predictions are reasonable:
+  expect_true(all(diff(t(y$state[1, , 1, ])) <= 0))
+  expect_true(all(diff(t(y$state[3, , 2, ])) >= 0))
+
+  expect_silent(pmcmc_predict(results, steps, prepend_trajectories = TRUE))
+})

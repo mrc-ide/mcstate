@@ -846,7 +846,7 @@ test_that("return names on nested pmcmc output", {
 
 
 
-test_that("run pmcmc with the particle filter and retain history", {
+test_that("run nested pmcmc with the particle filter and retain history", {
   dat <- example_sir_shared()
 
   proposal_fixed <- matrix(0.00026)

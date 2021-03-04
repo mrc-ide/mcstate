@@ -320,7 +320,7 @@ pmcmc_state <- R6::R6Class(
       }
 
       if (private$control$save_state) {
-        # [state x pop x time]
+        # [state x pop x step]
         state <- list_to_array(private$history_state$get())
         colnames(state) <- rownames(private$curr_pars)
       }

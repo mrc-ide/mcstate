@@ -1120,3 +1120,56 @@ test_that("initialise with complex state - nested", {
   expect_equal(p$history()[, , 2, 1],
                initial(NULL, n_particles, pars[[2]])[1:3, ])
 })
+
+
+test_that("Control the starting point of a nested simulation", {
+  dat <- example_sir_shared()
+  n_particles <- 42
+
+  data <- dat$data
+  ## Drop extra columns that are confusing in this context
+  data <- data[setdiff(names(data), c("day_start", "day_end"))]
+  ## Offset the data by a considerable margin:
+  offset <- 400
+  data[c("step_start", "step_end")] <-
+    data[c("step_start", "step_end")] + offset
+  ## A burnin step:
+  ## pop a
+  intro_a <- data[data$population == "a", ][1, ]
+  intro_a$incidence <- NA
+  intro_a$step_start <- 0
+  intro_a$step_end <- data$step_start[[1]]
+  ## pop b
+  intro_b <- data[data$population == "b", ][1, ]
+  intro_b$incidence <- NA
+  intro_b$step_start <- 0
+  intro_b$step_end <- data$step_start[[1]]
+  ## Our combination data:
+  data <- rbind(intro_a,
+                data[data$population == "a", ],
+                intro_b,
+                data[data$population == "b", ])
+
+  pars <- list(list(I0 = 10, beta = 0.2, gamma = 0.1, step = offset),
+               list(I0 = 10, beta = 0.3, gamma = 0.1, step = offset))
+
+  ## The usual version, with normal data:
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index)
+  set.seed(1)
+  ll1 <- p1$run(pars)
+
+  ## Then tune the start date to get the same effect:
+  initial <- function(info, n_particles, pars) {
+    list(state = c(1000, pars$I0, 0, 0, 0),
+         step = pars$step)
+  }
+
+  ## Tuning the start date
+  p2 <- particle_filter$new(data, dat$model, n_particles, dat$compare,
+                            index = dat$index, initial = initial)
+  set.seed(1)
+  ll2 <- p2$run(pars)
+
+  expect_identical(ll1, ll2)
+})
