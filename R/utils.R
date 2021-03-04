@@ -66,7 +66,7 @@ list_to_array <- function(data) {
     which <- len > 0
     len <- len[which]
     stopifnot(length(unique(len)) == 1)
-    
+
     data <- data[which]
     array(unlist(data, FALSE, FALSE), c(dim(data[[1L]]), length(data)))
   }

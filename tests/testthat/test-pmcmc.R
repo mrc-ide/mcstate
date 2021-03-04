@@ -798,8 +798,8 @@ test_that("pmcmc nested sir - 2 chains", {
 
   expect_equal(res1$pars, res3$pars[, , 1:51])
   expect_equal(res1$state, res3$state[, , 1:51])
-  expect_equal(res1$restart$state, res3$restart$state[, 1:51,,])
-  expect_equal(res1$trajectories$state, res3$trajectories$state[, 1:51, ,])
+  expect_equal(res1$restart$state, res3$restart$state[, 1:51, , ])
+  expect_equal(res1$trajectories$state, res3$trajectories$state[, 1:51, , ])
 })
 
 test_that("sample_trajectory_nested single state", {

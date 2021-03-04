@@ -29,11 +29,11 @@ bind_mcstate_trajectories_nested <- function(a, b) {
             last(a$step) == b$step[[1]],
             a$rate == b$rate,
             dim(a)[1:2] == dim(b)[1:2])
-  
+
   step <- c(a$step, b$step[-1])
   state <- array_bind(a$state, b$state[, , , -1, drop = FALSE])
   rownames(state) <- rownames(b$state) %||% rownames(a$state)
   predicted <- c(a$predicted, b$predicted[-1])
-  
+
   mcstate_trajectories(step, a$rate, state, predicted)
 }
