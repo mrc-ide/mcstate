@@ -61,16 +61,13 @@ pmcmc_predict <- function(object, steps, prepend_trajectories = FALSE,
   } else {
     pars <- apply(object$pars, 1, object$predict$transform)
 
-    ## NOTE: n_particles here is 1 because every particle gets a
-    ## different state.
-    mod <- model$new(pars, steps[[1]], 1L, n_threads = n_threads,
+    mod <- model$new(pars, steps[[1]], NULL, n_threads = n_threads,
                      seed = seed, pars_multi = TRUE)
 
-    mod$set_state(array_reshape(state, 2, c(1, length(pars))))
+    mod$set_state(state)
 
     mod$set_index(index)
     y <- mod$simulate(steps)
-    y <- array_drop(y, 2L) # (state x particles(1) x pars x time)
 
     res <- mcstate_trajectories(steps, object$predict$rate, y, TRUE)
 
@@ -95,17 +92,12 @@ pmcmc_predict_nested <- function(object, state, index, model, n_threads,
   model <- object$predict$filter$model
   n_threads <- n_threads %||% object$predict$filter$n_threads
 
-  ## NOTE: n_particles here is 1 because every particle gets a
-  ## different state.
-  mod <- model$new(pars, steps[[1]], 1L, n_threads = n_threads,
+  mod <- model$new(pars, steps[[1]], NULL, n_threads = n_threads,
                    seed = seed, pars_multi = TRUE)
 
-  mod$set_state(aperm(array_reshape(state, 3, c(1, nrow(pars))),
-                      c(1, 3, 4, 2)))
-
+  mod$set_state(aperm(state, c(1, 3, 2)))
   mod$set_index(index)
   y <- mod$simulate(steps)
-  y <- array_drop(y, 2L) # (state x particles(1) x pars x time)
 
   res <- mcstate_trajectories(steps, object$predict$rate, y, TRUE)
 
