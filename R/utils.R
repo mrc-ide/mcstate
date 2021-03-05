@@ -206,3 +206,7 @@ set_layernames <- function(m, nms) {
 normalise <- function(x) {
   x / sum(x)
 }
+
+try_list_get <- function(list, nm) {
+  tryCatch(list[[nm]], error = function(e) NULL)
+}

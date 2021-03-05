@@ -341,7 +341,7 @@ pmcmc_state <- R6::R6Class(
         rownames(trajectories_state) <- names(predict$index)
 
         data <- private$filter$inputs()$data
-        step_end <- data$step_end[seq_len(table(data$population)[1])]
+        step_end <- data$step_end[seq_len(tabulate(data$population)[1])]
         step <- c(data$step_start[[1]], step_end)
         trajectories <- mcstate_trajectories(step, predict$rate,
                                              trajectories_state, FALSE)

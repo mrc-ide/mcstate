@@ -86,6 +86,12 @@ particle_filter_state_nested <- R6::R6Class(
       steps <- set_nested_model_state(model, initial, pars, n_particles, steps)
 
       index_data <- if (is.null(index)) NULL else lapply(model$info(), index)
+
+      nok <- !all(vlapply(index_data[-1], identical, index_data[[1]]))
+      if (nok) {
+        stop("index must be identical across populations")
+      }
+
       if (!is.null(compare) && !is.null(index_data[[1]]$run)) {
         run <- index_data[[1]]$run
         model$set_index(run)
@@ -204,21 +210,19 @@ particle_filter_state_nested <- R6::R6Class(
         if (is.null(compare)) {
           log_weights <- model$compare_data()
         } else {
-          ok <- !is.null(compare(
-            array_drop(state[, , 1, drop = FALSE], 3),
-            data_split[[t]][[1]], pars[[1]]))
-
-          if (!ok) {
-            log_weights <- NULL
-          } else {
-            log_weights <- vapply(
+          log_weights <- lapply(
               seq_len(nlayer(state)),
               function(i) {
                 compare(array_drop(state[, , i, drop = FALSE], 3),
                         data_split[[t]][[i]], pars[[i]])
-              }, numeric(ncol(state)))
-          }
+              })
 
+          if (all(lengths(log_weights) == 0)) {
+            log_weights <- NULL
+          } else {
+            log_weights <- vapply(log_weights, identity,
+                                  numeric(length(log_weights[[1]])))
+          }
         }
 
         if (is.null(log_weights)) {
@@ -307,33 +311,42 @@ set_nested_model_state <- function(model, initial, pars, n_particles, steps) {
     )
 
     if (!all(vlapply(initial_data, is.null))) {
-      if (any(c(c("step", "state") %in% names(initial_data[[1]])))) {
-        init_step <- lapply(initial_data, "[[", "step")
-        initial_step_len <- lengths(init_step)
-        if (length(unique(initial_step_len)) != 1) {
-          stop(
-            sprintf(
-              "initial() produced unequal step lengths %s",
-              str_collapse(initial_step_len)
-            )
-          )
-        }
+      init_step <- lapply(initial_data, try_list_get, "step")
+      init_step_len <- lengths(init_step)
+      init_state <- lapply(initial_data, try_list_get, "state")
+      init_state_len <- lengths(init_state)
 
-        initial_step_len <- initial_step_len[[1]]
-        if (initial_step_len == 1) {
+      if (length(unique(init_step_len)) != 1) {
+          stop(sprintf("initial() produced unequal step lengths %s",
+              str_collapse(init_step_len)))
+      }
+      init_step_len <- init_step_len[[1]]
+
+      if (length(unique(init_state_len)) != 1) {
+          stop(sprintf("initial() produced unequal state lengths %s",
+              str_collapse(init_state_len)))
+      }
+      init_state_len <- init_state_len[[1]]
+
+      if (init_step_len > 0 || init_state_len > 0) {
+        if (init_step_len == 0) {
+          init_step <- NULL
+        } else if (init_step_len == 1) {
           init_step <- rep(unlist(init_step), each = n_particles)
-        } else if (initial_step_len == n_particles) {
+        } else if (init_step_len == n_particles) {
           init_step <- unlist(init_step)
         } else {
           stop(sprintf("initial() produced unexpected step length %d
-                             (expected 1 or %d)", initial_step_len,
+                             (expected 1 or %d)", init_step_len,
                        n_particles))
         }
 
-        init_state <- unlist(lapply(initial_data, "[[", "state"))
-        if (!is.null(init_state)) {
-          init_state <- matrix(init_state, ncol = 2)
+        if (init_state_len > 0) {
+          init_state <- matrix(unlist(init_state), ncol = 2)
+        } else {
+          init_state <- NULL
         }
+
         steps <- particle_steps(steps, init_step)
         model$set_state(init_state, init_step)
       } else {
