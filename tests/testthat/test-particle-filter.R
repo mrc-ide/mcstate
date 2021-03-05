@@ -1224,7 +1224,7 @@ test_that("nested error on unequal state", {
     list(state = c(1000, pars$I0, 0, 0, 0))
   }
 
-  p <- particle_filter$new(data, dat$model, n_particles, dat$compare,
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index, initial = initial)
 
   expect_error(p$run(pars), "unequal state")
@@ -1241,7 +1241,7 @@ test_that("nested silent on initial w. state w/o step", {
     list(state = c(1000, 0, 0, 0, 0))
   }
 
-  p <- particle_filter$new(data, dat$model, n_particles, dat$compare,
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index, initial = initial)
   expect_is(p$run(pars), "numeric")
 })
