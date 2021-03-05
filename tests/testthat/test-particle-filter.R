@@ -924,7 +924,9 @@ test_that("nested pf with initial", {
 
   ## Running from the beginning is much worse:
   set.seed(1)
-  ll3 <- p2$run(list(pars, list(initial = c(0L, 0L))))
+  pars <- list(list(beta = 0.2, gamma = 0.1, initial = 0),
+               list(beta = 0.3, gamma = 0.1, initial = 0))
+  ll3 <- p2$run(pars)
   expect_true(all(ll3 < ll1))
 })
 
@@ -1073,6 +1075,17 @@ test_that("nested particle filter initial - error wrong length", {
   pars <- list(list(beta = 0.2, gamma = 0.1),
                list(beta = 0.3, gamma = 0.1))
   expect_error(p$run(pars), "length")
+
+  dat <- example_sir_shared()
+  n_particles <- 42
+  initial <- function(info, n_particles, pars) {
+    list(step = pars$initial)
+  }
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, initial = initial, seed = 100)
+  pars <- list(list(beta = 0.2, gamma = 0.1, initial = 0),
+               list(beta = 0.3, gamma = 0.1, initial = 0:1))
+  expect_error(p$run(pars), "unequal step")
 })
 
 test_that("return names on nested history, if present", {

@@ -83,36 +83,7 @@ particle_filter_state_nested <- R6::R6Class(
         model$reset(pars, steps[[1L]])
       }
 
-      if (!is.null(initial)) {
-        initial_data <- Map(initial,
-          info = model$info(),
-          pars = pars,
-          MoreArgs = list(n_particles = n_particles)
-        )
-        if (!is.null(unlist(initial_data))) {
-          if (any(c(c("step", "state") %in% names(initial_data[[1]])))) {
-            init_step <- unlist(lapply(initial_data, "[[", "step"))
-            if (length(init_step) != n_particles * length(pars)) {
-              if (length(init_step) == length(pars)) {
-                init_step <- rep(init_step, each = n_particles)
-              } else {
-                stop(sprintf("Expected 'step' to be length %d or %d",
-                             length(pars), n_particles * length(pars)))
-              }
-            }
-            init_state <- unlist(lapply(initial_data, "[[", "state"))
-            if (!is.null(init_state)) {
-              init_state <- matrix(init_state, ncol = 2)
-            }
-            steps <- particle_steps(steps, init_step)
-            model$set_state(init_state, init_step)
-          } else {
-            model$set_state(list_to_array(initial_data))
-          }
-        } else {
-          model$set_state(NULL)
-        }
-      }
+      set_nested_model_state(model, initial, pars, n_particles, steps)
 
       index_data <- if (is.null(index)) NULL else lapply(model$info(), index)
       if (!is.null(compare) && !is.null(index_data[[1]]$run)) {
@@ -325,3 +296,47 @@ particle_filter_state_nested <- R6::R6Class(
       ret
     }
   ))
+
+
+set_nested_model_state <- function(model, initial, pars, n_particles, steps) {
+        if (!is.null(initial)) {
+          initial_data <- Map(initial,
+            info = model$info(),
+            pars = pars,
+            MoreArgs = list(n_particles = n_particles)
+          )
+
+          if (!all(vlapply(initial_data, is.null))) {
+            if (any(c(c("step", "state") %in% names(initial_data[[1]])))) {
+              init_step <- lapply(initial_data, "[[", "step")
+              initial_step_len <- lengths(init_step)
+              if (length(unique(initial_step_len)) != 1) {
+                stop(
+                  sprintf("initial() produced unequal step lengths %s",
+                          str_collapse(initial_step_len)))
+              }
+              initial_step_len <- initial_step_len[[1]]
+              if (initial_step_len == 1) {
+                init_step <- rep(unlist(init_step), each = n_particles)
+              } else if (initial_step_len == n_particles) {
+                init_step <- unlist(init_step)
+              } else {
+                stop(sprintf("initial() produced unexpected step length %d
+                             (expected 1 or %d)", initial_step_len,
+                             n_particles))
+              }
+
+              init_state <- unlist(lapply(initial_data, "[[", "state"))
+              if (!is.null(init_state)) {
+                init_state <- matrix(init_state, ncol = 2)
+              }
+              steps <- particle_steps(steps, init_step)
+              model$set_state(init_state, init_step)
+            } else {
+              model$set_state(list_to_array(initial_data))
+            }
+          } else {
+            model$set_state(NULL)
+          }
+        }
+      }
