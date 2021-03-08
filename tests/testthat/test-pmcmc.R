@@ -937,4 +937,10 @@ test_that("nested_step_ratio works", {
   res2 <- pmcmc(pars, p, control = control)
   expect_equal(as.numeric(res2$pars[2, , ]), rep(0.1, 62))
   expect_false(identical(as.numeric(res2$pars[1, , ]), rep(c(0.2, 0.3), 31)))
+
+  control <- pmcmc_control(30, nested_step_ratio = 1 / 2)
+  expect_is(pmcmc(pars, p, control = control), "mcstate_pmcmc")
+
+  control <- pmcmc_control(30, nested_step_ratio = 2)
+  expect_is(pmcmc(pars, p, control = control), "mcstate_pmcmc")
 })
