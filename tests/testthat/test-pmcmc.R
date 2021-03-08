@@ -911,3 +911,36 @@ test_that("run nested pmcmc with the particle filter and retain history", {
     names(results1$predict),
     c("transform", "index", "rate", "step", "filter"))
 })
+
+
+test_that("nested_step_ratio works", {
+  dat <- example_sir_shared()
+  p <- particle_filter$new(dat$data, dat$model, 10, dat$compare,
+                           dat$index)
+  proposal_fixed <- matrix(0.00026)
+  proposal_varied <- matrix(0.00057)
+
+  pars <- pmcmc_parameters_nested$new(
+    list(pmcmc_varied_parameter("beta", letters[1:2], c(0.2, 0.3),
+                                min = 0, max = 1,
+                                prior = function(p) log(1e-10)),
+         pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
+                         prior = function(p) log(1e-10))),
+    proposal_fixed = proposal_fixed, proposal_varied = proposal_varied)
+
+  control <- pmcmc_control(30, nested_step_ratio = 30)
+  res1 <- pmcmc(pars, p, control = control)
+  expect_equal(as.numeric(res1$pars[1, , ]), rep(c(0.2, 0.3), 31))
+  expect_false(identical(as.numeric(res1$pars[2, , ]), rep(0.1, 62)))
+
+  control <- pmcmc_control(30, nested_step_ratio = 1 / 30)
+  res2 <- pmcmc(pars, p, control = control)
+  expect_equal(as.numeric(res2$pars[2, , ]), rep(0.1, 62))
+  expect_false(identical(as.numeric(res2$pars[1, , ]), rep(c(0.2, 0.3), 31)))
+
+  control <- pmcmc_control(30, nested_step_ratio = 1 / 2)
+  expect_is(pmcmc(pars, p, control = control), "mcstate_pmcmc")
+
+  control <- pmcmc_control(30, nested_step_ratio = 2)
+  expect_is(pmcmc(pars, p, control = control), "mcstate_pmcmc")
+})

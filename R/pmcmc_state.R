@@ -211,6 +211,9 @@ pmcmc_state <- R6::R6Class(
       steps <- seq(from = private$curr_step + 1L,
                    length.out = to - private$curr_step)
 
+      run_alternate_step <- alternate(private$run_fixed, private$run_varied,
+                                      private$control$nested_step_ratio)
+
       for (i in steps) {
         private$tick()
 
@@ -220,11 +223,7 @@ pmcmc_state <- R6::R6Class(
           private$update_history_nested()
         }
 
-        if (i %% 2) {
-          private$run_fixed()
-        } else {
-          private$run_varied()
-        }
+        run_alternate_step(i)
 
         private$history_pars$add(private$curr_pars)
         private$history_probabilities$add(
@@ -393,4 +392,19 @@ history_collector <- function(n) {
   }
 
   list(add = add, get = get)
+}
+
+
+alternate <- function(f, g, ratio) {
+  if (ratio < 1) {
+    return(alternate(g, f, 1 / ratio))
+  }
+
+  function(i) {
+    if (i %% (ratio + 1) == 0) {
+      g()
+    } else {
+      f()
+    }
+  }
 }

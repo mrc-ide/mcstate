@@ -210,3 +210,17 @@ normalise <- function(x) {
 try_list_get <- function(list, nm) {
   tryCatch(list[[nm]], error = function(e) NULL)
 }
+
+
+test_integer <- function(x, name = deparse(substitute(x)),
+                         what = "integer") {
+  if (!(is.integer(x))) {
+    eps <- sqrt(.Machine$double.eps)
+    usable_as_integer <- is.numeric(x) && (max(abs(round(x) - x)) < eps)
+    if (!usable_as_integer) {
+      return(FALSE)
+    }
+  }
+
+  TRUE
+}

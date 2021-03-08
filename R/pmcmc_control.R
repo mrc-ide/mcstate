@@ -99,6 +99,16 @@
 ##' @param progress Logical, indicating if a progress bar should be
 ##'   displayed, using [`progress::progress_bar`].
 ##'
+##' @param nested_step_ratio Either integer or 1/integer, which specifies the
+##'   ratio of fixed:varied steps in a nested pMCMC. For example `3` would run
+##'   3 steps proposing fixed parameters only and then 1 step proposing varied
+##'   parameters only; whereas `1/3` would run 3 varied steps
+##'   for every 1 fixed step. The default value of `1` runs an equal number of
+##'   iterations updating the fixed and varied parameters. Sensible choices
+##'   of this parameter may depend on the true ratio of fixed:varied parameters
+##'   or on desired run-time, for example updating fixed parameters is
+##'   quicker so more varied steps could be more efficient.
+##'
 ##' @return A `pmcmc_control` object, which should not be modified
 ##'   once created.
 ##'
@@ -122,7 +132,8 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
                           n_workers = 1L, n_steps_each = NULL,
                           rerun_every = Inf, use_parallel_seed = FALSE,
                           save_state = TRUE, save_restart = NULL,
-                          save_trajectories = FALSE, progress = FALSE) {
+                          save_trajectories = FALSE, progress = FALSE,
+                          nested_step_ratio = 1) {
   assert_scalar_positive_integer(n_steps)
   assert_scalar_positive_integer(n_chains)
   assert_scalar_positive_integer(n_workers)
@@ -167,6 +178,12 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
     assert_strictly_increasing(save_restart)
   }
 
+  ok <- test_integer(nested_step_ratio) || test_integer(1 / nested_step_ratio)
+  if (!ok) {
+    stop(sprintf("Either 'nested_step_ratio' (%g) or 1/'nested_step_ratio'
+                          must be an integer", nested_step_ratio))
+  }
+
   ret <- list(n_steps = n_steps,
               n_chains = n_chains,
               n_workers = n_workers,
@@ -177,7 +194,8 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
               save_state = save_state,
               save_restart = save_restart,
               save_trajectories = save_trajectories,
-              progress = progress)
+              progress = progress,
+              nested_step_ratio = nested_step_ratio)
   class(ret) <- "pmcmc_control"
   ret
 }
