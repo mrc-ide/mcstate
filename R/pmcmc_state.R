@@ -214,8 +214,6 @@ pmcmc_state <- R6::R6Class(
       run_alternate_step <- alternate(private$run_fixed, private$run_varied,
                                       private$control$nested_step_ratio)
 
-      ## add linear counter for step ratio
-      j <- 1
       for (i in steps) {
         private$tick()
 
@@ -225,8 +223,7 @@ pmcmc_state <- R6::R6Class(
           private$update_history_nested()
         }
 
-        run_alternate_step(j)
-        j <- j + 1
+        run_alternate_step(i)
 
         private$history_pars$add(private$curr_pars)
         private$history_probabilities$add(

@@ -103,7 +103,11 @@
 ##'   ratio of fixed:varied steps in a nested pMCMC. For example `3` would run
 ##'   3 steps proposing fixed parameters only and then 1 step proposing varied
 ##'   parameters only; whereas `1/3` would run 3 varied steps
-##'   for every 1 fixed step.
+##'   for every 1 fixed step. The default value of `1` runs an equal number of
+##'   iterations updating the fixed and varied parameters. Sensible choices
+##'   of this parameter may depend on the true ratio of fixed:varied parameters
+##'   or on desired run-time, for example updating fixed parameters is
+##'   quicker so more varied steps could be more efficient.
 ##'
 ##' @return A `pmcmc_control` object, which should not be modified
 ##'   once created.
