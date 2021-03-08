@@ -174,9 +174,8 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
     assert_strictly_increasing(save_restart)
   }
 
-  nok <- !test_integer(nested_step_ratio) &&
-    !test_integer(1 / nested_step_ratio)
-  if (nok) {
+  ok <- test_integer(nested_step_ratio) || test_integer(1 / nested_step_ratio)
+  if (!ok) {
     stop(sprintf("Either 'nested_step_ratio' (%g) or 1/'nested_step_ratio'
                           must be an integer", nested_step_ratio))
   }
