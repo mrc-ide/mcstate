@@ -153,34 +153,34 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
         n_threads_total, n_workers))
     }
   }
-  
+
   if (!identical(unname(rerun_every), Inf)) {
     assert_scalar_positive_integer(rerun_every)
-    
+
   }
-  
+
   assert_scalar_logical(use_parallel_seed)
   assert_scalar_logical(save_state)
   assert_scalar_logical(save_trajectories)
   assert_scalar_logical(progress)
-  
+
   if (n_chains < n_workers) {
     stop(sprintf("'n_chains' (%d) is less than 'n_workers' (%d)",
                  n_chains, n_workers))
   }
-  
+
   if (!is.null(save_restart)) {
     ## possibly assert_integer(save_restart)?
     assert_strictly_increasing(save_restart)
   }
-  
+
   nok <- !test_integer(nested_step_ratio) &&
     !test_integer(1 / nested_step_ratio)
   if (nok) {
     stop(sprintf("Either 'nested_step_ratio' (%g) or 1/'nested_step_ratio'
                           must be an integer", nested_step_ratio))
   }
-  
+
   ret <- list(n_steps = n_steps,
               n_chains = n_chains,
               n_workers = n_workers,
