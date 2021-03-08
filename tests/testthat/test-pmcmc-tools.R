@@ -382,9 +382,9 @@ test_that("discarding burnin drops beginnings of nested chain", {
   expect_identical(res$pars, results$pars[, , i])
   expect_identical(res$probabilities, results$probabilities[, , i])
   expect_identical(res$state, results$state[, , i])
-  expect_identical(res$trajectories$state, results$trajectories$state[, , , i])
+  expect_identical(res$trajectories$state, results$trajectories$state[, i, , ])
   expect_identical(res$restart$state,
-                   results$restart$state[, , , i, drop = FALSE])
+                   results$restart$state[, i, , , drop = FALSE])
 })
 
 test_that("can sample from a nested mcmc", {

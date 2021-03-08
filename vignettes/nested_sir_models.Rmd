@@ -164,9 +164,9 @@ res <- mcstate::pmcmc(mcmc_pars, filter, control = control)
 ```{r plot_infected}
 t <- 0:100
 par(mfrow = c(1, 2))
-matplot(t, res$trajectories$state[2, , 1, ], type = "l", lty = 1,
+matplot(t, t(res$trajectories$state[2, , 1, ]), type = "l", lty = 1,
         col = "#00000011", xlab =  "Day", ylab = "Infected", main = "Daily Infected in Population A")
-matplot(t, res$trajectories$state[2, , 2, ],
+matplot(t, t(res$trajectories$state[2, , 2, ]),
         col = "#00000011", xlab =  "Day", ylab = "Infected", type = "l", lty = 1,
         main = "Daily Infected in Population B")
 par(mfrow = c(1, 1))
@@ -176,12 +176,12 @@ And the daily incidence
 
 ```{r plot_inc}
 par(mfrow = c(1, 2))
-matplot(t[-1], diff(res$trajectories$state[4, , 1, ]), type = "l",
+matplot(t[-1], diff(t(res$trajectories$state[4, , 1, ])), type = "l",
         lty = 1, col = "#00000005", xlab = "Day", ylab = "Daily incidence",
         main = "Daily Incidence in Population A")
 points(cases ~ day, incidence[incidence$population == "A", ], col = "blue",
        pch = 19)
-matplot(t[-1], diff(res$trajectories$state[4, , 2, ]), type = "l",
+matplot(t[-1], diff(t(res$trajectories$state[4, , 2, ])), type = "l",
         lty = 1, col = "#00000005", xlab = "Day", ylab = "Daily incidence",
         main = "Daily Incidence in Population B")
 points(cases ~ day, incidence[incidence$population == "B", ], col = "blue",

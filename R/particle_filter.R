@@ -491,12 +491,15 @@ is_dust_generator <- function(x) {
 
 
 check_save_restart <- function(save_restart, data) {
+
   if (is.null(save_restart)) {
     return(integer(0))
   }
   assert_strictly_increasing(save_restart)
   assert_is(data, "particle_filter_data")
   nm <- attr(data, "time")
+  ## Note that this works in the nested model because `match` only returns
+  ## the first match and `step_end` is identical across populations.
   i <- match(save_restart, data[[paste0(nm, "_end")]])
   err <- is.na(i)
   if (any(err)) {

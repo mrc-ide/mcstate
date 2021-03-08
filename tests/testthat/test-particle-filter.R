@@ -893,7 +893,7 @@ test_that("particle filter state nested - errors", {
 
 test_that("nested pf with initial", {
   initial <- function(info, n_particles, pars) {
-    list(step = pars[[2]]$initial)
+    list(step = pars$initial)
   }
 
   dat <- example_sir_shared()
@@ -924,7 +924,9 @@ test_that("nested pf with initial", {
 
   ## Running from the beginning is much worse:
   set.seed(1)
-  ll3 <- p2$run(list(pars, list(initial = 0L)))
+  pars <- list(list(beta = 0.2, gamma = 0.1, initial = 0),
+               list(beta = 0.3, gamma = 0.1, initial = 0))
+  ll3 <- p2$run(pars)
   expect_true(all(ll3 < ll1))
 })
 
@@ -1053,6 +1055,48 @@ test_that("nested particle filter initial not list", {
   expect_is(p$run(pars), "numeric")
 })
 
+test_that("nested particle filter initial - silent length pop", {
+  dat <- example_sir_shared()
+  n_particles <- 42
+  initial <- function(...) list(step = 1)
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, initial = initial, seed = 100)
+  pars <- list(list(beta = 0.2, gamma = 0.1),
+               list(beta = 0.3, gamma = 0.1))
+  expect_silent(p$run(pars))
+
+  dat <- example_sir_shared()
+  n_particles <- 42
+  initial <- function(...) list(step = numeric(42))
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, initial = initial, seed = 100)
+  pars <- list(list(beta = 0.2, gamma = 0.1),
+               list(beta = 0.3, gamma = 0.1))
+  expect_silent(p$run(pars))
+})
+
+test_that("nested particle filter initial - error wrong length", {
+  dat <- example_sir_shared()
+  n_particles <- 42
+  initial <- function(...) list(step = 2:4)
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, initial = initial, seed = 100)
+  pars <- list(list(beta = 0.2, gamma = 0.1),
+               list(beta = 0.3, gamma = 0.1))
+  expect_error(p$run(pars), "length")
+
+  dat <- example_sir_shared()
+  n_particles <- 42
+  initial <- function(info, n_particles, pars) {
+    list(step = pars$initial)
+  }
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, initial = initial, seed = 100)
+  pars <- list(list(beta = 0.2, gamma = 0.1, initial = 0),
+               list(beta = 0.3, gamma = 0.1, initial = 0:1))
+  expect_error(p$run(pars), "unequal step")
+})
+
 test_that("return names on nested history, if present", {
   dat <- example_sir_shared()
   n_particles <- 42
@@ -1067,4 +1111,137 @@ test_that("return names on nested history, if present", {
   p$run(pars, save_history = TRUE)
   res <- p$history()
   expect_equal(rownames(res), c("S", "I", "R"))
+})
+
+
+test_that("error on different population indices", {
+  dat <- example_sir_shared()
+  n_particles <- 42
+  index <- function(info) {
+    list(run = info$pars$beta * 10)
+  }
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+    index = index, seed = 100
+  )
+  pars <- list(
+    list(beta = 0.2, gamma = 0.1),
+    list(beta = 0.3, gamma = 0.1)
+  )
+  set.seed(1)
+  expect_error(p$run(pars, save_history = TRUE), "index must be")
+})
+
+test_that("initialise with complex state - nested", {
+  dat <- example_sir_shared()
+  n_particles <- 100
+
+  initial <- function(info, n_particles, pars) {
+    y <- matrix(0, 5, n_particles)
+    set.seed(1) # so that we can check below
+    i0 <- rpois(n_particles, pars$I0)
+    y[1, ] <- 1100 - i0
+    y[2, ] <- i0
+    y
+  }
+
+  ## Set the incidence to NA so that no shuffling occurs
+  dat$data$incidence <- NA
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, initial = initial)
+
+  pars <- list(list(I0 = 10, beta = 0.2, gamma = 0.1),
+               list(I0 = 10, beta = 0.3, gamma = 0.1))
+
+  set.seed(1)
+  ll <- p$run(pars, save_history = TRUE)
+  expect_equal(p$history()[, , 1, 1],
+               initial(NULL, n_particles, pars[[1]])[1:3, ])
+  expect_equal(p$history()[, , 2, 1],
+               initial(NULL, n_particles, pars[[2]])[1:3, ])
+})
+
+
+test_that("Control the starting point of a nested simulation", {
+  dat <- example_sir_shared()
+  n_particles <- 42
+
+  data <- dat$data
+  ## Drop extra columns that are confusing in this context
+  data <- data[setdiff(names(data), c("day_start", "day_end"))]
+  ## Offset the data by a considerable margin:
+  offset <- 400
+  data[c("step_start", "step_end")] <-
+    data[c("step_start", "step_end")] + offset
+  ## A burnin step:
+  ## pop a
+  intro_a <- data[data$population == "a", ][1, ]
+  intro_a$incidence <- NA
+  intro_a$step_start <- 0
+  intro_a$step_end <- data$step_start[[1]]
+  ## pop b
+  intro_b <- data[data$population == "b", ][1, ]
+  intro_b$incidence <- NA
+  intro_b$step_start <- 0
+  intro_b$step_end <- data$step_start[[1]]
+  ## Our combination data:
+  data <- rbind(intro_a,
+                data[data$population == "a", ],
+                intro_b,
+                data[data$population == "b", ])
+
+  pars <- list(list(I0 = 10, beta = 0.2, gamma = 0.1, step = offset),
+               list(I0 = 10, beta = 0.3, gamma = 0.1, step = offset))
+
+  ## The usual version, with normal data:
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index)
+  set.seed(1)
+  ll1 <- p1$run(pars)
+
+  ## Then tune the start date to get the same effect:
+  initial <- function(info, n_particles, pars) {
+    list(state = c(1000, pars$I0, 0, 0, 0),
+         step = pars$step)
+  }
+
+  ## Tuning the start date
+  p2 <- particle_filter$new(data, dat$model, n_particles, dat$compare,
+                            index = dat$index, initial = initial)
+  set.seed(1)
+  ll2 <- p2$run(pars)
+
+  expect_identical(ll1, ll2)
+})
+
+
+test_that("nested error on unequal state", {
+  dat <- example_sir_shared()
+  n_particles <- 42
+  pars <- list(list(I0 = NULL, beta = 0.2, gamma = 0.1),
+               list(I0 = 10, beta = 0.3, gamma = 0.1))
+
+  initial <- function(info, n_particles, pars) {
+    list(state = c(1000, pars$I0, 0, 0, 0))
+  }
+
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, initial = initial)
+
+  expect_error(p$run(pars), "unequal state")
+})
+
+
+test_that("nested silent on initial w. state w/o step", {
+  dat <- example_sir_shared()
+  n_particles <- 42
+  pars <- list(list(beta = 0.2, gamma = 0.1),
+               list(beta = 0.3, gamma = 0.1))
+
+  initial <- function(info, n_particles, pars) {
+    list(state = c(1000, 0, 0, 0, 0))
+  }
+
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, initial = initial)
+  expect_is(p$run(pars), "numeric")
 })

@@ -61,9 +61,15 @@ list_to_matrix <- function(data) {
 
 
 list_to_array <- function(data) {
-  len <- lengths(data)
-  stopifnot(all(len == len[[1L]]))
-  array(unlist(data, FALSE, FALSE), c(dim(data[[1L]]), length(data)))
+  if (!is.null(unlist(data))) {
+    len <- lengths(data)
+    which <- len > 0
+    len <- len[which]
+    stopifnot(length(unique(len)) == 1)
+
+    data <- data[which]
+    array(unlist(data, FALSE, FALSE), c(dim(data[[1L]]), length(data)))
+  }
 }
 
 
@@ -199,4 +205,8 @@ set_layernames <- function(m, nms) {
 
 normalise <- function(x) {
   x / sum(x)
+}
+
+try_list_get <- function(list, nm) {
+  tryCatch(list[[nm]], error = function(e) NULL)
 }
