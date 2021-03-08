@@ -45,7 +45,7 @@ rmvnorm_generator <- function(vcv) {
   }
   n <- nrow(vcv)
   res <- t(ev$vectors %*% (t(ev$vectors) * sqrt(pmax(ev$values, 0))))
-  
+
   function(mean, scale = 1.0) {
     mean + drop(rnorm(ncol(vcv)) %*% (res * sqrt(scale)))
   }
@@ -66,7 +66,7 @@ list_to_array <- function(data) {
     which <- len > 0
     len <- len[which]
     stopifnot(length(unique(len)) == 1)
-    
+
     data <- data[which]
     array(unlist(data, FALSE, FALSE), c(dim(data[[1L]]), length(data)))
   }
@@ -176,22 +176,22 @@ layernames <- function(x) {
   if (length(dim(x)) < 3) {
     stop("'x' has less than three dimensions")
   }
-  
+
   nms <- dimnames(x)
-  
+
   if (is.null(nms)) {
     if (is.null(value)) {
       stop("'value' cannot be NULL if 'dimnames(x)' is NULL")
     }
     nms <- vector("list", length(dim(x)))
   }
-  
+
   if (is.null(value)) {
     nms[3L] <- list(NULL)
   } else {
     nms[[3L]] <-  assert_scalar_character(value)
   }
-  
+
   dimnames(x) <- nms
   x
 }
@@ -221,6 +221,6 @@ test_integer <- function(x, name = deparse(substitute(x)),
       return(FALSE)
     }
   }
-  
+
   TRUE
 }

@@ -1,3 +1,8 @@
+# mcstate 0.5.9
+
+* Add parameter to `pmcmc_control` for controlling the ratio of fixed:varied
+steps for nested pMCMC
+
 # mcstate 0.5.5
 
 * New array helper `mcstate::array_flatten` for unshaping an array
