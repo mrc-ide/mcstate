@@ -211,12 +211,8 @@ pmcmc_state <- R6::R6Class(
       steps <- seq(from = private$curr_step + 1L,
                    length.out = to - private$curr_step)
 
-      fix_vary_step <- vary_fix_step <- NULL
-      if (test_integer(private$control$nested_step_ratio)) {
-        fix_vary_step <- round(private$control$nested_step_ratio) + 1
-      } else {
-        vary_fix_step <- round(1 / private$control$nested_step_ratio) + 1
-      }
+      run_alternate_step <- alternate(private$run_fixed, private$run_varied,
+                                      private$control$nested_step_ratio)
 
       ## add linear counter for step ratio
       j <- 1
@@ -229,19 +225,7 @@ pmcmc_state <- R6::R6Class(
           private$update_history_nested()
         }
 
-        if (!is.null(fix_vary_step)) {
-          if (j %% fix_vary_step > 0) {
-            private$run_fixed()
-          } else {
-            private$run_varied()
-          }
-        } else {
-          if (j %% vary_fix_step > 0) {
-            private$run_varied()
-          } else {
-            private$run_fixed()
-          }
-        }
+        run_alternate_step(j)
         j <- j + 1
 
         private$history_pars$add(private$curr_pars)
@@ -411,4 +395,19 @@ history_collector <- function(n) {
   }
 
   list(add = add, get = get)
+}
+
+
+alternate <- function(f, g, ratio) {
+  if (ratio < 1) {
+    return(alternate(g, f, 1 / ratio))
+  }
+
+  function(i) {
+    if (i %% (ratio + 1) == 0) {
+      g()
+    } else {
+      f()
+    }
+  }
 }
