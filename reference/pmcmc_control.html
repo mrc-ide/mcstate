@@ -84,7 +84,7 @@ as the order of the arguments may change in future." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.9</span>
       </span>
     </div>
 
@@ -171,7 +171,8 @@ as the order of the arguments may change in future.</p>
   save_state <span class='op'>=</span> <span class='cn'>TRUE</span>,
   save_restart <span class='op'>=</span> <span class='cn'>NULL</span>,
   save_trajectories <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  progress <span class='op'>=</span> <span class='cn'>FALSE</span>
+  progress <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  nested_step_ratio <span class='op'>=</span> <span class='fl'>1</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -287,6 +288,18 @@ particle will be selected for each.</p></td>
       <td><p>Logical, indicating if a progress bar should be
 displayed, using <code><a href='https://rdrr.io/pkg/progress/man/progress_bar.html'>progress::progress_bar</a></code>.</p></td>
     </tr>
+    <tr>
+      <th>nested_step_ratio</th>
+      <td><p>Either integer or 1/integer, which specifies the
+ratio of fixed:varied steps in a nested pMCMC. For example <code>3</code> would run
+3 steps proposing fixed parameters only and then 1 step proposing varied
+parameters only; whereas <code>1/3</code> would run 3 varied steps
+for every 1 fixed step. The default value of <code>1</code> runs an equal number of
+iterations updating the fixed and varied parameters. Sensible choices
+of this parameter may depend on the true ratio of fixed:varied parameters
+or on desired run-time, for example updating fixed parameters is
+quicker so more varied steps could be more efficient.</p></td>
+    </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
@@ -334,6 +347,9 @@ detail in <code><a href='../articles/parallelisation.html'>vignette("parallelisa
 #&gt; $progress
 #&gt; [1] FALSE
 #&gt; 
+#&gt; $nested_step_ratio
+#&gt; [1] 1
+#&gt; 
 #&gt; attr(,"class")
 #&gt; [1] "pmcmc_control"</div><div class='input'>
 <span class='co'># Suppose we have a fairly large node with 16 cores and we want to</span>
@@ -372,6 +388,9 @@ detail in <code><a href='../articles/parallelisation.html'>vignette("parallelisa
 #&gt; 
 #&gt; $progress
 #&gt; [1] FALSE
+#&gt; 
+#&gt; $nested_step_ratio
+#&gt; [1] 1
 #&gt; 
 #&gt; attr(,"class")
 #&gt; [1] "pmcmc_control"</div><div class='input'>
@@ -413,6 +432,9 @@ detail in <code><a href='../articles/parallelisation.html'>vignette("parallelisa
 #&gt; 
 #&gt; $progress
 #&gt; [1] FALSE
+#&gt; 
+#&gt; $nested_step_ratio
+#&gt; [1] 1
 #&gt; 
 #&gt; attr(,"class")
 #&gt; [1] "pmcmc_control"</div></pre>
