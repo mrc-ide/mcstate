@@ -99,6 +99,12 @@
 ##' @param progress Logical, indicating if a progress bar should be
 ##'   displayed, using [`progress::progress_bar`].
 ##'
+##' @param nested_step_ratio Either integer or 1/integer, which specifies the
+##'   ratio of fixed:varied steps in a nested pMCMC. For example `3` would run
+##'   3 steps proposing fixed parameters only and then 1 step proposing varied
+##'   parameters only; whereas whereas `1/3` would run 3 varied steps
+##'   for every 1 fixed step.
+##'
 ##' @return A `pmcmc_control` object, which should not be modified
 ##'   once created.
 ##'
@@ -122,7 +128,8 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
                           n_workers = 1L, n_steps_each = NULL,
                           rerun_every = Inf, use_parallel_seed = FALSE,
                           save_state = TRUE, save_restart = NULL,
-                          save_trajectories = FALSE, progress = FALSE) {
+                          save_trajectories = FALSE, progress = FALSE,
+                          nested_step_ratio = 1) {
   assert_scalar_positive_integer(n_steps)
   assert_scalar_positive_integer(n_chains)
   assert_scalar_positive_integer(n_workers)
@@ -146,27 +153,34 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
         n_threads_total, n_workers))
     }
   }
-
+  
   if (!identical(unname(rerun_every), Inf)) {
     assert_scalar_positive_integer(rerun_every)
-
+    
   }
-
+  
   assert_scalar_logical(use_parallel_seed)
   assert_scalar_logical(save_state)
   assert_scalar_logical(save_trajectories)
   assert_scalar_logical(progress)
-
+  
   if (n_chains < n_workers) {
     stop(sprintf("'n_chains' (%d) is less than 'n_workers' (%d)",
                  n_chains, n_workers))
   }
-
+  
   if (!is.null(save_restart)) {
     ## possibly assert_integer(save_restart)?
     assert_strictly_increasing(save_restart)
   }
-
+  
+  nok <- !test_integer(nested_step_ratio) &&
+    !test_integer(1 / nested_step_ratio)
+  if (nok) {
+    stop(sprintf("Either 'nested_step_ratio' (%g) or 1/'nested_step_ratio'
+                          must be an integer", nested_step_ratio))
+  }
+  
   ret <- list(n_steps = n_steps,
               n_chains = n_chains,
               n_workers = n_workers,
@@ -177,7 +191,8 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
               save_state = save_state,
               save_restart = save_restart,
               save_trajectories = save_trajectories,
-              progress = progress)
+              progress = progress,
+              nested_step_ratio = nested_step_ratio)
   class(ret) <- "pmcmc_control"
   ret
 }

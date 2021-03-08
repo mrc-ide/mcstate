@@ -47,3 +47,10 @@ test_that("specify save_restart", {
     pmcmc_control(100, save_restart = c(20, 10)),
     "'save_restart' must be strictly increasing")
 })
+
+test_that("integer step ratio", {
+  expect_error(pmcmc_control(1, nested_step_ratio = 1.2), "must be an integer")
+  expect_error(pmcmc_control(1, nested_step_ratio = 1 / 1.2), "must be")
+  expect_silent(pmcmc_control(1, nested_step_ratio = 3))
+  expect_silent(pmcmc_control(1, nested_step_ratio = 1 / 3))
+})

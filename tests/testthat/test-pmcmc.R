@@ -7,7 +7,7 @@ context("pmcmc")
 test_that("mcmc works for uniform distribution on unit square", {
   dat <- example_uniform()
   control <- pmcmc_control(1000, save_state = FALSE, save_trajectories = FALSE)
-
+  
   set.seed(1)
   testthat::try_again(5, {
     res <- pmcmc(dat$pars, dat$filter, control = control)
@@ -22,7 +22,7 @@ test_that("mcmc works for uniform distribution on unit square", {
 test_that("mcmc works for multivariate gaussian", {
   dat <- example_mvnorm()
   control <- pmcmc_control(1000, save_state = FALSE, save_trajectories = FALSE)
-
+  
   set.seed(1)
   testthat::try_again(5, {
     res <- pmcmc(dat$pars, dat$filter, control = control)
@@ -39,12 +39,12 @@ test_that("Reflect parameters: double sided", {
   expect_equal(reflect_proposal(0.4, 0, 1), 0.4)
   expect_equal(reflect_proposal(1.4, 0, 1), 0.6)
   expect_equal(reflect_proposal(2.4, 0, 1), 0.4)
-
+  
   ## Additional cases from the original
   expect_equal(reflect_proposal(6, 1, 5), 4)
   expect_equal(reflect_proposal(0, 1, 5), 2)
   expect_equal(reflect_proposal(10, 1, 5), 2)
-
+  
   expect_equal(reflect_proposal(0:2 + 0.4, rep(0, 3), rep(1, 3)),
                c(0.4, 0.6, 0.4))
   expect_equal(reflect_proposal(0:2 + 1.4, rep(1, 3), rep(2, 3)),
@@ -76,7 +76,7 @@ test_that("proposal uses provided covariance structure", {
   dat <- example_uniform(proposal_kernel = matrix(0.1, 2, 2))
   control <- pmcmc_control(100, save_state = FALSE, save_trajectories = FALSE)
   res <- pmcmc(dat$pars, dat$filter, control = control)
-
+  
   expect_true(all(acceptance_rate(res$pars) == 1))
   expect_equal(res$pars[, 1], res$pars[, 2])
 })
@@ -85,56 +85,56 @@ test_that("proposal uses provided covariance structure", {
 test_that("run pmcmc with the particle filter and retain history", {
   proposal_kernel <- diag(2) * 1e-4
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("beta", "gamma")
-
+  
   pars <- pmcmc_parameters$new(
     list(pmcmc_parameter("beta", 0.2, min = 0, max = 1,
                          prior = function(p) log(1e-10)),
          pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
                          prior = function(p) log(1e-10))),
     proposal = proposal_kernel)
-
+  
   dat <- example_sir()
   n_particles <- 100
   p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index)
   p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index)
-
+  
   control1 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE)
   control2 <- pmcmc_control(30, save_trajectories = FALSE, save_state = FALSE)
-
+  
   set.seed(1)
   results1 <- pmcmc(pars, p1, control = control1)
   set.seed(1)
   results2 <- pmcmc(pars, p2, control = control2)
-
+  
   expect_setequal(
     names(results1),
     c("chain", "iteration",
       "pars", "probabilities", "state", "trajectories", "restart", "predict"))
-
+  
   expect_null(results1$chain)
   expect_equal(results1$iteration, 0:30)
-
+  
   ## Including or not the history does not change the mcmc trajectory:
   expect_identical(names(results1), names(results2))
   expect_equal(results1$pars, results2$pars)
   expect_equal(results1$probabilities, results2$probabilities)
-
+  
   ## We did mix
   expect_true(all(acceptance_rate(results1$pars) > 0))
-
+  
   ## Parameters and probabilities have the expected shape
   expect_equal(dim(results1$pars), c(31, 2))
   expect_equal(colnames(results1$pars), c("beta", "gamma"))
-
+  
   expect_equal(dim(results1$probabilities), c(31, 3))
   expect_equal(colnames(results1$probabilities),
                c("log_prior", "log_likelihood", "log_posterior"))
-
+  
   ## History, if returned, has the correct shape
   expect_equal(dim(results1$state), c(5, 31)) # state, mcmc
-
+  
   ## Trajectories, if returned, have the same shape
   expect_s3_class(results1$trajectories, "mcstate_trajectories")
   expect_equal(dim(results1$trajectories$state), c(3, 31, 101))
@@ -144,7 +144,7 @@ test_that("run pmcmc with the particle filter and retain history", {
   expect_equal(results1$trajectories$predicted, rep(FALSE, 101))
   expect_equal(results1$trajectories$step, seq(0, 400, by = 4))
   expect_equal(results1$trajectories$rate, 4)
-
+  
   ## Additional information required to predict
   expect_setequal(
     names(results1$predict),
@@ -166,7 +166,7 @@ test_that("collecting state from model yields an RNG state", {
                             index = dat$index, seed = 1L)
   p3 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index, seed = 2L)
-
+  
   set.seed(1)
   results1 <- pmcmc(dat$pars, p1,
                     control = pmcmc_control(5, save_state = FALSE))
@@ -176,7 +176,7 @@ test_that("collecting state from model yields an RNG state", {
   set.seed(1)
   results3 <- pmcmc(dat$pars, p3,
                     control = pmcmc_control(5, save_state = TRUE))
-
+  
   expect_identical(
     r6_private(p1)$last_model$rng_state(),
     r6_private(p2)$last_model$rng_state())
@@ -200,20 +200,20 @@ test_that("running pmcmc with progress = TRUE prints messages", {
 
 test_that("run multiple chains", {
   dat <- example_uniform()
-
+  
   control1 <- pmcmc_control(100, save_state = FALSE, n_chains = 1)
   control2 <- pmcmc_control(100, save_state = FALSE, n_chains = 3)
-
+  
   set.seed(1)
   res1 <- pmcmc(dat$pars, dat$filter, control = control1)
   expect_s3_class(res1, "mcstate_pmcmc")
   expect_null(res1$chain)
-
+  
   set.seed(1)
   res3 <- pmcmc(dat$pars, dat$filter, control = control2)
   expect_s3_class(res3, "mcstate_pmcmc")
   expect_equal(res3$chain, rep(1:3, each = 101))
-
+  
   expect_equal(res1$pars, res3$pars[1:101, ])
 })
 
@@ -231,14 +231,14 @@ test_that("progress in multiple chains", {
 test_that("return names on pmcmc output", {
   proposal_kernel <- diag(2) * 1e-4
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("beta", "gamma")
-
+  
   pars <- pmcmc_parameters$new(
     list(pmcmc_parameter("beta", 0.2, min = 0, max = 1,
                          prior = function(p) log(1e-10)),
          pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
                          prior = function(p) log(1e-10))),
     proposal = proposal_kernel)
-
+  
   dat <- example_sir()
   n_particles <- 10
   index2 <- function(info) list(run = 4L, state = c(a = 1, b = 2, c = 3))
@@ -246,14 +246,14 @@ test_that("return names on pmcmc output", {
                             index = dat$index)
   p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = index2)
-
+  
   control <- pmcmc_control(5, save_state = TRUE, save_trajectories = TRUE)
-
+  
   set.seed(1)
   results1 <- pmcmc(pars, p1, control = control)
   set.seed(1)
   results2 <- pmcmc(pars, p2, control = control)
-
+  
   expect_null(rownames(results1$trajectories$state))
   expect_equal(rownames(results2$trajectories$state), c("a", "b", "c"))
 })
@@ -313,13 +313,13 @@ test_that("can validate a matrix initial conditions", {
   expect_error(
     pmcmc_check_initial(matrix(0.5, 2, 6), dat$pars, 5),
     "Expected a matrix with 5 columns for 'initial'")
-
+  
   expect_error(
     pmcmc_check_initial(matrix(0.5, 2, 5, dimnames = list(c("x", "y"), NULL)),
                         dat$pars, 5),
     "If 'initial' has rownames, they must match pars$names()",
     fixed = TRUE)
-
+  
   m <- matrix(runif(10), 2, 5)
   i <- cbind(c(2, 1, 2), c(2, 4, 5))
   m[i] <- -m[i]
@@ -342,30 +342,30 @@ test_that("can start a pmcmc from a matrix of starting points", {
 test_that("can trigger rerunning particle filter", {
   proposal_kernel <- diag(2) * 1e-4
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("beta", "gamma")
-
+  
   pars <- pmcmc_parameters$new(
     list(pmcmc_parameter("beta", 0.2, min = 0, max = 1,
                          prior = function(p) log(1e-10)),
          pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
                          prior = function(p) log(1e-10))),
     proposal = proposal_kernel * 50)
-
+  
   dat <- example_sir()
   n_particles <- 100
   p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index)
   p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index)
-
+  
   control1 <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE,
                             rerun_every = 2)
   control2 <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE,
                             rerun_every = Inf)
-
+  
   set.seed(1)
   res1 <- pmcmc(pars, p1, control = control1)
   expect_lte(max(rle(res1$probabilities[, "log_likelihood"])$lengths), 2)
-
+  
   set.seed(1)
   res2 <- pmcmc(pars, p1, control = control2)
   expect_gt(max(rle(res2$probabilities[, "log_likelihood"])$lengths), 5)
@@ -377,12 +377,12 @@ test_that("rerunning the particle filter triggers the filter run method", {
   dat <- example_uniform()
   dat$filter$run <- mockery::mock(1, cycle = TRUE)
   dat$inputs <- function() NULL
-
+  
   ## with the dummy version we can't return history
   control <- pmcmc_control(10, rerun_every = 2, save_trajectories = FALSE,
                            save_state = FALSE)
   ans <- pmcmc(dat$pars, dat$filter, control = control)
-
+  
   mockery::expect_called(dat$filter$run, 16)
 })
 
@@ -390,26 +390,26 @@ test_that("rerunning the particle filter triggers the filter run method", {
 test_that("can partially run the pmcmc", {
   proposal_kernel <- diag(2) * 1e-4
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("beta", "gamma")
-
+  
   pars <- pmcmc_parameters$new(
     list(pmcmc_parameter("beta", 0.2, min = 0, max = 1,
                          prior = function(p) log(1e-10)),
          pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
                          prior = function(p) log(1e-10))),
     proposal = proposal_kernel)
-
+  
   control <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE)
-
+  
   dat <- example_sir()
   n_particles <- 42
   p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index)
   p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index)
-
+  
   set.seed(1)
   results1 <- pmcmc(pars, p1, control = control)
-
+  
   control$n_steps_each <- 10
   set.seed(1)
   initial <- pmcmc_check_initial(NULL, pars, 1)[, 1]
@@ -421,7 +421,7 @@ test_that("can partially run the pmcmc", {
   expect_equal(obj$run(), list(step = 30, finished = TRUE))
   expect_equal(obj$run(), list(step = 30, finished = TRUE))
   results2 <- obj$finish()
-
+  
   expect_equal(results2, results1)
 })
 
@@ -434,13 +434,13 @@ test_that("can change the number of threads mid-run", {
                             index = dat$index)
   p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index)
-
-
+  
+  
   control <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE)
-
+  
   set.seed(1)
   results1 <- pmcmc(dat$pars, p1, control = control)
-
+  
   control$n_steps_each <- 10
   set.seed(1)
   initial <- pmcmc_check_initial(NULL, dat$pars, 1)[, 1]
@@ -454,7 +454,7 @@ test_that("can change the number of threads mid-run", {
   expect_equal(r6_private(r6_private(obj)$filter)$n_threads, 1)
   expect_equal(obj$run(), list(step = 30, finished = TRUE))
   results2 <- obj$finish()
-
+  
   expect_equal(results2, results1)
 })
 
@@ -467,7 +467,7 @@ test_that("Can override thread count via control", {
   res <- pmcmc(dat$pars, p,
                control = pmcmc_control(5, n_threads_total = 2))
   expect_equal(res$predict$filter$n_threads, 2)
-
+  
   p$set_n_threads(4)
   res <- pmcmc(dat$pars, p,
                control = pmcmc_control(5, n_threads_total = NULL))
@@ -495,21 +495,21 @@ test_that("Can save intermediate state to restart", {
   res2 <- pmcmc(dat$pars, p2, control = control2)
   set.seed(1)
   res3 <- pmcmc(dat$pars, p3, control = control3)
-
+  
   ## Same actual run
   expect_identical(res1$trajectories, res2$trajectories)
   expect_identical(res1$trajectories, res3$trajectories)
-
+  
   expect_null(res1$restart)
-
+  
   expect_is(res2$restart, "list")
   expect_equal(res2$restart$time, 20)
   expect_equal(dim(res2$restart$state), c(5, 31, 1))
-
+  
   expect_is(res3$restart, "list")
   expect_equal(res3$restart$time, c(20, 30))
   expect_equal(dim(res3$restart$state), c(5, 31, 2))
-
+  
   expect_equal(res3$restart$state[, , 1], res2$restart$state[, , 1])
 })
 
@@ -520,14 +520,14 @@ test_that("can restart the mcmc using saved state", {
   ## these are harder questions.
   dat <- example_sir()
   n_particles <- 100
-
+  
   set.seed(1)
   p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index)
   control1 <- pmcmc_control(50, save_trajectories = TRUE, save_state = TRUE,
                             progress = FALSE, save_restart = 40)
   res1 <- pmcmc(dat$pars, p1, control = control1)
-
+  
   ## Our new restart state, which includes a range of possible S
   ## values
   expect_equal(dim(res1$restart$state), c(5, 51, 1))
@@ -542,7 +542,7 @@ test_that("can restart the mcmc using saved state", {
   control2 <- pmcmc_control(50, save_trajectories = TRUE, save_state = TRUE,
                             progress = FALSE)
   res2 <- pmcmc(dat$pars, p2, control = control2)
-
+  
   expect_equal(res2$trajectories$step, (40:100) * 4)
   expect_equal(dim(res2$trajectories$state), c(3, 51, 61))
 })
@@ -551,22 +551,22 @@ test_that("can restart the mcmc using saved state", {
 test_that("Fix parameters in sir model", {
   proposal_kernel <- diag(2) * 1e-4
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("beta", "gamma")
-
+  
   pars <- pmcmc_parameters$new(
     list(pmcmc_parameter("beta", 0.2, min = 0, max = 1,
                          prior = function(p) log(1e-10)),
          pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
                          prior = function(p) log(1e-10))),
     proposal = proposal_kernel)
-
+  
   pars2 <- pars$fix(c(gamma = 0.1))
-
+  
   dat <- example_sir()
   n_particles <- 40
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index)
   control <- pmcmc_control(10, save_trajectories = TRUE, save_state = TRUE)
-
+  
   results <- pmcmc(pars2, p, control = control)
   expect_equal(dim(results$pars), c(11, 1))
   expect_equal(results$predict$transform(pi), list(beta = pi, gamma = 0.1))
@@ -659,7 +659,7 @@ test_that("pmcmc_check_initial_nested - error matrix initial", {
 test_that("pmcmc nested Uniform on unit square - fixed only", {
   dat <- example_uniform_shared(varied = FALSE)
   control <- pmcmc_control(1000, save_state = FALSE, save_trajectories = FALSE)
-
+  
   set.seed(1)
   testthat::try_again(5, {
     res <- pmcmc(dat$pars, dat$filter, control = control)
@@ -675,7 +675,7 @@ test_that("pmcmc nested Uniform on unit square - fixed only", {
 test_that("pmcmc nested Uniform on unit square - varied only", {
   dat <- example_uniform_shared(fixed = FALSE)
   control <- pmcmc_control(1000, save_state = FALSE, save_trajectories = FALSE)
-
+  
   set.seed(1)
   testthat::try_again(5, {
     res <- pmcmc(dat$pars, dat$filter, control = control)
@@ -691,7 +691,7 @@ test_that("pmcmc nested Uniform on unit square - varied only", {
 test_that("pmcmc nested Uniform on unit square", {
   dat <- example_uniform_shared()
   control <- pmcmc_control(1000, save_state = FALSE, save_trajectories = FALSE)
-
+  
   set.seed(1)
   testthat::try_again(5, {
     res <- pmcmc(dat$pars, dat$filter, control = control)
@@ -709,7 +709,7 @@ test_that("pmcmc nested Uniform on unit square", {
 test_that("pmcmc nested multivariate gaussian", {
   dat <- example_mvnorm_shared()
   control <- pmcmc_control(500, save_state = FALSE, save_trajectories = FALSE)
-
+  
   set.seed(1)
   testthat::try_again(10, {
     res <- pmcmc(dat$pars, dat$filter, control = control)
@@ -744,7 +744,7 @@ test_that("pmcmc nested sir - 1 chain", {
                            n_chains = 1L)
   proposal_fixed <- matrix(0.00026)
   proposal_varied <- matrix(0.00057)
-
+  
   pars <- pmcmc_parameters_nested$new(
     list(pmcmc_varied_parameter("beta", letters[1:2], c(0.2, 0.3),
                                 min = 0, max = 1,
@@ -752,7 +752,7 @@ test_that("pmcmc nested sir - 1 chain", {
          pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
                          prior = function(p) log(1e-10))),
     proposal_fixed = proposal_fixed, proposal_varied = proposal_varied)
-
+  
   set.seed(1)
   res1 <- pmcmc(pars, p, control = control)
   set.seed(1)
@@ -769,7 +769,7 @@ test_that("pmcmc nested sir - 2 chains", {
                             dat$index, seed = 1L)
   proposal_fixed <- matrix(0.00026)
   proposal_varied <- matrix(0.00057)
-
+  
   pars <- pmcmc_parameters_nested$new(
     list(pmcmc_varied_parameter("beta", letters[1:2], c(0.2, 0.3),
                                 min = 0, max = 1,
@@ -777,25 +777,25 @@ test_that("pmcmc nested sir - 2 chains", {
          pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
                          prior = function(p) log(1e-10))),
     proposal_fixed = proposal_fixed, proposal_varied = proposal_varied)
-
+  
   control1 <- pmcmc_control(50, save_state = TRUE, n_chains = 1,
                             save_restart = c(10, 20, 30, 40),
                             save_trajectories = TRUE)
   control2 <- pmcmc_control(50, n_chains = 3, save_state = TRUE,
                             save_restart = c(10, 20, 30, 40),
                             save_trajectories = TRUE)
-
+  
   set.seed(1)
   res1 <- pmcmc(pars, p1, control = control1)
   expect_s3_class(res1, "mcstate_pmcmc")
   expect_null(res1$chain)
-
+  
   set.seed(1)
   res3 <- pmcmc(pars, p2, control = control2)
   expect_s3_class(res3, "mcstate_pmcmc")
   expect_equal(res3$chain, rep(1:3, each = 51))
   expect_equal(dim(res3$trajectories$state), c(3, 153, 2, 101))
-
+  
   expect_equal(res1$pars, res3$pars[, , 1:51])
   expect_equal(res1$state, res3$state[, , 1:51])
   expect_equal(res1$restart$state, res3$restart$state[, 1:51, , ])
@@ -812,10 +812,10 @@ test_that("return names on nested pmcmc output", {
   dat <- example_sir_shared()
   p1 <- particle_filter$new(dat$data, dat$model, 100, dat$compare,
                             dat$index, seed = 1L)
-
+  
   proposal_fixed <- matrix(0.00026)
   proposal_varied <- matrix(0.00057)
-
+  
   pars <- pmcmc_parameters_nested$new(
     list(pmcmc_varied_parameter("beta", letters[1:2], c(0.2, 0.3),
                                 min = 0, max = 1,
@@ -823,23 +823,23 @@ test_that("return names on nested pmcmc output", {
          pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
                          prior = function(p) log(1e-10))),
     proposal_fixed = proposal_fixed, proposal_varied = proposal_varied)
-
+  
   control1 <- pmcmc_control(50, save_state = FALSE, n_chains = 1)
-
+  
   n_particles <- 10
   index2 <- function(info) list(run = 4L, state = c(a = 1, b = 2, c = 3))
   p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index)
   p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = index2)
-
+  
   control <- pmcmc_control(5, save_state = TRUE, save_trajectories = TRUE)
-
+  
   set.seed(1)
   results1 <- pmcmc(pars, p1, control = control)
   set.seed(1)
   results2 <- pmcmc(pars, p2, control = control)
-
+  
   expect_null(rownames(results1$trajectories$state))
   expect_equal(rownames(results2$trajectories$state), c("a", "b", "c"))
 })
@@ -848,10 +848,10 @@ test_that("return names on nested pmcmc output", {
 
 test_that("run nested pmcmc with the particle filter and retain history", {
   dat <- example_sir_shared()
-
+  
   proposal_fixed <- matrix(0.00026)
   proposal_varied <- matrix(0.00057)
-
+  
   pars <- pmcmc_parameters_nested$new(
     list(pmcmc_varied_parameter("beta", letters[1:2], c(0.2, 0.3),
                                 min = 0, max = 1,
@@ -859,55 +859,82 @@ test_that("run nested pmcmc with the particle filter and retain history", {
          pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
                          prior = function(p) log(1e-10))),
     proposal_fixed = proposal_fixed, proposal_varied = proposal_varied)
-
-
+  
+  
   n_particles <- 100
   p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index)
   p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index)
-
+  
   control1 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE)
   control2 <- pmcmc_control(30, save_trajectories = FALSE, save_state = FALSE)
-
+  
   set.seed(1)
   results1 <- pmcmc(pars, p1, control = control1)
   set.seed(1)
   results2 <- pmcmc(pars, p2, control = control2)
-
+  
   expect_setequal(
     names(results1),
     c("chain", "iteration",
       "pars", "probabilities", "state", "trajectories", "restart", "predict"))
-
+  
   expect_null(results1$chain)
   expect_equal(results1$iteration, 0:30)
-
+  
   ## Including or not the history does not change the mcmc trajectory:
   expect_identical(names(results1), names(results2))
   expect_equal(results1$pars, results2$pars)
   expect_equal(results1$probabilities, results2$probabilities)
-
+  
   ## Parameters and probabilities have the expected shape
   expect_equal(dim(results1$pars), c(2, 2, 31))
   expect_equal(rownames(results1$pars), c("beta", "gamma"))
   expect_equal(colnames(results1$pars), c("a", "b"))
-
+  
   expect_equal(dim(results1$probabilities), c(3, 2, 31))
   expect_equal(rownames(results1$probabilities),
                c("log_prior", "log_likelihood", "log_posterior"))
-
+  
   ## History, if returned, has the correct shape
   expect_equal(dim(results1$state), c(5, 2, 31)) # state, mcmc
-
+  
   ## Trajectories, if returned, have the same shape
   expect_s3_class(results1$trajectories, "mcstate_trajectories")
   expect_equal(dim(results1$trajectories$state), c(3, 31, 2, 101))
   expect_equal(results1$trajectories$step, seq(0, 400, by = 4))
   expect_equal(results1$trajectories$rate, 4)
-
+  
   ## Additional information required to predict
   expect_setequal(
     names(results1$predict),
     c("transform", "index", "rate", "step", "filter"))
+})
+
+
+test_that("nested_step_ratio works", {
+  dat <- example_sir_shared()
+  p <- particle_filter$new(dat$data, dat$model, 10, dat$compare,
+                           dat$index)
+  proposal_fixed <- matrix(0.00026)
+  proposal_varied <- matrix(0.00057)
+  
+  pars <- pmcmc_parameters_nested$new(
+    list(pmcmc_varied_parameter("beta", letters[1:2], c(0.2, 0.3),
+                                min = 0, max = 1,
+                                prior = function(p) log(1e-10)),
+         pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
+                         prior = function(p) log(1e-10))),
+    proposal_fixed = proposal_fixed, proposal_varied = proposal_varied)
+  
+  control <- pmcmc_control(30, nested_step_ratio = 30)
+  res1 <- pmcmc(pars, p, control = control)
+  expect_equal(as.numeric(res1$pars[1, , ]), rep(c(0.2, 0.3), 31))
+  expect_false(identical(as.numeric(res1$pars[2, , ]), rep(0.1, 62)))
+  
+  control <- pmcmc_control(30, nested_step_ratio = 1 / 30)
+  res2 <- pmcmc(pars, p, control = control)
+  expect_equal(as.numeric(res2$pars[2, , ]), rep(0.1, 62))
+  expect_false(identical(as.numeric(res2$pars[1, , ]), rep(c(0.2, 0.3), 31)))
 })
