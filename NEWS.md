@@ -1,6 +1,6 @@
 # mcstate 0.5.9
 
-* Add parameter to `pmcmc_control` for controlling the ratio of fixed:varied
+* Add `nested_step_ratio` parameter to `pmcmc_control` for controlling the ratio of fixed:varied
 steps for nested pMCMC
 
 # mcstate 0.5.5
