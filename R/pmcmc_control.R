@@ -102,7 +102,7 @@
 ##' @param nested_step_ratio Either integer or 1/integer, which specifies the
 ##'   ratio of fixed:varied steps in a nested pMCMC. For example `3` would run
 ##'   3 steps proposing fixed parameters only and then 1 step proposing varied
-##'   parameters only; whereas whereas `1/3` would run 3 varied steps
+##'   parameters only; whereas `1/3` would run 3 varied steps
 ##'   for every 1 fixed step.
 ##'
 ##' @return A `pmcmc_control` object, which should not be modified

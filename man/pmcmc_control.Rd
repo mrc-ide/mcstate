@@ -15,7 +15,8 @@ pmcmc_control(
   save_state = TRUE,
   save_restart = NULL,
   save_trajectories = FALSE,
-  progress = FALSE
+  progress = FALSE,
+  nested_step_ratio = 1
 )
 }
 \arguments{
@@ -106,6 +107,12 @@ particle will be selected for each.}
 
 \item{progress}{Logical, indicating if a progress bar should be
 displayed, using \code{\link[progress:progress_bar]{progress::progress_bar}}.}
+
+\item{nested_step_ratio}{Either integer or 1/integer, which specifies the
+ratio of fixed:varied steps in a nested pMCMC. For example \code{3} would run
+3 steps proposing fixed parameters only and then 1 step proposing varied
+parameters only; whereas \code{1/3} would run 3 varied steps
+for every 1 fixed step.}
 }
 \value{
 A \code{pmcmc_control} object, which should not be modified
