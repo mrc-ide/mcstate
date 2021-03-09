@@ -342,7 +342,7 @@ set_nested_model_state <- function(model, initial, pars, n_particles, steps) {
         }
 
         if (init_state_len > 0) {
-          init_state <- matrix(unlist(init_state), ncol = 2)
+          init_state <- matrix(unlist(init_state), ncol = length(pars))
         } else {
           init_state <- NULL
         }
