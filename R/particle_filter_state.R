@@ -174,10 +174,6 @@ particle_filter_state <- R6::R6Class(
       model <- self$model
       compare <- private$compare
 
-      restart_state <- self$restart_state
-      save_restart_step <- private$save_restart_step
-      save_restart <- !is.null(restart_state)
-
       history <- self$history
       save_history <- !is.null(history)
       save_history_index <- self$history$index
@@ -187,28 +183,39 @@ particle_filter_state <- R6::R6Class(
       log_likelihood <- self$log_likelihood
       n_particles <- private$n_particles
 
+      ## I think that this can be factored into a little utility
+      ## because it will be very shared with the multiple parameter
+      ## case too.
       if (is.null(compare)) {
-        ## Each of these is a feature that needs implementing, mostly in dust
-        if (!save_restart && curr == 0L && step_index == n_steps && !partial) {
-          if (save_history) {
-            model$set_index(save_history_index)
-            on.exit(model$set_index(integer(0)))
-          }
-          ret <- model$filter(save_history)
-          self$log_likelihood_step <- NA_real_
-          self$log_likelihood <- ret$log_likelihood
-          private$current_step_index <- step_index
-          if (save_history) {
-            self$history <- list(value = ret$history,
-                                 index = save_history_index)
-          }
-          return(ret$log_likelihood)
+        ## This needs a little work in dust:
+        ## https://github.com/mrc-ide/dust/issues/177
+        if (curr != 0L || step_index != n_steps || partial) {
+          stop("Partial particle filter running not supported")
         }
+        if (save_history) {
+          model$set_index(save_history_index)
+          on.exit(model$set_index(integer(0)))
+        }
+        res <- model$filter(save_history, private$save_restart_step)
+
+        self$log_likelihood_step <- NA_real_
+        self$log_likelihood <- res$log_likelihood
+        private$current_step_index <- step_index
+        if (save_history) {
+          self$history <- list(value = res$trajectories,
+                               index = save_history_index)
+        }
+        self$restart_state <- res$snapshots
+        return(res$log_likelihood)
       }
 
       steps <- private$steps
       data_split <- private$data_split
       pars <- private$pars
+
+      save_restart_step <- private$save_restart_step
+      restart_state <- self$restart_state
+      save_restart <- !is.null(restart_state)
 
       for (t in seq(curr + 1L, step_index)) {
         step_end <- steps[t, 2L]
