@@ -180,12 +180,7 @@ particle_filter_state_nested <- R6::R6Class(
       }
 
       model <- self$model
-
       compare <- private$compare
-
-      restart_state <- self$restart_state
-      save_restart_step <- private$save_restart_step
-      save_restart <- !is.null(restart_state)
 
       history <- self$history
       save_history <- !is.null(history)
@@ -221,6 +216,10 @@ particle_filter_state_nested <- R6::R6Class(
       steps <- private$steps
       data_split <- private$data_split
       pars <- private$pars
+
+      restart_state <- self$restart_state
+      save_restart_step <- private$save_restart_step
+      save_restart <- !is.null(restart_state)
 
       for (t in seq(curr + 1L, step_index)) {
         step_end <- steps[t, 2L]
