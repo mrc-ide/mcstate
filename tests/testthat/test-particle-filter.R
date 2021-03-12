@@ -935,8 +935,6 @@ test_that("can get history with compiled particle filter on nested model", {
   p2 <- particle_filter$new(dat$data, model, n_particles, NULL,
                             index = dat$index)
 
-  ## TODO: p1$run(save_history = TRUE) does not work but does in the
-  ## unnested case.
   p1$run(pars, save_history = TRUE)
   p2$run(pars, save_history = TRUE)
 

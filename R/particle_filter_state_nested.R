@@ -200,22 +200,21 @@ particle_filter_state_nested <- R6::R6Class(
         ## TODO: this section is a copy of a similar section in the
         ## unnested filter. It's hard to factor out because we need
         ## many inputs and we write to both self and private...
-        ##
-        ## Each of these is a feature that needs implementing, mostly in dust
-        if (!save_restart && curr == 0L && step_index == n_steps) {
+        if (curr == 0L && step_index == n_steps) {
           if (save_history) {
             model$set_index(save_history_index)
             on.exit(model$set_index(integer(0)))
           }
-          ret <- model$filter(save_history)
+          res <- model$filter(save_history, private$save_restart_step)
           self$log_likelihood_step <- NA_real_
-          self$log_likelihood <- ret$log_likelihood
+          self$log_likelihood <- res$log_likelihood
           private$current_step_index <- step_index
           if (save_history) {
-            self$history <- list(value = ret$history,
+            self$history <- list(value = res$trajectories,
                                  index = save_history_index)
           }
-          return(ret$log_likelihood)
+          self$restart_state <- res$snapshots
+          return(res$log_likelihood)
         }
       }
 
