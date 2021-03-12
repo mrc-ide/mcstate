@@ -546,8 +546,6 @@ history_single <- function(history_value, history_order, history_index,
 history_nested <- function(history_value, history_order, history_index,
                            index_particle) {
   ny <- nrow(history_value)
-  npop <- ncol(history_order)
-  nt <- nlayer(history_order)
 
   if (is.null(history_order)) {
     npop <- nlayer(history_value)
@@ -556,9 +554,20 @@ history_nested <- function(history_value, history_order, history_index,
     } else if (!is.matrix(index_particle)) {
       ret <- history_value[, index_particle, , , drop = FALSE]
     } else {
-      stop("WRITEME")
+      if (!ncol(index_particle) == npop) {
+        stop(sprintf("'index_particle' should have %d columns", npop))
+      }
+      d <- dim(history_value)
+      d[[2L]] <- nrow(index_particle)
+      ret <- array(NA_real_, d)
+      for (i in seq_len(npop)) {
+        ret[, , i, ] <- history_value[, index_particle[, i], i, ]
+      }
     }
   } else {
+    npop <- ncol(history_order)
+    nt <- nlayer(history_order)
+
     if (is.null(index_particle)) {
       index_particle <- matrix(seq_len(ncol(history_value)),
                                ncol(history_value), npop)

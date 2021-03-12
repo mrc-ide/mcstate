@@ -887,7 +887,7 @@ test_that("Can extract state from the model - nested", {
   n_particles <- 42
   set.seed(1)
   pars <- list(list(beta = 0.2, gamma = 0.1),
-                               list(beta = 0.3, gamma = 0.1))
+               list(beta = 0.3, gamma = 0.1))
   seed <- 100
   index <- function(info) {
     list(run = 5L, state = 1:3)
@@ -962,6 +962,15 @@ test_that("can get history with compiled particle filter on nested model", {
   expect_true(all(diff(t(p2$history()[3, , 2, ])) >= 0))
   expect_equal(dim(p1$history(1L)), dim(p2$history(1L)))
   expect_equal(dim(p1$history(1:5)), dim(p2$history(1:5)))
+
+  idx <- cbind(1:4, 2:5)
+  h2 <- p2$history(idx)
+  expect_equal(dim(h2), dim(p1$history(idx)))
+  expect_equal(h2[, , 1, ], p2$history()[, 1:4, 1, ])
+  expect_equal(h2[, , 2, ], p2$history()[, 2:5, 2, ])
+
+  expect_error(p2$history(idx[, c(1, 1, 2)]),
+               "'index_particle' should have 2 columns")
 })
 
 
