@@ -225,11 +225,7 @@ particle_filter_state <- R6::R6Class(
           history_value[, , t + 1L] <- model$state(save_history_index)
         }
 
-        if (is.null(compare)) {
-          log_weights <- model$compare_data()
-        } else {
-          log_weights <- compare(state, data_split[[t]], pars)
-        }
+        log_weights <- compare(state, data_split[[t]], pars)
 
         if (is.null(log_weights)) {
           if (save_history) {

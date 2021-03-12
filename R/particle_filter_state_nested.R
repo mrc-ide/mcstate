@@ -191,26 +191,29 @@ particle_filter_state_nested <- R6::R6Class(
       log_likelihood <- self$log_likelihood
       n_particles <- private$n_particles
 
+      ## TODO: this section is a copy of a similar section in the
+      ## unnested filter. It's hard to factor out because we need
+      ## many inputs and we write to both self and private...
       if (is.null(compare)) {
-        ## TODO: this section is a copy of a similar section in the
-        ## unnested filter. It's hard to factor out because we need
-        ## many inputs and we write to both self and private...
-        if (curr == 0L && step_index == n_steps) {
-          if (save_history) {
-            model$set_index(save_history_index)
-            on.exit(model$set_index(integer(0)))
-          }
-          res <- model$filter(save_history, private$save_restart_step)
-          self$log_likelihood_step <- NA_real_
-          self$log_likelihood <- res$log_likelihood
-          private$current_step_index <- step_index
-          if (save_history) {
-            self$history <- list(value = res$trajectories,
-                                 index = save_history_index)
-          }
-          self$restart_state <- res$snapshots
-          return(res$log_likelihood)
+        ## This needs a little work in dust:
+        ## https://github.com/mrc-ide/dust/issues/177
+        if (curr != 0L || step_index != n_steps) {
+          stop("Partial particle filter running not supported")
         }
+        if (save_history) {
+          model$set_index(save_history_index)
+          on.exit(model$set_index(integer(0)))
+        }
+        res <- model$filter(save_history, private$save_restart_step)
+        self$log_likelihood_step <- NA_real_
+        self$log_likelihood <- res$log_likelihood
+        private$current_step_index <- step_index
+        if (save_history) {
+          self$history <- list(value = res$trajectories,
+                               index = save_history_index)
+        }
+        self$restart_state <- res$snapshots
+        return(res$log_likelihood)
       }
 
       steps <- private$steps
@@ -229,22 +232,18 @@ particle_filter_state_nested <- R6::R6Class(
           history_value[, , , t + 1L] <- model$state(save_history_index)
         }
 
-        if (is.null(compare)) {
-          log_weights <- model$compare_data()
-        } else {
-          log_weights <- lapply(
-              seq_len(nlayer(state)),
-              function(i) {
-                compare(array_drop(state[, , i, drop = FALSE], 3),
-                        data_split[[t]][[i]], pars[[i]])
-              })
+        log_weights <- lapply(
+          seq_len(nlayer(state)),
+          function(i) {
+            compare(array_drop(state[, , i, drop = FALSE], 3),
+                    data_split[[t]][[i]], pars[[i]])
+          })
 
-          if (all(lengths(log_weights) == 0)) {
-            log_weights <- NULL
-          } else {
-            log_weights <- vapply(log_weights, identity,
-                                  numeric(length(log_weights[[1]])))
-          }
+        if (all(lengths(log_weights) == 0)) {
+          log_weights <- NULL
+        } else {
+          log_weights <- vapply(log_weights, identity,
+                                numeric(length(log_weights[[1]])))
         }
 
         if (is.null(log_weights)) {
