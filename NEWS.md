@@ -1,3 +1,7 @@
+# mcstate 0.5.11
+
+* The particle filter can now run entirely in compiled code if supported by the model. This may give a small performance gain, particularly on very simple models, or of the model has an expensive compare function (#118)
+
 # mcstate 0.5.9
 
 * Add `nested_step_ratio` parameter to `pmcmc_control` for controlling the ratio of fixed:varied steps for nested pMCMC

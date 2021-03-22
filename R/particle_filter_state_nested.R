@@ -149,7 +149,11 @@ particle_filter_state_nested <- R6::R6Class(
     ##' a convenience function around `$step()` which provides the correct
     ##' value of `step_index`
     run = function() {
-      self$step(private$n_steps)
+      if (is.null(private$compare)) {
+        particle_filter_compiled(self, private)
+      } else {
+        self$step(private$n_steps)
+      }
     },
 
     ##' @description Take a step with the particle filter. This moves
@@ -180,8 +184,14 @@ particle_filter_state_nested <- R6::R6Class(
       }
 
       model <- self$model
-
       compare <- private$compare
+
+      ## This needs a little work in dust:
+      ## https://github.com/mrc-ide/dust/issues/177
+      if (is.null(compare)) {
+        stop("Can't use low-level step with compiled particle filter (yet)")
+      }
+
       steps <- private$steps
       data_split <- private$data_split
       pars <- private$pars
@@ -207,22 +217,18 @@ particle_filter_state_nested <- R6::R6Class(
           history_value[, , , t + 1L] <- model$state(save_history_index)
         }
 
-        if (is.null(compare)) {
-          log_weights <- model$compare_data()
-        } else {
-          log_weights <- lapply(
-              seq_len(nlayer(state)),
-              function(i) {
-                compare(array_drop(state[, , i, drop = FALSE], 3),
-                        data_split[[t]][[i]], pars[[i]])
-              })
+        log_weights <- lapply(
+          seq_len(nlayer(state)),
+          function(i) {
+            compare(array_drop(state[, , i, drop = FALSE], 3),
+                    data_split[[t]][[i]], pars[[i]])
+          })
 
-          if (all(lengths(log_weights) == 0)) {
-            log_weights <- NULL
-          } else {
-            log_weights <- vapply(log_weights, identity,
-                                  numeric(length(log_weights[[1]])))
-          }
+        if (all(lengths(log_weights) == 0)) {
+          log_weights <- NULL
+        } else {
+          log_weights <- vapply(log_weights, identity,
+                                numeric(length(log_weights[[1]])))
         }
 
         if (is.null(log_weights)) {

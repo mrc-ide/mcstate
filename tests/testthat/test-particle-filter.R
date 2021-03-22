@@ -632,6 +632,49 @@ test_that("use compiled compare function", {
 })
 
 
+test_that("Can get history with compiled particle filter", {
+  dat <- example_sir()
+  n_particles <- 100
+  set.seed(1)
+
+  model <- dust::dust_example("sir")
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index)
+  p2 <- particle_filter$new(dat$data, model, n_particles, NULL,
+                            index = dat$index)
+
+  p1$run(save_history = TRUE)
+  p2$run(save_history = TRUE)
+
+  expect_equal(dim(p1$history()), dim(p2$history()))
+  expect_true(all(diff(t(p2$history()[3, , ])) >= 0))
+  expect_equal(dim(p1$history(1L)), dim(p2$history(1L)))
+  expect_equal(dim(p1$history(1:5)), dim(p2$history(1:5)))
+})
+
+
+test_that("Can save restart with compiled particle filter", {
+  dat <- example_sir()
+  n_particles <- 100
+  set.seed(1)
+
+  model <- dust::dust_example("sir")
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index)
+  p2 <- particle_filter$new(dat$data, model, n_particles, NULL,
+                            index = dat$index)
+
+  at <- c(10, 20, 40, 80)
+  p1$run(save_restart = at)
+  p2$run(save_restart = at)
+
+  expect_equal(dim(p1$restart_state()), dim(p2$restart_state()))
+  expect_true(all(diff(t(p2$restart_state()[3, , ])) >= 0))
+  expect_equal(dim(p1$restart_state(1L)), dim(p2$restart_state(1L)))
+  expect_equal(dim(p1$restart_state(1:5)), dim(p2$restart_state(1:5)))
+})
+
+
 test_that("prevent using compiled compare where model does not support it", {
   dat <- example_sir()
   n_particles <- 100
@@ -722,6 +765,28 @@ test_that("Can't run past the end of the data", {
     obj$step(n + 1),
     "step_index 101 is beyond the length of the data (max 100)",
     fixed = TRUE)
+})
+
+
+test_that("Can't partially run a compiled filter", {
+  dat <- example_sir()
+  p <- particle_filter$new(dat$data, dat$model, 10, NULL,
+                           index = dat$index, seed = 1L)
+  expect_error(p$run_begin()$step(5),
+               "Can't use low-level step with compiled particle filter (yet)",
+               fixed = TRUE)
+})
+
+
+test_that("Can't partially run a compiled filter (nested)", {
+  dat <- example_sir_shared()
+  pars <- list(list(beta = 0.2, gamma = 0.1),
+               list(beta = 0.3, gamma = 0.1))
+  p <- particle_filter$new(dat$data, dat$model, 10, NULL,
+                           index = dat$index)
+  expect_error(p$run_begin(pars)$step(5),
+               "Can't use low-level step with compiled particle filter (yet)",
+               fixed = TRUE)
 })
 
 
@@ -825,7 +890,7 @@ test_that("Can extract state from the model - nested", {
   n_particles <- 42
   set.seed(1)
   pars <- list(list(beta = 0.2, gamma = 0.1),
-                               list(beta = 0.3, gamma = 0.1))
+               list(beta = 0.3, gamma = 0.1))
   seed <- 100
   index <- function(info) {
     list(run = 5L, state = 1:3)
@@ -864,7 +929,7 @@ test_that("use compiled compare function - nested", {
   set.seed(1)
 
   pars <- list(list(beta = 0.2, gamma = 0.1),
-                               list(beta = 0.3, gamma = 0.1))
+               list(beta = 0.3, gamma = 0.1))
 
   model <- dust::dust_example("sir")
   p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
@@ -876,6 +941,41 @@ test_that("use compiled compare function - nested", {
   y2 <- replicate(50, p2$run(pars))
   expect_equal(mean(y1), mean(y2), tolerance = 0.01)
 })
+
+
+test_that("can get history with compiled particle filter on nested model", {
+  dat <- example_sir_shared()
+  n_particles <- 42
+  set.seed(1)
+
+  pars <- list(list(beta = 0.2, gamma = 0.1),
+                               list(beta = 0.3, gamma = 0.1))
+
+  model <- dust::dust_example("sir")
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index)
+  p2 <- particle_filter$new(dat$data, model, n_particles, NULL,
+                            index = dat$index)
+
+  p1$run(pars, save_history = TRUE)
+  p2$run(pars, save_history = TRUE)
+
+  expect_equal(dim(p1$history()), dim(p2$history()))
+  expect_true(all(diff(t(p2$history()[3, , 1, ])) >= 0))
+  expect_true(all(diff(t(p2$history()[3, , 2, ])) >= 0))
+  expect_equal(dim(p1$history(1L)), dim(p2$history(1L)))
+  expect_equal(dim(p1$history(1:5)), dim(p2$history(1:5)))
+
+  idx <- cbind(1:4, 2:5)
+  h2 <- p2$history(idx)
+  expect_equal(dim(h2), dim(p1$history(idx)))
+  expect_equal(h2[, , 1, ], p2$history()[, 1:4, 1, ])
+  expect_equal(h2[, , 2, ], p2$history()[, 2:5, 2, ])
+
+  expect_error(p2$history(idx[, c(1, 1, 2)]),
+               "'index_particle' should have 2 columns")
+})
+
 
 test_that("particle filter state nested - errors", {
   dat <- example_sir_shared()
@@ -935,7 +1035,7 @@ test_that("Can fork a particle_filter_state_nested object", {
   n_particles <- 42
 
   pars <- list(list(beta = 0.2, gamma = 0.1),
-                               list(beta = 0.3, gamma = 0.1))
+               list(beta = 0.3, gamma = 0.1))
 
   set.seed(1)
   p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,

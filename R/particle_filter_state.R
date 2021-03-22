@@ -138,7 +138,11 @@ particle_filter_state <- R6::R6Class(
     ##' a convenience function around `$step()` which provides the correct
     ##' value of `step_index`
     run = function() {
-      self$step(private$n_steps)
+      if (is.null(private$compare)) {
+        particle_filter_compiled(self, private)
+      } else {
+        self$step(private$n_steps)
+      }
     },
 
     ##' @description Take a step with the particle filter. This moves
@@ -172,8 +176,14 @@ particle_filter_state <- R6::R6Class(
       }
 
       model <- self$model
-
       compare <- private$compare
+
+      ## This needs a little work in dust:
+      ## https://github.com/mrc-ide/dust/issues/177
+      if (is.null(compare)) {
+        stop("Can't use low-level step with compiled particle filter (yet)")
+      }
+
       steps <- private$steps
       data_split <- private$data_split
       pars <- private$pars
@@ -199,11 +209,7 @@ particle_filter_state <- R6::R6Class(
           history_value[, , t + 1L] <- model$state(save_history_index)
         }
 
-        if (is.null(compare)) {
-          log_weights <- model$compare_data()
-        } else {
-          log_weights <- compare(state, data_split[[t]], pars)
-        }
+        log_weights <- compare(state, data_split[[t]], pars)
 
         if (is.null(log_weights)) {
           if (save_history) {
@@ -281,3 +287,30 @@ particle_filter_state <- R6::R6Class(
       ret
     }
   ))
+
+
+## This is used by both the nested and non-nested particle filter, and
+## outsources all the work to dust.
+particle_filter_compiled <- function(self, private) {
+  history <- self$history
+  save_history <- !is.null(history)
+  save_history_index <- self$history$index
+
+  model <- self$model
+  if (save_history) {
+    model$set_index(save_history_index)
+    on.exit(model$set_index(integer(0)))
+  }
+
+  res <- model$filter(save_history, private$save_restart_step)
+
+  self$log_likelihood_step <- NA_real_
+  self$log_likelihood <- res$log_likelihood
+  private$current_step_index <- private$n_steps
+  if (save_history) {
+    self$history <- list(value = res$trajectories,
+                         index = save_history_index)
+  }
+  self$restart_state <- res$snapshots
+  res$log_likelihood
+}
