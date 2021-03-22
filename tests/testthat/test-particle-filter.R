@@ -773,8 +773,10 @@ test_that("Can't partially run a compiled filter", {
   p <- particle_filter$new(dat$data, dat$model, 10, NULL,
                            index = dat$index, seed = 1L)
   expect_error(p$run_begin()$step(5),
-               "Partial particle filter running not supported")
+               "Can't use low-level step with compiled particle filter (yet)",
+               fixed = TRUE)
 })
+
 
 test_that("Can't partially run a compiled filter (nested)", {
   dat <- example_sir_shared()
@@ -783,7 +785,8 @@ test_that("Can't partially run a compiled filter (nested)", {
   p <- particle_filter$new(dat$data, dat$model, 10, NULL,
                            index = dat$index)
   expect_error(p$run_begin(pars)$step(5),
-               "Partial particle filter running not supported")
+               "Can't use low-level step with compiled particle filter (yet)",
+               fixed = TRUE)
 })
 
 

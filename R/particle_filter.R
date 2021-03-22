@@ -543,12 +543,18 @@ history_single <- function(history_value, history_order, history_index,
   ret
 }
 
+## This function handles the nested/non-nested case but also the
+## compiled/non-compiled case. In the compiled case we already have
+## our history nicely ordered (that is the states convered into a tree
+## based on the history of particle sampling) and history_order is
+## NULL.
 history_nested <- function(history_value, history_order, history_index,
                            index_particle) {
   ny <- nrow(history_value)
+  npop <- nlayer(history_value)
 
   if (is.null(history_order)) {
-    npop <- nlayer(history_value)
+    ## Compiled particle filter; no ordering needed (or available)
     if (is.null(index_particle)) {
       ret <- history_value
     } else if (!is.matrix(index_particle)) {
@@ -565,7 +571,7 @@ history_nested <- function(history_value, history_order, history_index,
       }
     }
   } else {
-    npop <- ncol(history_order)
+    ## mcstate particle filter; need to sort the history
     nt <- nlayer(history_order)
 
     if (is.null(index_particle)) {

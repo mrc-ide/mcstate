@@ -149,7 +149,11 @@ particle_filter_state_nested <- R6::R6Class(
     ##' a convenience function around `$step()` which provides the correct
     ##' value of `step_index`
     run = function() {
-      self$step(private$n_steps)
+      if (is.null(private$compare)) {
+        particle_filter_compiled(self, private)
+      } else {
+        self$step(private$n_steps)
+      }
     },
 
     ##' @description Take a step with the particle filter. This moves
@@ -182,38 +186,10 @@ particle_filter_state_nested <- R6::R6Class(
       model <- self$model
       compare <- private$compare
 
-      history <- self$history
-      save_history <- !is.null(history)
-      save_history_index <- self$history$index
-      history_value <- history$value
-      history_order <- history$order
-
-      log_likelihood <- self$log_likelihood
-      n_particles <- private$n_particles
-
-      ## TODO: this section is a copy of a similar section in the
-      ## unnested filter. It's hard to factor out because we need
-      ## many inputs and we write to both self and private...
+      ## This needs a little work in dust:
+      ## https://github.com/mrc-ide/dust/issues/177
       if (is.null(compare)) {
-        ## This needs a little work in dust:
-        ## https://github.com/mrc-ide/dust/issues/177
-        if (curr != 0L || step_index != n_steps) {
-          stop("Partial particle filter running not supported")
-        }
-        if (save_history) {
-          model$set_index(save_history_index)
-          on.exit(model$set_index(integer(0)))
-        }
-        res <- model$filter(save_history, private$save_restart_step)
-        self$log_likelihood_step <- NA_real_
-        self$log_likelihood <- res$log_likelihood
-        private$current_step_index <- step_index
-        if (save_history) {
-          self$history <- list(value = res$trajectories,
-                               index = save_history_index)
-        }
-        self$restart_state <- res$snapshots
-        return(res$log_likelihood)
+        stop("Can't use low-level step with compiled particle filter (yet)")
       }
 
       steps <- private$steps
@@ -223,6 +199,15 @@ particle_filter_state_nested <- R6::R6Class(
       restart_state <- self$restart_state
       save_restart_step <- private$save_restart_step
       save_restart <- !is.null(restart_state)
+
+      history <- self$history
+      save_history <- !is.null(history)
+      save_history_index <- self$history$index
+      history_value <- history$value
+      history_order <- history$order
+
+      log_likelihood <- self$log_likelihood
+      n_particles <- private$n_particles
 
       for (t in seq(curr + 1L, step_index)) {
         step_end <- steps[t, 2L]
