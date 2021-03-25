@@ -2,11 +2,8 @@ context("if2")
 
 
 test_that("Can run IF2", {
-  proposal_kernel <- diag(2) * 1e-4
-  row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("beta", "gamma")
-
-  pars <- list("beta" = 0.15, "gamma" = 0.05)
-  pars_sd <- list("beta" = 0.02, "gamma" = 0.02)
+  pars <- list(beta = 0.15, gamma = 0.05)
+  pars_sd <- c(beta = 0.02, gamma = 0.02) # not a list!
 
   dat <- example_sir()
 
