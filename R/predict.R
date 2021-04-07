@@ -65,8 +65,9 @@ pmcmc_predict <- function(object, steps, prepend_trajectories = FALSE,
                      seed = seed, pars_multi = TRUE)
 
     mod$set_state(state)
-
-    mod$set_index(index)
+    if (!is.null(index)) {
+      mod$set_index(index)
+    }
     y <- mod$simulate(steps)
 
     res <- mcstate_trajectories(steps, object$predict$rate, y, TRUE)
