@@ -2,7 +2,7 @@
 title: "Validation of SMC using a Kalman filter"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{kalman}
+  %\VignetteIndexEntry{Validation of SMC using a Kalman filter}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -43,7 +43,7 @@ data <- local({
   mod <- volatility$new(list(alpha = 0.91, sigma = 1), 0, 1L)
   mod$set_state(matrix(rnorm(1L, 0, 1L), 1))
   steps <- seq(0, 100, by = 1)
-  res <- dust::dust_iterate(mod, steps)
+  res <- mod$simulate(steps)
   observed <- res[1, 1, -1] + rnorm(length(steps) - 1, 0, 1)
   data.frame(step = steps[-1], value = observed)
 })
