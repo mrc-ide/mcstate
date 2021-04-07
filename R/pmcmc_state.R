@@ -165,10 +165,11 @@ pmcmc_state <- R6::R6Class(
                 private$control$n_steps)
       steps <- seq(from = private$curr_step + 1L,
                    length.out = to - private$curr_step)
+      control <- private$control
       for (i in steps) {
         private$tick()
 
-        if (i %% private$control$rerun_every == 0) {
+        if (rerun(i, control$rerun_every, control$rerun_random)) {
           private$curr_llik <- private$run_filter(private$curr_pars)
           private$curr_lpost <- private$curr_lprior + private$curr_llik
           private$update_history()
@@ -191,33 +192,33 @@ pmcmc_state <- R6::R6Class(
         private$history_probabilities$add(
           c(private$curr_lprior, private$curr_llik, private$curr_lpost))
 
-        if (private$control$save_trajectories) {
+        if (control$save_trajectories) {
           private$history_trajectories$add(private$curr_trajectories)
         }
-        if (private$control$save_state) {
+        if (control$save_state) {
           private$history_state$add(private$curr_state)
         }
-        if (length(private$control$save_restart) > 0) {
+        if (length(control$save_restart) > 0) {
           private$history_restart$add(private$curr_restart)
         }
       }
       private$curr_step <- to
-      list(step = to, finished = to == private$control$n_steps)
+      list(step = to, finished = to == control$n_steps)
     },
 
     run_nested = function() {
-      to <- min(private$curr_step + private$control$n_steps_each,
-                private$control$n_steps)
+      control <- private$control
+      to <- min(private$curr_step + control$n_steps_each,
+                control$n_steps)
       steps <- seq(from = private$curr_step + 1L,
                    length.out = to - private$curr_step)
-
       run_alternate_step <- alternate(private$run_fixed, private$run_varied,
-                                      private$control$nested_step_ratio)
+                                      control$nested_step_ratio)
 
       for (i in steps) {
         private$tick()
 
-        if (i %% private$control$rerun_every == 0) {
+        if (rerun(i, control$rerun_every, control$rerun_random)) {
           private$curr_llik <- private$run_filter_nested(private$curr_pars)
           private$curr_lpost <- private$curr_lprior + private$curr_llik
           private$update_history_nested()
@@ -230,19 +231,19 @@ pmcmc_state <- R6::R6Class(
           matrix(c(private$curr_lprior, private$curr_llik, private$curr_lpost),
                  ncol = 3, byrow = TRUE))
 
-        if (private$control$save_trajectories) {
+        if (control$save_trajectories) {
           private$history_trajectories$add(private$curr_trajectories)
         }
-        if (private$control$save_state) {
+        if (control$save_state) {
           private$history_state$add(private$curr_state)
         }
-        if (length(private$control$save_restart) > 0) {
+        if (length(control$save_restart) > 0) {
           private$history_restart$add(private$curr_restart)
         }
 
       }
       private$curr_step <- to
-      list(step = to, finished = to == private$control$n_steps)
+      list(step = to, finished = to == control$n_steps)
     },
 
     finish = function() {
@@ -406,5 +407,16 @@ alternate <- function(f, g, ratio) {
     } else {
       f()
     }
+  }
+}
+
+
+rerun <- function(i, every, random) {
+  if (!is.finite(every)) {
+    FALSE
+  } else if (random) {
+    runif(1) < 1 / every
+  } else {
+    i %% every == 0
   }
 }

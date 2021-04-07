@@ -58,6 +58,11 @@
 ##'   point before doing the comparison.  This may help "unstick"
 ##'   chains, at the cost of some bias in the results.
 ##'
+##' @param rerun_every_random Logical, indicating if `rerun_every`
+##'   should be interpreted as exactly every `rerun_every` steps (if
+##'   `FALSE`) or on average (if `TRUE`). If `TRUE`, then we rerun
+##'   every step with probability `1 / rerun_every`.
+##'
 ##' @param use_parallel_seed Logical, indicating if seeds should be
 ##'   configured in the same way as when running workers in parallel
 ##'   (with `n_workers > 1`).  Set this to `TRUE` to ensure
@@ -130,7 +135,8 @@
 ##'                        n_workers = 4)
 pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
                           n_workers = 1L, n_steps_each = NULL,
-                          rerun_every = Inf, use_parallel_seed = FALSE,
+                          rerun_every = Inf, rerun_random = FALSE,
+                          use_parallel_seed = FALSE,
                           save_state = TRUE, save_restart = NULL,
                           save_trajectories = FALSE, progress = FALSE,
                           nested_step_ratio = 1) {
@@ -160,8 +166,8 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
 
   if (!identical(unname(rerun_every), Inf)) {
     assert_scalar_positive_integer(rerun_every)
-
   }
+  assert_scalar_logical(rerun_random)
 
   assert_scalar_logical(use_parallel_seed)
   assert_scalar_logical(save_state)
@@ -190,6 +196,7 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
               n_steps_each = n_steps_each,
               n_threads_total = n_threads_total,
               rerun_every = rerun_every,
+              rerun_random = rerun_random,
               use_parallel_seed = use_parallel_seed,
               save_state = save_state,
               save_restart = save_restart,

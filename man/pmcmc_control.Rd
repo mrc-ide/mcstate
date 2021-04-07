@@ -11,6 +11,7 @@ pmcmc_control(
   n_workers = 1L,
   n_steps_each = NULL,
   rerun_every = Inf,
+  rerun_random = FALSE,
   use_parallel_seed = FALSE,
   save_state = TRUE,
   save_restart = NULL,
@@ -117,6 +118,11 @@ iterations updating the fixed and varied parameters. Sensible choices
 of this parameter may depend on the true ratio of fixed:varied parameters
 or on desired run-time, for example updating fixed parameters is
 quicker so more varied steps could be more efficient.}
+
+\item{rerun_every_random}{Logical, indicating if \code{rerun_every}
+should be interpreted as exactly every \code{rerun_every} steps (if
+\code{FALSE}) or on average (if \code{TRUE}). If \code{TRUE}, then we rerun
+every step with probability \code{1 / rerun_every}.}
 }
 \value{
 A \code{pmcmc_control} object, which should not be modified
