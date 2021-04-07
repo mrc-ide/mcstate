@@ -58,7 +58,7 @@
 ##'   point before doing the comparison.  This may help "unstick"
 ##'   chains, at the cost of some bias in the results.
 ##'
-##' @param rerun_every_random Logical, indicating if `rerun_every`
+##' @param rerun_random Logical, indicating if `rerun_every`
 ##'   should be interpreted as exactly every `rerun_every` steps (if
 ##'   `FALSE`) or on average (if `TRUE`). If `TRUE`, then we rerun
 ##'   every step with probability `1 / rerun_every`.

@@ -68,6 +68,11 @@ particle filter on both the proposed \emph{and} previously accepted
 point before doing the comparison.  This may help "unstick"
 chains, at the cost of some bias in the results.}
 
+\item{rerun_random}{Logical, indicating if \code{rerun_every}
+should be interpreted as exactly every \code{rerun_every} steps (if
+\code{FALSE}) or on average (if \code{TRUE}). If \code{TRUE}, then we rerun
+every step with probability \code{1 / rerun_every}.}
+
 \item{use_parallel_seed}{Logical, indicating if seeds should be
 configured in the same way as when running workers in parallel
 (with \code{n_workers > 1}).  Set this to \code{TRUE} to ensure
@@ -118,11 +123,6 @@ iterations updating the fixed and varied parameters. Sensible choices
 of this parameter may depend on the true ratio of fixed:varied parameters
 or on desired run-time, for example updating fixed parameters is
 quicker so more varied steps could be more efficient.}
-
-\item{rerun_every_random}{Logical, indicating if \code{rerun_every}
-should be interpreted as exactly every \code{rerun_every} steps (if
-\code{FALSE}) or on average (if \code{TRUE}). If \code{TRUE}, then we rerun
-every step with probability \code{1 / rerun_every}.}
 }
 \value{
 A \code{pmcmc_control} object, which should not be modified
