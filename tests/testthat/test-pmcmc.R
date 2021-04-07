@@ -192,8 +192,6 @@ test_that("running pmcmc with progress = TRUE prints messages", {
   dat <- example_uniform()
   control <- pmcmc_control(1000, save_state = FALSE, save_trajectories = FALSE,
                            progress = TRUE)
-  pmcmc(dat$pars, dat$filter, control = control)
-
   expect_message(
     pmcmc(dat$pars, dat$filter, control = control),
     "Finished 1000 steps in ")
