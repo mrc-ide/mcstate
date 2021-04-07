@@ -68,10 +68,12 @@ particle filter on both the proposed \emph{and} previously accepted
 point before doing the comparison.  This may help "unstick"
 chains, at the cost of some bias in the results.}
 
-\item{rerun_random}{Logical, indicating if \code{rerun_every}
-should be interpreted as exactly every \code{rerun_every} steps (if
-\code{FALSE}) or on average (if \code{TRUE}). If \code{TRUE}, then we rerun
-every step with probability \code{1 / rerun_every}.}
+\item{rerun_random}{Logical, controlling the behaviour of
+rerunning (when \code{rerun_every} is finite). The default value of
+\code{FALSE} will rerun the filter deterministically at a fixed
+number of iterations (given by \code{rerun_every}). If \code{TRUE}, then
+we stochastically rerun each step with probability of \code{1 / rerun_every}. This gives the same expected number of MCMC steps
+between reruns but a different pattern.}
 
 \item{use_parallel_seed}{Logical, indicating if seeds should be
 configured in the same way as when running workers in parallel

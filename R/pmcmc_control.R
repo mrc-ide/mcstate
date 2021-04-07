@@ -58,10 +58,13 @@
 ##'   point before doing the comparison.  This may help "unstick"
 ##'   chains, at the cost of some bias in the results.
 ##'
-##' @param rerun_random Logical, indicating if `rerun_every`
-##'   should be interpreted as exactly every `rerun_every` steps (if
-##'   `FALSE`) or on average (if `TRUE`). If `TRUE`, then we rerun
-##'   every step with probability `1 / rerun_every`.
+##' @param rerun_random Logical, controlling the behaviour of
+##'   rerunning (when `rerun_every` is finite). The default value of
+##'   `FALSE` will rerun the filter deterministically at a fixed
+##'   number of iterations (given by `rerun_every`). If `TRUE`, then
+##'   we stochastically rerun each step with probability of `1 /
+##'   rerun_every`. This gives the same expected number of MCMC steps
+##'   between reruns but a different pattern.
 ##'
 ##' @param use_parallel_seed Logical, indicating if seeds should be
 ##'   configured in the same way as when running workers in parallel
