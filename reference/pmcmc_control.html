@@ -84,7 +84,7 @@ as the order of the arguments may change in future." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.12</span>
       </span>
     </div>
 
@@ -167,6 +167,7 @@ as the order of the arguments may change in future.</p>
   n_workers <span class='op'>=</span> <span class='fl'>1L</span>,
   n_steps_each <span class='op'>=</span> <span class='cn'>NULL</span>,
   rerun_every <span class='op'>=</span> <span class='cn'>Inf</span>,
+  rerun_random <span class='op'>=</span> <span class='cn'>FALSE</span>,
   use_parallel_seed <span class='op'>=</span> <span class='cn'>FALSE</span>,
   save_state <span class='op'>=</span> <span class='cn'>TRUE</span>,
   save_restart <span class='op'>=</span> <span class='cn'>NULL</span>,
@@ -236,6 +237,15 @@ point, but if you set to 100, then every 100 steps we run the
 particle filter on both the proposed <em>and</em> previously accepted
 point before doing the comparison.  This may help "unstick"
 chains, at the cost of some bias in the results.</p></td>
+    </tr>
+    <tr>
+      <th>rerun_random</th>
+      <td><p>Logical, controlling the behaviour of
+rerunning (when <code>rerun_every</code> is finite). The default value of
+<code>FALSE</code> will rerun the filter deterministically at a fixed
+number of iterations (given by <code>rerun_every</code>). If <code>TRUE</code>, then
+we stochastically rerun each step with probability of <code>1 / rerun_every</code>. This gives the same expected number of MCMC steps
+between reruns but a different pattern.</p></td>
     </tr>
     <tr>
       <th>use_parallel_seed</th>
@@ -332,6 +342,9 @@ detail in <code><a href='../articles/parallelisation.html'>vignette("parallelisa
 #&gt; $rerun_every
 #&gt; [1] Inf
 #&gt; 
+#&gt; $rerun_random
+#&gt; [1] FALSE
+#&gt; 
 #&gt; $use_parallel_seed
 #&gt; [1] FALSE
 #&gt; 
@@ -373,6 +386,9 @@ detail in <code><a href='../articles/parallelisation.html'>vignette("parallelisa
 #&gt; 
 #&gt; $rerun_every
 #&gt; [1] Inf
+#&gt; 
+#&gt; $rerun_random
+#&gt; [1] FALSE
 #&gt; 
 #&gt; $use_parallel_seed
 #&gt; [1] FALSE
@@ -417,6 +433,9 @@ detail in <code><a href='../articles/parallelisation.html'>vignette("parallelisa
 #&gt; 
 #&gt; $rerun_every
 #&gt; [1] Inf
+#&gt; 
+#&gt; $rerun_random
+#&gt; [1] FALSE
 #&gt; 
 #&gt; $use_parallel_seed
 #&gt; [1] FALSE
