@@ -11,6 +11,7 @@ pmcmc_control(
   n_workers = 1L,
   n_steps_each = NULL,
   rerun_every = Inf,
+  rerun_random = FALSE,
   use_parallel_seed = FALSE,
   save_state = TRUE,
   save_restart = NULL,
@@ -66,6 +67,13 @@ point, but if you set to 100, then every 100 steps we run the
 particle filter on both the proposed \emph{and} previously accepted
 point before doing the comparison.  This may help "unstick"
 chains, at the cost of some bias in the results.}
+
+\item{rerun_random}{Logical, controlling the behaviour of
+rerunning (when \code{rerun_every} is finite). The default value of
+\code{FALSE} will rerun the filter deterministically at a fixed
+number of iterations (given by \code{rerun_every}). If \code{TRUE}, then
+we stochastically rerun each step with probability of \code{1 / rerun_every}. This gives the same expected number of MCMC steps
+between reruns but a different pattern.}
 
 \item{use_parallel_seed}{Logical, indicating if seeds should be
 configured in the same way as when running workers in parallel
