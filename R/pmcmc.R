@@ -57,12 +57,76 @@ pmcmc <- function(pars, filter, initial = NULL, control = NULL) {
     initial <- pmcmc_check_initial(initial, pars, control$n_chains)
   }
 
-
   if (control$n_workers == 1) {
     pmcmc_multiple_series(pars, initial, filter, control)
   } else {
     pmcmc_multiple_parallel(pars, initial, filter, control)
   }
+}
+
+
+##' Run a pMCMC, with sensible random number behaviour, but schedule
+##' execution of the chains yourself. Use this if you want to
+##' distribute chains over (say) the nodes of an HPC system.
+##'
+##' Basic usage will look like
+##'
+##' ```
+##' inputs <- mcstate::pmcmc_chains_prepare(pars, filter, control = control)
+##' samples_data <-
+##'   lapply(seq_len(control$n_chains), mcstate::pmcmc_chains_run, inputs)
+##' samples <- mcstate::pmcmc_combine(samples = samples)
+##' ```
+##'
+##' You can safely parallelise (or not) however you like at the
+##' `lapply` call and get the same outputs regardless.
+##'
+##' @title pMCMC with manual chain scheduling
+##'
+##' @inheritParams pmcmc
+##' @export
+pmcmc_chains_prepare <- function(pars, filter, initial = NULL, control = NULL) {
+  assert_is(pars, c("pmcmc_parameters", "pmcmc_parameters_nested"))
+  assert_is(filter, "particle_filter")
+  assert_is(control, "pmcmc_control")
+
+  if (control$n_workers != 1) {
+    stop("'n_workers' must be 1")
+  }
+  if (!control$use_parallel_seed) {
+    stop("'use_parallel_seed' must be TRUE")
+  }
+
+  if (inherits(pars, "pmcmc_parameters_nested")) {
+    initial <- pmcmc_check_initial_nested(initial, pars, control$n_chains)
+  } else {
+    initial <- pmcmc_check_initial(initial, pars, control$n_chains)
+  }
+
+  seed <- make_seeds(control$n_chains, filter$inputs()$seed)
+
+  ret <- list(pars = pars, initial = initial, filter = filter,
+              control = control, seed = seed)
+  class(ret) <- "pmcmc_inputs"
+  ret
+}
+
+
+##' @param chain_id The chain index to run (1, 2, ..., `control$n_chains`)
+##'
+##' @param inputs A `pmcmc_inputs` object created by `pmcmc_chains_prepare`
+##'
+##' @export
+##' @rdname pmcmc_chains_prepare
+pmcmc_chains_run <- function(chain_id, inputs) {
+  assert_is(inputs, "pmcmc_inputs")
+  assert_scalar_positive_integer(chain_id)
+  if (chain_id < 1 || chain_id > inputs$control$n_chains) {
+    stop(sprintf("'chain_id' must be an integer in 1..%d",
+                 inputs$control$n_chains))
+  }
+  pmcmc_run_chain(chain_id, inputs$pars, inputs$initial, inputs$filter,
+                  inputs$control, inputs$seed)
 }
 
 
@@ -80,6 +144,7 @@ pmcmc_single_chain <- function(pars, initial, filter, control, seed = NULL) {
 pmcmc_single_chain_nested <- function(pars, initial, filter, control,
                                       seed = NULL) {
   if (!is.null(seed)) {
+    set.seed(seed$r)
     filter <- particle_filter_from_inputs(filter$inputs(), seed$dust)
   }
   obj <- pmcmc_state$new(pars, initial, filter, control)
@@ -94,27 +159,33 @@ pmcmc_multiple_series <- function(pars, initial, filter, control) {
   } else {
     seed <- NULL
   }
-  if (!is.null(control$n_threads_total)) {
-    filter$set_n_threads(control$n_threads_total)
-  }
   samples <- vector("list", control$n_chains)
 
   for (i in seq_along(samples)) {
-    if (control$progress) {
-      message(sprintf("Running chain %d / %d", i, control$n_chains))
-    }
-    if (inherits(pars, "pmcmc_parameters_nested")) {
-      samples[[i]] <- pmcmc_single_chain_nested(pars, initial[, , i], filter,
-                                                control, seed[[i]])
-    } else {
-      samples[[i]] <- pmcmc_single_chain(pars, initial[, i], filter, control,
-                                         seed[[i]])
-    }
+    samples[[i]] <- pmcmc_run_chain(i, pars, initial, filter, control, seed)
   }
+
   if (length(samples) == 1) {
     samples[[1L]]
   } else {
     pmcmc_combine(samples = samples)
+  }
+}
+
+
+pmcmc_run_chain <- function(chain_id, pars, initial, filter, control, seed) {
+  if (control$progress) {
+    message(sprintf("Running chain %d / %d", chain_id, control$n_chains))
+  }
+  if (!is.null(control$n_threads_total)) {
+    filter$set_n_threads(control$n_threads_total)
+  }
+  if (inherits(pars, "pmcmc_parameters_nested")) {
+    pmcmc_single_chain_nested(pars, initial[, , chain_id], filter,
+                              control, seed[[chain_id]])
+  } else {
+    pmcmc_single_chain(pars, initial[, chain_id], filter, control,
+                       seed[[chain_id]])
   }
 }
 

@@ -84,8 +84,7 @@ pmcmc_predict_nested <- function(object, state, index, model, n_threads,
                                  steps, prepend_trajectories, seed) {
 
   pars <- apply(object$pars, 3, function(x)
-    mcstate:::set_names(object$predict$transform(t(x)),
-                        colnames(object$pars)))
+    set_names(object$predict$transform(t(x)), colnames(object$pars)))
   pars <- unlist(pars, FALSE)
   dim(pars) <- c(nlayer(object$pars), ncol(object$pars))
 
