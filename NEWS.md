@@ -1,3 +1,7 @@
+# mcstate 0.5.13
+
+* New functions `pmcmc_chains_prepare` and `pmcmc_chains_run` which can be used to manually schedule chains over different computing resourcess (#129)
+
 # mcstate 0.5.12
 
 * When `rerun_every` is specified, a new control parameter `rerun_control` can be used to make this stochastic rerun
