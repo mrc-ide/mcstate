@@ -978,6 +978,19 @@ test_that("split chain running requires one worker", {
 })
 
 
+test_that("split chain running requires parallel seed setting", {
+  dat <- example_sir()
+  n_particles <- 30
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, seed = 1L)
+  control <- pmcmc_control(10, n_chains = 4, n_workers = 1,
+                           use_parallel_seed = FALSE)
+  expect_error(
+    pmcmc_chains_prepare(dat$pars, p, NULL, control),
+    "'use_parallel_seed' must be TRUE")
+})
+
+
 test_that("split chain running validates the chain id", {
   dat <- example_sir()
   n_particles <- 30
