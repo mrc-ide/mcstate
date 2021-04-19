@@ -1022,5 +1022,6 @@ test_that("can run split chains with nested model", {
   samples <- lapply(seq_len(control$n_chains), pmcmc_chains_run, inputs)
   res2 <- pmcmc_combine(samples = samples)
 
-  expect_equal(res1, res2)
+  v <- c("chain", "iteration", "pars", "probabilities", "trajectories")
+  expect_equal(res1[v], res2[v])
 })
