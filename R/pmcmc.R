@@ -69,6 +69,18 @@ pmcmc <- function(pars, filter, initial = NULL, control = NULL) {
 ##' execution of the chains yourself. Use this if you want to
 ##' distribute chains over (say) the nodes of an HPC system.
 ##'
+##' Basic usage will look like
+##'
+##' ```
+##' inputs <- mcstate::pmcmc_chains_prepare(pars, filter, control = control)
+##' samples_data <-
+##'   lapply(seq_len(control$n_chains), mcstate::pmcmc_chains_run, inputs)
+##' samples <- mcstate::pmcmc_combine(samples = samples)
+##' ```
+##'
+##' You can safely parallelise (or not) however you like at the
+##' `lapply` call and get the same outputs regardless.
+##'
 ##' @title pMCMC with manual chain scheduling
 ##'
 ##' @inheritParams pmcmc

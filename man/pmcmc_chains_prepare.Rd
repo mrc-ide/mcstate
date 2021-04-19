@@ -38,3 +38,13 @@ Run a pMCMC, with sensible random number behaviour, but schedule
 execution of the chains yourself. Use this if you want to
 distribute chains over (say) the nodes of an HPC system.
 }
+\details{
+Basic usage will look like\preformatted{inputs <- mcstate::pmcmc_chains_prepare(pars, filter, control = control)
+samples_data <-
+  lapply(seq_len(control$n_chains), mcstate::pmcmc_chains_run, inputs)
+samples <- mcstate::pmcmc_combine(samples = samples)
+}
+
+You can safely parallelise (or not) however you like at the
+\code{lapply} call and get the same outputs regardless.
+}
