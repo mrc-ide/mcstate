@@ -1,3 +1,7 @@
+# mcstate 0.5.14
+
+* New control parameter `nested_alternate` can be used to turn off alternatively proposing new fixed and varied parameters in nested pmcmc, instead all parameters are proposed and collectively accepted/rejected.
+
 # mcstate 0.5.13
 
 * New functions `pmcmc_chains_prepare` and `pmcmc_chains_run` which can be used to manually schedule chains over different computing resourcess (#129)

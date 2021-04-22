@@ -117,6 +117,12 @@
 ##'   or on desired run-time, for example updating fixed parameters is
 ##'   quicker so more varied steps could be more efficient.
 ##'
+##' @param nested_alternate If `TRUE` (default) then alternates between
+##'  proposing fixed and varied parameter updates according to the ratio in
+##'  `nested_step_ratio`. If `FALSE` then proposes fixed and varied parameters
+##'  simultaneously and collectively accepts/rejects them, `nested_step_ratio`
+##'  is ignored.
+##'
 ##' @return A `pmcmc_control` object, which should not be modified
 ##'   once created.
 ##'
@@ -142,7 +148,7 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
                           use_parallel_seed = FALSE,
                           save_state = TRUE, save_restart = NULL,
                           save_trajectories = FALSE, progress = FALSE,
-                          nested_step_ratio = 1) {
+                          nested_step_ratio = 1, nested_alternate = TRUE) {
   assert_scalar_positive_integer(n_steps)
   assert_scalar_positive_integer(n_chains)
   assert_scalar_positive_integer(n_workers)
@@ -193,6 +199,8 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
                           must be an integer", nested_step_ratio))
   }
 
+  assert_scalar_logical(nested_alternate)
+
   ret <- list(n_steps = n_steps,
               n_chains = n_chains,
               n_workers = n_workers,
@@ -205,7 +213,8 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
               save_restart = save_restart,
               save_trajectories = save_trajectories,
               progress = progress,
-              nested_step_ratio = nested_step_ratio)
+              nested_step_ratio = nested_step_ratio,
+              nested_alternate = nested_alternate)
   class(ret) <- "pmcmc_control"
   ret
 }
