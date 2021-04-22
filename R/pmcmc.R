@@ -116,8 +116,9 @@ pmcmc_chains_prepare <- function(pars, filter, initial = NULL, control = NULL) {
 ##'
 ##' @param inputs A `pmcmc_inputs` object created by `pmcmc_chains_prepare`
 ##'
-##' @param path Optionally a path to save output in. This might be
-##'   useful if splitting work across multiple processes.
+##' @param path Optionally a directory to save output in. This might
+##'   be useful if splitting work across multiple processes. Samples
+##'   will be saved at `<path>/samples_<chain_id>.rds`
 ##'
 ##' @export
 ##' @rdname pmcmc_chains_prepare
@@ -133,9 +134,11 @@ pmcmc_chains_run <- function(chain_id, inputs, path = NULL) {
   if (is.null(path)) {
     samples
   } else {
-    dir.create(dirname(path), FALSE, TRUE)
-    saveRDS(samples, path)
-    path
+    fmt <- "samples_%d.rds"
+    dir.create(path, FALSE, TRUE)
+    dest <- file.path(path, sprintf(fmt, chain_id))
+    saveRDS(samples, dest)
+    dest
   }
 }
 

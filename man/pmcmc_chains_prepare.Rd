@@ -33,8 +33,9 @@ and any of the parameters above aside from \code{pars} and \code{filter}.}
 
 \item{inputs}{A \code{pmcmc_inputs} object created by \code{pmcmc_chains_prepare}}
 
-\item{path}{Optionally a path to save output in. This might be
-useful if splitting work across multiple processes.}
+\item{path}{Optionally a directory to save output in. This might
+be useful if splitting work across multiple processes. Samples
+will be saved at \verb{<path>/samples_<chain_id>.rds}}
 }
 \description{
 Run a pMCMC, with sensible random number behaviour, but schedule
