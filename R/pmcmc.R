@@ -116,17 +116,27 @@ pmcmc_chains_prepare <- function(pars, filter, initial = NULL, control = NULL) {
 ##'
 ##' @param inputs A `pmcmc_inputs` object created by `pmcmc_chains_prepare`
 ##'
+##' @param path Optionally a path to save output in. This might be
+##'   useful if splitting work across multiple processes.
+##'
 ##' @export
 ##' @rdname pmcmc_chains_prepare
-pmcmc_chains_run <- function(chain_id, inputs) {
+pmcmc_chains_run <- function(chain_id, inputs, path = NULL) {
   assert_is(inputs, "pmcmc_inputs")
   assert_scalar_positive_integer(chain_id)
   if (chain_id < 1 || chain_id > inputs$control$n_chains) {
     stop(sprintf("'chain_id' must be an integer in 1..%d",
                  inputs$control$n_chains))
   }
-  pmcmc_run_chain(chain_id, inputs$pars, inputs$initial, inputs$filter,
-                  inputs$control, inputs$seed)
+  samples <- pmcmc_run_chain(chain_id, inputs$pars, inputs$initial,
+                             inputs$filter, inputs$control, inputs$seed)
+  if (is.null(path)) {
+    samples
+  } else {
+    dir.create(dirname(path), FALSE, TRUE)
+    saveRDS(samples, path)
+    path
+  }
 }
 
 

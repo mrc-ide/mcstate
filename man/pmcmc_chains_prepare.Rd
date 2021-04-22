@@ -7,7 +7,7 @@
 \usage{
 pmcmc_chains_prepare(pars, filter, initial = NULL, control = NULL)
 
-pmcmc_chains_run(chain_id, inputs)
+pmcmc_chains_run(chain_id, inputs, path = NULL)
 }
 \arguments{
 \item{pars}{A \code{\link{pmcmc_parameters}} object containing
@@ -32,6 +32,9 @@ and any of the parameters above aside from \code{pars} and \code{filter}.}
 \item{chain_id}{The chain index to run (1, 2, ..., \code{control$n_chains})}
 
 \item{inputs}{A \code{pmcmc_inputs} object created by \code{pmcmc_chains_prepare}}
+
+\item{path}{Optionally a path to save output in. This might be
+useful if splitting work across multiple processes.}
 }
 \description{
 Run a pMCMC, with sensible random number behaviour, but schedule
