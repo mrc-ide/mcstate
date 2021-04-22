@@ -1038,3 +1038,34 @@ test_that("can run split chains with nested model", {
   v <- c("chain", "iteration", "pars", "probabilities", "trajectories")
   expect_equal(res1[v], res2[v])
 })
+
+
+test_that("Split chain and write to file", {
+  dat <- example_sir()
+  n_particles <- 30
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  control <- pmcmc_control(10, n_chains = 4, use_parallel_seed = TRUE)
+
+  res1 <- pmcmc(dat$pars, p1, control = control)
+
+  inputs <- pmcmc_chains_prepare(dat$pars, p2, NULL, control)
+  ## typically the user will create this before but we won't here to
+  ## show that this is robust to that
+  path <- tempfile()
+
+  samples_path <- vcapply(seq_len(control$n_chains), pmcmc_chains_run,
+                          inputs, path)
+  expect_true(file.exists(path))
+  expect_true(file.info(path)$isdir)
+  expect_true(all(file.exists(samples_path)))
+  expect_equal(dirname(samples_path), rep(path, 4))
+  expect_equal(basename(samples_path),
+               sprintf("samples_%d.rds", 1:4))
+  samples <- lapply(samples_path, readRDS)
+  res2 <- pmcmc_combine(samples = samples)
+
+  expect_equal(res1, res2)
+})
