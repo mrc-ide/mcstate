@@ -1061,7 +1061,7 @@ test_that("Split chain and write to file", {
   expect_true(file.exists(path))
   expect_true(file.info(path)$isdir)
   expect_true(all(file.exists(samples_path)))
-  expect_equal(dirname(samples_path), rep(path, 4))
+  expect_setequal(dir(path), basename(samples_path))
   expect_equal(basename(samples_path),
                sprintf("samples_%d.rds", 1:4))
   samples <- lapply(samples_path, readRDS)
