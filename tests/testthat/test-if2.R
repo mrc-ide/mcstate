@@ -2,7 +2,9 @@ context("if2")
 
 
 test_that("Can run IF2", {
-  pars <- list(beta = 0.15, gamma = 0.05)
+  pars <- if2_parameters$new(
+            list(if2_parameter("beta", 0.15, min = 0, max = 1),
+                 if2_parameter("gamma", 0.05, min = 0, max = 1)))
   pars_sd <- c(beta = 0.02, gamma = 0.02) # not a list!
 
   dat <- example_sir()
