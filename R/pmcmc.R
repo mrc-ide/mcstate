@@ -20,16 +20,6 @@
 ##'
 ##' @param filter A [`particle_filter`] object
 ##'
-##' @param n_steps Deprecated: use [mcstate::pmcmc_control] instead
-##'
-##' @param save_state Deprecated: use [mcstate::pmcmc_control] instead
-##'
-##' @param save_trajectories Deprecated: use [mcstate::pmcmc_control] instead
-##'
-##' @param progress Deprecated: use [mcstate::pmcmc_control] instead
-##'
-##' @param n_chains Deprecated: use [mcstate::pmcmc_control] instead
-##'
 ##' @param initial Optional initial starting point. If given, it must
 ##'   be compatible with the parameters given in `pars`, and must be
 ##'   valid against your prior. You can use this to override the
@@ -37,8 +27,6 @@
 ##'   either a vector of initial conditions, or a matrix with
 ##'   `n_chains` columns to use a different starting point for each
 ##'   chain.
-##'
-##' @param rerun_every Deprecated: use [mcstate::pmcmc_control] instead
 ##'
 ##' @param control A [mcstate::pmcmc_control] object which will set
 ##'   parameters. This will become the primary way of specifying
@@ -58,37 +46,99 @@
 ##'   simulation (if `return_trajectories` was `TRUE`).
 ##'
 ##' @export
-pmcmc <- function(pars, filter, n_steps, save_state = TRUE,
-                  save_trajectories = FALSE, progress = FALSE,
-                  n_chains = 1, initial = NULL, rerun_every = Inf,
-                  control = NULL) {
-  assert_is(pars, "pmcmc_parameters")
+pmcmc <- function(pars, filter, initial = NULL, control = NULL) {
+  assert_is(pars, c("pmcmc_parameters", "pmcmc_parameters_nested"))
   assert_is(filter, "particle_filter")
-  if (is.null(control)) {
-    warning("Please update your code to use pmcmc::pmcmc_control()",
-            immediate. = TRUE)
-    control <- pmcmc_control(n_steps,
-                             n_chains = n_chains,
-                             rerun_every = rerun_every,
-                             save_state = save_state,
-                             save_trajectories = save_trajectories,
-                             progress = progress)
-  } else {
-    assert_is(control, "pmcmc_control")
-    ok <- missing(n_steps) && missing(save_state) &&
-      missing(save_trajectories) && missing(progress) && missing(n_chains) &&
-      missing(rerun_every)
-    if (!ok) {
-      stop("Do not use deprecated arguments duplicated in pmcmc_control")
-    }
-  }
+  assert_is(control, "pmcmc_control")
 
-  initial <- pmcmc_check_initial(initial, pars, control$n_chains)
+  if (inherits(pars, "pmcmc_parameters_nested")) {
+    initial <- pmcmc_check_initial_nested(initial, pars, control$n_chains)
+  } else {
+    initial <- pmcmc_check_initial(initial, pars, control$n_chains)
+  }
 
   if (control$n_workers == 1) {
     pmcmc_multiple_series(pars, initial, filter, control)
   } else {
     pmcmc_multiple_parallel(pars, initial, filter, control)
+  }
+}
+
+
+##' Run a pMCMC, with sensible random number behaviour, but schedule
+##' execution of the chains yourself. Use this if you want to
+##' distribute chains over (say) the nodes of an HPC system.
+##'
+##' Basic usage will look like
+##'
+##' ```
+##' inputs <- mcstate::pmcmc_chains_prepare(pars, filter, control = control)
+##' samples_data <-
+##'   lapply(seq_len(control$n_chains), mcstate::pmcmc_chains_run, inputs)
+##' samples <- mcstate::pmcmc_combine(samples = samples)
+##' ```
+##'
+##' You can safely parallelise (or not) however you like at the
+##' `lapply` call and get the same outputs regardless.
+##'
+##' @title pMCMC with manual chain scheduling
+##'
+##' @inheritParams pmcmc
+##' @export
+pmcmc_chains_prepare <- function(pars, filter, initial = NULL, control = NULL) {
+  assert_is(pars, c("pmcmc_parameters", "pmcmc_parameters_nested"))
+  assert_is(filter, "particle_filter")
+  assert_is(control, "pmcmc_control")
+
+  if (control$n_workers != 1) {
+    stop("'n_workers' must be 1")
+  }
+  if (!control$use_parallel_seed) {
+    stop("'use_parallel_seed' must be TRUE")
+  }
+
+  if (inherits(pars, "pmcmc_parameters_nested")) {
+    initial <- pmcmc_check_initial_nested(initial, pars, control$n_chains)
+  } else {
+    initial <- pmcmc_check_initial(initial, pars, control$n_chains)
+  }
+
+  seed <- make_seeds(control$n_chains, filter$inputs()$seed)
+
+  ret <- list(pars = pars, initial = initial, filter = filter,
+              control = control, seed = seed)
+  class(ret) <- "pmcmc_inputs"
+  ret
+}
+
+
+##' @param chain_id The chain index to run (1, 2, ..., `control$n_chains`)
+##'
+##' @param inputs A `pmcmc_inputs` object created by `pmcmc_chains_prepare`
+##'
+##' @param path Optionally a directory to save output in. This might
+##'   be useful if splitting work across multiple processes. Samples
+##'   will be saved at `<path>/samples_<chain_id>.rds`
+##'
+##' @export
+##' @rdname pmcmc_chains_prepare
+pmcmc_chains_run <- function(chain_id, inputs, path = NULL) {
+  assert_is(inputs, "pmcmc_inputs")
+  assert_scalar_positive_integer(chain_id)
+  if (chain_id < 1 || chain_id > inputs$control$n_chains) {
+    stop(sprintf("'chain_id' must be an integer in 1..%d",
+                 inputs$control$n_chains))
+  }
+  samples <- pmcmc_run_chain(chain_id, inputs$pars, inputs$initial,
+                             inputs$filter, inputs$control, inputs$seed)
+  if (is.null(path)) {
+    samples
+  } else {
+    fmt <- "samples_%d.rds"
+    dir.create(path, FALSE, TRUE)
+    dest <- file.path(path, sprintf(fmt, chain_id))
+    saveRDS(samples, dest)
+    dest
   }
 }
 
@@ -104,6 +154,17 @@ pmcmc_single_chain <- function(pars, initial, filter, control, seed = NULL) {
   obj$finish()
 }
 
+pmcmc_single_chain_nested <- function(pars, initial, filter, control,
+                                      seed = NULL) {
+  if (!is.null(seed)) {
+    set.seed(seed$r)
+    filter <- particle_filter_from_inputs(filter$inputs(), seed$dust)
+  }
+  obj <- pmcmc_state$new(pars, initial, filter, control)
+  obj$run_nested()
+  obj$finish_nested()
+}
+
 
 pmcmc_multiple_series <- function(pars, initial, filter, control) {
   if (control$use_parallel_seed) {
@@ -111,21 +172,33 @@ pmcmc_multiple_series <- function(pars, initial, filter, control) {
   } else {
     seed <- NULL
   }
-  if (!is.null(control$n_threads_total)) {
-    filter$set_n_threads(control$n_threads_total)
-  }
   samples <- vector("list", control$n_chains)
+
   for (i in seq_along(samples)) {
-    if (control$progress) {
-      message(sprintf("Running chain %d / %d", i, control$n_chains))
-    }
-    samples[[i]] <- pmcmc_single_chain(pars, initial[, i], filter, control,
-                                       seed[[i]])
+    samples[[i]] <- pmcmc_run_chain(i, pars, initial, filter, control, seed)
   }
+
   if (length(samples) == 1) {
     samples[[1L]]
   } else {
     pmcmc_combine(samples = samples)
+  }
+}
+
+
+pmcmc_run_chain <- function(chain_id, pars, initial, filter, control, seed) {
+  if (control$progress) {
+    message(sprintf("Running chain %d / %d", chain_id, control$n_chains))
+  }
+  if (!is.null(control$n_threads_total)) {
+    filter$set_n_threads(control$n_threads_total)
+  }
+  if (inherits(pars, "pmcmc_parameters_nested")) {
+    pmcmc_single_chain_nested(pars, initial[, , chain_id], filter,
+                              control, seed[[chain_id]])
+  } else {
+    pmcmc_single_chain(pars, initial[, chain_id], filter, control,
+                       seed[[chain_id]])
   }
 }
 
@@ -176,5 +249,70 @@ pmcmc_check_initial <- function(initial, pars, n_chains) {
     initial <- matrix(initial, n_pars, n_chains)
   }
   dimnames(initial) <- list(nms, NULL)
+  initial
+}
+
+## TODO: This does not check that the parameters are in range, or that
+## they are appropriately discrete. We should add that in too at some
+## point, though this overlaps with some outstanding validation in the
+## smc2 branch.
+pmcmc_check_initial_nested <- function(initial, pars, n_chains) {
+  nms <- pars$names()
+  pops <- pars$populations()
+  n_pars <- length(nms)
+  n_pops <- length(pops)
+
+  if (is.null(initial)) {
+    initial <- pars$initial()
+  }
+  if (is_3d_array(initial)) {
+    if (nlayer(initial) != n_chains) {
+      stop(sprintf("Expected an array with %d layers for 'initial'", n_chains))
+    }
+    if (ncol(initial) != n_pars) {
+      stop(sprintf("Expected an array with %d columns for 'initial'", n_pars))
+    }
+    if (nrow(initial) != n_pops) {
+      stop(sprintf("Expected an array with %d rows for 'initial'", n_pops))
+    }
+    if (!is.null(rownames(initial)) && !identical(rownames(initial), pops)) {
+      stop("If 'initial' has rownames, they must match pars$populations()")
+    }
+    if (!is.null(colnames(initial)) && !identical(colnames(initial), nms)) {
+      stop("If 'initial' has colnames, they must match pars$names()")
+    }
+
+    dimnames(initial) <- list(pops, nms, NULL)
+
+    ok <- apply(initial, 3, function(p) all(is.finite(pars$prior(p))))
+    if (any(!ok)) {
+      stop(sprintf(
+        "Starting point does not have finite prior probability (%s)",
+        paste(which(!ok), collapse = ", ")))
+    }
+  } else {
+    if (NCOL(initial) != n_pars) {
+      stop(sprintf("Expected a matrix with %d columns for 'initial'", n_pars))
+    }
+    if (NROW(initial) != n_pops) {
+      stop(sprintf("Expected a matrix with %d rows for 'initial'", n_pops))
+    }
+    if (!is.null(rownames(initial)) && !identical(rownames(initial), pops)) {
+      stop("If 'initial' has rownames, they must match pars$populations()")
+    }
+    if (!is.null(colnames(initial)) && !identical(colnames(initial), nms)) {
+      stop("If 'initial' has colnames, they must match pars$names()")
+    }
+
+    dimnames(initial) <- list(pops, nms)
+
+    if (any(!is.finite(pars$prior(initial)))) {
+      stop("Starting point does not have finite prior probability")
+    }
+
+    initial <- array(initial, c(n_pops, n_pars, n_chains),
+                     dimnames = list(pops, nms, NULL))
+  }
+
   initial
 }

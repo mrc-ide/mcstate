@@ -11,11 +11,13 @@ pmcmc_control(
   n_workers = 1L,
   n_steps_each = NULL,
   rerun_every = Inf,
+  rerun_random = FALSE,
   use_parallel_seed = FALSE,
   save_state = TRUE,
   save_restart = NULL,
   save_trajectories = FALSE,
-  progress = FALSE
+  progress = FALSE,
+  nested_step_ratio = 1
 )
 }
 \arguments{
@@ -66,6 +68,13 @@ particle filter on both the proposed \emph{and} previously accepted
 point before doing the comparison.  This may help "unstick"
 chains, at the cost of some bias in the results.}
 
+\item{rerun_random}{Logical, controlling the behaviour of
+rerunning (when \code{rerun_every} is finite). The default value of
+\code{FALSE} will rerun the filter deterministically at a fixed
+number of iterations (given by \code{rerun_every}). If \code{TRUE}, then
+we stochastically rerun each step with probability of \code{1 / rerun_every}. This gives the same expected number of MCMC steps
+between reruns but a different pattern.}
+
 \item{use_parallel_seed}{Logical, indicating if seeds should be
 configured in the same way as when running workers in parallel
 (with \code{n_workers > 1}).  Set this to \code{TRUE} to ensure
@@ -106,6 +115,16 @@ particle will be selected for each.}
 
 \item{progress}{Logical, indicating if a progress bar should be
 displayed, using \code{\link[progress:progress_bar]{progress::progress_bar}}.}
+
+\item{nested_step_ratio}{Either integer or 1/integer, which specifies the
+ratio of fixed:varied steps in a nested pMCMC. For example \code{3} would run
+3 steps proposing fixed parameters only and then 1 step proposing varied
+parameters only; whereas \code{1/3} would run 3 varied steps
+for every 1 fixed step. The default value of \code{1} runs an equal number of
+iterations updating the fixed and varied parameters. Sensible choices
+of this parameter may depend on the true ratio of fixed:varied parameters
+or on desired run-time, for example updating fixed parameters is
+quicker so more varied steps could be more efficient.}
 }
 \value{
 A \code{pmcmc_control} object, which should not be modified

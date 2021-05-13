@@ -20,6 +20,7 @@ example_sir <- function() {
       rexp(n = length(incidence_modelled), rate = exp_noise)
     dpois(x = incidence_observed, lambda = lambda, log = TRUE)
   }
+
   inv_dt <- 4
   day <- seq(1, 100)
   incidence <- rep(NA, length(day))
@@ -59,6 +60,79 @@ example_sir <- function() {
 }
 
 
+example_sir_shared <- function() {
+  set.seed(1)
+  model <- dust::dust_example("sir")
+  sir <- model$new(pars = list(list(beta = 0.2, gamma = 0.1),
+                               list(beta = 0.3, gamma = 0.1)),
+                   step = 0, n_particles = 1, pars_multi = TRUE)
+  y0 <- sir$state()
+
+  inv_dt <- 4
+  day <- seq(1, 100)
+  incidence <- matrix(NA, nrow = 2, ncol = length(day))
+  history <- array(NA_real_, c(5, 2, length(day) + 1))
+  history[, , 1] <- array(y0, c(5, 2, 1))
+
+  for (i in day) {
+    state_start <- sir$state()
+    state_end <- sir$run(i * inv_dt)
+    history[, , i + 1] <- array(state_end, c(5, 2, 1))
+    incidence[, i] <- state_end[5, 1, ]
+  }
+
+  data_raw <- apply(incidence, 1,
+                    function(x) data.frame(day = day, incidence = x))
+  data_raw <- do.call(rbind, data_raw)
+  data_raw$populations <- factor(rep(letters[1:2], each = nrow(data_raw) / 2))
+
+  data <- particle_filter_data(data_raw, time = "day", rate = 4,
+                               population = "populations")
+
+  index <- function(info) {
+    list(run = 5L, state = 1:3)
+  }
+
+  proposal_fixed <- matrix(0.00026)
+  row.names(proposal_fixed) <- colnames(proposal_fixed) <- "gamma"
+  proposal_varied <- matrix(0.00057)
+  row.names(proposal_varied) <- colnames(proposal_varied) <- "beta"
+
+  pars <- pmcmc_parameters_nested$new(
+    list(pmcmc_varied_parameter("beta", letters[1:2], c(0.2, 0.3),
+                                min = 0, max = 1,
+                                prior = function(p) log(1e-10)),
+         pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
+                         prior = function(p) log(1e-10))),
+    proposal_fixed = proposal_fixed, proposal_varied = proposal_varied)
+
+  compare <- function(state, observed, pars = NULL) {
+    if (is.na(observed$incidence)) {
+      return(NULL)
+    }
+    if (is.null(pars$compare$exp_noise)) {
+      exp_noise <- 1e6
+    } else {
+      exp_noise <- pars$compare$exp_noise
+    }
+    ## This is on the *filtered* state (i.e., returned by run())
+    incidence_modelled <- state[1, , drop = TRUE]
+    incidence_observed <- observed$incidence
+    lambda <- incidence_modelled +
+      rexp(n = length(incidence_modelled), rate = exp_noise)
+    dpois(x = incidence_observed, lambda = lambda, log = TRUE)
+  }
+
+  ## Avoid warnings about scope capture that are not important here.
+  environment(index) <- globalenv()
+  environment(compare) <- globalenv()
+
+  list(model = model, compare = compare, y0 = y0,
+       data_raw = data_raw, data = data, history = history,
+       index = index, pars = pars)
+}
+
+
 example_uniform <- function(proposal_kernel = NULL) {
   target <- function(p, ...) {
     1
@@ -85,6 +159,64 @@ example_uniform <- function(proposal_kernel = NULL) {
 }
 
 
+example_uniform_shared <- function(varied = TRUE, fixed = TRUE,
+                                   proposal_varied = NULL,
+                                   proposal_fixed = NULL) {
+
+  if (!varied || !fixed) {
+    n_par <- 2
+  } else {
+    n_par <- 4
+  }
+
+  target <- function(p, ...) {
+    rep(1, 3)
+  }
+
+
+  filter <- structure(list(run = target,
+                           n_particles = 10),
+                      class = "particle_filter")
+
+  pars <- list()
+  pops <- paste0("p", 1:3)
+
+  if (fixed) {
+    if (is.null(proposal_fixed)) {
+      proposal_fixed <- diag(2) * 0.1
+      row.names(proposal_fixed) <- colnames(proposal_fixed) <- c("a", "b")
+    }
+    pars <- c(pars,
+              list(
+                pmcmc_parameter("a", 0.5, min = 0, max = 1,
+                                prior = function(p) dunif(p, log = TRUE)),
+                pmcmc_parameter("b", 0.5, min = 0, max = 1,
+                                prior = function(p) dunif(p, log = TRUE))
+              ))
+  }
+
+  if (varied) {
+    if (is.null(proposal_varied)) {
+      proposal_varied <- diag(2) * 0.1
+      row.names(proposal_varied) <- colnames(proposal_varied) <- c("c", "d")
+    }
+    pars <- c(pars,
+              list(
+                pmcmc_varied_parameter("c", pops, 0.5, min = 0, max = 1,
+                                       prior = function(p) dunif(p,
+                                                                 log = TRUE)),
+                pmcmc_varied_parameter("d", pops, 0.5, min = 0, max = 1,
+                                       prior = function(p) dunif(p, log = TRUE))
+              ))
+  }
+
+  pars <- pmcmc_parameters_nested$new(pars, proposal_varied, proposal_fixed,
+                                      pops)
+
+  list(target = target, filter = filter, pars = pars)
+}
+
+
 example_mvnorm <- function() {
   target <- function(p, ...) {
     mvtnorm::dmvnorm(unlist(p), log = TRUE)
@@ -105,6 +237,54 @@ example_mvnorm <- function() {
   list(target = target, filter = filter, pars = pars)
 }
 
+
+example_mvnorm_shared <- function(varied = TRUE, fixed = TRUE,
+                                  proposal_varied = NULL,
+                                  proposal_fixed = NULL) {
+  target <- function(p, ...) {
+    vnapply(p, function(x) mvtnorm::dmvnorm(unlist(x), log = TRUE))
+  }
+  if (!varied || !fixed) {
+    n_par <- 2
+  } else {
+    n_par <- 4
+  }
+  filter <- structure(list(run = target,
+                           n_particles = 10),
+                      class = "particle_filter")
+
+  pars <- list()
+  pops <- paste0("p", 1:3)
+
+  if (fixed) {
+    if (is.null(proposal_fixed)) {
+      proposal_fixed <- diag(2)
+      row.names(proposal_fixed) <- colnames(proposal_fixed) <- c("a", "b")
+    }
+    pars <- c(pars,
+              list(
+                pmcmc_parameter("a", 0, min = -100, max = 100),
+                pmcmc_parameter("b", 0, min = -100, max = 100)
+              ))
+  }
+
+  if (varied) {
+    if (is.null(proposal_varied)) {
+      proposal_varied <- diag(2)
+      row.names(proposal_varied) <- colnames(proposal_varied) <- c("c", "d")
+    }
+    pars <- c(pars,
+              list(
+                pmcmc_varied_parameter("c", pops, 0, min = -100, max = 100),
+                pmcmc_varied_parameter("d", pops, 0, min = -100, max = 100)
+              ))
+  }
+
+  pars <- pmcmc_parameters_nested$new(pars, proposal_varied, proposal_fixed,
+                                      pops)
+
+  list(target = target, filter = filter, pars = pars)
+}
 
 ## Some form of these will likely go back into the package later
 acceptance_rate <- function(chain) {
@@ -158,6 +338,28 @@ example_sir_pmcmc2 <- function() {
     test_cache$example_sir_pmcmc2 <- dat
   }
   test_cache$example_sir_pmcmc2
+}
+
+
+example_sir_nested_pmcmc <- function() {
+  if (is.null(test_cache$example_sir_nested_pmcmc)) {
+    dat <- example_sir_shared()
+
+    n_particles <- 10
+    p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            dat$index, seed = 1L)
+    set.seed(1)
+
+    control <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE,
+                             save_restart = 40)
+
+    dat$results <- list(
+      pmcmc(dat$pars, p, control = control),
+      pmcmc(dat$pars, p, control = control),
+      pmcmc(dat$pars, p, control = control))
+    test_cache$example_sir_nested_pmcmc <- dat
+  }
+  test_cache$example_sir_nested_pmcmc
 }
 
 

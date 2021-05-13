@@ -11,7 +11,8 @@ pmcmc_orchestrator <- R6::R6Class(
     status = NULL,
     results = NULL,
     thread_pool = NULL,
-    progress = NULL
+    progress = NULL,
+    nested = FALSE
   ),
 
   public = list(
@@ -29,6 +30,7 @@ pmcmc_orchestrator <- R6::R6Class(
       private$sessions <- vector("list", control$n_workers)
       private$status <- vector("list", control$n_chains)
       private$results <- vector("list", control$n_chains)
+      private$nested <- inherits(pars, "pmcmc_parameters_nested")
 
       ## First stage starts the process, but this is async...
       for (i in seq_len(control$n_workers)) {
@@ -107,7 +109,8 @@ pmcmc_remote <- R6::R6Class(
     inputs = NULL,
     control = NULL,
     seed = NULL,
-    step = NULL
+    step = NULL,
+    nested = FALSE
   ),
 
   public = list(
@@ -123,6 +126,7 @@ pmcmc_remote <- R6::R6Class(
       private$inputs <- inputs
       private$control <- control
       private$seed <- seed
+        private$nested <- inherits(pars, "pmcmc_parameters_nested")
 
       lockBinding("session", self)
     },
@@ -141,14 +145,23 @@ pmcmc_remote <- R6::R6Class(
     ## is *capable* of starting every chain but we do the allocation
     ## dynamically.
     init = function(index) {
-      args <- list(private$pars, private$initial[, index], private$inputs,
+      if (is_3d_array(private$initial)) {
+        initial <- private$initial[, , index]
+      } else {
+        initial <- private$initial[, index]
+      }
+      args <- list(private$pars, initial, private$inputs,
                    private$control, private$seed[[index]])
       self$session$call(function(pars, initial, inputs, control, seed) {
         set.seed(seed$r)
         filter <- particle_filter_from_inputs(inputs, seed$dust)
         control$progress <- FALSE
         .GlobalEnv$obj <- pmcmc_state$new(pars, initial, filter, control)
-        .GlobalEnv$obj$run()
+        if (inherits(pars, "pmcmc_parameters_nested")) {
+          .GlobalEnv$obj$run_nested()
+        } else {
+          .GlobalEnv$obj$run()
+        }
       }, args, package = "mcstate")
       self$index <- index
       self$n_threads <- private$inputs$n_threads
@@ -156,7 +169,11 @@ pmcmc_remote <- R6::R6Class(
     },
 
     continue = function() {
-      self$session$call(function() .GlobalEnv$obj$run())
+      if (private$nested) {
+        self$session$call(function() .GlobalEnv$obj$run_nested())
+      } else {
+        self$session$call(function() .GlobalEnv$obj$run())
+      }
     },
 
     read = function() {
@@ -180,8 +197,15 @@ pmcmc_remote <- R6::R6Class(
 
     ## This one is synchronous
     finish = function() {
-      list(index = self$index,
-           data = self$session$run(function() .GlobalEnv$obj$finish()))
+      if (private$nested) {
+        list(index = self$index,
+             data = self$session$run(function()
+               .GlobalEnv$obj$finish_nested()))
+      } else {
+        list(index = self$index,
+             data = self$session$run(function()
+               .GlobalEnv$obj$finish()))
+      }
     }
   ))
 

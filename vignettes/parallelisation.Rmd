@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r, include = FALSE}
-incidence <- read.table("sir_incidence_data.csv", header = TRUE, sep = ",")
+incidence <- read.csv(system.file("sir_incidence.csv", package = "mcstate"))
 dt <- 0.25
 data <- mcstate::particle_filter_data(data = incidence,
                                       time = "day",

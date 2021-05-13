@@ -1,7 +1,14 @@
 mcstate_pmcmc <- function(pars, probabilities, state, trajectories, restart,
                           predict, chain = NULL, iteration = NULL) {
+
+  if (is_3d_array(pars)) {
+    iteration <- iteration %||% seq.int(0, length.out = nlayer(pars))
+  } else {
+    iteration <- iteration %||% seq.int(0, length.out = nrow(pars))
+  }
+
   ret <- list(chain = chain,
-              iteration = iteration %||% seq.int(0, length.out = nrow(pars)),
+              iteration = iteration,
               pars = pars,
               probabilities = probabilities,
               state = state,

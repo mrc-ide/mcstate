@@ -51,23 +51,58 @@ pmcmc_predict <- function(object, steps, prepend_trajectories = FALSE,
   }
 
   state <- object$state
-  pars <- apply(object$pars, 1, object$predict$transform)
   index <- object$predict$index
   model <- object$predict$filter$model
   n_threads <- n_threads %||% object$predict$filter$n_threads
 
-  ## NOTE: n_particles here is 1 because every particle gets a
-  ## different state.
-  mod <- model$new(pars, steps[[1]], 1L, n_threads = n_threads,
+  if (is_3d_array(state)) {
+    res <- pmcmc_predict_nested(object, state, index, model, n_threads,
+                                steps, prepend_trajectories, seed)
+  } else {
+    pars <- apply(object$pars, 1, object$predict$transform)
+
+    mod <- model$new(pars, steps[[1]], NULL, n_threads = n_threads,
+                     seed = seed, pars_multi = TRUE)
+
+    mod$set_state(state)
+    if (!is.null(index)) {
+      mod$set_index(index)
+    }
+    y <- mod$simulate(steps)
+
+    res <- mcstate_trajectories(steps, object$predict$rate, y, TRUE)
+
+    if (prepend_trajectories) {
+      res <- bind_mcstate_trajectories(object$trajectories, res)
+    }
+  }
+
+  res
+}
+
+pmcmc_predict_nested <- function(object, state, index, model, n_threads,
+                                 steps, prepend_trajectories, seed) {
+
+  pars <- apply(object$pars, 3, function(x)
+    set_names(object$predict$transform(t(x)), colnames(object$pars)))
+  pars <- unlist(pars, FALSE)
+  dim(pars) <- c(nlayer(object$pars), ncol(object$pars))
+
+  index <- object$predict$index
+  model <- object$predict$filter$model
+  n_threads <- n_threads %||% object$predict$filter$n_threads
+
+  mod <- model$new(pars, steps[[1]], NULL, n_threads = n_threads,
                    seed = seed, pars_multi = TRUE)
-  mod$set_state(array_reshape(state, 2, c(1, length(pars))))
+
+  mod$set_state(aperm(state, c(1, 3, 2)))
   mod$set_index(index)
   y <- mod$simulate(steps)
-  y <- array_drop(y, 2L) # (state x particles(1) x pars x time)
 
   res <- mcstate_trajectories(steps, object$predict$rate, y, TRUE)
+
   if (prepend_trajectories) {
-    res <- bind_mcstate_trajectories(object$trajectories, res)
+    res <- bind_mcstate_trajectories_nested(object$trajectories, res)
   }
 
   res

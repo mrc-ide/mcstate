@@ -1,3 +1,47 @@
+# mcstate 0.5.13
+
+* New functions `pmcmc_chains_prepare` and `pmcmc_chains_run` which can be used to manually schedule chains over different computing resourcess (#129)
+
+# mcstate 0.5.12
+
+* When `rerun_every` is specified, a new control parameter `rerun_control` can be used to make this stochastic rerun
+
+# mcstate 0.5.11
+
+* The particle filter can now run entirely in compiled code if supported by the model. This may give a small performance gain, particularly on very simple models, or of the model has an expensive compare function (#118)
+
+# mcstate 0.5.9
+
+* Add `nested_step_ratio` parameter to `pmcmc_control` for controlling the ratio of fixed:varied steps for nested pMCMC
+
+# mcstate 0.5.5
+
+* New array helper `mcstate::array_flatten` for unshaping an array
+
+# mcstate 0.5.4
+
+* Remove deprecated arguments to `pmcmc` (these were deprecated in 0.3.0) (#114)
+
+# mcstate 0.5.3
+
+* Bugfix in `index` for nested particle filters.
+
+# mcstate 0.5.2
+
+* Extend support of `pmcmc` to `pmcmc_parameters_nested` objects.
+
+# mcstate 0.5.1
+
+* Added `particle_filter_state_nested` and extended `particle_filter` to handle `pmcmc_parameters_nested` objects.
+
+# mcstate 0.5.0
+
+* Basic SMC^2 implementation (`smc2()`) as an alternative to pmcmc. This is very embryonic and the interface will change over future versions to support things like restarting and saving trajectories (#13)
+
+# mcstate 0.4.8
+
+* Bug fixes in `$proposal` method of `pmcmc_parameters_nested` for discrete and bounded parameters.
+
 # mcstate 0.4.7
 
 * Added helper methods `mcstate::array_bind`, `mcstate::array_reshape` and `mcstate::array_drop` to simplify some common array operations (#106)
