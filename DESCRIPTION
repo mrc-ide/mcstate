@@ -41,6 +41,6 @@ Suggests:
 RoxygenNote: 7.1.1
 Roxygen: list(markdown = TRUE)
 Remotes:
-    mrc-ide/dust@catch-error-multi,
+    mrc-ide/dust,
     mrc-ide/odin.dust
 VignetteBuilder: knitr
