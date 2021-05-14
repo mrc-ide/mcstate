@@ -10,9 +10,9 @@ if2 <- R6::R6Class(
     model = NULL,
     compare = NULL,
     compare_pars = NULL,
-    index = NULL
+    index = NULL,
     # Outputs
-    log_likelihood = NULL,
+    ll = NULL,
     if_pars = NULL
   ),
 
@@ -21,13 +21,13 @@ if2 <- R6::R6Class(
     initialize = function(pars, data, model, compare, compare_pars, index) {
       assert_is(pars, "if2_parameters")
       assert_is(data, "particle_filter_data")
-      if (!is_dust_generator(generator)) {
+      if (!is_dust_generator(model)) {
         stop("'model' must be a dust_generator")
       }
       if (!is.null(index) && !is.function(index)) {
         stop("'index' must be function if not NULL")
       }
-      if (!is.function(comapare)) {
+      if (!is.function(compare)) {
         stop("'compare' must be a function")
       }
 
@@ -40,7 +40,7 @@ if2 <- R6::R6Class(
     },
 
     run = function(pars_sd, iterations, n_par_sets, cooling_target,
-                   n_threads = 1L, seed = NULL, progress = TRUE)
+                   n_threads = 1L, seed = NULL, progress = TRUE) {
       data_split <- df_to_list_of_lists(private$data)
 
       steps <- unname(as.matrix(private$data[c("step_start", "step_end")]))
@@ -96,75 +96,76 @@ if2 <- R6::R6Class(
       # outputs
       # pars: n_pars * n_par_sets * iterations
       # ll: iterations * n_par_sets
-      private$log_likelihood <- log_likelihood
+      private$ll <- log_likelihood
       private$if_pars <- if_pars
     },
 
     ##' @description Return the initial parameter values as a named numeric
     ##' vector
     log_likelihood = function() {
-      private$log_likelihood
+      if(is.null(private$ll)) {
+        stop("IF2 must be run first")
+      }
+      private$ll
     },
 
     pars_series = function() {
+      if(is.null(private$ll)) {
+        stop("IF2 must be run first")
+      }
       private$if_pars
     },
 
-    ##' @description Set up a parameter walk
-    ##'
-    ##' @param n_par_sets An integer number of parameter sets, which
-    ##' defines the size of the population being peturbed.
-    walk_initialise = function(n_par_sets, pars_sd) {
-      n_par_sets <- assert_integer(n_par_sets)
-      n_pars <- length(private$parameters)
-
-      pars_mat <- matrix(self$initial(), n_pars, n_par_sets)
-      rownames(pars_mat) <- names(self$names())
-      self$walk(pars_mat, pars_sd)
+    plot = function(what = "ll") {
+      if(is.null(private$ll)) {
+        stop("IF2 must be run first")
+      }
+      if (what %in% private$pars$names()) {
+        par_idx <- which(private$pars$names() == what)
+        mean <- apply(private$if_pars[par_idx, , ], 2, mean)
+        quantiles <- apply(private$if_pars[par_idx, , ], 2, quantile, c(0.025, 0.975))
+        matplot(seq_len(length(private$ll)),
+                mean, type = "l", lwd = 1, col = "#000000",
+                xlab = "IF iteration", ylab = what,
+                ylim = range(quantiles))
+        matlines(seq_len(length(private$ll)),
+                t(quantiles), type = "l", lty = 2, lwd = 1, col = "#999999")
+        legend("bottomright", lwd = 1, legend = c("Mean", "95% quantile"), bty = "n")
+      } else {
+        plot(private$ll,
+        main = "LL profile",
+        xlab = "IF iteration",
+        ylab = "log-likelihood",
+        type = "l")
+      }
     },
 
-if2 <- function(pars, data, generator, compare, compare_pars, index,
-                pars_sd, iterations, n_par_sets, cooling_target, # will become control
-                n_threads = 1L, seed = NULL, progress = TRUE) {
-  # particle filter setup
+    # Run a particle filter at each point estimate at final state to get
+    # mean + standard error
+    sample = function(n_particles, progress = TRUE, n_threads = 1L,
+                      seed = NULL) {
+      if(is.null(private$ll)) {
+        stop("IF2 must be run first")
+      }
 
-  if (!is.null(index) && !is.function(index)) {
-    stop("'index' must be function if not NULL")
-  }
+      n_par_sets <- dim(private$if_pars)[2]
+      n_iterations <- dim(private$if_pars)[3]
+      pf_ll <- array(NA_real_, n_par_sets)
 
-  assert_is(data, "particle_filter_data")
-  assert_is(pars, "if2_parameters")
-
-  # TODO check inputs
-
-  
-}
-
-##' @export
-plot.if2_result <- function(obj, ...) {
-  plot(obj$log_likelihood,
-       main = "LL profile",
-       xlab = "IF iteration",
-       ylab = "log-likelihood",
-       type = "l")
-
-  # Could vectorise this better
-  par_idx <- 0
-  for (par in obj$pars$names()) {
-    par_idx <- par_idx + 1
-    mean <- apply(obj$if_pars[par_idx, , ], 2, mean)
-    quantiles <- apply(obj$if_pars[par_idx, , ], 2, quantile, c(0.025, 0.975))
-    matplot(seq_len(length(obj$log_likelihood)),
-            mean, type = "l", lwd = 1, col = "#000000",
-            xlab = "IF iteration", ylab = par,
-            ylim = range(quantiles))
-    matlines(seq_len(length(obj$log_likelihood)),
-            t(quantiles), type = "l", lty = 2, lwd = 1, col = "#999999")
-    legend("bottomright", lwd = 1, legend = c("Mean", "95% quantile"), bty = "n")
-  }
-}
-
-# TODO add likelihood sample
-# Run a particle filter at each point estimate at final state to get
-# mean + standard error
-summary
+      p <- pmcmc_progress(n_par_sets, progress)
+      for (par_set in seq_len(n_par_sets)) {
+        p()
+        pf <- particle_filter$new(private$data,
+                                  private$model,
+                                  n_particles,
+                                  private$compare,
+                                  private$index,
+                                  n_threads = n_threads,
+                                  seed = seed)
+        pf_ll[par_set] <-
+          pf$run(pars = list(private$if_pars[, par_set, n_iterations]))
+      }
+      pf_ll
+    }
+  )
+)

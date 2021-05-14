@@ -1,6 +1,5 @@
 context("if2")
 
-
 test_that("Can run IF2", {
   pars <- if2_parameters$new(
             list(if2_parameter("beta", 0.15, min = 0, max = 1),
@@ -9,19 +8,24 @@ test_that("Can run IF2", {
 
   dat <- example_sir()
 
+  filter <- if2$new(pars, dat$data, dat$model, dat$compare, NULL, dat$index)
+
   iterations <- 50
   cooling_target <- 0.5
   n_par_sets <- 100
   set.seed(1)
-  if2_res <- if2(pars, dat$data, dat$model, dat$compare, NULL, dat$index,
-                 pars_sd, iterations, n_par_sets, cooling_target)
 
-  expect_setequal(
-    names(if2_res),
-    c("log_likelihood", "if_pars"))
+  filter$run(pars_sd, iterations, n_par_sets, cooling_target)
 
-  expect_equal(dim(if2_res$log_likelihood), c(iterations, n_par_sets))
-  expect_equal(dim(if2_res$if_pars),
-               c(length(pars), iterations, n_par_sets))
+  expect_equal(length(filter$log_likelihood()), iterations)
+  expect_equal(dim(filter$pars_series()),
+               c(length(pars$names()), n_par_sets, iterations))
+
+  filter$plot()
+  filter$plot("beta")
+  filter$plot("gamma")
+
+  n_particles <- 100
+  filter$sample(n_particles)
 })
 
