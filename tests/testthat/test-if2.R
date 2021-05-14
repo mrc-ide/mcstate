@@ -4,7 +4,6 @@ test_that("Can run IF2", {
   pars <- if2_parameters$new(
             list(if2_parameter("beta", 0.15, min = 0, max = 1),
                  if2_parameter("gamma", 0.05, min = 0, max = 1)))
-  pars_sd <- c(beta = 0.02, gamma = 0.02) # not a list!
 
   dat <- example_sir()
 
@@ -13,6 +12,7 @@ test_that("Can run IF2", {
   iterations <- 50
   cooling_target <- 0.5
   n_par_sets <- 100
+  pars_sd <- c(beta = 0.02, gamma = 0.02) # not a list!
   set.seed(1)
 
   filter$run(pars_sd, iterations, n_par_sets, cooling_target)

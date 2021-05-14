@@ -84,13 +84,13 @@ if2 <- R6::R6Class(
 
             kappa <- particle_resample(weights$weights)
             model$reorder(kappa)
-            pars_matrix <- pars$walk(pars_matrix[, kappa], pars_sd)
-            model$set_pars(pars$model(pars_matrix))
+            pars_matrix <- private$pars$walk(pars_matrix[, kappa], pars_sd)
+            model$set_pars(private$pars$model(pars_matrix))
           }
         }
         pars_sd <- pars_sd * alpha_cool
         pars_final <- pars_matrix
-        pars_matrix <- pars$walk(pars_final, pars_sd)
+        pars_matrix <- private$pars$walk(pars_final, pars_sd)
         if_pars[, , m] <- pars_final
       }
       # outputs
