@@ -1,4 +1,4 @@
-context("if2")
+context("IF2")
 
 test_that("Can run IF2", {
   dat <- example_sir()
@@ -32,9 +32,9 @@ test_that("Can run IF2", {
   filter$plot("gamma")
 
   # LL from particle filter runs possible
-  n_particles <- 100
-  ll_samples <- filter$sample(n_particles, progress = FALSE)
-  expect_equal(length(ll_samples), n_particles)
+  n_particles <- 50
+  ll_samples <- filter$sample(n_particles)
+  expect_equal(length(ll_samples), n_par_sets)
 })
 
 test_that("IF2 won't run with mismatched parameter names", {
@@ -55,7 +55,8 @@ test_that("IF2 won't run with mismatched parameter names", {
 
   expect_error(if2$new(pars, dat$data, dat$model, dat$compare, NULL,
                        dat$index, control),
-               "'b' must be in control$pars_sd")
+               "'{b}' must be in control$pars_sd",
+               fixed = TRUE)
 })
 
 test_that("IF2 inputs must be of the correct type", {
@@ -103,8 +104,8 @@ test_that("Can't get IF2 results before object has been run", {
 
   filter <- if2$new(pars, dat$data, dat$model, dat$compare, NULL,
                     dat$index, control)
-  expect_error(if2$log_likelihood(), "IF2 must be run first")
-  expect_error(if2$pars_series(), "IF2 must be run first")
-  expect_error(if2$plot(), "IF2 must be run first")
-  expect_error(if2$sample(100L), "IF2 must be run first")
+  expect_error(filter$log_likelihood(), "IF2 must be run first")
+  expect_error(filter$pars_series(), "IF2 must be run first")
+  expect_error(filter$plot(), "IF2 must be run first")
+  expect_error(filter$sample(100L), "IF2 must be run first")
 })

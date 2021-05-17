@@ -33,7 +33,6 @@ if2 <- R6::R6Class(
       if (!is.function(compare)) {
         stop("'compare' must be a function")
       }
-
       assert_is(control, "if2_control")
       name_order <- match(pars$names(), names(control$pars_sd))
       if (any(is.na(name_order))) {
@@ -63,9 +62,10 @@ if2 <- R6::R6Class(
       n_par_sets <- private$control$n_par_sets
       iterations <- private$control$iterations
       cooling_target <- private$control$cooling_target
+      pars_sd <- private$pars_sd
 
       pars_matrix <- private$pars$walk_initialise(n_par_sets,
-                                                  private$pars_sd)
+                                                  pars_sd)
       n_pars <- nrow(pars_matrix)
 
       model <- private$model$new(pars = private$pars$model(pars_matrix),
@@ -80,7 +80,7 @@ if2 <- R6::R6Class(
       if_pars <- array(NA_real_, c(n_pars, n_par_sets, iterations))
       alpha_cool <- cooling_target^(1 / iterations)
 
-      p <- pmcmc_progress(iterations, progress)
+      p <- pmcmc_progress(iterations, private$control$progress)
 
       for (m in seq_len(iterations)) {
         p()
@@ -104,7 +104,7 @@ if2 <- R6::R6Class(
             kappa <- particle_resample(weights$weights)
             model$reorder(kappa)
             pars_matrix <- private$pars$walk(pars_matrix[, kappa],
-                                             private$pars_sd)
+                                             pars_sd)
             model$set_pars(private$pars$model(pars_matrix))
           }
         }
@@ -164,8 +164,7 @@ if2 <- R6::R6Class(
 
     # Run a particle filter at each point estimate at final state to get
     # mean + standard error
-    sample = function(n_particles, progress = TRUE, n_threads = 1L,
-                      seed = NULL) {
+    sample = function(n_particles, n_threads = 1L, seed = NULL) {
       if(is.null(private$ll)) {
         stop("IF2 must be run first")
       }
@@ -174,7 +173,7 @@ if2 <- R6::R6Class(
       n_iterations <- private$control$iterations
       pf_ll <- array(NA_real_, n_par_sets)
 
-      p <- pmcmc_progress(n_par_sets, progress)
+      p <- pmcmc_progress(n_par_sets, private$control$progress)
       for (par_set in seq_len(n_par_sets)) {
         p()
         pf <- particle_filter$new(private$data,
