@@ -1,3 +1,7 @@
+# mcstate 0.6.0
+
+* Add iterated filtering as the `IF2` class.
+
 # mcstate 0.5.13
 
 * New functions `pmcmc_chains_prepare` and `pmcmc_chains_run` which can be used to manually schedule chains over different computing resourcess (#129)

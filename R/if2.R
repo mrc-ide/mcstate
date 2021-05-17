@@ -1,5 +1,4 @@
-##' Run an IF2 inference. This is experimental and subject to change. Use at
-##' your own risk.
+##' Run an IF2 inference.
 ##'
 ##' @title Run iterated filtering (IF2 algorithm)
 ##'
