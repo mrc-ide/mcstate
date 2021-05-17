@@ -189,8 +189,10 @@ if2_parameters <- R6::R6Class(
         if (private$discrete[par_idx]) {
           pars[par_idx, ] <- vnapply(pars[par_idx, ], round)
         }
-        pars[par_idx, pars[par_idx, ] < private$min[par_idx]] <- private$min[par_idx]
-        pars[par_idx, pars[par_idx, ] > private$max[par_idx]] <- private$max[par_idx]
+        pars[par_idx, pars[par_idx, ] < private$min[par_idx]] <-
+          private$min[par_idx]
+        pars[par_idx, pars[par_idx, ] > private$max[par_idx]] <-
+          private$max[par_idx]
       }
       pars
     },

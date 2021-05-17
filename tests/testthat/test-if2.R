@@ -109,3 +109,35 @@ test_that("Can't get IF2 results before object has been run", {
   expect_error(filter$plot(), "IF2 must be run first")
   expect_error(filter$sample(100L), "IF2 must be run first")
 })
+
+test_that("stop inference when likelihood is impossible", {
+  dat <- example_sir()
+  steps <- nrow(dat$data) + 1
+
+  compare <- function(state, observed, pars) {
+    ret <- dat$compare(state, observed, pars)
+    if (observed$incidence > 15) {
+      ret[] <- -Inf
+    }
+    ret
+  }
+
+  pars <- if2_parameters$new(
+            list(if2_parameter("beta", 0.15, min = 0, max = 1),
+                 if2_parameter("gamma", 0.05, min = 0, max = 1)))
+
+  iterations <- 50
+  cooling_target <- 0.5
+  n_par_sets <- 20
+  control <- if2_control(pars_sd = list("beta" = 0.02, "gamma" = 0.02),
+                         iterations = iterations,
+                         n_par_sets = n_par_sets,
+                         cooling_target = cooling_target,
+                         progress = FALSE)
+
+  filter <- if2$new(pars, dat$data, dat$model, compare, NULL,
+                    dat$index, control)
+  filter$run()
+
+  expect_equal(filter$log_likelihood(), rep(-Inf, iterations))
+})

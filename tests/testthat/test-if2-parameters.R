@@ -28,13 +28,14 @@ test_that("if2_parameter must satisfy min/max constraints", {
 test_that("if2_parameter prior works", {
   expect_error(
     p <- if2_parameter("a", 0, min = -1, max = 1,
-                       prior = function(x) 1/x),
+                       prior = function(x) 1 / x),
     "Prior function for 'a' returned a non-finite value on initial value",
     fixed = TRUE)
   expect_error(
     p <- if2_parameter("a", -1, min = -1, max = 1,
                        prior = function(x) sample(c(0, 1), x)),
-    "Prior function for 'a' failed to evaluate initial value: invalid 'size' argument",
+    paste0("Prior function for 'a' failed to evaluate initial value:",
+           " invalid 'size' argument"),
     fixed = TRUE)
 })
 

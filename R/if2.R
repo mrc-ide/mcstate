@@ -41,7 +41,7 @@
 ##' # each final parameter estimate
 ##' n_particles <- 100
 ##' ll_samples <- filter$sample(n_particles)
-if2_engine <- R6::R6Class(
+if2 <- R6::R6Class(
   "if2",
   cloneable = FALSE,
 
@@ -147,7 +147,7 @@ if2_engine <- R6::R6Class(
 
       log_likelihood <- rep(0, iterations)
       if_pars <- array(NA_real_, c(n_pars, n_par_sets, iterations))
-      alpha_cool <- cooling_target^(1 / iterations)
+      alpha_cool <- cooling_target ^ (1 / iterations)
 
       p <- pmcmc_progress(iterations, private$control$progress)
 
@@ -183,15 +183,15 @@ if2_engine <- R6::R6Class(
         if_pars[, , m] <- pars_final
       }
       # outputs
-      # pars: n_pars * n_par_sets * iterations
-      # ll: iterations * n_par_sets
+      # pars dimensions are: n_pars, n_par_sets, iterations
+      # ll dimensions are: iterations, n_par_sets
       private$ll <- log_likelihood
       private$if_pars <- if_pars
     },
 
     ##' @description Return the log-likelihood at each iteration
     log_likelihood = function() {
-      if(is.null(private$ll)) {
+      if (is.null(private$ll)) {
         stop("IF2 must be run first")
       }
       private$ll
@@ -199,7 +199,7 @@ if2_engine <- R6::R6Class(
 
     ##' @description Return the set of parameters at each iteration
     pars_series = function() {
-      if(is.null(private$ll)) {
+      if (is.null(private$ll)) {
         stop("IF2 must be run first")
       }
       private$if_pars
@@ -210,7 +210,7 @@ if2_engine <- R6::R6Class(
     ##' #param what Which parameter to plot. Any of `pars$names()` or `ll`
     ##' for the log-likelihood
     plot = function(what = "ll") {
-      if(is.null(private$ll)) {
+      if (is.null(private$ll)) {
         stop("IF2 must be run first")
       }
       if (what %in% private$pars$names()) {
@@ -252,7 +252,7 @@ if2_engine <- R6::R6Class(
     ##' stream is unrelated from R's random number generator, except for
     ##' initialisation with `seed = NULL`.
     sample = function(n_particles, n_threads = 1L, seed = NULL) {
-      if(is.null(private$ll)) {
+      if (is.null(private$ll)) {
         stop("IF2 must be run first")
       }
 

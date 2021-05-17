@@ -48,4 +48,3 @@ test_that("Don't run with invalid IF2 parameters", {
     "'cooling_target' must be between 0 and 1 (non-inclusive)",
     fixed = TRUE)
 })
-
