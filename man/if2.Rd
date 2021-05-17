@@ -17,7 +17,7 @@ Perturbed Bayes Maps."
 PNAS, 112(3), 719–724. https://doi.org/10.1073/pnas.1410597112.
 }
 \examples{
-A basic SIR model used in the particle filter example
+# A basic SIR model used in the particle filter example
 dat <- example_sir()
 
 # Range and initial values for model parameters

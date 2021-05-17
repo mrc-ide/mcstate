@@ -14,7 +14,7 @@
 ##' @export
 ##' @importFrom R6 R6Class
 ##' @examples
-##' A basic SIR model used in the particle filter example
+##' # A basic SIR model used in the particle filter example
 ##' dat <- example_sir()
 ##'
 ##' # Range and initial values for model parameters
