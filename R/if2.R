@@ -1,5 +1,11 @@
 ##' Run an IF2 inference.
 ##'
+##' See:
+##' Ionides EL, Nguyen D, Atchadé Y, Stoev S, King AA (2015).
+##' "Inference for Dynamic and Latent Variable Models via Iterated,
+##' Perturbed Bayes Maps."
+##' PNAS, 112(3), 719–724. https://doi.org/10.1073/pnas.1410597112.
+##'
 ##' @title Run iterated filtering (IF2 algorithm)
 ##'
 ##' @description Create an IF2 object for running
@@ -71,6 +77,9 @@ if2 <- R6::R6Class(
     ##' `dust_generator` object.
     ##'
     ##' @param compare A comparison function, as in the [particle_filter()]
+    ##'
+    ##' @param compare_pars A list of any parameters required by the
+    ##' comparison function
     ##'
     ##' @param index An index function, as in the [particle_filter()]
     ##'

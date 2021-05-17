@@ -2,7 +2,7 @@
 % Please edit documentation in R/smc2_parameters.R
 \name{smc2_parameters}
 \alias{smc2_parameters}
-\title{pmcmc_parameters}
+\title{smc2_parameters}
 \description{
 Construct parameters for use with
 \code{\link[=smc2]{smc2()}}. This creates a utility object that is used
