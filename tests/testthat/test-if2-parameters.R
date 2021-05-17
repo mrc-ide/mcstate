@@ -65,5 +65,4 @@ test_that("can construct and walk a set of parameters", {
   model_input <- pars$model(walk_mat)
   expect_equal(length(model_input), n_par_sets)
   expect_equal(length(model_input[[1]]), n_pars)
-
 })
