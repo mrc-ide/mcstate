@@ -7,6 +7,8 @@
 ##'
 ##' @param name Name for the parameter (a string)
 ##'
+##' @param initial Initial value of the parameter
+##'
 ##' @param min Optional minimum value for the parameter (otherwise
 ##'   `-Inf`). If given, then `initial` must be at least this
 ##'   value.
@@ -26,7 +28,7 @@
 ##'
 ##' @export
 ##' @examples
-##' mcstate::if2_parameter("a")
+##' mcstate::if2_parameter("a", 0.1)
 if2_parameter <- function(name, initial,
                           min = -Inf, max = Inf, discrete = FALSE,
                           prior = NULL) {
@@ -72,6 +74,35 @@ if2_parameter <- function(name, initial,
 ##'   used.
 ##'
 ##' @export
+##' @examples
+##' # Construct an object with two parameters:
+##' pars <- mcstate::if2_parameters$new(
+##'   list(mcstate::if2_parameter("a", 0.1, min = 0, max = 1,
+##'                                 prior = function(a) log(a)),
+##'        mcstate::if2_parameter("b", 0, prior = dnorm)))
+##'
+##' # Initial parameters
+##' pars$initial()
+##'
+##' # Create the initial parameter set
+##' n_par_sets <- 5
+##' pars_sd <- list("a" = 0.02, "b" = 0.02)
+##' p_mat <- pars$walk_initialise(n_par_sets, pars_sd)
+##' p_mat
+##'
+##' # Propose a new parameter set
+##' p_mat <- pars$walk(p_mat, pars_sd)
+##' p_mat
+##'
+##' # Information about parameters:
+##' pars$names()
+##' pars$summary()
+##'
+##' # Compute prior
+##' pars$prior(p_mat)
+##'
+##' # Transform data for your model
+##' pars$model(p_mat)
 if2_parameters <- R6::R6Class(
   "if2_parameters",
   cloneable = FALSE,
@@ -129,6 +160,9 @@ if2_parameters <- R6::R6Class(
     ##'
     ##' @param n_par_sets An integer number of parameter sets, which
     ##' defines the size of the population being peturbed.
+    ##'
+    ##' @param pars_sd A vector of standard deviations for the walk
+    ##' of each parameter
     walk_initialise = function(n_par_sets, pars_sd) {
       n_par_sets <- assert_integer(n_par_sets)
       n_pars <- length(private$parameters)
@@ -138,17 +172,14 @@ if2_parameters <- R6::R6Class(
       self$walk(pars_mat, pars_sd)
     },
 
-    ##' @description Propose a new parameter vector given a current parameter
-    ##' vector and variance covariance matrix. After proposal, this discretises
-    ##' any discrete values, and reflects bounded parameters until they lie
-    ##' within `min`:`max`.
+    ##' @description Propose a new parameter matrix given a current matrix
+    ##' and walk standard deviation vector.
     ##'
-    ##' @param theta a parameter vector in the same order as your
-    ##' parameters were defined in (see `$names()` for that order).
+    ##' @param pars A parameter matrix, from this function or
+    ##' `$walk_initialise()`
     ##'
-    ##' @param vcv the variance covariance matrix for the proposal; must
-    ##' be square and have a number of rows and columns equal to the
-    ##' number of parameters, in the same order as `theta`.
+    ##' @param pars_sd A vector of standard deviations for the walk
+    ##' of each parameter
     walk = function(pars, pars_sd) {
       stopifnot(length(pars_sd) == nrow(pars))
       n_par_sets <- ncol(pars)
@@ -180,8 +211,7 @@ if2_parameters <- R6::R6Class(
 
     ##' @description Compute the prior for a parameter vector
     ##'
-    ##' @param theta a parameter vector in the same order as your
-    ##' parameters were defined in (see `$names()` for that order.
+    ##' @param pars a parameter matrix from `$walk()`
     prior = function(pars) {
       n_pars <- length(private$parameters)
       stopifnot(nrow(pars) == n_pars)
@@ -193,10 +223,10 @@ if2_parameters <- R6::R6Class(
     },
 
     ##' @description Apply the model transformation function to a parameter
-    ##' vector.
+    ##' vector. Output is a list for lists, suitable for use with a dust
+    ##' object with pars_multi = TRUE
     ##'
-    ##' @param theta a parameter vector in the same order as your
-    ##' parameters were defined in (see `$names()` for that order.
+    ##' @param pars a parameter matrix from `$walk()`
     model = function(pars) {
       apply(pars, 2, private$transform)
     }

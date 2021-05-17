@@ -11,6 +11,8 @@ if2 <- R6::R6Class(
     compare = NULL,
     compare_pars = NULL,
     index = NULL,
+    control = NULL,
+    pars_sd = NULL,
     # Outputs
     ll = NULL,
     if_pars = NULL
@@ -18,7 +20,8 @@ if2 <- R6::R6Class(
 
   public = list(
 
-    initialize = function(pars, data, model, compare, compare_pars, index) {
+    initialize = function(pars, data, model, compare, compare_pars,
+                          index, control) {
       assert_is(pars, "if2_parameters")
       assert_is(data, "particle_filter_data")
       if (!is_dust_generator(model)) {
@@ -31,22 +34,38 @@ if2 <- R6::R6Class(
         stop("'compare' must be a function")
       }
 
+      assert_is(control, "if2_control")
+      name_order <- match(pars$names(), names(control$pars_sd))
+      if (any(is.na(name_order))) {
+        missing <- pars$names()[is.na(name_order)]
+        stop(sprintf("'%s' must be in control$pars_sd",
+                     str_collapse(missing)), call. = FALSE)
+      }
+      pars_sd <- unlist(control$pars_sd[name_order])
+
       private$pars <- pars
       private$data <- data
       private$model <- model
       private$compare <- compare
       private$compare_pars <- compare_pars
       private$index <- index
+      private$control <- control
+      private$pars_sd <- pars_sd
     },
 
-    run = function(pars_sd, iterations, n_par_sets, cooling_target,
-                   n_threads = 1L, seed = NULL, progress = TRUE) {
+    run = function(n_threads = 1L, seed = NULL) {
       data_split <- df_to_list_of_lists(private$data)
 
       steps <- unname(as.matrix(private$data[c("step_start", "step_end")]))
       n_steps <- nrow(steps)
 
-      pars_matrix <- private$pars$walk_initialise(n_par_sets, pars_sd)
+      # Unpack some items from control
+      n_par_sets <- private$control$n_par_sets
+      iterations <- private$control$iterations
+      cooling_target <- private$control$cooling_target
+
+      pars_matrix <- private$pars$walk_initialise(n_par_sets,
+                                                  private$pars_sd)
       n_pars <- nrow(pars_matrix)
 
       model <- private$model$new(pars = private$pars$model(pars_matrix),
@@ -84,7 +103,8 @@ if2 <- R6::R6Class(
 
             kappa <- particle_resample(weights$weights)
             model$reorder(kappa)
-            pars_matrix <- private$pars$walk(pars_matrix[, kappa], pars_sd)
+            pars_matrix <- private$pars$walk(pars_matrix[, kappa],
+                                             private$pars_sd)
             model$set_pars(private$pars$model(pars_matrix))
           }
         }
@@ -123,14 +143,16 @@ if2 <- R6::R6Class(
       if (what %in% private$pars$names()) {
         par_idx <- which(private$pars$names() == what)
         mean <- apply(private$if_pars[par_idx, , ], 2, mean)
-        quantiles <- apply(private$if_pars[par_idx, , ], 2, quantile, c(0.025, 0.975))
+        quantiles <- apply(private$if_pars[par_idx, , ], 2,
+                           quantile, c(0.025, 0.975))
         matplot(seq_len(length(private$ll)),
                 mean, type = "l", lwd = 1, col = "#000000",
                 xlab = "IF iteration", ylab = what,
                 ylim = range(quantiles))
         matlines(seq_len(length(private$ll)),
                 t(quantiles), type = "l", lty = 2, lwd = 1, col = "#999999")
-        legend("bottomright", lwd = 1, legend = c("Mean", "95% quantile"), bty = "n")
+        legend("bottomright", lwd = 1,
+               legend = c("Mean", "95% quantile"), bty = "n")
       } else {
         plot(private$ll,
         main = "LL profile",
@@ -148,8 +170,8 @@ if2 <- R6::R6Class(
         stop("IF2 must be run first")
       }
 
-      n_par_sets <- dim(private$if_pars)[2]
-      n_iterations <- dim(private$if_pars)[3]
+      n_par_sets <- private$control$n_par_sets
+      n_iterations <- private$control$iterations
       pf_ll <- array(NA_real_, n_par_sets)
 
       p <- pmcmc_progress(n_par_sets, progress)
