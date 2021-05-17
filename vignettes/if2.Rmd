@@ -1,0 +1,218 @@
+---
+title: "Inference with iterated filtering"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{if2}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+lang_output <- function(x, lang) {
+  cat(c(sprintf("```%s", lang), x, "```"), sep = "\n")
+}
+r_output <- function(x) lang_output(x, "r")
+```
+
+The iterated filtering method, called `IF2` in `mcstate`, is an alternative
+method to infer the most likely parameters. Instead of conducting an MCMC
+over particle filter likelihoods, as in the `pmcmc` methods, the `IF2`
+algorithm proceeds roughly as follows:
+
+1. Create a set of $N$ models, each running a single particle with its own
+parameter set.
+2. At each time step, perturb each parameter in each model using Brownian
+noise.
+3. Run the models forward, and calculate their log-likelihood.
+4. Run the particle filter resampling step, swapping model state and
+parameters.
+5. At the end of the time-series, recycle the current parameters, reset the
+model state, and reduce the intensity of the Brownian noise.
+6. Iterate this procedure until a cooling target for the noise is reached.
+
+Over the course of the iterations, the parameters closer to the data tend
+to be selected in the resampling step. The noise allows them to vary and
+approach an optimum. The cooling schedule is similar to simulated annealing,
+allowing larger steps at the beginning, and finer stes as the optimum is
+approached.
+
+This algorithm is described in the following paper:
+
+Ionides EL, Nguyen D, Atchadé Y, Stoev S, King AA (2015).
+"Inference for Dynamic and Latent Variable Models via Iterated,
+Perturbed Bayes Maps."
+PNAS, 112(3), 719–724. https://doi.org/10.1073/pnas.1410597112.
+
+# Setting up an IF2 run
+
+Based on the example in `vignette("sir_models")`, we will start by loading
+an SIR model and some simulated data:
+
+```{r, include=FALSE}
+example_sir <- function() {
+  set.seed(1)
+  model <- dust::dust_example("sir")
+  sir <- model$new(pars = list(), step = 0, n_particles = 1)
+  y0 <- sir$state()
+
+  compare <- function(state, observed, pars = NULL) {
+    if (is.na(observed$incidence)) {
+      return(NULL)
+    }
+    if (is.null(pars$compare$exp_noise)) {
+      exp_noise <- 1e6
+    } else {
+      exp_noise <- pars$compare$exp_noise
+    }
+    ## This is on the *filtered* state (i.e., returned by run())
+    incidence_modelled <- state[1, , drop = TRUE]
+    incidence_observed <- observed$incidence
+    lambda <- incidence_modelled +
+      rexp(n = length(incidence_modelled), rate = exp_noise)
+    dpois(x = incidence_observed, lambda = lambda, log = TRUE)
+  }
+
+  inv_dt <- 4
+  day <- seq(1, 100)
+  incidence <- rep(NA, length(day))
+  history <- array(NA_real_, c(5, 1, length(day) + 1))
+  history[, , 1] <- sir$state()
+
+  for (i in day) {
+    state_start <- sir$state()
+    state_end <- sir$run(i * inv_dt)
+    history[, , i + 1] <- state_end
+    incidence[i] <- state_end[5, 1]
+  }
+
+  data_raw <- data.frame(day = day, incidence = incidence)
+  data <- mcstate::particle_filter_data(data_raw, "day", 4)
+  index <- function(info) {
+    list(run = 5L, state = 1:3)
+  }
+
+  proposal_kernel <- rbind(c(0.00057, 0.00034), c(0.00034, 0.00026))
+  row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("beta", "gamma")
+
+  pars <- mcstate::pmcmc_parameters$new(
+    list(mcstate::pmcmc_parameter("beta", 0.2, min = 0, max = 1,
+                         prior = function(p) log(1e-10)),
+         mcstate::pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
+                         prior = function(p) log(1e-10))),
+    proposal = proposal_kernel)
+
+  list(model = model, compare = compare, y0 = y0,
+       data_raw = data_raw, data = data, history = history,
+       index = index, pars = pars)
+}
+```
+
+```{r}
+# See tests/testthat/helper-mcstate.R
+dat <- example_sir()
+```
+
+We now need to specify the initial values and the search range for the two
+parameters $\beta$ and $\gamma$:
+
+```{r}
+pars <- mcstate::if2_parameters$new(
+            list(mcstate::if2_parameter("beta", 0.5, min = 0, max = 1),
+                 mcstate::if2_parameter("gamma", 0.01, min = 0, max = 1)))
+```
+
+We start far away from the true values of $\beta = 0.2$ and $\gamma = 0.1$.
+
+The IF2 algorithm needs a number of parameter sets to perturb, the magnitude
+of the noise with which to perturb them, the amount to reduce the
+perturbations by, and the number of iterations of which to perform this
+reduction in magnitude:
+
+```{r}
+iterations <- 100
+cooling_target <- 0.5
+n_par_sets <- 300
+control <- mcstate::if2_control(pars_sd = list("beta" = 0.02, "gamma" = 0.02),
+                                iterations = iterations,
+                                n_par_sets = n_par_sets,
+                                cooling_target = cooling_target,
+                                progress = TRUE)
+```
+
+Here we will iterate 300 parameter sets with `X ~ N(0, 0.02)`, with
+geometrically descreasing noise, until after 100 iterations the magnitude of
+the noise has halved.
+
+# Running the IF2 algorithm
+
+The IF2 run is first initialised using similar arguments to the particle
+filter, and the parameters and tuning parameters set above
+
+```{r}
+iterated_filter <- mcstate::if2$new(pars, dat$data, dat$model, dat$compare,
+                                    NULL, dat$index, control)
+```
+
+This object can then be run:
+
+```{r}
+iterated_filter$run()
+```
+
+We can plot the likelihood over the course of the iterations, and the values
+of $\beta$ and $\gamma$:
+
+```{r}
+plot_if2 = function(if2_obj, pars, what = "ll") {
+  if (what %in% pars$names()) {
+    if_pars <- if2_obj$pars_series()
+    par_idx <- which(pars$names() == what)
+    mean <- apply(if_pars[par_idx, , ], 2, mean)
+    quantiles <- apply(if_pars[par_idx, , ], 2,
+                       quantile, c(0.025, 0.975))
+    matplot(seq_len(length(if2_obj$log_likelihood())),
+            mean, type = "l", lwd = 1, col = "#000000",
+            xlab = "IF iteration", ylab = what,
+            ylim = range(quantiles))
+    matlines(seq_len(length(if2_obj$log_likelihood())),
+            t(quantiles), type = "l", lty = 2, lwd = 1, col = "#999999")
+    legend("bottomright", lwd = 1,
+            legend = c("Mean", "95% quantile"), bty = "n")
+  } else {
+    plot(if2_obj$log_likelihood(),
+         main = "LL profile",
+         xlab = "IF iteration",
+         ylab = "log-likelihood",
+         type = "l")
+  }
+}
+plot_if2(iterated_filter, pars, "ll")
+plot_if2(iterated_filter, pars, "beta")
+plot_if2(iterated_filter, pars, "gamma")
+```
+
+Checking the mean values of each parameter at the final iteration, they are
+close to their true values:
+
+```{r}
+if_pars <- if2_obj$pars_series()
+# beta
+mean(if_pars[1, , iterations])
+# gamma
+mean(if_pars[2, , iterations])
+```
+
+We can also run particle filters at each final parameter estimate to get an
+estimate of the model likelihood, showing the mean value in red:
+
+```{r}
+n_particles <- 100
+ll_samples <- iterated_filter$sample(n_particles)
+hist(ll_samples, col = "steelblue3")
+abline(v = mean(ll_samples), col = "red", lty = 2, lwd = 2)
+```
+
