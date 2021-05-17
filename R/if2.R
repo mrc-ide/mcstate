@@ -141,7 +141,7 @@ if2 <- R6::R6Class(
                                  n_particles = NULL, n_threads = n_threads,
                                  seed = seed, pars_multi = TRUE)
       if (!is.null(private$index)) {
-        model$set_index(private$index(mod$info())$run)
+        model$set_index(private$index(model$info())$run)
       }
 
       log_likelihood <- rep(0, iterations)
@@ -153,7 +153,6 @@ if2 <- R6::R6Class(
       for (m in seq_len(iterations)) {
         p()
         model$reset(pars = private$pars$model(pars_matrix), steps[[1L]])
-        ## TODO: refactor internal loop into function
         for (t in seq_len(n_steps)) {
           step_end <- steps[t, 2L]
           state <- model$run(step_end)
@@ -228,6 +227,8 @@ if2 <- R6::R6Class(
       n_par_sets <- private$control$n_par_sets
       n_iterations <- private$control$iterations
       pf_ll <- array(NA_real_, n_par_sets)
+      pars_array <- private$if_pars[, , n_iterations]
+      rownames(pars_array) <- private$pars$names()
 
       p <- pmcmc_progress(n_par_sets, private$control$progress)
       for (par_set in seq_len(n_par_sets)) {
@@ -240,7 +241,8 @@ if2 <- R6::R6Class(
                                   n_threads = n_threads,
                                   seed = seed)
         pf_ll[par_set] <-
-          pf$run(pars = list(private$if_pars[, par_set, n_iterations]))
+          pf$run(pars = c(as.list(pars_array[, par_set]),
+                          private$compare_pars))
       }
       pf_ll
     }

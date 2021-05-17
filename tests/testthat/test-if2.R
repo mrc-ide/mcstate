@@ -32,6 +32,34 @@ test_that("Can run IF2", {
   expect_equal(length(ll_samples), n_par_sets)
 })
 
+test_that("IF2 converges on the correct ll for the volatility model", {
+  dat <- example_volatility()
+
+  # Start parameters far away from correct values
+  set.seed(1)
+  pars <- if2_parameters$new(
+            list(if2_parameter("alpha", 5, min = 0, max = Inf),
+                 if2_parameter("sigma", 5, min = 0, max = Inf)))
+
+  iterations <- 50
+  cooling_target <- 0.5
+  n_par_sets <- 100
+  control <- if2_control(pars_sd = list("alpha" = 0.02, "sigma" = 0.02),
+                         iterations = iterations,
+                         n_par_sets = n_par_sets,
+                         cooling_target = cooling_target,
+                         progress = FALSE)
+
+  filter <- if2$new(pars, dat$data, dat$model, dat$compare,
+                    list(compare = list(gamma = 1, tau = 1)),
+                    NULL, control)
+  filter$run()
+  filter_ll <- filter$sample(100)
+  expect_equal(mean(filter_ll),
+               dat$kalman_filter(dat$pars, dat$data),
+               sd(filter_ll))
+})
+
 test_that("IF2 won't run with mismatched parameter names", {
   dat <- example_sir()
 
@@ -101,7 +129,6 @@ test_that("Can't get IF2 results before object has been run", {
                     dat$index, control)
   expect_error(filter$log_likelihood(), "IF2 must be run first")
   expect_error(filter$pars_series(), "IF2 must be run first")
-  expect_error(filter$plot(), "IF2 must be run first")
   expect_error(filter$sample(100L), "IF2 must be run first")
 })
 

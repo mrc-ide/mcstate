@@ -59,6 +59,54 @@ example_sir <- function() {
        index = index, pars = pars)
 }
 
+example_volatility <- function(pars = NULL) {
+  pars <- pars %||% list(alpha = 0.91, sigma = 1, gamma = 1, tau = 1)
+
+  set.seed(1) # random for init and obs
+  volatility <- dust::dust_example("volatility")
+  mod <- volatility$new(pars, 0, 1L, seed = 1L)
+  mod$set_state(matrix(rnorm(1L, 0, 1L), 1))
+  steps <- seq(0, 100, by = 1)
+  res <- mod$simulate(steps)
+  observed <- res[1, 1, -1] + rnorm(length(steps) - 1, 0, 1)
+  data <- data.frame(step = steps[-1], observed = observed)
+  data <- particle_filter_data(data, "step", 1)
+
+  compare <- function(state, observed, pars) {
+    dnorm(observed$observed, pars$compare$gamma * drop(state),
+          pars$compare$tau, log = TRUE)
+  }
+
+  kalman_filter <- function(pars, data) {
+    alpha <- pars$alpha
+    sigma <- pars$sigma
+    gamma <- pars$gamma
+    tau <- pars$tau
+    y <- data$observed
+
+    mu <- 0
+    s <- 1
+    log_likelihood <- 0
+
+    for (t in seq_along(y)) {
+      mu <- alpha * mu
+      s <- alpha^2 * s + sigma^2
+      m <- gamma * mu
+
+      S <- gamma^2 * s + tau^2 # nolint
+      K <- gamma * s / S # nolint
+
+      mu <- mu + K * (y[t] - m)
+      s <- s - gamma * K * s
+
+      log_likelihood <- log_likelihood + dnorm(y[t], m, sqrt(S), log = TRUE)
+    }
+
+    log_likelihood
+  }
+  list(pars = pars, data = data, compare = compare,
+       model = volatility, kalman_filter = kalman_filter)
+}
 
 example_sir_shared <- function() {
   set.seed(1)

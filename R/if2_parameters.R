@@ -230,6 +230,7 @@ if2_parameters <- R6::R6Class(
     ##'
     ##' @param pars a parameter matrix from `$walk()`
     model = function(pars) {
+      rownames(pars) <- self$names()
       apply(pars, 2, private$transform)
     }
   ))
