@@ -199,7 +199,7 @@ Checking the mean values of each parameter at the final iteration, they are
 close to their true values:
 
 ```{r}
-if_pars <- if2_obj$pars_series()
+if_pars <- iterated_filter$pars_series()
 # beta
 mean(if_pars[1, , iterations])
 # gamma
