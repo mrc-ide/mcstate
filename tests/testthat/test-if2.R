@@ -26,11 +26,6 @@ test_that("Can run IF2", {
   expect_equal(dim(filter$pars_series()),
                c(length(pars$names()), n_par_sets, iterations))
 
-  # Test plots can run
-  filter$plot() # LL plot (default)
-  filter$plot("beta")
-  filter$plot("gamma")
-
   # LL from particle filter runs possible
   n_particles <- 50
   ll_samples <- filter$sample(n_particles)

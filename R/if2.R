@@ -204,36 +204,6 @@ if2 <- R6::R6Class(
       private$if_pars
     },
 
-    ##' @description Plot results
-    ##'
-    ##' #param what Which parameter to plot. Any of `pars$names()` or `ll`
-    ##' for the log-likelihood
-    plot = function(what = "ll") {
-      if (is.null(private$ll)) {
-        stop("IF2 must be run first")
-      }
-      if (what %in% private$pars$names()) {
-        par_idx <- which(private$pars$names() == what)
-        mean <- apply(private$if_pars[par_idx, , ], 2, mean)
-        quantiles <- apply(private$if_pars[par_idx, , ], 2,
-                           quantile, c(0.025, 0.975))
-        matplot(seq_len(length(private$ll)),
-                mean, type = "l", lwd = 1, col = "#000000",
-                xlab = "IF iteration", ylab = what,
-                ylim = range(quantiles))
-        matlines(seq_len(length(private$ll)),
-                t(quantiles), type = "l", lty = 2, lwd = 1, col = "#999999")
-        legend("bottomright", lwd = 1,
-               legend = c("Mean", "95% quantile"), bty = "n")
-      } else {
-        plot(private$ll,
-        main = "LL profile",
-        xlab = "IF iteration",
-        ylab = "log-likelihood",
-        type = "l")
-      }
-    },
-
     ##' @description Run a particle filter at each point estimate at final
     ##' state to get an estimate of the model likelihood
     ##'
