@@ -1,5 +1,47 @@
+##' Run an IF2 inference. This is experimental and subject to change. Use at
+##' your own risk.
+##'
+##' @title Run iterated filtering (IF2 algorithm)
+##'
+##' @description Create an IF2 object for running
+##'   and interacting with an IF2 inference.
+##'
 ##' @export
-if2 <- R6::R6Class(
+##' @importFrom R6 R6Class
+##' @examples
+##' A basic SIR model used in the particle filter example
+##' dat <- example_sir()
+##'
+##' # Range and initial values for model parameters
+##' pars <- if2_parameters$new(
+##'           list(if2_parameter("beta", 0.15, min = 0, max = 1),
+##'                if2_parameter("gamma", 0.05, min = 0, max = 1)))
+##'
+##' # Set up of IF2 algorithm
+##' iterations <- 100
+##' cooling_target <- 0.5
+##' n_par_sets <- 300
+##' control <- if2_control(pars_sd = list("beta" = 0.02, "gamma" = 0.02),
+##'                         iterations = iterations,
+##'                         n_par_sets = n_par_sets,
+##'                         cooling_target = cooling_target,
+##'                         progress = FALSE)
+##'
+##' Set up, and run IF2
+##' filter <- if2$new(pars, dat$data, dat$model, dat$compare, NULL,
+##'                   dat$index, control)
+##' filter$run()
+##'
+##' # Plot results
+##' filter$plot("ll")
+##' filter$plot("beta")
+##' filter$plot("gamma")
+##'
+##' # Get log-likelihood estimates from running a particle filter at
+##' # each final parameter estimate
+##' n_particles <- 100
+##' ll_samples <- filter$sample(n_particles)
+if2_engine <- R6::R6Class(
   "if2",
   cloneable = FALSE,
 
@@ -20,6 +62,21 @@ if2 <- R6::R6Class(
 
   public = list(
 
+    ##' @description Create the IF2 object
+    ##'
+    ##' @param pars Parameters as an [if2_parameters()] object
+    ##'
+    ##' @param data The data set to be used, as in the [particle_filter()]
+    ##'
+    ##' @param model A stochastic model to use.  Must be a
+    ##' `dust_generator` object.
+    ##'
+    ##' @param compare A comparison function, as in the [particle_filter()]
+    ##'
+    ##' @param index An index function, as in the [particle_filter()]
+    ##'
+    ##' @param control An [if2_control()] object
+    ##'
     initialize = function(pars, data, model, compare, compare_pars,
                           index, control) {
       assert_is(pars, "if2_parameters")
@@ -52,6 +109,18 @@ if2 <- R6::R6Class(
       private$pars_sd <- pars_sd
     },
 
+    ##' @description Run the IF2
+    ##'
+    ##' @param n_threads Number of threads to use when running the
+    ##' simulation. Defaults to 1, and should not be set higher than the
+    ##' number of cores available to the machine.
+    ##'
+    ##' @param seed Seed for the random number generator on initial
+    ##' creation. Can be `NULL` (to initialise using R's random number
+    ##' generator), a positive integer, or a raw vector - see [`dust::dust`]
+    ##' and [`dust::dust_rng`] for more details. Note that the random number
+    ##' stream is unrelated from R's random number generator, except for
+    ##' initialisation with `seed = NULL`.
     run = function(n_threads = 1L, seed = NULL) {
       data_split <- df_to_list_of_lists(private$data)
 
@@ -120,8 +189,7 @@ if2 <- R6::R6Class(
       private$if_pars <- if_pars
     },
 
-    ##' @description Return the initial parameter values as a named numeric
-    ##' vector
+    ##' @description Return the log-likelihood at each iteration
     log_likelihood = function() {
       if(is.null(private$ll)) {
         stop("IF2 must be run first")
@@ -129,6 +197,7 @@ if2 <- R6::R6Class(
       private$ll
     },
 
+    ##' @description Return the set of parameters at each iteration
     pars_series = function() {
       if(is.null(private$ll)) {
         stop("IF2 must be run first")
@@ -136,6 +205,10 @@ if2 <- R6::R6Class(
       private$if_pars
     },
 
+    ##' @description Plot results
+    ##'
+    ##' #param what Which parameter to plot. Any of `pars$names()` or `ll`
+    ##' for the log-likelihood
     plot = function(what = "ll") {
       if(is.null(private$ll)) {
         stop("IF2 must be run first")
@@ -162,8 +235,22 @@ if2 <- R6::R6Class(
       }
     },
 
-    # Run a particle filter at each point estimate at final state to get
-    # mean + standard error
+    ##' @description Run a particle filter at each point estimate at final
+    ##' state to get an estimate of the model likelihood
+    ##'
+    ##' @param n_particles The number of particles to simulate for each
+    ##' parameter set
+    ##'
+    ##' @param n_threads Number of threads to use when running the
+    ##' simulation. Defaults to 1, and should not be set higher than the
+    ##' number of cores available to the machine.
+    ##'
+    ##' @param seed Seed for the random number generator on initial
+    ##' creation. Can be `NULL` (to initialise using R's random number
+    ##' generator), a positive integer, or a raw vector - see [`dust::dust`]
+    ##' and [`dust::dust_rng`] for more details. Note that the random number
+    ##' stream is unrelated from R's random number generator, except for
+    ##' initialisation with `seed = NULL`.
     sample = function(n_particles, n_threads = 1L, seed = NULL) {
       if(is.null(private$ll)) {
         stop("IF2 must be run first")
