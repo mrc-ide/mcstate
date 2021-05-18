@@ -37,7 +37,7 @@ model state, and reduce the intensity of the Brownian noise.
 Over the course of the iterations, the parameters closer to the data tend
 to be selected in the resampling step. The noise allows them to vary and
 approach an optimum. The cooling schedule is similar to simulated annealing,
-allowing larger steps at the beginning, and finer stes as the optimum is
+allowing larger steps at the beginning, and finer steps as the optimum is
 approached.
 
 This algorithm is described in the following paper:
