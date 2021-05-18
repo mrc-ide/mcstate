@@ -15,7 +15,41 @@
 ##' @importFrom R6 R6Class
 ##' @examples
 ##' # A basic SIR model used in the particle filter example
-##' dat <- example_sir()
+##' gen <- dust::dust_example("sir")
+##'
+##' # Some data that we will fit to, using 1 particle:
+##' sir <- gen$new(pars = list(), step = 0, n_particles = 1)
+##' dt <- 1 / 4
+##' day <- seq(1, 100)
+##' incidence <- rep(NA, length(day))
+##' true_history <- array(NA_real_, c(5, 1, 101))
+##' true_history[, 1, 1] <- sir$state()
+##' for (i in day) {
+##'   state_start <- sir$state()
+##'   sir$run(i / dt)
+##'   state_end <- sir$state()
+##'   true_history[, 1, i + 1] <- state_end
+##'   # Reduction in S
+##'   incidence[i] <- state_start[1, 1] - state_end[1, 1]
+##' }
+##'
+##' # Convert this into our required format:
+##' data_raw <- data.frame(day = day, incidence = incidence)
+##' data <- particle_filter_data(data_raw, "day", 4)
+##'
+##' # A comparison function
+##' compare <- function(state, observed, pars = NULL) {
+##'   if (is.null(pars$exp_noise)) {
+##'     exp_noise <- 1e6
+##'   } else {
+##'     exp_noise <- pars$exp_noise
+##'   }
+##'   incidence_modelled <- state[1,]
+##'   incidence_observed <- observed$incidence
+##'   lambda <- incidence_modelled +
+##'     rexp(length(incidence_modelled), exp_noise)
+##'   dpois(incidence_observed, lambda, log = TRUE)
+##' }
 ##'
 ##' # Range and initial values for model parameters
 ##' pars <- if2_parameters$new(
@@ -27,14 +61,14 @@
 ##' cooling_target <- 0.5
 ##' n_par_sets <- 300
 ##' control <- if2_control(pars_sd = list("beta" = 0.02, "gamma" = 0.02),
-##'                         iterations = iterations,
-##'                         n_par_sets = n_par_sets,
-##'                         cooling_target = cooling_target,
-##'                         progress = FALSE)
+##'                        iterations = iterations,
+##'                        n_par_sets = n_par_sets,
+##'                        cooling_target = cooling_target,
+##'                        progress = FALSE)
 ##'
-##' Set up, and run IF2
-##' filter <- if2$new(pars, dat$data, dat$model, dat$compare, NULL,
-##'                   dat$index, control)
+##' # Set up, and run IF2
+##' filter <- if2$new(pars, data, gen, compare, NULL,
+##'                   NULL, control)
 ##' filter$run()
 ##'
 ##' # Plot results
