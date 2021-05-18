@@ -71,11 +71,6 @@
 ##'                   NULL, control)
 ##' filter$run()
 ##'
-##' # Plot results
-##' filter$plot("ll")
-##' filter$plot("beta")
-##' filter$plot("gamma")
-##'
 ##' # Get log-likelihood estimates from running a particle filter at
 ##' # each final parameter estimate
 ##' n_particles <- 100
