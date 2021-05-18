@@ -1,4 +1,5 @@
-##' Run an IF2 inference.
+##' Create an IF2 object for running and interacting with an IF2
+##'   inference.
 ##'
 ##' See:
 ##' Ionides EL, Nguyen D, Atchadé Y, Stoev S, King AA (2015).
@@ -8,8 +9,21 @@
 ##'
 ##' @title Run iterated filtering (IF2 algorithm)
 ##'
-##' @description Create an IF2 object for running
-##'   and interacting with an IF2 inference.
+##' @param pars An [mcstate::if2_parameters] object, describing the
+##'   parameters that will be varied in the simulation, and the method
+##'   of transformation into model parameters.
+##'
+##' @param filter A [mcstate::particle_filter] object. We don't use
+##'   the particle filter directly (except for sampling with
+##'   `mcstate::if2_sample`) but this shares so much validation that
+##'   it's convenient.  Be sure to set things like the seed and number
+##'   of threads here if you want to use anything other than the
+##'   default.
+##'
+##' @param control An [mcstate::if2_control()] object
+##'
+##' @return An object of class `if2_fit`, which contains the sampled
+##'   parameters (over time) and their log-likelihoods
 ##'
 ##' @export
 ##' @importFrom R6 R6Class
@@ -52,237 +66,144 @@
 ##' }
 ##'
 ##' # Range and initial values for model parameters
-##' pars <- if2_parameters$new(
-##'           list(if2_parameter("beta", 0.15, min = 0, max = 1),
-##'                if2_parameter("gamma", 0.05, min = 0, max = 1)))
+##' pars <- mcstate::if2_parameters$new(
+##'   list(mcstate::if2_parameter("beta", 0.15, min = 0, max = 1),
+##'        mcstate::if2_parameter("gamma", 0.05, min = 0, max = 1)))
 ##'
-##' # Set up of IF2 algorithm
-##' iterations <- 100
-##' cooling_target <- 0.5
-##' n_par_sets <- 300
-##' control <- if2_control(pars_sd = list("beta" = 0.02, "gamma" = 0.02),
-##'                        iterations = iterations,
-##'                        n_par_sets = n_par_sets,
-##'                        cooling_target = cooling_target,
-##'                        progress = FALSE)
+##' # Set up of IF2 algorithm (the iterations and n_par_sets should be
+##' # increased here for any real use)
+##' control <- mcstate::if2_control(
+##'   pars_sd = list("beta" = 0.02, "gamma" = 0.02),
+##'   iterations = 10,
+##'   n_par_sets = 40,
+##'   cooling_target = 0.5,
+##'   progress = interactive())
 ##'
-##' # Set up, and run IF2
-##' filter <- if2$new(pars, data, gen, compare, NULL,
-##'                   NULL, control)
-##' filter$run()
+##' # Create a particle filter object
+##' filter <- mcstate::particle_filter$new(data, gen, 1L, compare)
+##'
+##' # Then run the IF2
+##' res <- mcstate::if2(pars, filter, control)
 ##'
 ##' # Get log-likelihood estimates from running a particle filter at
 ##' # each final parameter estimate
-##' n_particles <- 100
-##' ll_samples <- filter$sample(n_particles)
-if2 <- R6::R6Class(
-  "if2",
-  cloneable = FALSE,
+##' ll_samples <- mcstate::if2_sample(res, 20)
+if2 <- function(pars, filter, control) {
+  assert_is(pars, "if2_parameters")
+  assert_is(filter, "particle_filter")
+  assert_is(control, "if2_control")
 
-  private = list(
-    # Inputs
-    pars = NULL,
-    data = NULL,
-    model = NULL,
-    compare = NULL,
-    compare_pars = NULL,
-    index = NULL,
-    control = NULL,
-    pars_sd = NULL,
-    # Outputs
-    ll = NULL,
-    if_pars = NULL
-  ),
+  inputs <- filter$inputs()
 
-  public = list(
+  name_order <- match(pars$names(), names(control$pars_sd))
+  if (any(is.na(name_order))) {
+    missing <- pars$names()[is.na(name_order)]
+    stop(sprintf("'%s' must be in control$pars_sd",
+                 str_collapse(missing)), call. = FALSE)
+  }
+  pars_sd <- unlist(control$pars_sd[name_order])
 
-    ##' @description Create the IF2 object
-    ##'
-    ##' @param pars Parameters as an [if2_parameters()] object
-    ##'
-    ##' @param data The data set to be used, as in the [particle_filter()]
-    ##'
-    ##' @param model A stochastic model to use.  Must be a
-    ##' `dust_generator` object.
-    ##'
-    ##' @param compare A comparison function, as in the [particle_filter()]
-    ##'
-    ##' @param compare_pars A list of any parameters required by the
-    ##' comparison function
-    ##'
-    ##' @param index An index function, as in the [particle_filter()]
-    ##'
-    ##' @param control An [if2_control()] object
-    ##'
-    initialize = function(pars, data, model, compare, compare_pars,
-                          index, control) {
-      assert_is(pars, "if2_parameters")
-      assert_is(data, "particle_filter_data")
-      if (!is_dust_generator(model)) {
-        stop("'model' must be a dust_generator")
-      }
-      if (!is.null(index) && !is.function(index)) {
-        stop("'index' must be function if not NULL")
-      }
-      if (!is.function(compare)) {
-        stop("'compare' must be a function")
-      }
-      assert_is(control, "if2_control")
-      name_order <- match(pars$names(), names(control$pars_sd))
-      if (any(is.na(name_order))) {
-        missing <- pars$names()[is.na(name_order)]
-        stop(sprintf("'%s' must be in control$pars_sd",
-                     str_collapse(missing)), call. = FALSE)
-      }
-      pars_sd <- unlist(control$pars_sd[name_order])
+  data_split <- df_to_list_of_lists(inputs$data)
 
-      private$pars <- pars
-      private$data <- data
-      private$model <- model
-      private$compare <- compare
-      private$compare_pars <- compare_pars
-      private$index <- index
-      private$control <- control
-      private$pars_sd <- pars_sd
-    },
+  steps <- unname(as.matrix(inputs$data[c("step_start", "step_end")]))
+  n_steps <- nrow(steps)
 
-    ##' @description Run the IF2
-    ##'
-    ##' @param n_threads Number of threads to use when running the
-    ##' simulation. Defaults to 1, and should not be set higher than the
-    ##' number of cores available to the machine.
-    ##'
-    ##' @param seed Seed for the random number generator on initial
-    ##' creation. Can be `NULL` (to initialise using R's random number
-    ##' generator), a positive integer, or a raw vector - see [`dust::dust`]
-    ##' and [`dust::dust_rng`] for more details. Note that the random number
-    ##' stream is unrelated from R's random number generator, except for
-    ##' initialisation with `seed = NULL`.
-    run = function(n_threads = 1L, seed = NULL) {
-      data_split <- df_to_list_of_lists(private$data)
+  n_par_sets <- control$n_par_sets
+  iterations <- control$iterations
+  cooling_rate <- 1 / iterations
+  alpha_cool <- control$cooling_target^cooling_rate
 
-      steps <- unname(as.matrix(private$data[c("step_start", "step_end")]))
-      n_steps <- nrow(steps)
+  pars_matrix <- pars$walk_initialise(n_par_sets, pars_sd)
+  n_pars <- nrow(pars_matrix)
 
-      # Unpack some items from control
-      n_par_sets <- private$control$n_par_sets
-      iterations <- private$control$iterations
-      cooling_target <- private$control$cooling_target
-      pars_sd <- private$pars_sd
+  model <- inputs$model$new(pars = pars$model(pars_matrix),
+                            step = steps[[1L]],
+                            n_particles = NULL,
+                            n_threads = inputs$n_threads,
+                            seed = inputs$seed,
+                            pars_multi = TRUE)
+  if (!is.null(inputs$index)) {
+    model$set_index(inputs$index(model$info())$run)
+  }
 
-      pars_matrix <- private$pars$walk_initialise(n_par_sets,
-                                                  pars_sd)
-      n_pars <- nrow(pars_matrix)
+  ## NOTE: the [, 1L]..[[1L]] here assumes that observation parameters
+  ## always shared, and are not sampled (i.e., same over
+  ## simulation). We can't enforce that though.
+  pars_compare <- pars$model(pars_matrix[, 1L, drop = FALSE])[[1L]]
 
-      model <- private$model$new(pars = private$pars$model(pars_matrix),
-                                 step = steps[[1L]],
-                                 n_particles = NULL, n_threads = n_threads,
-                                 seed = seed, pars_multi = TRUE)
-      if (!is.null(private$index)) {
-        model$set_index(private$index(model$info())$run)
-      }
+  ## We'll collect into these:
+  log_likelihood <- numeric(iterations)
+  result_pars <- array(NA_real_, c(n_pars, n_par_sets, iterations))
 
-      log_likelihood <- rep(0, iterations)
-      if_pars <- array(NA_real_, c(n_pars, n_par_sets, iterations))
-      alpha_cool <- cooling_target ^ (1 / iterations)
+  p <- pmcmc_progress(iterations, control$progress)
 
-      p <- pmcmc_progress(iterations, private$control$progress)
+  for (i in seq_len(iterations)) {
+    p()
+    model$reset(pars = pars$model(pars_matrix), steps[[1L]])
+    for (t in seq_len(n_steps)) {
+      step_end <- steps[t, 2L]
+      state <- model$run(step_end)
 
-      for (m in seq_len(iterations)) {
-        p()
-        model$reset(pars = private$pars$model(pars_matrix), steps[[1L]])
-        for (t in seq_len(n_steps)) {
-          step_end <- steps[t, 2L]
-          state <- model$run(step_end)
+      log_weights <- inputs$compare(state, data_split[[t]], pars_compare)
 
-          log_weights <- private$compare(state, data_split[[t]],
-                                         private$compare_pars)
-          log_weights <- log_weights + private$pars$prior(pars_matrix)
-
-          if (!is.null(log_weights)) {
-            weights <- scale_log_weights(log_weights)
-            log_likelihood[m] <- log_likelihood[m] + weights$average
-            if (log_likelihood[m] == -Inf) {
-              break
-            }
-
-            kappa <- particle_resample(weights$weights)
-            model$reorder(kappa)
-            pars_matrix <- private$pars$walk(pars_matrix[, kappa],
-                                             pars_sd)
-            model$set_pars(private$pars$model(pars_matrix))
-          }
+      if (!is.null(log_weights)) {
+        weights <- scale_log_weights(log_weights + pars$prior(pars_matrix))
+        log_likelihood[i] <- log_likelihood[i] + weights$average
+        if (log_likelihood[i] == -Inf) {
+          break
         }
-        pars_sd <- pars_sd * alpha_cool
-        pars_final <- pars_matrix
-        pars_matrix <- private$pars$walk(pars_final, pars_sd)
-        if_pars[, , m] <- pars_final
-      }
-      # outputs
-      # pars dimensions are: n_pars, n_par_sets, iterations
-      # ll dimensions are: iterations, n_par_sets
-      private$ll <- log_likelihood
-      private$if_pars <- if_pars
-    },
 
-    ##' @description Return the log-likelihood at each iteration
-    log_likelihood = function() {
-      if (is.null(private$ll)) {
-        stop("IF2 must be run first")
+        kappa <- particle_resample(weights$weights)
+        model$reorder(kappa)
+        pars_matrix <- pars$walk(pars_matrix[, kappa], pars_sd)
+        model$set_pars(pars$model(pars_matrix))
       }
-      private$ll
-    },
-
-    ##' @description Return the set of parameters at each iteration
-    pars_series = function() {
-      if (is.null(private$ll)) {
-        stop("IF2 must be run first")
-      }
-      private$if_pars
-    },
-
-    ##' @description Run a particle filter at each point estimate at final
-    ##' state to get an estimate of the model likelihood
-    ##'
-    ##' @param n_particles The number of particles to simulate for each
-    ##' parameter set
-    ##'
-    ##' @param n_threads Number of threads to use when running the
-    ##' simulation. Defaults to 1, and should not be set higher than the
-    ##' number of cores available to the machine.
-    ##'
-    ##' @param seed Seed for the random number generator on initial
-    ##' creation. Can be `NULL` (to initialise using R's random number
-    ##' generator), a positive integer, or a raw vector - see [`dust::dust`]
-    ##' and [`dust::dust_rng`] for more details. Note that the random number
-    ##' stream is unrelated from R's random number generator, except for
-    ##' initialisation with `seed = NULL`.
-    sample = function(n_particles, n_threads = 1L, seed = NULL) {
-      if (is.null(private$ll)) {
-        stop("IF2 must be run first")
-      }
-
-      n_par_sets <- private$control$n_par_sets
-      n_iterations <- private$control$iterations
-      pf_ll <- array(NA_real_, n_par_sets)
-      pars_array <- private$if_pars[, , n_iterations]
-      rownames(pars_array) <- private$pars$names()
-
-      p <- pmcmc_progress(n_par_sets, private$control$progress)
-      for (par_set in seq_len(n_par_sets)) {
-        p()
-        pf <- particle_filter$new(private$data,
-                                  private$model,
-                                  n_particles,
-                                  private$compare,
-                                  private$index,
-                                  n_threads = n_threads,
-                                  seed = seed)
-        pf_ll[par_set] <-
-          pf$run(pars = c(as.list(pars_array[, par_set]),
-                          private$compare_pars))
-      }
-      pf_ll
     }
-  )
-)
+    result_pars[, , i] <- pars_matrix
+
+    pars_sd <- pars_sd * alpha_cool
+    pars_matrix <- pars$walk(pars_matrix, pars_sd)
+  }
+
+  ## pars dimensions are: n_pars, n_par_sets, iterations
+  ## ll dimensions are: iterations, n_par_sets
+  rownames(result_pars) <- pars$names()
+  result <- list(log_likelihood = log_likelihood, pars = result_pars)
+
+  ret <- list(result = result,
+              pars = pars,
+              control = control,
+              filter = inputs)
+  class(ret) <- "if2_fit"
+  ret
+}
+
+
+
+##' @rdname if2
+##' @param obj An object of class `if2_fit`, returned by `mcstate::if2()`
+##'
+##' @param n_particles The number of particles to simulate, for each
+##'   IF2 parameter set
+##' @export
+if2_sample <- function(obj, n_particles) {
+  assert_is(obj, "if2_fit")
+
+  inputs <- obj$filter
+  inputs$n_particles <- n_particles
+
+  filter <- particle_filter_from_inputs(inputs)
+  n_par_sets <- obj$control$n_par_sets
+
+  ll <- numeric(n_par_sets)
+  pars <- obj$pars$model(array_drop(
+    obj$result$pars[, , obj$control$iterations, drop = FALSE], 3))
+
+  p <- pmcmc_progress(n_par_sets, obj$control$progress)
+  for (i in seq_len(n_par_sets)) {
+    p()
+    ll[i] <- filter$run(pars = pars[[i]])
+  }
+
+  ll
+}

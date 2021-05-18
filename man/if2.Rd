@@ -2,14 +2,41 @@
 % Please edit documentation in R/if2.R
 \name{if2}
 \alias{if2}
+\alias{if2_sample}
 \title{Run iterated filtering (IF2 algorithm)}
+\usage{
+if2(pars, filter, control)
+
+if2_sample(obj, n_particles)
+}
+\arguments{
+\item{pars}{An \link{if2_parameters} object, describing the
+parameters that will be varied in the simulation, and the method
+of transformation into model parameters.}
+
+\item{filter}{A \link{particle_filter} object. We don't use
+the particle filter directly (except for sampling with
+\code{mcstate::if2_sample}) but this shares so much validation that
+it's convenient.  Be sure to set things like the seed and number
+of threads here if you want to use anything other than the
+default.}
+
+\item{control}{An \code{\link[=if2_control]{if2_control()}} object}
+
+\item{obj}{An object of class \code{if2_fit}, returned by \code{mcstate::if2()}}
+
+\item{n_particles}{The number of particles to simulate, for each
+IF2 parameter set}
+}
+\value{
+An object of class \code{if2_fit}, which contains the sampled
+parameters (over time) and their log-likelihoods
+}
 \description{
-Create an IF2 object for running
-and interacting with an IF2 inference.
+Create an IF2 object for running and interacting with an IF2
+inference.
 }
 \details{
-Run an IF2 inference.
-
 See:
 Ionides EL, Nguyen D, Atchadé Y, Stoev S, King AA (2015).
 "Inference for Dynamic and Latent Variable Models via Iterated,
@@ -55,145 +82,26 @@ compare <- function(state, observed, pars = NULL) {
 }
 
 # Range and initial values for model parameters
-pars <- if2_parameters$new(
-          list(if2_parameter("beta", 0.15, min = 0, max = 1),
-               if2_parameter("gamma", 0.05, min = 0, max = 1)))
+pars <- mcstate::if2_parameters$new(
+  list(mcstate::if2_parameter("beta", 0.15, min = 0, max = 1),
+       mcstate::if2_parameter("gamma", 0.05, min = 0, max = 1)))
 
-# Set up of IF2 algorithm
-iterations <- 100
-cooling_target <- 0.5
-n_par_sets <- 300
-control <- if2_control(pars_sd = list("beta" = 0.02, "gamma" = 0.02),
-                       iterations = iterations,
-                       n_par_sets = n_par_sets,
-                       cooling_target = cooling_target,
-                       progress = FALSE)
+# Set up of IF2 algorithm (the iterations and n_par_sets should be
+# increased here for any real use)
+control <- mcstate::if2_control(
+  pars_sd = list("beta" = 0.02, "gamma" = 0.02),
+  iterations = 10,
+  n_par_sets = 40,
+  cooling_target = 0.5,
+  progress = interactive())
 
-# Set up, and run IF2
-filter <- if2$new(pars, data, gen, compare, NULL,
-                  NULL, control)
-filter$run()
+# Create a particle filter object
+filter <- mcstate::particle_filter$new(data, gen, 1L, compare)
+
+# Then run the IF2
+res <- mcstate::if2(pars, filter, control)
 
 # Get log-likelihood estimates from running a particle filter at
 # each final parameter estimate
-n_particles <- 100
-ll_samples <- filter$sample(n_particles)
-}
-\section{Methods}{
-\subsection{Public methods}{
-\itemize{
-\item \href{#method-new}{\code{if2$new()}}
-\item \href{#method-run}{\code{if2$run()}}
-\item \href{#method-log_likelihood}{\code{if2$log_likelihood()}}
-\item \href{#method-pars_series}{\code{if2$pars_series()}}
-\item \href{#method-sample}{\code{if2$sample()}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
-\subsection{Method \code{new()}}{
-Create the IF2 object
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{if2$new(pars, data, model, compare, compare_pars, index, control)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{pars}}{Parameters as an \code{\link[=if2_parameters]{if2_parameters()}} object}
-
-\item{\code{data}}{The data set to be used, as in the \code{\link[=particle_filter]{particle_filter()}}}
-
-\item{\code{model}}{A stochastic model to use.  Must be a
-\code{dust_generator} object.}
-
-\item{\code{compare}}{A comparison function, as in the \code{\link[=particle_filter]{particle_filter()}}}
-
-\item{\code{compare_pars}}{A list of any parameters required by the
-comparison function}
-
-\item{\code{index}}{An index function, as in the \code{\link[=particle_filter]{particle_filter()}}}
-
-\item{\code{control}}{An \code{\link[=if2_control]{if2_control()}} object}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-run"></a>}}
-\if{latex}{\out{\hypertarget{method-run}{}}}
-\subsection{Method \code{run()}}{
-Run the IF2
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{if2$run(n_threads = 1L, seed = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{n_threads}}{Number of threads to use when running the
-simulation. Defaults to 1, and should not be set higher than the
-number of cores available to the machine.}
-
-\item{\code{seed}}{Seed for the random number generator on initial
-creation. Can be \code{NULL} (to initialise using R's random number
-generator), a positive integer, or a raw vector - see \code{\link[dust:dust]{dust::dust}}
-and \code{\link[dust:dust_rng]{dust::dust_rng}} for more details. Note that the random number
-stream is unrelated from R's random number generator, except for
-initialisation with \code{seed = NULL}.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-log_likelihood"></a>}}
-\if{latex}{\out{\hypertarget{method-log_likelihood}{}}}
-\subsection{Method \code{log_likelihood()}}{
-Return the log-likelihood at each iteration
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{if2$log_likelihood()}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-pars_series"></a>}}
-\if{latex}{\out{\hypertarget{method-pars_series}{}}}
-\subsection{Method \code{pars_series()}}{
-Return the set of parameters at each iteration
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{if2$pars_series()}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-sample"></a>}}
-\if{latex}{\out{\hypertarget{method-sample}{}}}
-\subsection{Method \code{sample()}}{
-Run a particle filter at each point estimate at final
-state to get an estimate of the model likelihood
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{if2$sample(n_particles, n_threads = 1L, seed = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{n_particles}}{The number of particles to simulate for each
-parameter set}
-
-\item{\code{n_threads}}{Number of threads to use when running the
-simulation. Defaults to 1, and should not be set higher than the
-number of cores available to the machine.}
-
-\item{\code{seed}}{Seed for the random number generator on initial
-creation. Can be \code{NULL} (to initialise using R's random number
-generator), a positive integer, or a raw vector - see \code{\link[dust:dust]{dust::dust}}
-and \code{\link[dust:dust_rng]{dust::dust_rng}} for more details. Note that the random number
-stream is unrelated from R's random number generator, except for
-initialisation with \code{seed = NULL}.}
-}
-\if{html}{\out{</div>}}
-}
-}
+ll_samples <- mcstate::if2_sample(res, 20)
 }

@@ -16,19 +16,19 @@ test_that("Can run IF2", {
                          cooling_target = cooling_target,
                          progress = FALSE)
 
-  filter <- if2$new(pars, dat$data, dat$model, dat$compare, NULL,
-                    dat$index, control)
+  filter <- particle_filter$new(dat$data, dat$model, 1L, dat$compare,
+                                dat$index)
 
-  set.seed(1)
-  filter$run()
+  obj <- if2(pars, filter, control)
 
-  expect_equal(length(filter$log_likelihood()), iterations)
-  expect_equal(dim(filter$pars_series()),
-               c(length(pars$names()), n_par_sets, iterations))
+  expect_s3_class(obj, "if2_fit")
+  expect_length(obj$result$log_likelihood, iterations)
+  expect_equal(dim(obj$result$pars),
+               c(2, n_par_sets, iterations))
 
-  # LL from particle filter runs possible
+  ## LL from particle filter runs possible
   n_particles <- 50
-  ll_samples <- filter$sample(n_particles)
+  ll_samples <- if2_sample(obj, n_particles)
   expect_equal(length(ll_samples), n_par_sets)
 })
 
@@ -37,9 +37,13 @@ test_that("IF2 converges on the correct ll for the volatility model", {
 
   # Start parameters far away from correct values
   set.seed(1)
+  transform <- function(x) {
+    c(as.list(x), list(compare = list(gamma = 1, tau = 1)))
+  }
   pars <- if2_parameters$new(
-            list(if2_parameter("alpha", 5, min = 0, max = Inf),
-                 if2_parameter("sigma", 5, min = 0, max = Inf)))
+    list(if2_parameter("alpha", 5, min = 0, max = Inf),
+         if2_parameter("sigma", 5, min = 0, max = Inf)),
+    transform)
 
   iterations <- 50
   cooling_target <- 0.5
@@ -50,11 +54,10 @@ test_that("IF2 converges on the correct ll for the volatility model", {
                          cooling_target = cooling_target,
                          progress = FALSE)
 
-  filter <- if2$new(pars, dat$data, dat$model, dat$compare,
-                    list(compare = list(gamma = 1, tau = 1)),
-                    NULL, control)
-  filter$run()
-  filter_ll <- filter$sample(100)
+  filter <- particle_filter$new(dat$data, dat$model, 1L, dat$compare)
+  obj <- if2(pars, filter, control)
+
+  filter_ll <- if2_sample(obj, 100)
   expect_equal(mean(filter_ll),
                dat$kalman_filter(dat$pars, dat$data),
                sd(filter_ll))
@@ -76,61 +79,14 @@ test_that("IF2 won't run with mismatched parameter names", {
                          cooling_target = cooling_target,
                          progress = FALSE)
 
-  expect_error(if2$new(pars, dat$data, dat$model, dat$compare, NULL,
-                       dat$index, control),
+  filter <- particle_filter$new(dat$data, dat$model, 1L, dat$compare,
+                                dat$index)
+
+  expect_error(if2(pars, filter, control),
                "'{b}' must be in control$pars_sd",
                fixed = TRUE)
 })
 
-test_that("IF2 inputs must be of the correct type", {
-  dat <- example_sir()
-
-  pars <- if2_parameters$new(
-            list(if2_parameter("beta", 0.15, min = 0, max = 1),
-                 if2_parameter("gamma", 0.05, min = 0, max = 1)))
-
-  iterations <- 50
-  cooling_target <- 0.5
-  n_par_sets <- 20
-  control <- if2_control(pars_sd = list("beta" = 0.02, "gamma" = 0.02),
-                         iterations = iterations,
-                         n_par_sets = n_par_sets,
-                         cooling_target = cooling_target,
-                         progress = FALSE)
-
-  expect_error(if2$new(pars, dat$data, "dat$model", dat$compare, NULL,
-                       dat$index, control),
-                       "'model' must be a dust_generator")
-  expect_error(if2$new(pars, dat$data, dat$model, dat$compare, NULL,
-                       c(1, 2), control),
-                       "'index' must be function if not NULL")
-  expect_error(if2$new(pars, dat$data, dat$model, "dat$compare", NULL,
-                        dat$index, control),
-                       "'compare' must be a function")
-})
-
-test_that("Can't get IF2 results before object has been run", {
-  dat <- example_sir()
-
-  pars <- if2_parameters$new(
-            list(if2_parameter("beta", 0.15, min = 0, max = 1),
-                 if2_parameter("gamma", 0.05, min = 0, max = 1)))
-
-  iterations <- 50
-  cooling_target <- 0.5
-  n_par_sets <- 20
-  control <- if2_control(pars_sd = list("beta" = 0.02, "gamma" = 0.02),
-                         iterations = iterations,
-                         n_par_sets = n_par_sets,
-                         cooling_target = cooling_target,
-                         progress = FALSE)
-
-  filter <- if2$new(pars, dat$data, dat$model, dat$compare, NULL,
-                    dat$index, control)
-  expect_error(filter$log_likelihood(), "IF2 must be run first")
-  expect_error(filter$pars_series(), "IF2 must be run first")
-  expect_error(filter$sample(100L), "IF2 must be run first")
-})
 
 test_that("stop inference when likelihood is impossible", {
   dat <- example_sir()
@@ -150,16 +106,17 @@ test_that("stop inference when likelihood is impossible", {
 
   iterations <- 50
   cooling_target <- 0.5
-  n_par_sets <- 20
+  n_par_sets <- 5
   control <- if2_control(pars_sd = list("beta" = 0.02, "gamma" = 0.02),
                          iterations = iterations,
                          n_par_sets = n_par_sets,
                          cooling_target = cooling_target,
                          progress = FALSE)
 
-  filter <- if2$new(pars, dat$data, dat$model, compare, NULL,
-                    dat$index, control)
-  filter$run()
+  filter <- particle_filter$new(dat$data, dat$model, 1L, compare,
+                                dat$index)
 
-  expect_equal(filter$log_likelihood(), rep(-Inf, iterations))
+  res <- if2(pars, filter, control)
+
+  expect_equal(res$result$log_likelihood, rep(-Inf, iterations))
 })

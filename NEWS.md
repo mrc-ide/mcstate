@@ -1,6 +1,6 @@
 # mcstate 0.6.0
 
-* Add iterated filtering as the `IF2` class.
+* Add iterated filtering as the `IF2` class (#123)
 
 # mcstate 0.5.13
 
