@@ -1,7 +1,7 @@
-##' Control for [if2]. This function constructs a list of options and
-##' does some basic validation. Do not manually change the values in this
-##' object. Do not refer to any argument by
-##' position as the order of the arguments may change in future.
+##' Control for [mcstate::if2()]. This function constructs a list of
+##' options and does some basic validation. Do not manually change the
+##' values in this object. Do not refer to any argument by position as
+##' the order of the arguments may change in future.
 ##'
 ##' @title Control for IF2
 ##'
@@ -19,7 +19,9 @@
 ##' @param progress Logical, indicating if a progress bar should be
 ##'   displayed, using [`progress::progress_bar`].
 ##'
-##' @return An `if2_control` object, which should not be modified once created.
+##' @return An `if2_control` object, which should not be modified once
+##'   created. Pass this into [mcstate::if2()]
+##'
 ##' @export
 ##' @examples
 ##' mcstate::if2_control(list(beta = 0.2, gamma = 0.2), 100, 1000, 0.5)

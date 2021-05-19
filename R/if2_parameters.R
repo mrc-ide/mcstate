@@ -1,7 +1,7 @@
 ##' Describe a single parameter for use within IF2. Note that
 ##' the name is not set here, but will end up being naturally defined
-##' when used with [`if2_parameters`], which collects
-##' these together for use with [if2()].
+##' when used with [`mcstate::if2_parameters`], which collects
+##' these together for use with [mcstate::if2()].
 ##'
 ##' @title Describe single IF2 parameter
 ##'
@@ -68,7 +68,7 @@ if2_parameter <- function(name, initial,
 ##' @title if2_parameters
 ##'
 ##' @description Construct parameters for use with
-##'   [if2()]. This creates a utility object that is used
+##'   [mcstate::if2()]. This creates a utility object that is used
 ##'   internally to work with parameters. Most users only need to
 ##'   construct this object, but see the examples for how it can be
 ##'   used.
@@ -119,7 +119,7 @@ if2_parameters <- R6::R6Class(
     ##' @description Create the if2_parameters object
     ##'
     ##' @param parameters A `list` of
-    ##' [if2_parameter] objects, each of which describe a
+    ##' [`mcstate::if2_parameter`] objects, each of which describe a
     ##' single parameter in your model. If `parameters` is named, then
     ##' these names must match the `$name` element of each parameter is
     ##' used (this is verified).
@@ -132,7 +132,6 @@ if2_parameters <- R6::R6Class(
     ##' you can do arbitrary transformations here.
     initialize = function(parameters, transform = NULL) {
       parameters <- check_parameters(parameters, "if2_parameter")
-
 
       if (is.null(transform)) {
         transform <- as.list
@@ -203,7 +202,7 @@ if2_parameters <- R6::R6Class(
       names(private$parameters)
     },
 
-    ##' @description Return a `data.frame` with information about
+    ##' @description Return a [`data.frame`] with information about
     ##' parameters (name, min, max, and discrete).
     summary = function() {
       data_frame(name = self$names(),
@@ -227,7 +226,7 @@ if2_parameters <- R6::R6Class(
 
     ##' @description Apply the model transformation function to a parameter
     ##' vector. Output is a list for lists, suitable for use with a dust
-    ##' object with pars_multi = TRUE
+    ##' object with `pars_multi = TRUE`
     ##'
     ##' @param pars a parameter matrix from `$walk()`
     model = function(pars) {

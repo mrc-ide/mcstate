@@ -66,7 +66,7 @@ Create the if2_parameters object
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{parameters}}{A \code{list} of
-\link{if2_parameter} objects, each of which describe a
+\code{\link{if2_parameter}} objects, each of which describe a
 single parameter in your model. If \code{parameters} is named, then
 these names must match the \verb{$name} element of each parameter is
 used (this is verified).}
@@ -149,7 +149,7 @@ Return the names of the parameters
 \if{html}{\out{<a id="method-summary"></a>}}
 \if{latex}{\out{\hypertarget{method-summary}{}}}
 \subsection{Method \code{summary()}}{
-Return a \code{data.frame} with information about
+Return a \code{\link{data.frame}} with information about
 parameters (name, min, max, and discrete).
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{if2_parameters$summary()}\if{html}{\out{</div>}}
@@ -179,7 +179,7 @@ Compute the prior for a parameter vector
 \subsection{Method \code{model()}}{
 Apply the model transformation function to a parameter
 vector. Output is a list for lists, suitable for use with a dust
-object with pars_multi = TRUE
+object with \code{pars_multi = TRUE}
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{if2_parameters$model(pars)}\if{html}{\out{</div>}}
 }
