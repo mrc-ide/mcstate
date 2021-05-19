@@ -83,7 +83,7 @@ these together for use with pmcmc()." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.14</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.0</span>
       </span>
     </div>
 
@@ -105,6 +105,9 @@ these together for use with pmcmc()." />
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/if2.html">Inference with iterated filtering</a>
+    </li>
     <li>
       <a href="../articles/kalman.html">Validation of SMC using a Kalman filter</a>
     </li>
@@ -247,7 +250,7 @@ populations.</p></td>
 #&gt; $prior
 #&gt; function (x, mean = 0, sd = 1, log = FALSE) 
 #&gt; .Call(C_dnorm, x, mean, sd, log)
-#&gt; &lt;bytecode: 0x7fa95f27f3d0&gt;
+#&gt; &lt;bytecode: 0x7ffb1442c780&gt;
 #&gt; &lt;environment: namespace:stats&gt;
 #&gt; 
 #&gt; attr(,"class")
@@ -272,7 +275,7 @@ populations.</p></td>
 #&gt; $prior
 #&gt; function (x, rate = 1, log = FALSE) 
 #&gt; .Call(C_dexp, x, 1/rate, log)
-#&gt; &lt;bytecode: 0x7fa959f86568&gt;
+#&gt; &lt;bytecode: 0x7ffb19266d68&gt;
 #&gt; &lt;environment: namespace:stats&gt;
 #&gt; 
 #&gt; attr(,"class")

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Articles • mcstate</title>
+<title>Control for IF2 — if2_control • mcstate</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -46,7 +46,11 @@
 
 
 
-<meta property="og:title" content="Articles" />
+<meta property="og:title" content="Control for IF2 — if2_control" />
+<meta property="og:description" content="Control for if2(). This function constructs a list of
+options and does some basic validation. Do not manually change the
+values in this object. Do not refer to any argument by position as
+the order of the arguments may change in future." />
 <meta property="og:image" content="/logo.png" />
 
 
@@ -66,7 +70,7 @@
   </head>
 
   <body data-spy="scroll" data-target="#toc">
-    <div class="container template-article-index">
+    <div class="container template-reference-topic">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -145,28 +149,83 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-      <h1>Articles</h1>
+    <h1>Control for IF2</h1>
+    <small class="dont-index">Source: <a href='https://github.com/mrc-ide/mcstate/blob/master/R/if2_control.R'><code>R/if2_control.R</code></a></small>
+    <div class="hidden name"><code>if2_control.Rd</code></div>
     </div>
 
-    <div class="section ">
-      <h3>All vignettes</h3>
-      <p class="section-desc"></p>
-
-      <dl>
-        <dt><a href="if2.html">Inference with iterated filtering</a></dt>
-        <dd></dt>
-        <dt><a href="kalman.html">Validation of SMC using a Kalman filter</a></dt>
-        <dd></dt>
-        <dt><a href="nested_sir_models.html">Nested SIR Models</a></dt>
-        <dd></dt>
-        <dt><a href="parallelisation.html">Parallelisation of inference</a></dt>
-        <dd></dt>
-        <dt><a href="restart.html">Restarting pMCMC</a></dt>
-        <dd></dt>
-        <dt><a href="sir_models.html">SIR models with odin, dust and mcstate</a></dt>
-        <dd></dt>
-      </dl>
+    <div class="ref-description">
+    <p>Control for <code><a href='if2.html'>if2()</a></code>. This function constructs a list of
+options and does some basic validation. Do not manually change the
+values in this object. Do not refer to any argument by position as
+the order of the arguments may change in future.</p>
     </div>
+
+    <pre class="usage"><span class='fu'>if2_control</span><span class='op'>(</span><span class='va'>pars_sd</span>, <span class='va'>iterations</span>, <span class='va'>n_par_sets</span>, <span class='va'>cooling_target</span>, progress <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span></pre>
+
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>pars_sd</th>
+      <td><p>The initial standard deviation of parameter walks.</p></td>
+    </tr>
+    <tr>
+      <th>iterations</th>
+      <td><p>The number of IF2 iterations to run, across which
+the cooling is performed</p></td>
+    </tr>
+    <tr>
+      <th>n_par_sets</th>
+      <td><p>The number of parameter sets to walk (c.f. the
+population size)</p></td>
+    </tr>
+    <tr>
+      <th>cooling_target</th>
+      <td><p>A factor &lt; 1 multiplying pars_sd, which will be
+reached by the end of the iterations, and approached geometrically</p></td>
+    </tr>
+    <tr>
+      <th>progress</th>
+      <td><p>Logical, indicating if a progress bar should be
+displayed, using <code><a href='https://rdrr.io/pkg/progress/man/progress_bar.html'>progress::progress_bar</a></code>.</p></td>
+    </tr>
+    </table>
+
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+
+    <p>An <code>if2_control</code> object, which should not be modified once
+created. Pass this into <code><a href='if2.html'>if2()</a></code></p>
+
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'>if2_control</span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span>beta <span class='op'>=</span> <span class='fl'>0.2</span>, gamma <span class='op'>=</span> <span class='fl'>0.2</span><span class='op'>)</span>, <span class='fl'>100</span>, <span class='fl'>1000</span>, <span class='fl'>0.5</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; $pars_sd
+#&gt; $pars_sd$beta
+#&gt; [1] 0.2
+#&gt; 
+#&gt; $pars_sd$gamma
+#&gt; [1] 0.2
+#&gt; 
+#&gt; 
+#&gt; $iterations
+#&gt; [1] 100
+#&gt; 
+#&gt; $n_par_sets
+#&gt; [1] 1000
+#&gt; 
+#&gt; $cooling_target
+#&gt; [1] 0.5
+#&gt; 
+#&gt; $progress
+#&gt; [1] TRUE
+#&gt; 
+#&gt; attr(,"class")
+#&gt; [1] "if2_control"</div></pre>
+  </div>
+  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
+    <nav id="toc" data-toggle="toc" class="sticky-top">
+      <h2 data-toc-skip>Contents</h2>
+    </nav>
   </div>
 </div>
 

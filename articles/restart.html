@@ -38,7 +38,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.14</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.0</span>
       </span>
     </div>
 
@@ -61,6 +61,9 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
+      <a href="../articles/if2.html">Inference with iterated filtering</a>
+    </li>
+    <li>
       <a href="../articles/kalman.html">Validation of SMC using a Kalman filter</a>
     </li>
     <li>
@@ -149,7 +152,7 @@
 <p>An index function for filtering the run state</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">index</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">info</span><span class="op">)</span> <span class="op">{</span>
-  <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>run <span class="op">=</span> <span class="fl">4L</span>, state <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span>
+  <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>run <span class="op">=</span> <span class="fl">5L</span>, state <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span>
 <span class="op">}</span></code></pre></div>
 <p>Parameter information for the pMCMC, including a roughly tuned kernel so that we get adequate mixing</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
@@ -182,7 +185,7 @@
 <p><img src="restart_files/figure-html/unnamed-chunk-9-1.png" width="672"></p>
 <p>And the daily incidence</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html">matplot</a></span><span class="op">(</span><span class="va">t</span><span class="op">[</span><span class="op">-</span><span class="fl">1</span><span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/base/diff.html">diff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="va">res1</span><span class="op">$</span><span class="va">trajectories</span><span class="op">$</span><span class="va">state</span><span class="op">[</span><span class="fl">4</span>, , <span class="op">]</span><span class="op">)</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"l"</span>,
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html">matplot</a></span><span class="op">(</span><span class="va">t</span><span class="op">[</span><span class="op">-</span><span class="fl">1</span><span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/base/diff.html">diff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="va">res1</span><span class="op">$</span><span class="va">trajectories</span><span class="op">$</span><span class="va">state</span><span class="op">[</span><span class="fl">5</span>, , <span class="op">]</span><span class="op">)</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"l"</span>,
         lty <span class="op">=</span> <span class="fl">1</span>, col <span class="op">=</span> <span class="st">"#00000005"</span>, xlab <span class="op">=</span> <span class="st">"Day"</span>, ylab <span class="op">=</span> <span class="st">"Daily incidence"</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/graphics/points.html">points</a></span><span class="op">(</span><span class="va">cases</span> <span class="op">~</span> <span class="va">day</span>, <span class="va">incidence</span>, col <span class="op">=</span> <span class="st">"blue"</span>, pch <span class="op">=</span> <span class="fl">19</span><span class="op">)</span></code></pre></div>
 <p><img src="restart_files/figure-html/unnamed-chunk-10-1.png" width="672"></p>

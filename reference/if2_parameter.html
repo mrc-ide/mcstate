@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Articles • mcstate</title>
+<title>Describe single IF2 parameter — if2_parameter • mcstate</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -46,7 +46,11 @@
 
 
 
-<meta property="og:title" content="Articles" />
+<meta property="og:title" content="Describe single IF2 parameter — if2_parameter" />
+<meta property="og:description" content="Describe a single parameter for use within IF2. Note that
+the name is not set here, but will end up being naturally defined
+when used with if2_parameters, which collects
+these together for use with if2()." />
 <meta property="og:image" content="/logo.png" />
 
 
@@ -66,7 +70,7 @@
   </head>
 
   <body data-spy="scroll" data-target="#toc">
-    <div class="container template-article-index">
+    <div class="container template-reference-topic">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -145,28 +149,96 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-      <h1>Articles</h1>
+    <h1>Describe single IF2 parameter</h1>
+    <small class="dont-index">Source: <a href='https://github.com/mrc-ide/mcstate/blob/master/R/if2_parameters.R'><code>R/if2_parameters.R</code></a></small>
+    <div class="hidden name"><code>if2_parameter.Rd</code></div>
     </div>
 
-    <div class="section ">
-      <h3>All vignettes</h3>
-      <p class="section-desc"></p>
-
-      <dl>
-        <dt><a href="if2.html">Inference with iterated filtering</a></dt>
-        <dd></dt>
-        <dt><a href="kalman.html">Validation of SMC using a Kalman filter</a></dt>
-        <dd></dt>
-        <dt><a href="nested_sir_models.html">Nested SIR Models</a></dt>
-        <dd></dt>
-        <dt><a href="parallelisation.html">Parallelisation of inference</a></dt>
-        <dd></dt>
-        <dt><a href="restart.html">Restarting pMCMC</a></dt>
-        <dd></dt>
-        <dt><a href="sir_models.html">SIR models with odin, dust and mcstate</a></dt>
-        <dd></dt>
-      </dl>
+    <div class="ref-description">
+    <p>Describe a single parameter for use within IF2. Note that
+the name is not set here, but will end up being naturally defined
+when used with <code><a href='if2_parameters.html'>if2_parameters</a></code>, which collects
+these together for use with <code><a href='if2.html'>if2()</a></code>.</p>
     </div>
+
+    <pre class="usage"><span class='fu'>if2_parameter</span><span class='op'>(</span>
+  <span class='va'>name</span>,
+  <span class='va'>initial</span>,
+  min <span class='op'>=</span> <span class='op'>-</span><span class='cn'>Inf</span>,
+  max <span class='op'>=</span> <span class='cn'>Inf</span>,
+  discrete <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  prior <span class='op'>=</span> <span class='cn'>NULL</span>
+<span class='op'>)</span></pre>
+
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>name</th>
+      <td><p>Name for the parameter (a string)</p></td>
+    </tr>
+    <tr>
+      <th>initial</th>
+      <td><p>Initial value of the parameter</p></td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td><p>Optional minimum value for the parameter (otherwise
+<code>-Inf</code>). If given, then <code>initial</code> must be at least this
+value.</p></td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td><p>Optional max value for the parameter (otherwise
+<code>Inf</code>). If given, then <code>initial</code> must be at most this
+value.</p></td>
+    </tr>
+    <tr>
+      <th>discrete</th>
+      <td><p>Logical, indicating if this parameter is
+discrete. If <code>TRUE</code> then the parameter will be rounded
+after a new parameter is proposed.</p></td>
+    </tr>
+    <tr>
+      <th>prior</th>
+      <td><p>A prior function (if not given an improper flat prior
+is used - be careful!). It must be a function that takes a
+single argument, being the value of this parameter. If given,
+then <code>prior(initial)</code> must evaluate to a finite value.</p></td>
+    </tr>
+    </table>
+
+
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'>if2_parameter</span><span class='op'>(</span><span class='st'>"a"</span>, <span class='fl'>0.1</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; $name
+#&gt; [1] "a"
+#&gt; 
+#&gt; $initial
+#&gt; [1] 0.1
+#&gt; 
+#&gt; $min
+#&gt; [1] -Inf
+#&gt; 
+#&gt; $max
+#&gt; [1] Inf
+#&gt; 
+#&gt; $discrete
+#&gt; [1] FALSE
+#&gt; 
+#&gt; $prior
+#&gt; function (p) 
+#&gt; 0
+#&gt; &lt;bytecode: 0x7ffb1884f3f8&gt;
+#&gt; &lt;environment: 0x7ffb161946a8&gt;
+#&gt; 
+#&gt; attr(,"class")
+#&gt; [1] "if2_parameter"</div></pre>
+  </div>
+  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
+    <nav id="toc" data-toggle="toc" class="sticky-top">
+      <h2 data-toc-skip>Contents</h2>
+    </nav>
   </div>
 </div>
 

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>pmcmc_parameters — pmcmc_parameters • mcstate</title>
+<title>if2_parameters — if2_parameters • mcstate</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -46,9 +46,9 @@
 
 
 
-<meta property="og:title" content="pmcmc_parameters — pmcmc_parameters" />
+<meta property="og:title" content="if2_parameters — if2_parameters" />
 <meta property="og:description" content="Construct parameters for use with
-pmcmc(). This creates a utility object that is used
+if2(). This creates a utility object that is used
 internally to work with parameters. Most users only need to
 construct this object, but see the examples for how it can be
 used." />
@@ -150,14 +150,14 @@ used." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>pmcmc_parameters</h1>
-    <small class="dont-index">Source: <a href='https://github.com/mrc-ide/mcstate/blob/master/R/pmcmc_parameters.R'><code>R/pmcmc_parameters.R</code></a></small>
-    <div class="hidden name"><code>pmcmc_parameters.Rd</code></div>
+    <h1>if2_parameters</h1>
+    <small class="dont-index">Source: <a href='https://github.com/mrc-ide/mcstate/blob/master/R/if2_parameters.R'><code>R/if2_parameters.R</code></a></small>
+    <div class="hidden name"><code>if2_parameters.Rd</code></div>
     </div>
 
     <div class="ref-description">
     <p>Construct parameters for use with
-<code><a href='pmcmc.html'>pmcmc()</a></code>. This creates a utility object that is used
+<code><a href='if2.html'>if2()</a></code>. This creates a utility object that is used
 internally to work with parameters. Most users only need to
 construct this object, but see the examples for how it can be
 used.</p>
@@ -171,40 +171,32 @@ used.</p>
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Public methods</h3>
 
 <ul>
-<li><p><a href='#method-new'><code>pmcmc_parameters$new()</code></a></p></li>
-<li><p><a href='#method-initial'><code>pmcmc_parameters$initial()</code></a></p></li>
-<li><p><a href='#method-names'><code>pmcmc_parameters$names()</code></a></p></li>
-<li><p><a href='#method-summary'><code>pmcmc_parameters$summary()</code></a></p></li>
-<li><p><a href='#method-prior'><code>pmcmc_parameters$prior()</code></a></p></li>
-<li><p><a href='#method-propose'><code>pmcmc_parameters$propose()</code></a></p></li>
-<li><p><a href='#method-model'><code>pmcmc_parameters$model()</code></a></p></li>
-<li><p><a href='#method-fix'><code>pmcmc_parameters$fix()</code></a></p></li>
+<li><p><a href='#method-new'><code>if2_parameters$new()</code></a></p></li>
+<li><p><a href='#method-initial'><code>if2_parameters$initial()</code></a></p></li>
+<li><p><a href='#method-walk_initialise'><code>if2_parameters$walk_initialise()</code></a></p></li>
+<li><p><a href='#method-walk'><code>if2_parameters$walk()</code></a></p></li>
+<li><p><a href='#method-names'><code>if2_parameters$names()</code></a></p></li>
+<li><p><a href='#method-summary'><code>if2_parameters$summary()</code></a></p></li>
+<li><p><a href='#method-prior'><code>if2_parameters$prior()</code></a></p></li>
+<li><p><a href='#method-model'><code>if2_parameters$model()</code></a></p></li>
 </ul>
 <p><hr>
 <a id="method-new"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>new()</code></h3>
-<p>Create the pmcmc_parameters object</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
-<p><div class="r"></p><pre><span class='va'>pmcmc_parameters</span><span class='op'>$</span><span class='fu'>new</span><span class='op'>(</span><span class='va'>parameters</span>, <span class='va'>proposal</span>, transform <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre><p></div></p>
+<p>Create the if2_parameters object</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>if2_parameters</span><span class='op'>$</span><span class='fu'>new</span><span class='op'>(</span><span class='va'>parameters</span>, transform <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre><p></div></p>
 
 <h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>parameters</code></dt><dd><p>A <code>list</code> of
-<a href='pmcmc_parameter.html'>pmcmc_parameter</a> objects, each of which describe a
+<code><a href='if2_parameter.html'>if2_parameter</a></code> objects, each of which describe a
 single parameter in your model. If <code>parameters</code> is named, then
 these names must match the <code>$name</code> element of each parameter is
 used (this is verified).</p></dd>
 
-<dt><code>proposal</code></dt><dd><p>A square proposal distribution corresponding to the
-variance-covariance matrix of a multivariate gaussian distribution
-used to generate new parameters. It must have the same number of
-rows and columns as there are elements in <code>parameters</code>, and if
-named the names must correspond exactly to the names in
-<code>parameters</code>. Because it corresponds to a variance-covariance
-matrix it must be symmetric and positive definite.</p></dd>
-
 <dt><code>transform</code></dt><dd><p>An optional transformation function to apply
 to your parameter vector immediately before passing it to the
 model function. If not given, then <a href='https://rdrr.io/r/base/list.html'>as.list</a> is
-used, as dust models require this. However, if t you need to
+used, as dust models require this. However, if you need to
 generate derived parameters from those being actively sampled
 you can do arbitrary transformations here.</p></dd>
 
@@ -213,71 +205,68 @@ you can do arbitrary transformations here.</p></dd>
 <a id="method-initial"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>initial()</code></h3>
 <p>Return the initial parameter values as a named numeric
 vector</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
-<p><div class="r"></p><pre><span class='va'>pmcmc_parameters</span><span class='op'>$</span><span class='fu'>initial</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
+<p><div class="r"></p><pre><span class='va'>if2_parameters</span><span class='op'>$</span><span class='fu'>initial</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
+<p><hr>
+<a id="method-walk_initialise"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>walk_initialise()</code></h3>
+<p>Set up a parameter walk</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>if2_parameters</span><span class='op'>$</span><span class='fu'>walk_initialise</span><span class='op'>(</span><span class='va'>n_par_sets</span>, <span class='va'>pars_sd</span><span class='op'>)</span></pre><p></div></p>
+
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
+<dt><code>n_par_sets</code></dt><dd><p>An integer number of parameter sets, which
+defines the size of the population being peturbed.</p></dd>
+
+<dt><code>pars_sd</code></dt><dd><p>A vector of standard deviations for the walk
+of each parameter</p></dd>
+
+</dl><p></div></p>
+<p><hr>
+<a id="method-walk"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>walk()</code></h3>
+<p>Propose a new parameter matrix given a current matrix
+and walk standard deviation vector.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>if2_parameters</span><span class='op'>$</span><span class='fu'>walk</span><span class='op'>(</span><span class='va'>pars</span>, <span class='va'>pars_sd</span><span class='op'>)</span></pre><p></div></p>
+
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
+<dt><code>pars</code></dt><dd><p>A parameter matrix, from this function or
+<code>$walk_initialise()</code></p></dd>
+
+<dt><code>pars_sd</code></dt><dd><p>A vector of standard deviations for the walk
+of each parameter</p></dd>
+
+</dl><p></div></p>
 <p><hr>
 <a id="method-names"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code><a href='https://rdrr.io/r/base/names.html'>names()</a></code></h3>
 <p>Return the names of the parameters</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
-<p><div class="r"></p><pre><span class='va'>pmcmc_parameters</span><span class='op'>$</span><span class='fu'>names</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
+<p><div class="r"></p><pre><span class='va'>if2_parameters</span><span class='op'>$</span><span class='fu'>names</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
 <p><hr>
 <a id="method-summary"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code><a href='https://rdrr.io/r/base/summary.html'>summary()</a></code></h3>
-<p>Return a <code>data.frame</code> with information about
+<p>Return a <code><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></code> with information about
 parameters (name, min, max, and discrete).</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
-<p><div class="r"></p><pre><span class='va'>pmcmc_parameters</span><span class='op'>$</span><span class='fu'>summary</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
+<p><div class="r"></p><pre><span class='va'>if2_parameters</span><span class='op'>$</span><span class='fu'>summary</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
 <p><hr>
 <a id="method-prior"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>prior()</code></h3>
 <p>Compute the prior for a parameter vector</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
-<p><div class="r"></p><pre><span class='va'>pmcmc_parameters</span><span class='op'>$</span><span class='fu'>prior</span><span class='op'>(</span><span class='va'>theta</span><span class='op'>)</span></pre><p></div></p>
+<p><div class="r"></p><pre><span class='va'>if2_parameters</span><span class='op'>$</span><span class='fu'>prior</span><span class='op'>(</span><span class='va'>pars</span><span class='op'>)</span></pre><p></div></p>
 
 <h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
-<dt><code>theta</code></dt><dd><p>a parameter vector in the same order as your
-parameters were defined in (see <code>$names()</code> for that order.</p></dd>
-
-</dl><p></div></p>
-<p><hr>
-<a id="method-propose"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>propose()</code></h3>
-<p>Propose a new parameter vector given a current parameter
-vector. This proposes a new parameter vector given your current
-vector and the variance-covariance matrix of your proposal
-kernel, discretises any discrete values, and reflects bounded
-parameters until they lie within <code>min</code>:<code>max</code>.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
-<p><div class="r"></p><pre><span class='va'>pmcmc_parameters</span><span class='op'>$</span><span class='fu'>propose</span><span class='op'>(</span><span class='va'>theta</span>, scale <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span></pre><p></div></p>
-
-<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
-<p><div class="arguments"></p><dl>
-<dt><code>theta</code></dt><dd><p>a parameter vector in the same order as your
-parameters were defined in (see <code>$names()</code> for that order.</p></dd>
-
-<dt><code>scale</code></dt><dd><p>an optional scaling factor to apply to the
-proposal distribution. This may be useful in sampling starting
-points. The parameter is equivalent to a multiplicative factor
-applied to the variance covariance matrix.</p></dd>
+<dt><code>pars</code></dt><dd><p>a parameter matrix from <code>$walk()</code></p></dd>
 
 </dl><p></div></p>
 <p><hr>
 <a id="method-model"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>model()</code></h3>
 <p>Apply the model transformation function to a parameter
-vector.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
-<p><div class="r"></p><pre><span class='va'>pmcmc_parameters</span><span class='op'>$</span><span class='fu'>model</span><span class='op'>(</span><span class='va'>theta</span><span class='op'>)</span></pre><p></div></p>
+vector. Output is a list for lists, suitable for use with a dust
+object with <code>pars_multi = TRUE</code></p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>if2_parameters</span><span class='op'>$</span><span class='fu'>model</span><span class='op'>(</span><span class='va'>pars</span><span class='op'>)</span></pre><p></div></p>
 
 <h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
-<dt><code>theta</code></dt><dd><p>a parameter vector in the same order as your
-parameters were defined in (see <code>$names()</code> for that order.</p></dd>
-
-</dl><p></div></p>
-<p><hr>
-<a id="method-fix"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code><a href='https://rdrr.io/r/utils/fix.html'>fix()</a></code></h3>
-<p>Set some parameters to fixed values. Use this to
-reduce the dimensionality of your system.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
-<p><div class="r"></p><pre><span class='va'>pmcmc_parameters</span><span class='op'>$</span><span class='fu'>fix</span><span class='op'>(</span><span class='va'>fixed</span><span class='op'>)</span></pre><p></div></p>
-
-<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
-<p><div class="arguments"></p><dl>
-<dt><code>fixed</code></dt><dd><p>a named vector of parameters to fix</p></dd>
+<dt><code>pars</code></dt><dd><p>a parameter matrix from <code>$walk()</code></p></dd>
 
 </dl><p></div></p>
 
@@ -285,21 +274,29 @@ reduce the dimensionality of your system.</p><h4 class='hasAnchor' id='arguments
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='co'># Construct an object with two parameters:</span>
-<span class='va'>pars</span> <span class='op'>&lt;-</span> <span class='fu'>mcstate</span><span class='fu'>::</span><span class='va'>pmcmc_parameters</span><span class='op'>$</span><span class='fu'>new</span><span class='op'>(</span>
-  <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'><a href='pmcmc_parameter.html'>pmcmc_parameter</a></span><span class='op'>(</span><span class='st'>"a"</span>, <span class='fl'>0.1</span>, min <span class='op'>=</span> <span class='fl'>0</span>, max <span class='op'>=</span> <span class='fl'>1</span>,
+<span class='va'>pars</span> <span class='op'>&lt;-</span> <span class='fu'>mcstate</span><span class='fu'>::</span><span class='va'>if2_parameters</span><span class='op'>$</span><span class='fu'>new</span><span class='op'>(</span>
+  <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'><a href='if2_parameter.html'>if2_parameter</a></span><span class='op'>(</span><span class='st'>"a"</span>, <span class='fl'>0.1</span>, min <span class='op'>=</span> <span class='fl'>0</span>, max <span class='op'>=</span> <span class='fl'>1</span>,
                                 prior <span class='op'>=</span> <span class='kw'>function</span><span class='op'>(</span><span class='va'>a</span><span class='op'>)</span> <span class='fu'><a href='https://rdrr.io/r/base/Log.html'>log</a></span><span class='op'>(</span><span class='va'>a</span><span class='op'>)</span><span class='op'>)</span>,
-       <span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'><a href='pmcmc_parameter.html'>pmcmc_parameter</a></span><span class='op'>(</span><span class='st'>"b"</span>, <span class='fl'>0</span>, prior <span class='op'>=</span> <span class='va'>dnorm</span><span class='op'>)</span><span class='op'>)</span>,
-  <span class='fu'><a href='https://rdrr.io/r/base/matrix.html'>matrix</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>0.5</span>, <span class='fl'>0.5</span>, <span class='fl'>2</span><span class='op'>)</span>, <span class='fl'>2</span>, <span class='fl'>2</span><span class='op'>)</span><span class='op'>)</span>
+       <span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'><a href='if2_parameter.html'>if2_parameter</a></span><span class='op'>(</span><span class='st'>"b"</span>, <span class='fl'>0</span>, prior <span class='op'>=</span> <span class='va'>dnorm</span><span class='op'>)</span><span class='op'>)</span><span class='op'>)</span>
 
 <span class='co'># Initial parameters</span>
-<span class='va'>p</span> <span class='op'>&lt;-</span> <span class='va'>pars</span><span class='op'>$</span><span class='fu'>initial</span><span class='op'>(</span><span class='op'>)</span>
-<span class='va'>p</span>
+<span class='va'>pars</span><span class='op'>$</span><span class='fu'>initial</span><span class='op'>(</span><span class='op'>)</span>
 </div><div class='output co'>#&gt;   a   b 
 #&gt; 0.1 0.0 </div><div class='input'>
-<span class='co'># Propose a new parameter point</span>
-<span class='va'>pars</span><span class='op'>$</span><span class='fu'>propose</span><span class='op'>(</span><span class='va'>p</span><span class='op'>)</span>
-</div><div class='output co'>#&gt;         a         b 
-#&gt; 0.8378669 0.1972515 </div><div class='input'>
+<span class='co'># Create the initial parameter set</span>
+<span class='va'>n_par_sets</span> <span class='op'>&lt;-</span> <span class='fl'>5</span>
+<span class='va'>pars_sd</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='st'>"a"</span> <span class='op'>=</span> <span class='fl'>0.02</span>, <span class='st'>"b"</span> <span class='op'>=</span> <span class='fl'>0.02</span><span class='op'>)</span>
+<span class='va'>p_mat</span> <span class='op'>&lt;-</span> <span class='va'>pars</span><span class='op'>$</span><span class='fu'>walk_initialise</span><span class='op'>(</span><span class='va'>n_par_sets</span>, <span class='va'>pars_sd</span><span class='op'>)</span>
+<span class='va'>p_mat</span>
+</div><div class='output co'>#&gt;           [,1]        [,2]        [,3]       [,4]        [,5]
+#&gt; a  0.095039469  0.07334459 0.116361301 0.12941940 0.104585662
+#&gt; b -0.007306416 -0.01133474 0.006297038 0.02415437 0.001534398</div><div class='input'>
+<span class='co'># Propose a new parameter set</span>
+<span class='va'>p_mat</span> <span class='op'>&lt;-</span> <span class='va'>pars</span><span class='op'>$</span><span class='fu'>walk</span><span class='op'>(</span><span class='va'>p_mat</span>, <span class='va'>pars_sd</span><span class='op'>)</span>
+<span class='va'>p_mat</span>
+</div><div class='output co'>#&gt;          [,1]         [,2]        [,3]       [,4]        [,5]
+#&gt; a  0.10590882  0.101096316  0.13392404 0.13027376  0.07802785
+#&gt; b -0.02957219 -0.008500499 -0.01550211 0.03416819 -0.00691448</div><div class='input'>
 <span class='co'># Information about parameters:</span>
 <span class='va'>pars</span><span class='op'>$</span><span class='fu'>names</span><span class='op'>(</span><span class='op'>)</span>
 </div><div class='output co'>#&gt; [1] "a" "b"</div><div class='input'><span class='va'>pars</span><span class='op'>$</span><span class='fu'>summary</span><span class='op'>(</span><span class='op'>)</span>
@@ -307,15 +304,49 @@ reduce the dimensionality of your system.</p><h4 class='hasAnchor' id='arguments
 #&gt; 1    a    0   1    FALSE
 #&gt; 2    b -Inf Inf    FALSE</div><div class='input'>
 <span class='co'># Compute prior</span>
-<span class='va'>pars</span><span class='op'>$</span><span class='fu'>prior</span><span class='op'>(</span><span class='va'>p</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; [1] -1.903643</div><div class='input'>
+<span class='va'>pars</span><span class='op'>$</span><span class='fu'>prior</span><span class='op'>(</span><span class='va'>p_mat</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; [1] -1.846409 -1.892754 -1.611588 -1.639408 -2.151757</div><div class='input'>
 <span class='co'># Transform data for your model</span>
-<span class='va'>pars</span><span class='op'>$</span><span class='fu'>model</span><span class='op'>(</span><span class='va'>p</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; $a
-#&gt; [1] 0.1
+<span class='va'>pars</span><span class='op'>$</span><span class='fu'>model</span><span class='op'>(</span><span class='va'>p_mat</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; [[1]]
+#&gt; [[1]]$a
+#&gt; [1] 0.1059088
 #&gt; 
-#&gt; $b
-#&gt; [1] 0
+#&gt; [[1]]$b
+#&gt; [1] -0.02957219
+#&gt; 
+#&gt; 
+#&gt; [[2]]
+#&gt; [[2]]$a
+#&gt; [1] 0.1010963
+#&gt; 
+#&gt; [[2]]$b
+#&gt; [1] -0.008500499
+#&gt; 
+#&gt; 
+#&gt; [[3]]
+#&gt; [[3]]$a
+#&gt; [1] 0.133924
+#&gt; 
+#&gt; [[3]]$b
+#&gt; [1] -0.01550211
+#&gt; 
+#&gt; 
+#&gt; [[4]]
+#&gt; [[4]]$a
+#&gt; [1] 0.1302738
+#&gt; 
+#&gt; [[4]]$b
+#&gt; [1] 0.03416819
+#&gt; 
+#&gt; 
+#&gt; [[5]]
+#&gt; [[5]]$a
+#&gt; [1] 0.07802785
+#&gt; 
+#&gt; [[5]]$b
+#&gt; [1] -0.00691448
+#&gt; 
 #&gt; </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
