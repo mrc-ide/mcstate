@@ -2,7 +2,7 @@
 title: "Inference with iterated filtering"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{if2}
+  %\VignetteIndexEntry{Inference with iterated filtering}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

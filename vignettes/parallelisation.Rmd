@@ -2,7 +2,7 @@
 title: "Parallelisation of inference"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{parallelisation}
+  %\VignetteIndexEntry{Parallelisation of inference}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
