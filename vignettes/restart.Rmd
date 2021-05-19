@@ -67,7 +67,7 @@ An index function for filtering the run state
 
 ```{r}
 index <- function(info) {
-  list(run = 4L, state = 1:4)
+  list(run = 5L, state = 1:3)
 }
 ```
 
