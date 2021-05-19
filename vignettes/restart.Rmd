@@ -67,7 +67,7 @@ An index function for filtering the run state
 
 ```{r}
 index <- function(info) {
-  list(run = 4L, state = 1:4)
+  list(run = 5L, state = 1:5)
 }
 ```
 
@@ -109,7 +109,7 @@ points(I ~ t, history, pch = 19, col = "blue")
 And the daily incidence
 
 ```{r}
-matplot(t[-1], diff(t(res1$trajectories$state[4, , ])), type = "l",
+matplot(t[-1], diff(t(res1$trajectories$state[5, , ])), type = "l",
         lty = 1, col = "#00000005", xlab = "Day", ylab = "Daily incidence")
 points(cases ~ day, incidence, col = "blue", pch = 19)
 ```
