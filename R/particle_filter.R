@@ -71,6 +71,7 @@ particle_filter <- R6::R6Class(
     index = NULL,
     initial = NULL,
     compare = NULL,
+    device_id = NULL,
     ## Control for dust
     seed = NULL,
     n_threads = NULL,
@@ -156,10 +157,18 @@ particle_filter <- R6::R6Class(
     ##' and [`dust::dust_rng`] for more details. Note that the random number
     ##' stream is unrelated from R's random number generator, except for
     ##' initialisation with `seed = NULL`.
+    ##'
+    ##' @param device_id Integer, indicating the device to use, where the
+    ##' model has GPU support. An error is thrown if the device id given
+    ##' is not reported to be available (note that CUDA numbers devices
+    ##' from 0, so that '0' is the first device, and so on). To see available
+    ##' device ids, you can run `model$public_methods$device_info()`.
+    ##' If `device_id` is non-NULL, then when your model calls methods
+    ##' `run` or `filter`, it will run on the GPU.
     initialize = function(data, model, n_particles, compare,
                           index = NULL, initial = NULL,
-                          n_threads = 1L, seed = NULL) {
-
+                          n_threads = 1L, seed = NULL,
+                          device_id = NULL) {
       if (!is_dust_generator(model)) {
         stop("'model' must be a dust_generator")
       }
@@ -208,7 +217,16 @@ particle_filter <- R6::R6Class(
       if (is.null(compare) && !model$public_methods$has_compare()) {
         stop("Your model does not have a built-in 'compare' function")
       }
+
+      if (!is.null(device_id)) {
+        assert_scalar_integer(device_id)
+        if (!model$public_methods$has_cuda()) {
+          stop("'device_id' provided, but 'model' does not have cuda support")
+        }
+      }
+
       private$compare <- compare
+      private$device_id <- device_id
       private$index <- index
       private$initial <- initial
 
@@ -276,13 +294,13 @@ particle_filter <- R6::R6Class(
           pars, self$model, private$last_model, private$data,
           private$data_split, private$steps, self$n_particles,
           private$n_threads, private$initial, private$index, private$compare,
-          private$seed, save_history, save_restart)
+          private$device_id, private$seed, save_history, save_restart)
       } else {
         particle_filter_state$new(
           pars, self$model, private$last_model, private$data,
           private$data_split, private$steps, self$n_particles,
           private$n_threads, private$initial, private$index, private$compare,
-          private$seed, save_history, save_restart)
+          private$device_id, private$seed, save_history, save_restart)
       }
     },
 

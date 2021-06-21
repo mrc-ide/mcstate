@@ -26,6 +26,7 @@ particle_filter_state_nested <- R6::R6Class(
     initial = NULL,
     index = NULL,
     compare = NULL,
+    device = NULL,
     save_restart_step = NULL,
     save_restart = NULL,
     current_step_index = 0L
@@ -60,8 +61,7 @@ particle_filter_state_nested <- R6::R6Class(
     ##' documented.
     initialize = function(pars, generator, model, data, data_split, steps,
                           n_particles, n_threads, initial, index, compare,
-                          seed, save_history, save_restart) {
-
+                          device, seed, save_history, save_restart) {
       ## NOTE: this will generate a warning when updating docs but
       ## that's ok; see https://github.com/r-lib/roxygen2/issues/1067
       if (length(pars) < length(unique(data$population))) {
@@ -137,6 +137,7 @@ particle_filter_state_nested <- R6::R6Class(
       private$initial <- initial
       private$index <- index
       private$compare <- compare
+      private$device <- device
       private$save_restart_step <- save_restart_step
       private$save_restart <- save_restart
 
@@ -150,7 +151,7 @@ particle_filter_state_nested <- R6::R6Class(
     ##' value of `step_index`
     run = function() {
       if (is.null(private$compare)) {
-        particle_filter_compiled(self, private)
+        particle_filter_compiled(self, private, private$device)
       } else {
         self$step(private$n_steps)
       }
@@ -211,7 +212,7 @@ particle_filter_state_nested <- R6::R6Class(
 
       for (t in seq(curr + 1L, step_index)) {
         step_end <- steps[t, 2L]
-        state <- model$run(step_end)
+        state <- model$run(step_end, device = private$device)
 
         if (save_history) {
           history_value[, , , t + 1L] <- model$state(save_history_index)
