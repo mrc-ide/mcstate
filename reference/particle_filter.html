@@ -82,7 +82,7 @@ interface will be implemented later." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.1</span>
       </span>
     </div>
 
@@ -196,7 +196,8 @@ re-bound)</p></dd>
   index <span class='op'>=</span> <span class='cn'>NULL</span>,
   initial <span class='op'>=</span> <span class='cn'>NULL</span>,
   n_threads <span class='op'>=</span> <span class='fl'>1L</span>,
-  seed <span class='op'>=</span> <span class='cn'>NULL</span>
+  seed <span class='op'>=</span> <span class='cn'>NULL</span>,
+  device_id <span class='op'>=</span> <span class='cn'>NULL</span>
 <span class='op'>)</span></pre><p></div></p>
 
 <h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
@@ -267,6 +268,14 @@ generator), a positive integer, or a raw vector - see <code><a href='https://rdr
 and <code><a href='https://rdrr.io/pkg/dust/man/dust_rng.html'>dust::dust_rng</a></code> for more details. Note that the random number
 stream is unrelated from R's random number generator, except for
 initialisation with <code>seed = NULL</code>.</p></dd>
+
+<dt><code>device_id</code></dt><dd><p>Integer, indicating the device to use, where the
+model has GPU support. An error is thrown if the device id given
+is not reported to be available (note that CUDA numbers devices
+from 0, so that '0' is the first device, and so on). To see available
+device ids, you can run <code>model$public_methods$device_info()</code>.
+If <code>device_id</code> is non-NULL, then when your model calls methods
+<code>run</code> or <code>filter</code>, it will run on the GPU.</p></dd>
 
 </dl><p></div></p>
 <p><hr>
