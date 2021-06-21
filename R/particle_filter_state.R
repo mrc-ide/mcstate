@@ -272,13 +272,14 @@ particle_filter_state <- R6::R6Class(
     ##' @param pars New model parameters
     fork = function(pars) {
       stopifnot(!private$device) # this won't work
+      device_id <- NULL
       seed <- self$model$rng_state()
       save_history <- !is.null(self$history)
       ret <- particle_filter_state$new(
         pars, private$generator, NULL, private$data, private$data_split,
         private$steps, private$n_particles, private$n_threads,
-        private$initial, private$index, private$compare, seed,
-        save_history, private$save_restart)
+        private$initial, private$index, private$compare, device_id,
+        seed, save_history, private$save_restart)
 
       ## Run it up to the same point
       ret$step(private$current_step_index)

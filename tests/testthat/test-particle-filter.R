@@ -450,6 +450,7 @@ test_that("can return inputs", {
   expect_equal(inputs$n_particles, n_particles)
   expect_equal(inputs$index, dat$index)
   expect_equal(inputs$compare, dat$compare)
+  expect_null(inputs$device_id)
   expect_equal(inputs$initial, initial)
   expect_equal(inputs$seed, 100)
 

@@ -415,6 +415,7 @@ particle_filter <- R6::R6Class(
            index = private$index,
            initial = private$initial,
            compare = private$compare,
+           device_id = private$device_id,
            n_threads = private$n_threads,
            seed = seed)
     },
@@ -456,6 +457,7 @@ particle_filter_from_inputs <- function(inputs, seed = NULL) {
                       model = inputs$model,
                       n_particles = inputs$n_particles,
                       compare = inputs$compare,
+                      device_id = inputs$device_id,
                       index = inputs$index,
                       initial = inputs$initial,
                       n_threads = inputs$n_threads,
