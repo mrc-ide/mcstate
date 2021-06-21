@@ -76,7 +76,7 @@ jobs:
         shell: Rscript {0}
 
       - name: debug
-        if: runner.os == "Linux"
+        if: runner.os == 'Linux'
         uses: mxschmitt/action-tmate@v3
 
       - name: Check
