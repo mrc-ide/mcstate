@@ -49,12 +49,8 @@ test_that("Share out cores", {
 })
 
 
-## Currently failing on R-devel because of changes that restrict
-## assignment of the traceback (currently used by callr); see
-## https://github.com/r-lib/callr/issues/196
 test_that("throw from callr operation", {
   skip_on_cran()
-  skip_if(getRversion() > numeric_version("4.0.5"))
 
   dat <- example_sir()
   n_particles <- 42
