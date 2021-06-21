@@ -450,6 +450,7 @@ test_that("can return inputs", {
   expect_equal(inputs$n_particles, n_particles)
   expect_equal(inputs$index, dat$index)
   expect_equal(inputs$compare, dat$compare)
+  expect_null(inputs$device_id)
   expect_equal(inputs$initial, initial)
   expect_equal(inputs$seed, 100)
 
@@ -1344,4 +1345,52 @@ test_that("nested silent on initial w. state w/o step", {
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index, initial = initial)
   expect_is(p$run(pars), "numeric")
+})
+
+
+test_that("device_id requires cuda support", {
+  dat <- example_sir()
+  n_particles <- 100
+  set.seed(1)
+  expect_error(
+    particle_filter$new(dat$data, dat$model, n_particles, NULL,
+                        index = dat$index, device_id = 0),
+    "device_id' provided, but 'model' does not have cuda support")
+})
+
+
+test_that("Can run a gpu model by passing device through", {
+  dat <- example_sir()
+  n_particles <- 100
+  set.seed(1)
+
+  model_g <- R6::R6Class(
+    "dust",
+    inherit = dat$model,
+    public = list(
+      has_cuda = function() TRUE,
+      has_compare = function() TRUE))
+
+  p_c <- particle_filter$new(dat$data, model_g, n_particles, NULL,
+                           index = dat$index)
+  p_g <- particle_filter$new(dat$data, model_g, n_particles, NULL,
+                           index = dat$index, device_id = 0)
+  expect_null(r6_private(p_c)$device_id)
+  expect_equal(r6_private(p_g)$device_id, 0)
+
+  filter_c <- p_c$run_begin()
+  filter_g <- p_g$run_begin()
+  expect_false(r6_private(filter_c)$device)
+  expect_true(r6_private(filter_g)$device)
+
+  target_c <- mockery::mock()
+  target_g <- mockery::mock()
+  mockery::stub(filter_c$run, "particle_filter_compiled", target_c)
+  mockery::stub(filter_g$run, "particle_filter_compiled", target_g)
+  filter_c$run()
+  filter_g$run()
+  mockery::expect_called(target_c, 1L)
+  mockery::expect_called(target_g, 1L)
+  expect_false(mockery::mock_args(target_c)[[1]][[3]])
+  expect_true(mockery::mock_args(target_g)[[1]][[3]])
 })

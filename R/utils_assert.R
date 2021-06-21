@@ -74,6 +74,14 @@ assert_scalar_positive_integer <- function(x, name = deparse(substitute(x))) {
 }
 
 
+assert_scalar_integer <- function(x, name = deparse(substitute(x))) {
+  force(name)
+  assert_scalar(x, name)
+  assert_integer(x, name)
+  invisible(x)
+}
+
+
 assert_scalar_logical <- function(x, name = deparse(substitute(x))) {
   force(name)
   assert_scalar(x, name)

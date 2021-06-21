@@ -97,7 +97,8 @@ Create the particle filter
   index = NULL,
   initial = NULL,
   n_threads = 1L,
-  seed = NULL
+  seed = NULL,
+  device_id = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -170,6 +171,14 @@ generator), a positive integer, or a raw vector - see \code{\link[dust:dust]{dus
 and \code{\link[dust:dust_rng]{dust::dust_rng}} for more details. Note that the random number
 stream is unrelated from R's random number generator, except for
 initialisation with \code{seed = NULL}.}
+
+\item{\code{device_id}}{Integer, indicating the device to use, where the
+model has GPU support. An error is thrown if the device id given
+is not reported to be available (note that CUDA numbers devices
+from 0, so that '0' is the first device, and so on). To see available
+device ids, you can run \code{model$public_methods$device_info()}.
+If \code{device_id} is non-NULL, then when your model calls methods
+\code{run} or \code{filter}, it will run on the GPU.}
 }
 \if{html}{\out{</div>}}
 }

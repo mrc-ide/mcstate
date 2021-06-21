@@ -66,6 +66,7 @@ documented.
   initial,
   index,
   compare,
+  device_id,
   seed,
   save_history,
   save_restart

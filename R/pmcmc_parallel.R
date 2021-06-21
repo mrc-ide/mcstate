@@ -316,7 +316,7 @@ pmcmc_parallel_progress <- function(control, force = FALSE) {
     t0 <- Sys.time()
     callback <- function(p) {
       message(sprintf("Finished %d steps in %s",
-                      n, format(Sys.time() - t0, digits = 0)))
+                      n, format(Sys.time() - t0, digits = 1)))
     }
     p <- progress::progress_bar$new(fmt, n, callback = callback, force = force)
     ## Progress likes to be started right away:
