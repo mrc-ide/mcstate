@@ -83,7 +83,7 @@ pmcmc_progress <- function(n, show, force = FALSE) {
     t0 <- Sys.time()
     callback <- function(p) {
       message(sprintf("Finished %d steps in %s",
-                      n, format(Sys.time() - t0, digits = 0)))
+                      n, format(Sys.time() - t0, digits = 1)))
     }
     p <- progress::progress_bar$new(fmt, n, callback = callback, force = force)
     p$tick(0)
