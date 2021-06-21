@@ -111,5 +111,5 @@ test_that("progress bar creates progress_bar when progress = TRUE", {
     "progress_bar")
   expect_message(
     p(),
-    "Finished 3 steps in [0-9]+ secs")
+    "Finished 3 steps in [0-9.]+ secs")
 })
