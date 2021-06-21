@@ -75,6 +75,10 @@ jobs:
           install.packages(".", repos = NULL, type = "source")
         shell: Rscript {0}
 
+      - name: debug
+        if: runner.os == "Linux"
+        uses: mxschmitt/action-tmate@v3
+
       - name: Check
         env:
           _R_CHECK_CRAN_INCOMING_REMOTE_: false
