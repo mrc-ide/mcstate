@@ -61,7 +61,7 @@ particle_filter_state_nested <- R6::R6Class(
     ##' documented.
     initialize = function(pars, generator, model, data, data_split, steps,
                           n_particles, n_threads, initial, index, compare,
-                          device_id, seed, save_history, save_restart) {
+                          device_config, seed, save_history, save_restart) {
       ## NOTE: this will generate a warning when updating docs but
       ## that's ok; see https://github.com/r-lib/roxygen2/issues/1067
       if (length(pars) < length(unique(data$population))) {
@@ -74,7 +74,7 @@ particle_filter_state_nested <- R6::R6Class(
         model <- generator$new(pars = pars, step = steps[[1L]],
                                n_particles = n_particles,
                                n_threads = n_threads, seed = seed,
-                               device_id = device_id, pars_multi = TRUE)
+                               device_config = device_config, pars_multi = TRUE)
         if (is.null(compare)) {
           model$set_index(integer(0))
           model$set_data(data_split)
@@ -137,7 +137,7 @@ particle_filter_state_nested <- R6::R6Class(
       private$initial <- initial
       private$index <- index
       private$compare <- compare
-      private$device <- !is.null(device_id)
+      private$device <- !is.null(device_config)
       private$save_restart_step <- save_restart_step
       private$save_restart <- save_restart
 
@@ -290,13 +290,13 @@ particle_filter_state_nested <- R6::R6Class(
     ##' @param pars New model parameters
     fork = function(pars) {
       stopifnot(!private$device) # this won't work
-      device_id <- NULL
+      device_config <- NULL
       seed <- self$model$rng_state()
       save_history <- !is.null(self$history)
       ret <- particle_filter_state_nested$new(
         pars, private$generator, NULL, private$data, private$data_split,
         private$steps, private$n_particles, private$n_threads,
-        private$initial, private$index, private$compare, device_id,
+        private$initial, private$index, private$compare, device_config,
         seed, save_history, private$save_restart)
 
       ## Run it up to the same point

@@ -71,7 +71,7 @@ particle_filter <- R6::R6Class(
     index = NULL,
     initial = NULL,
     compare = NULL,
-    device_id = NULL,
+    device_config = NULL,
     ## Control for dust
     seed = NULL,
     n_threads = NULL,
@@ -158,17 +158,22 @@ particle_filter <- R6::R6Class(
     ##' stream is unrelated from R's random number generator, except for
     ##' initialisation with `seed = NULL`.
     ##'
-    ##' @param device_id Integer, indicating the device to use, where the
-    ##' model has GPU support. An error is thrown if the device id given
-    ##' is not reported to be available (note that CUDA numbers devices
-    ##' from 0, so that '0' is the first device, and so on). To see available
-    ##' device ids, you can run `model$public_methods$device_info()`.
-    ##' If `device_id` is non-NULL, then when your model calls methods
-    ##' `run` or `filter`, it will run on the GPU.
+    ##' @param device_config Device configuration, typically an integer
+    ##' indicating the device to use, where the model has GPU support.
+    ##' If not given, then the default value of `NULL` will fall back on the
+    ##' first found device if any are available. An error is thrown if the
+    ##' device id given is larger than those reported to be available (note
+    ##' that CUDA numbers devices from 0, so that '0' is the first device,
+    ##' and so on). Negative values disable the use of a device. See the
+    ##' method `$device_info()` for available device ids; this can be called
+    ##' before object creation as `{{name}}$public_methods$device_info()`.
+    ##' For additional control, provide a list with elements `device_id`
+    ##' and `run_block_size`. Further options (and validation) of this
+    ##' list will be added in a future version!
     initialize = function(data, model, n_particles, compare,
                           index = NULL, initial = NULL,
                           n_threads = 1L, seed = NULL,
-                          device_id = NULL) {
+                          device_config = NULL) {
       if (!is_dust_generator(model)) {
         stop("'model' must be a dust_generator")
       }
@@ -218,15 +223,15 @@ particle_filter <- R6::R6Class(
         stop("Your model does not have a built-in 'compare' function")
       }
 
-      if (!is.null(device_id)) {
-        assert_scalar_integer(device_id)
+      if (!is.null(device_config)) {
         if (!model$public_methods$has_cuda()) {
-          stop("'device_id' provided, but 'model' does not have cuda support")
+          stop(paste("'device_config' provided, but 'model' does not have",
+                     "cuda support"))
         }
       }
 
       private$compare <- compare
-      private$device_id <- device_id
+      private$device_config <- device_config
       private$index <- index
       private$initial <- initial
 
@@ -294,13 +299,13 @@ particle_filter <- R6::R6Class(
           pars, self$model, private$last_model, private$data,
           private$data_split, private$steps, self$n_particles,
           private$n_threads, private$initial, private$index, private$compare,
-          private$device_id, private$seed, save_history, save_restart)
+          private$device_config, private$seed, save_history, save_restart)
       } else {
         particle_filter_state$new(
           pars, self$model, private$last_model, private$data,
           private$data_split, private$steps, self$n_particles,
           private$n_threads, private$initial, private$index, private$compare,
-          private$device_id, private$seed, save_history, save_restart)
+          private$device_config, private$seed, save_history, save_restart)
       }
     },
 
@@ -415,7 +420,7 @@ particle_filter <- R6::R6Class(
            index = private$index,
            initial = private$initial,
            compare = private$compare,
-           device_id = private$device_id,
+           device_config = private$device_config,
            n_threads = private$n_threads,
            seed = seed)
     },
@@ -457,7 +462,7 @@ particle_filter_from_inputs <- function(inputs, seed = NULL) {
                       model = inputs$model,
                       n_particles = inputs$n_particles,
                       compare = inputs$compare,
-                      device_id = inputs$device_id,
+                      device_config = inputs$device_config,
                       index = inputs$index,
                       initial = inputs$initial,
                       n_threads = inputs$n_threads,
