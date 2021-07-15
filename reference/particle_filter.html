@@ -82,7 +82,7 @@ interface will be implemented later." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.2</span>
       </span>
     </div>
 
@@ -197,7 +197,7 @@ re-bound)</p></dd>
   initial <span class='op'>=</span> <span class='cn'>NULL</span>,
   n_threads <span class='op'>=</span> <span class='fl'>1L</span>,
   seed <span class='op'>=</span> <span class='cn'>NULL</span>,
-  device_id <span class='op'>=</span> <span class='cn'>NULL</span>
+  device_config <span class='op'>=</span> <span class='cn'>NULL</span>
 <span class='op'>)</span></pre><p></div></p>
 
 <h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
@@ -269,13 +269,18 @@ and <code><a href='https://rdrr.io/pkg/dust/man/dust_rng.html'>dust::dust_rng</a
 stream is unrelated from R's random number generator, except for
 initialisation with <code>seed = NULL</code>.</p></dd>
 
-<dt><code>device_id</code></dt><dd><p>Integer, indicating the device to use, where the
-model has GPU support. An error is thrown if the device id given
-is not reported to be available (note that CUDA numbers devices
-from 0, so that '0' is the first device, and so on). To see available
-device ids, you can run <code>model$public_methods$device_info()</code>.
-If <code>device_id</code> is non-NULL, then when your model calls methods
-<code>run</code> or <code>filter</code>, it will run on the GPU.</p></dd>
+<dt><code>device_config</code></dt><dd><p>Device configuration, typically an integer
+indicating the device to use, where the model has GPU support.
+If not given, then the default value of <code>NULL</code> will fall back on the
+first found device if any are available. An error is thrown if the
+device id given is larger than those reported to be available (note
+that CUDA numbers devices from 0, so that '0' is the first device,
+and so on). Negative values disable the use of a device. See the
+method <code>$device_info()</code> for available device ids; this can be called
+before object creation as <code>{{name}}$public_methods$device_info()</code>.
+For additional control, provide a list with elements <code>device_id</code>
+and <code>run_block_size</code>. Further options (and validation) of this
+list will be added in a future version!</p></dd>
 
 </dl><p></div></p>
 <p><hr>
