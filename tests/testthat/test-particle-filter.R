@@ -450,7 +450,7 @@ test_that("can return inputs", {
   expect_equal(inputs$n_particles, n_particles)
   expect_equal(inputs$index, dat$index)
   expect_equal(inputs$compare, dat$compare)
-  expect_null(inputs$device_id)
+  expect_null(inputs$device_config)
   expect_equal(inputs$initial, initial)
   expect_equal(inputs$seed, 100)
 
@@ -1348,14 +1348,14 @@ test_that("nested silent on initial w. state w/o step", {
 })
 
 
-test_that("device_id requires cuda support", {
+test_that("device_config requires cuda support", {
   dat <- example_sir()
   n_particles <- 100
   set.seed(1)
   expect_error(
     particle_filter$new(dat$data, dat$model, n_particles, NULL,
-                        index = dat$index, device_id = 0),
-    "device_id' provided, but 'model' does not have cuda support")
+                        index = dat$index, device_config = 0),
+    "device_config' provided, but 'model' does not have cuda support")
 })
 
 
@@ -1374,9 +1374,9 @@ test_that("Can run a gpu model by passing device through", {
   p_c <- particle_filter$new(dat$data, model_g, n_particles, NULL,
                            index = dat$index)
   p_g <- particle_filter$new(dat$data, model_g, n_particles, NULL,
-                           index = dat$index, device_id = 0)
-  expect_null(r6_private(p_c)$device_id)
-  expect_equal(r6_private(p_g)$device_id, 0)
+                           index = dat$index, device_config = 0)
+  expect_null(r6_private(p_c)$device_config)
+  expect_equal(r6_private(p_g)$device_config, 0)
 
   filter_c <- p_c$run_begin()
   filter_g <- p_g$run_begin()

@@ -1,6 +1,6 @@
 Package: mcstate
 Title: Monte Carlo Methods for State Space Models
-Version: 0.6.1
+Version: 0.6.2
 Authors@R: c(person("Rich", "FitzJohn", role = c("aut", "cre"),
                     email = "rich.fitzjohn@gmail.com"),
              person("Marc", "Baguelin", role = "aut"),
@@ -23,7 +23,7 @@ BugReports: https://github.com/mrc-ide/mcstate/issues
 Imports:
     R6,
     callr (>= 3.7.0),
-    dust (>= 0.9.2),
+    dust (>= 0.9.10),
     processx,
     progress (>= 1.2.0)
 Suggests:
@@ -34,7 +34,7 @@ Suggests:
     knitr,
     mockery,
     mvtnorm,
-    odin.dust (>= 0.1.11),
+    odin.dust (>= 0.2.6),
     rmarkdown,
     testthat,
     withr
