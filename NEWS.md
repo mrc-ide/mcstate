@@ -1,3 +1,7 @@
+# mcstate 0.6.3
+
+* Add support for running in "deterministic" mode with recent dust (#139)
+
 # mcstate 0.6.0
 
 * Add an iterated filtering method via `mcstate::if2` (#123)
