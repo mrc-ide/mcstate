@@ -67,7 +67,7 @@ control <- mcstate::pmcmc_control(300)
 p1 <- mcstate::particle_filter$new(data, sir, n_particles, compare,
                                    index = index,
                                    n_threads = dust::dust_openmp_threads())
-res1 <- mcstate::pmcmc(pars, p1, control = control1)
+res1 <- mcstate::pmcmc(pars, p1, control = control)
 ```
 
 then again, with the deterministic filter. The only change is to use the object `mcstate::particle_nofilter` and omit the `n_particles` element to the constructor (there will only ever be one particle!) and the `n_threads` element which has no effect here.

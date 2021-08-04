@@ -2,7 +2,7 @@
 title: "SIR models with odin, dust and mcstate"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{sir_models}
+  %\VignetteIndexEntry{SIR models with odin, dust and mcstate}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
