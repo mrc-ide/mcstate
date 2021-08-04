@@ -36,11 +36,11 @@ particle_nofilter <- R6::R6Class(
       private$seed <- seed
     },
 
-    run = function(pars, save_history = TRUE, save_restart = NULL) {
+    run = function(pars = list(), save_history = FALSE, save_restart = NULL) {
       self$run_many(list(pars), save_history, save_restart)
     },
 
-    run_many = function(pars, save_history = TRUE, save_restart = NULL) {
+    run_many = function(pars, save_history = FALSE, save_restart = NULL) {
       if (!is.null(save_restart)) {
         stop("'save_restart' cannot be used with the deterministic nofilter")
       }
@@ -61,8 +61,6 @@ particle_nofilter <- R6::R6Class(
       }
 
       if (!is.null(private$initial)) {
-        ## This is a little nastier than expected because we were
-        ## never expecting this sort of topology here
         initial_data <- nofilter_initial(pars, private$initial, model$info())
         if (is.list(initial_data)) {
           steps <- particle_steps(steps, initial_data$step)
@@ -73,29 +71,38 @@ particle_nofilter <- R6::R6Class(
       }
 
       if (is.null(private$index)) {
-        index_data <- NULL
+        index <- NULL
       } else {
         index <- nofilter_index(private$index(model$info()))
         model$set_index(index$index)
       }
 
-      y <- model$simulate(steps[, 2], deterministic = TRUE)
+      y <- model$simulate(c(steps[[1]], steps[, 2]), deterministic = TRUE)
 
-      y_compare <- y[index$run, , , drop = FALSE]
-      rownames(y_compare) <- rownames(index$data$run)
+      if (is.null(index)) {
+        y_compare <- y
+      } else {
+        y_compare <- y[index$run, , , drop = FALSE]
+        rownames(y_compare) <- rownames(index$data$run)
+      }
 
       ll <- vnapply(seq_len(n_particles), nofilter_likelihood,
                     y_compare, private$compare, pars, private$data_split)
 
       if (save_history) {
-        y_history <- y[index$state, , , drop = FALSE]
-        rownames(y_history) <- rownames(index$data$state)
+        if (is.null(index)) {
+          y_history <- y
+        } else {
+          y_history <- y[index$state, , , drop = FALSE]
+          rownames(y_history) <- rownames(index$data$state)
+        }
+        history <- list(value = y_history, index = index$predict)
       } else {
-        y_history <- NULL
+        history <- NULL
       }
 
       private$last_model <- model
-      private$last_history <- y_history
+      private$last_history <- history
 
       ll
     },
@@ -115,9 +122,10 @@ particle_nofilter <- R6::R6Class(
         stop("Can't get history as model was run with save_history = FALSE")
       }
       if (is.null(index_particle)) {
-        private$last_history
+        private$last_history$value
       } else {
-        array_drop(private$last_history[, index_particle, , drop = FALSE], 2L)
+        array_drop(
+          private$last_history$value[, index_particle, , drop = FALSE], 2L)
       }
     },
 
@@ -158,7 +166,8 @@ nofilter_index <- function(index) {
   index_all <- union(index$run, index$state)
   list(index = index_all,
        run = match(index$run, index_all),
-       state = match(index$state, index_all))
+       state = match(index$state, index_all),
+       predict = index$state)
 }
 
 
@@ -166,7 +175,7 @@ nofilter_likelihood <- function(idx, y, compare, pars, data) {
   n_steps <- length(data)
   ll <- numeric(n_steps)
   for (i in seq_len(n_steps)) {
-    y_i <- array_drop(y[, idx, i, drop = FALSE], 3L)
+    y_i <- array_drop(y[, idx, i + 1L, drop = FALSE], 3L)
     ll[i] <- compare(y_i, data[[i]], pars)
   }
   sum(ll)

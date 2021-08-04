@@ -27,7 +27,7 @@ pmcmc_state <- R6::R6Class(
     update_history = function() {
       if (private$deterministic) {
         if (private$control$save_trajectories) {
-          private$curr_trajectories <- private$filter$history(i)
+          private$curr_trajectories <- private$filter$history(1L)
         }
         if (private$control$save_state) {
           private$curr_state <- private$filter$state()
