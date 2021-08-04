@@ -36,11 +36,14 @@ particle_nofilter <- R6::R6Class(
       private$seed <- seed
     },
 
-    run = function(pars) {
-      self$run_many(list(pars))
+    run = function(pars, save_history = TRUE, save_restart = NULL) {
+      self$run_many(list(pars), save_history, save_restart)
     },
 
-    run_many = function(pars) {
+    run_many = function(pars, save_history = TRUE, save_restart = NULL) {
+      if (!is.null(save_restart)) {
+        stop("'save_restart' cannot be used with the deterministic nofilter")
+      }
       n_particles <- length(pars)
       steps <- unname(as.matrix(private$data[c("step_start", "step_end")]))
       model <- private$last_model
@@ -84,13 +87,55 @@ particle_nofilter <- R6::R6Class(
       ll <- vnapply(seq_len(n_particles), nofilter_likelihood,
                     y_compare, private$compare, pars, private$data_split)
 
-      y_history <- y[index$state, , , drop = FALSE]
-      rownames(y_history) <- rownames(index$data$state)
+      if (save_history) {
+        y_history <- y[index$state, , , drop = FALSE]
+        rownames(y_history) <- rownames(index$data$state)
+      } else {
+        y_history <- NULL
+      }
 
       private$last_model <- model
       private$last_history <- y_history
 
       ll
+    },
+
+    state = function(index_state = NULL) {
+      if (is.null(private$last_model)) {
+        stop("Model has not yet been run")
+      }
+      private$last_model$state(index_state)
+    },
+
+    history = function(index_particle = NULL) {
+      if (is.null(private$last_model)) {
+        stop("Model has not yet been run")
+      }
+      if (is.null(private$last_history)) {
+        stop("Can't get history as model was run with save_history = FALSE")
+      }
+      if (is.null(index_particle)) {
+        private$last_history
+      } else {
+        array_drop(private$last_history[, index_particle, , drop = FALSE], 2L)
+      }
+    },
+
+    inputs = function() {
+      if (is.null(private$last_model)) {
+        seed <- private$seed
+      } else {
+        seed <- private$last_model$rng_state(first_only = TRUE)
+      }
+      list(data = private$data,
+           model = self$model,
+           n_particles = self$n_particles,
+           index = private$index,
+           initial = private$initial,
+           compare = private$compare,
+           device_config = private$device_config,
+           n_threads = private$n_threads,
+           seed = seed)
     }
   ),
   private = list(
