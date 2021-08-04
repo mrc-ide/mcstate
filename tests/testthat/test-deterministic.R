@@ -39,6 +39,30 @@ test_that("Can control starting point of simulation", {
 })
 
 
+test_that("Control the initial conditions", {
+  dat <- example_sir()
+
+  initial <- function(info, n_particles, pars) {
+    c(1000, pars$I0, 0, 0, 0)
+  }
+  p <- particle_nofilter$new(dat$data, dat$model, dat$compare,
+                           index = dat$index, initial = initial)
+
+  ll1 <- p$run(list(I0 = 200), save_history = TRUE)
+  expect_equal(p$history()[, , 1],
+               c(1000, 200, 0))
+  ll2 <- p$run(list(I0 = 1), save_history = TRUE)
+  expect_equal(p$history()[, , 1],
+               c(1000, 1, 0))
+  ll3 <- p$run(list(I0 = 10), save_history = TRUE)
+  expect_equal(p$history()[, , 1],
+               c(1000, 10, 0))
+
+  expect_true(ll1 < ll3)
+  expect_true(ll2 < ll3)
+})
+
+
 test_that("can't restart deterministic filter", {
   dat <- example_sir()
   p <- particle_nofilter$new(dat$data, dat$model, dat$compare, dat$index)

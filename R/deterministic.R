@@ -62,12 +62,9 @@ particle_nofilter <- R6::R6Class(
 
       if (!is.null(private$initial)) {
         initial_data <- nofilter_initial(pars, private$initial, model$info())
-        if (is.list(initial_data)) {
-          steps <- particle_steps(steps, initial_data$step)
-          model$set_state(initial_data$state, initial_data$step)
-        } else {
-          model$set_state(initial_data)
-        }
+        steps <- particle_steps(steps, initial_data$step)
+        model$set_state(initial_data$state, initial_data$step,
+                        deterministic = TRUE)
       }
 
       if (is.null(private$index)) {
@@ -184,18 +181,18 @@ nofilter_likelihood <- function(idx, y, compare, pars, data) {
 
 nofilter_initial <- function(pars, initial, info) {
   init <- lapply(pars, function(p) initial(info(), 1L, p))
-  if (length(pars) == 1L) {
-    return(init[[1L]])
-  }
 
   ret <- list()
-  if ("state" %in% names(init[[1]])) {
-    ret$state <- vapply(init, function(x) x$state, init[[1]]$state)
-  }
+  if (is.list(init[[1]])) {
+    if ("state" %in% names(init[[1]])) {
+      ret$state <- vapply(init, function(x) x$state, init[[1]]$state)
+    }
 
-  ret <- list()
-  if ("step" %in% names(init[[1]])) {
-    ret$step <- vnapply(init, function(x) x$step)
+    if ("step" %in% names(init[[1]])) {
+      ret$step <- vnapply(init, function(x) x$step)
+    }
+  } else {
+    ret$state <- vapply(init, identity, init[[1]])
   }
 
   ret

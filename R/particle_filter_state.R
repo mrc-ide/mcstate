@@ -82,7 +82,7 @@ particle_filter_state <- R6::R6Class(
           steps <- particle_steps(steps, initial_data$step)
           model$set_state(initial_data$state, initial_data$step)
         } else {
-          model$set_state(initial_data)
+          model$set_state(matrix(initial_data))
         }
       }
 
