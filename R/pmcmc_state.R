@@ -170,9 +170,6 @@ pmcmc_state <- R6::R6Class(
     },
 
     run = function() {
-      ## if (private$deterministic && control$n_speculte > 1) {
-      ##   return(self$run_speculate())
-      ## }
       to <- min(private$curr_step + private$control$n_steps_each,
                 private$control$n_steps)
       steps <- seq(from = private$curr_step + 1L,
