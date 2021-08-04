@@ -131,17 +131,6 @@ test_that("Can run mcmc with deterministic filter", {
 })
 
 
-test_that("returning seed varies as model is run", {
-  dat <- example_sir()
-  control <- pmcmc_control(100, save_trajectories = TRUE)
-  p <- particle_nofilter$new(dat$data, dat$model, dat$compare, dat$index,
-                             seed = 1L)
-  expect_equal(p$inputs()$seed, 1L)
-  p$run()
-  expect_type(p$inputs()$seed, "raw")
-})
-
-
 test_that("Can run deterministic filter without index", {
   dat <- example_sir()
   n_particles <- 42
@@ -162,4 +151,27 @@ test_that("Can run deterministic filter without index", {
 
   expect_equal(dim(p1$history()), c(3, 1, 101))
   expect_equal(dim(p2$history()), c(5, 1, 101))
+})
+
+
+test_that("initial handles corner cases", {
+  initial1 <- function(info, n_particles, pars) {
+    rep(pars, 4)
+  }
+  initial2 <- function(info, n_particles, pars) {
+    list(state = rep(pars, 4))
+  }
+  initial3 <- function(info, n_particles, pars) {
+    list(state = rep(pars, 4), step = pars * 2)
+  }
+
+  pars <- list(1, 2, 3)
+  p1 <- nofilter_initial(pars, initial1, NULL)
+  p2 <- nofilter_initial(pars, initial2, NULL)
+  p3 <- nofilter_initial(pars, initial3, NULL)
+
+  m <- matrix(rep(1:3, each = 4), 4, 3)
+  expect_equal(p1, list(state = m))
+  expect_equal(p2, p1)
+  expect_equal(p3, list(state = m, step = c(2, 4, 6)))
 })
