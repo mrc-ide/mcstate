@@ -265,10 +265,23 @@ particle_filter <- R6::R6Class(
     ##' terms of steps. The state will be saved after the particle
     ##' filtering operation (i.e., at the end of the step).
     ##'
+    ##' @param min_likelihood Optionally, a numeric value representing the
+    ##' smallest likelihood we are interested in. If given and the particle
+    ##' filter drops below this number, then we terminate early and return
+    ##' `-Inf`. In this case, history and final state cannot be returned
+    ##' from the filter. This is primarily intended for use with
+    ##' [mcstate::pmcmc] where we can avoid computing likelihoods that
+    ##' will certainly be rejected. Only suitable for use where
+    ##' log-likelihood increments (with the `compare` function) are always
+    ##' negative. This is the case if you use a normalised discrete
+    ##' distribution, but not necessarily otherwise.
+    ##'
     ##' @return A single numeric value representing the log-likelihood
     ##' (`-Inf` if the model is impossible)
-    run = function(pars = list(), save_history = FALSE, save_restart = NULL) {
-      obj <- self$run_begin(pars, save_history, save_restart)
+    run = function(pars = list(), save_history = FALSE, save_restart = NULL,
+                   min_likelihood = NULL) {
+      obj <- self$run_begin(pars, save_history, save_restart,
+                            min_likelihood = min_likelihood)
       obj$run()
       private$last_history <- obj$history
       private$last_model <- obj$model
@@ -293,7 +306,8 @@ particle_filter <- R6::R6Class(
     ##' @return An object of class `particle_filter_state`, with methods
     ##' `step` and `end`. This interface is still subject to change.
     run_begin = function(pars = list(), save_history = FALSE,
-                         save_restart = NULL) {
+                         save_restart = NULL, min_likelihood = NULL) {
+      min_likelihood <- min_likelihood %||% -Inf
       if (private$nested) {
         particle_filter_state_nested$new(
           pars, self$model, private$last_model, private$data,
@@ -305,7 +319,8 @@ particle_filter <- R6::R6Class(
           pars, self$model, private$last_model, private$data,
           private$data_split, private$steps, self$n_particles,
           private$n_threads, private$initial, private$index, private$compare,
-          private$device_config, private$seed, save_history, save_restart)
+          private$device_config, private$seed, min_likelihood,
+          save_history, save_restart)
       }
     },
 

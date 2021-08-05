@@ -1394,3 +1394,22 @@ test_that("Can run a gpu model by passing device through", {
   expect_false(mockery::mock_args(target_c)[[1]][[3]])
   expect_true(mockery::mock_args(target_g)[[1]][[3]])
 })
+
+
+test_that("Can terminate a filter early", {
+  dat <- example_sir()
+  n_particles <- 42
+  ## First run through, we'll get our cutoffs:
+  set.seed(1)
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  ll1 <- replicate(10, p1$run())
+
+  set.seed(1)
+  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  min_ll <- mean(ll1)
+  ll2 <- replicate(10, p2$run(min_likelihood = min_ll))
+  expect_true(-Inf %in% ll2)
+  expect_true(min(ll2[is.finite(ll2)]) >= min_ll)
+})

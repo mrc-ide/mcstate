@@ -29,6 +29,7 @@ particle_filter_state <- R6::R6Class(
     device = NULL,
     save_restart_step = NULL,
     save_restart = NULL,
+    min_likelihood = NULL,
     current_step_index = 0L
   ),
 
@@ -61,7 +62,8 @@ particle_filter_state <- R6::R6Class(
     ##' documented.
     initialize = function(pars, generator, model, data, data_split, steps,
                           n_particles, n_threads, initial, index, compare,
-                          device_config, seed, save_history, save_restart) {
+                          device_config, seed, min_likelihood,
+                          save_history, save_restart) {
       ## NOTE: this will generate a warning when updating docs but
       ## that's ok; see https://github.com/r-lib/roxygen2/issues/1067
       if (is.null(model)) {
@@ -128,6 +130,7 @@ particle_filter_state <- R6::R6Class(
       private$index <- index
       private$compare <- compare
       private$device <- !is.null(device_config)
+      private$min_likelihood <- min_likelihood
       private$save_restart_step <- save_restart_step
       private$save_restart <- save_restart
 
@@ -141,6 +144,7 @@ particle_filter_state <- R6::R6Class(
     ##' value of `step_index`
     run = function() {
       if (is.null(private$compare)) {
+        ## TODO: add min_likelihood support here, needs work in dust?
         particle_filter_compiled(self, private, private$device)
       } else {
         self$step(private$n_steps)
@@ -203,6 +207,8 @@ particle_filter_state <- R6::R6Class(
       log_likelihood <- self$log_likelihood
       n_particles <- private$n_particles
 
+      min_likelihood <- private$min_likelihood
+
       for (t in seq(curr + 1L, step_index)) {
         step_end <- steps[t, 2L]
         state <- model$run(step_end, device = private$device)
@@ -222,6 +228,9 @@ particle_filter_state <- R6::R6Class(
           weights <- scale_log_weights(log_weights)
           log_likelihood_step <- weights$average
           log_likelihood <- log_likelihood + log_likelihood_step
+          if (log_likelihood < min_likelihood) {
+            log_likelihood <- -Inf
+          }
           if (log_likelihood == -Inf) {
             break
           }
