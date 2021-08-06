@@ -68,6 +68,7 @@ documented.
   compare,
   device_config,
   seed,
+  min_log_likelihood,
   save_history,
   save_restart
 )}\if{html}{\out{</div>}}

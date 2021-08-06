@@ -194,7 +194,12 @@ list will be added in a future version!}
 \subsection{Method \code{run()}}{
 Run the particle filter
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_filter$run(pars = list(), save_history = FALSE, save_restart = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter$run(
+  pars = list(),
+  save_history = FALSE,
+  save_restart = NULL,
+  min_log_likelihood = NULL
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -219,6 +224,17 @@ restart infomation for. These are in terms of your underlying time
 variable (the \code{time} column in \code{\link[=particle_filter_data]{particle_filter_data()}}) not in
 terms of steps. The state will be saved after the particle
 filtering operation (i.e., at the end of the step).}
+
+\item{\code{min_log_likelihood}}{Optionally, a numeric value representing the
+smallest likelihood we are interested in. If given and the particle
+filter drops below this number, then we terminate early and return
+\code{-Inf}. In this case, history and final state cannot be returned
+from the filter. This is primarily intended for use with
+\link{pmcmc} where we can avoid computing likelihoods that
+will certainly be rejected. Only suitable for use where
+log-likelihood increments (with the \code{compare} function) are always
+negative. This is the case if you use a normalised discrete
+distribution, but not necessarily otherwise.}
 }
 \if{html}{\out{</div>}}
 }
@@ -240,7 +256,8 @@ as many steps as needed with \verb{$step()}.
 \if{html}{\out{<div class="r">}}\preformatted{particle_filter$run_begin(
   pars = list(),
   save_history = FALSE,
-  save_restart = NULL
+  save_restart = NULL,
+  min_log_likelihood = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -254,6 +271,9 @@ particles should be saved. See \verb{$run()} for details.}
 
 \item{\code{save_restart}}{Times to save restart state at. See \verb{$run()} for
 details.}
+
+\item{\code{min_log_likelihood}}{Optionally, a numeric value representing the
+smallest likelihood we are interested in. See \verb{$run()} for details.}
 }
 \if{html}{\out{</div>}}
 }

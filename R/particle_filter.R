@@ -303,6 +303,9 @@ particle_filter <- R6::R6Class(
     ##' @param save_restart Times to save restart state at. See `$run()` for
     ##' details.
     ##'
+    ##' @param min_log_likelihood Optionally, a numeric value representing the
+    ##' smallest likelihood we are interested in. See `$run()` for details.
+    ##'
     ##' @return An object of class `particle_filter_state`, with methods
     ##' `step` and `end`. This interface is still subject to change.
     run_begin = function(pars = list(), save_history = FALSE,

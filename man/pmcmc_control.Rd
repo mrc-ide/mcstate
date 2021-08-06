@@ -17,7 +17,8 @@ pmcmc_control(
   save_restart = NULL,
   save_trajectories = FALSE,
   progress = FALSE,
-  nested_step_ratio = 1
+  nested_step_ratio = 1,
+  filter_early_exit = FALSE
 )
 }
 \arguments{
@@ -125,6 +126,13 @@ iterations updating the fixed and varied parameters. Sensible choices
 of this parameter may depend on the true ratio of fixed:varied parameters
 or on desired run-time, for example updating fixed parameters is
 quicker so more varied steps could be more efficient.}
+
+\item{filter_early_exit}{Logical, indicating if we should allow
+the particle filter to exit early for points that will not be
+accepted. Only use this if your log-likelihood never increases
+between steps. This will the the case where your likelihood
+calculation is a sum of discrete normalised probability
+distributions, but may not be for continuous distributions!}
 }
 \value{
 A \code{pmcmc_control} object, which should not be modified
