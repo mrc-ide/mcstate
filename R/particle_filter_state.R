@@ -288,7 +288,7 @@ particle_filter_state <- R6::R6Class(
         pars, private$generator, NULL, private$data, private$data_split,
         private$steps, private$n_particles, private$n_threads,
         private$initial, private$index, private$compare, device_config,
-        seed, save_history, private$save_restart)
+        seed, private$min_log_likelihood, save_history, private$save_restart)
 
       ## Run it up to the same point
       ret$step(private$current_step_index)
