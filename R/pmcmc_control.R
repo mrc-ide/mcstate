@@ -117,6 +117,13 @@
 ##'   or on desired run-time, for example updating fixed parameters is
 ##'   quicker so more varied steps could be more efficient.
 ##'
+##' @param filter_early_exit Logical, indicating if we should allow
+##'   the particle filter to exit early for points that will not be
+##'   accepted. Only use this if your log-likelihood never increases
+##'   between steps. This will the the case where your likelihood
+##'   calculation is a sum of discrete normalised probability
+##'   distributions, but may not be for continuous distributions!
+##'
 ##' @return A `pmcmc_control` object, which should not be modified
 ##'   once created.
 ##'
@@ -142,7 +149,7 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
                           use_parallel_seed = FALSE,
                           save_state = TRUE, save_restart = NULL,
                           save_trajectories = FALSE, progress = FALSE,
-                          nested_step_ratio = 1) {
+                          nested_step_ratio = 1, filter_early_exit = FALSE) {
   assert_scalar_positive_integer(n_steps)
   assert_scalar_positive_integer(n_chains)
   assert_scalar_positive_integer(n_workers)
@@ -176,6 +183,7 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
   assert_scalar_logical(save_state)
   assert_scalar_logical(save_trajectories)
   assert_scalar_logical(progress)
+  assert_scalar_logical(filter_early_exit)
 
   if (n_chains < n_workers) {
     stop(sprintf("'n_chains' (%d) is less than 'n_workers' (%d)",
@@ -205,6 +213,7 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
               save_restart = save_restart,
               save_trajectories = save_trajectories,
               progress = progress,
+              filter_early_exit = filter_early_exit,
               nested_step_ratio = nested_step_ratio)
   class(ret) <- "pmcmc_control"
   ret

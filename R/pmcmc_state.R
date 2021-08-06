@@ -66,10 +66,12 @@ pmcmc_state <- R6::R6Class(
       }
     },
 
-    run_filter = function(p) {
+    ## TODO: change, everywhere, min_likelhood => min_loglikelihood
+    run_filter = function(p, min_likelihood = -Inf) {
       private$filter$run(private$pars$model(p),
                          private$control$save_trajectories,
-                         private$control$save_restart)
+                         private$control$save_restart,
+                         min_likelihood)
     },
 
     run_filter_nested = function(p) {
@@ -187,10 +189,25 @@ pmcmc_state <- R6::R6Class(
 
         prop_pars <- private$pars$propose(private$curr_pars)
         prop_lprior <- private$pars$prior(prop_pars)
-        prop_llik <- private$run_filter(prop_pars)
+
+        ## Computing the acceptance thresold, where u is a random uniform
+        ## draw:
+        ##
+        ## => u < exp(prop_llik + prop_lprior - curr_lpost)
+        ## => curr_lpost - prop_lprior + log(u) < prop_llik
+        ##
+        u <- runif(1)
+        if (control$filter_early_exit) {
+          min_llik <- private$curr_lpost - prop_lprior + log(u)
+        } else {
+          min_llik <- -Inf
+        }
+
+        prop_llik <- private$run_filter(prop_pars, min_llik)
         prop_lpost <- prop_lprior + prop_llik
 
-        if (runif(1) < exp(prop_lpost - private$curr_lpost)) {
+        accept <- u < exp(prop_lpost - private$curr_lpost)
+        if (accept) {
           private$curr_pars <- prop_pars
           private$curr_lprior <- prop_lprior
           private$curr_llik <- prop_llik

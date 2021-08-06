@@ -1069,3 +1069,26 @@ test_that("Split chain and write to file", {
 
   expect_equal(res1, res2)
 })
+
+
+test_that("Can run pmcmc with early exit enabled", {
+  dat <- example_sir()
+  ## Really low particle number to inflate variance and cause more
+  ## serious drop-outs
+  n_particles <- 5
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  control1 <- pmcmc_control(30)
+  control2 <- pmcmc_control(30, filter_early_exit = TRUE)
+  set.seed(1)
+  system.time(res1 <- pmcmc(dat$pars, p1, control = control1))
+  set.seed(1)
+  system.time(res2 <- pmcmc(dat$pars, p2, control = control2))
+
+  ## Really hard to test this, the final parameters turn out to be
+  ## identical to 300 steps at least, which is surprising. However,
+  ## you can see that the RNG streams differ:
+  expect_false(identical(p2$inputs()$seed, p1$inputs()$seed))
+})
