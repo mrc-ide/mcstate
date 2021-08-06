@@ -277,3 +277,26 @@ test_that("initial passes args as expected, for multipar case", {
   expect_equal(ll[[1]], ll[[2]], tolerance = 1e-5)
   expect_false(identical(ll[[1]], ll[[2]]))
 })
+
+
+test_that("reconstruct deterministic filter from inputs", {
+  dat <- example_sir()
+  p1 <- particle_nofilter$new(dat$data, dat$model, dat$compare, dat$index)
+  inputs <- p1$inputs()
+  p2 <- particle_filter_from_inputs(inputs)
+  expect_s3_class(p2, class(p1))
+  expect_equal(p1$run(), p2$run())
+})
+
+
+test_that("Can run parallel mcmc with deterministic model", {
+  dat <- example_sir()
+  n_steps <- 30L
+  n_chains <- 3L
+  control <- pmcmc_control(n_steps, save_trajectories = FALSE,
+                           n_workers = 2L, n_chains = n_chains)
+  p <- particle_nofilter$new(dat$data, dat$model, dat$compare, dat$index)
+  res <- pmcmc(dat$pars, p, NULL, control)
+  expect_s3_class(res, "mcstate_pmcmc")
+  expect_equal(nrow(res$pars), n_chains * (n_steps + 1))
+})

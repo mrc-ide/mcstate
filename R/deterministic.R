@@ -260,8 +260,7 @@ particle_nofilter <- R6::R6Class(
     ##' constructor and are the same as the input arguments.
     inputs = function() {
       list(data = private$data,
-           model = self$model,
-           n_particles = self$n_particles,
+           model = private$generator,
            index = private$index,
            initial = private$initial,
            compare = private$compare,
