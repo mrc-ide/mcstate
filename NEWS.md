@@ -1,3 +1,7 @@
+# mcstate 0.6.4
+
+* Allow the particle filter to terminate early if we would not be interested in the result. This is useful for `mcstate::pmcmc` which can use it to stop calculating a likelood that would be rejected. Primarily useful when running with relatively low numbers of particles and a high variance in the estimator (#138)
+
 # mcstate 0.6.3
 
 * Add support for running in "deterministic" mode with recent dust (#139)
