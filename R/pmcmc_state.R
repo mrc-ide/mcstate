@@ -66,12 +66,11 @@ pmcmc_state <- R6::R6Class(
       }
     },
 
-    ## TODO: change, everywhere, min_likelhood => min_loglikelihood
-    run_filter = function(p, min_likelihood = -Inf) {
+    run_filter = function(p, min_log_likelihood = -Inf) {
       private$filter$run(private$pars$model(p),
                          private$control$save_trajectories,
                          private$control$save_restart,
-                         min_likelihood)
+                         min_log_likelihood)
     },
 
     run_filter_nested = function(p) {

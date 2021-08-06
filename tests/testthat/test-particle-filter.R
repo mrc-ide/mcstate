@@ -1409,7 +1409,7 @@ test_that("Can terminate a filter early", {
   p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index, seed = 1L)
   min_ll <- mean(ll1)
-  ll2 <- replicate(10, p2$run(min_likelihood = min_ll))
+  ll2 <- replicate(10, p2$run(min_log_likelihood = min_ll))
   expect_true(-Inf %in% ll2)
   expect_true(min(ll2[is.finite(ll2)]) >= min_ll)
 })
