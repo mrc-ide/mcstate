@@ -166,9 +166,10 @@ test_that("initial handles corner cases", {
   }
 
   pars <- list(1, 2, 3)
-  p1 <- nofilter_initial(pars, initial1, NULL)
-  p2 <- nofilter_initial(pars, initial2, NULL)
-  p3 <- nofilter_initial(pars, initial3, NULL)
+  info <- vector("list", length(pars))
+  p1 <- nofilter_initial(pars, initial1, info)
+  p2 <- nofilter_initial(pars, initial2, info)
+  p3 <- nofilter_initial(pars, initial3, info)
 
   m <- matrix(rep(1:3, each = 4), 4, 3)
   expect_equal(p1, list(state = m))
