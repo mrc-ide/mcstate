@@ -96,12 +96,12 @@ particle_nofilter <- R6::R6Class(
       private$generator <- model
       private$data <- data
       private$data_split <- df_to_list_of_lists(data)
-      private$compare <- assert_is(compare, "function")
+      private$compare <- assert_function(compare)
       if (!is.null(index)) {
-        private$index <- assert_is(index, "function")
+        private$index <- assert_function(index)
       }
       if (!is.null(initial)) {
-        private$initial <- assert_is(initial, "function")
+        private$initial <- assert_function(initial)
       }
       private$n_threads <- n_threads
       lockBinding("model", self)
@@ -302,7 +302,7 @@ nofilter_likelihood <- function(idx, y, compare, pars, data) {
 
 
 nofilter_initial <- function(pars, initial, info) {
-  init <- lapply(pars, function(p) initial(info, 1L, p))
+  init <- Map(function(p, i) initial(i, 1L, p), pars, info)
 
   ret <- list()
   if (is.list(init[[1]])) {

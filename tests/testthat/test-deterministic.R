@@ -175,3 +175,37 @@ test_that("initial handles corner cases", {
   expect_equal(p2, p1)
   expect_equal(p3, list(state = m, step = c(2, 4, 6)))
 })
+
+
+test_that("initial passes args as expected", {
+  dat <- example_sir()
+  initial <- mockery::mock(c(1000, 10, 0, 0, 0), cycle = TRUE)
+  p <- particle_nofilter$new(dat$data, dat$model, dat$compare,
+                             index = dat$index, initial = initial)
+  pars <- list(beta = 0.21, gamma = 0.11)
+  ll <- p$run(pars)
+  info <- dat$model$new(pars, 0, 1)$info()
+  mockery::expect_called(initial, 1L)
+  expect_equal(mockery::mock_args(initial)[[1L]],
+               list(info, 1L, pars))
+})
+
+
+test_that("initial passes args as expected, for multipar case", {
+  dat <- example_sir()
+  initial <- mockery::mock(c(1000, 10, 0, 0, 0), cycle = TRUE)
+  p <- particle_nofilter$new(dat$data, dat$model, dat$compare,
+                             index = dat$index, initial = initial)
+  pars <- list(list(beta = 0.21, gamma = 0.11),
+               list(beta = 0.22, gamma = 0.12),
+               list(beta = 0.23, gamma = 0.13))
+  ll <- p$run_many(pars)
+  info <- lapply(pars, function(p) dat$model$new(p, 0, 1)$info())
+  mockery::expect_called(initial, 3L)
+  expect_equal(mockery::mock_args(initial)[[1L]],
+               list(info[[1L]], 1L, pars[[1L]]))
+  expect_equal(mockery::mock_args(initial)[[2L]],
+               list(info[[2L]], 1L, pars[[2L]]))
+  expect_equal(mockery::mock_args(initial)[[3L]],
+               list(info[[3L]], 1L, pars[[3L]]))
+})

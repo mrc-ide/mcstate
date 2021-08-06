@@ -7,6 +7,15 @@ assert_is <- function(x, what, name = deparse(substitute(x))) {
 }
 
 
+## Special version of above to cope with classed functions
+assert_function <- function(x, name = deparse(substitute(x))) {
+  if (!is.function(x)) {
+    stop(sprintf("'%s' must be a function", name), call. = FALSE)
+  }
+  invisible(x)
+}
+
+
 assert_named <- function(x, unique = FALSE, name = deparse(substitute(x))) {
   if (is.null(names(x))) {
     stop(sprintf("'%s' must be named", name), call. = FALSE)
