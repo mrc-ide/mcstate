@@ -177,7 +177,9 @@ particle_nofilter <- R6::R6Class(
       if (is.null(private$index)) {
         index <- NULL
       } else {
-        index <- nofilter_index(private$index(model$info()))
+        ## NOTE: this assumes that all parameterisation result in the
+        ## same shape, which is assumed generally.
+        index <- nofilter_index(private$index(model$info()[[1L]]))
         model$set_index(index$index)
       }
 
