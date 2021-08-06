@@ -307,4 +307,7 @@ test_that("Can run parallel mcmc with deterministic model", {
   p <- particle_nofilter$new(dat$data, dat$model, dat$compare, dat$index)
   expect_equal(p$set_n_threads(2L), 1L)
   expect_equal(p$set_n_threads(1L), 2L)
+  p$run()
+  expect_equal(p$set_n_threads(2L), 1L)
+  expect_equal(p$set_n_threads(1L), 2L)
 })
