@@ -265,6 +265,25 @@ particle_nofilter <- R6::R6Class(
            initial = private$initial,
            compare = private$compare,
            n_threads = private$n_threads)
+    },
+
+    ##' @description
+    ##' Set the number of threads used by the particle filter (and dust
+    ##'   model) after creation. This can be used to allocate additional
+    ##'   (or subtract excess) computing power from the deterministic filter
+    ##'   Returns (invisibly) the previous value.
+    ##'
+    ##' @param n_threads The new number of threads to use. You may want to
+    ##'   wrap this argument in [dust::dust_openmp_threads()] in order to
+    ##'   verify that you can actually use the number of threads
+    ##'   requested (based on environment variables and OpenMP support).
+    set_n_threads = function(n_threads) {
+      prev <- private$n_threads
+      private$n_threads <- n_threads
+      if (!is.null(private$last_model)) {
+        private$last_model$set_n_threads(n_threads)
+      }
+      invisible(prev)
     }
   ),
   private = list(

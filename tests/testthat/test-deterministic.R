@@ -300,3 +300,11 @@ test_that("Can run parallel mcmc with deterministic model", {
   expect_s3_class(res, "mcstate_pmcmc")
   expect_equal(nrow(res$pars), n_chains * (n_steps + 1))
 })
+
+
+test_that("Can run parallel mcmc with deterministic model", {
+  dat <- example_sir()
+  p <- particle_nofilter$new(dat$data, dat$model, dat$compare, dat$index)
+  expect_equal(p$set_n_threads(2L), 1L)
+  expect_equal(p$set_n_threads(1L), 2L)
+})

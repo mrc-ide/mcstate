@@ -25,6 +25,7 @@ re-bound)}
 \item \href{#method-state}{\code{particle_nofilter$state()}}
 \item \href{#method-history}{\code{particle_nofilter$history()}}
 \item \href{#method-inputs}{\code{particle_nofilter$inputs()}}
+\item \href{#method-set_n_threads}{\code{particle_nofilter$set_n_threads()}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -232,5 +233,28 @@ constructor and are the same as the input arguments.
 \if{html}{\out{<div class="r">}}\preformatted{particle_nofilter$inputs()}\if{html}{\out{</div>}}
 }
 
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-set_n_threads"></a>}}
+\if{latex}{\out{\hypertarget{method-set_n_threads}{}}}
+\subsection{Method \code{set_n_threads()}}{
+Set the number of threads used by the particle filter (and dust
+model) after creation. This can be used to allocate additional
+(or subtract excess) computing power from the deterministic filter
+Returns (invisibly) the previous value.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{particle_nofilter$set_n_threads(n_threads)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{n_threads}}{The new number of threads to use. You may want to
+wrap this argument in \code{\link[dust:dust_openmp_threads]{dust::dust_openmp_threads()}} in order to
+verify that you can actually use the number of threads
+requested (based on environment variables and OpenMP support).}
+}
+\if{html}{\out{</div>}}
+}
 }
 }
