@@ -252,3 +252,28 @@ test_that("Can reference by name in compare", {
   expect_equal(h1, unname(h2))
   expect_equal(dimnames(h2), list(c("S", "I", "R"), NULL, NULL))
 })
+
+
+test_that("initial passes args as expected, for multipar case", {
+  ## As normal, but we require the exp_noise parameter
+  compare <- function(state, observed, pars = NULL) {
+    if (is.na(observed$incidence)) {
+      return(NULL)
+    }
+    exp_noise <- pars$exp_noise
+    incidence_modelled <- state[1L, , drop = TRUE]
+    incidence_observed <- observed$incidence
+    lambda <- incidence_modelled +
+      rexp(n = length(incidence_modelled), rate = exp_noise)
+    dpois(x = incidence_observed, lambda = lambda, log = TRUE)
+  }
+
+  dat <- example_sir()
+  p <- particle_nofilter$new(dat$data, dat$model, compare,
+                             index = dat$index, initial = dat$initial)
+  pars <- list(list(exp_noise = Inf),
+               list(exp_noise = 1e6))
+  ll <- p$run_many(pars)
+  expect_equal(ll[[1]], ll[[2]], tolerance = 1e-5)
+  expect_false(identical(ll[[1]], ll[[2]]))
+})

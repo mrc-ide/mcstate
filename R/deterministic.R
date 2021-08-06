@@ -297,7 +297,7 @@ nofilter_likelihood <- function(idx, y, compare, pars, data) {
   ll <- numeric(n_steps)
   for (i in seq_len(n_steps)) {
     y_i <- array_drop(y[, idx, i + 1L, drop = FALSE], 3L)
-    ll[i] <- compare(y_i, data[[i]], pars)
+    ll[i] <- compare(y_i, data[[i]], pars[[idx]])
   }
   sum(ll)
 }
