@@ -210,3 +210,45 @@ test_that("initial passes args as expected, for multipar case", {
   expect_equal(mockery::mock_args(initial)[[3L]],
                list(info[[3L]], 1L, pars[[3L]]))
 })
+
+
+test_that("Can reference by name in compare", {
+  dat <- example_sir()
+  p1 <- particle_nofilter$new(dat$data, dat$model, dat$compare, dat$index)
+  set.seed(1)
+  ll1 <- p1$run(dat$pars$model(dat$pars$initial()),
+                save_history = TRUE)
+
+  compare <- function(state, observed, pars = NULL) {
+    if (is.na(observed$incidence)) {
+      return(NULL)
+    }
+    if (is.null(pars$compare$exp_noise)) {
+      exp_noise <- 1e6
+    } else {
+      exp_noise <- pars$compare$exp_noise
+    }
+    ## This is on the *filtered* state (i.e., returned by run())
+    incidence_modelled <- state["incidence", , drop = TRUE]
+    incidence_observed <- observed$incidence
+    lambda <- incidence_modelled +
+      rexp(n = length(incidence_modelled), rate = exp_noise)
+    dpois(x = incidence_observed, lambda = lambda, log = TRUE)
+  }
+
+  index <- function(info) {
+    list(run = c("S" = 1L, "incidence" = 5L),
+         state = c("S" = 1L, "I" = 2L, "R" = 3L))
+  }
+
+  p2 <- particle_nofilter$new(dat$data, dat$model, compare, index)
+  set.seed(1)
+  ll2 <- p2$run(dat$pars$model(dat$pars$initial()),
+                save_history = TRUE)
+  expect_identical(ll2, ll1)
+  h1 <- p1$history()
+  h2 <- p2$history()
+
+  expect_equal(h1, unname(h2))
+  expect_equal(dimnames(h2), list(c("S", "I", "R"), NULL, NULL))
+})

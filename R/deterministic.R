@@ -189,7 +189,7 @@ particle_nofilter <- R6::R6Class(
         y_compare <- y
       } else {
         y_compare <- y[index$run, , , drop = FALSE]
-        rownames(y_compare) <- rownames(index$data$run)
+        rownames(y_compare) <- names(index$run)
       }
 
       ll <- vnapply(seq_len(n_particles), nofilter_likelihood,
@@ -200,7 +200,7 @@ particle_nofilter <- R6::R6Class(
           y_history <- y
         } else {
           y_history <- y[index$state, , , drop = FALSE]
-          rownames(y_history) <- rownames(index$data$state)
+          rownames(y_history) <- names(index$state)
         }
         history <- list(value = y_history, index = index$predict)
       } else {
@@ -286,8 +286,8 @@ particle_nofilter <- R6::R6Class(
 nofilter_index <- function(index) {
   index_all <- union(index$run, index$state)
   list(index = index_all,
-       run = match(index$run, index_all),
-       state = match(index$state, index_all),
+       run = set_names(match(index$run, index_all), names(index$run)),
+       state = set_names(match(index$state, index_all), names(index$state)),
        predict = index$state)
 }
 
