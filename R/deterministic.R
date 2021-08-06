@@ -126,10 +126,15 @@ particle_deterministic <- R6::R6Class(
     ##' @param save_restart An integer vector of time points to save
     ##' restart infomation for. Not currently supported.
     ##'
+    ##' @param min_log_likelihood Not currently supported, exists to match
+    ##'   the inteface with [mcstate::particle_filter]. Providing a value
+    ##'   larger than -Inf will cause an error.
+    ##'
     ##' @return A single numeric value representing the log-likelihood
     ##' (`-Inf` if the model is impossible)
-    run = function(pars = list(), save_history = FALSE, save_restart = NULL) {
-      self$run_many(list(pars), save_history, save_restart)
+    run = function(pars = list(), save_history = FALSE, save_restart = NULL,
+                   min_log_likelihood = -Inf) {
+      self$run_many(list(pars), save_history, save_restart, min_log_likelihood)
     },
 
     ##' @description Run the deterministic particle filter on several
@@ -146,11 +151,19 @@ particle_deterministic <- R6::R6Class(
     ##' @param save_restart An integer vector of time points to save
     ##' restart infomation for. Not currently supported.
     ##'
+    ##' @param min_log_likelihood Not currently supported, exists to match
+    ##'   the inteface with [mcstate::particle_filter]. Providing a value
+    ##'   larger than -Inf will cause an error.
+    ##'
     ##' @return A numeric vector of values representing the log-likelihood
     ##' (`-Inf` if the model is impossible), one per parameter set
-    run_many = function(pars, save_history = FALSE, save_restart = NULL) {
+    run_many = function(pars, save_history = FALSE, save_restart = NULL,
+                        min_log_likelihood = -Inf) {
       if (!is.null(save_restart)) {
         stop("'save_restart' cannot be used with particle_deterministic")
+      }
+      if (min_log_likelihood > -Inf) {
+        stop("'min_log_likelihood' cannot be used with particle_deterministic")
       }
       n_particles <- length(pars)
       steps <- unname(as.matrix(private$data[c("step_start", "step_end")]))

@@ -67,8 +67,17 @@ test_that("can't restart deterministic filter", {
   dat <- example_sir()
   p <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
   expect_error(
-    p$run(pars, save_restart = c(100, 200)),
+    p$run(list(), save_restart = c(100, 200)),
     "'save_restart' cannot be used with particle_deterministic")
+})
+
+
+test_that("can't use min_log_likelihood with deterministic filter", {
+  dat <- example_sir()
+  p <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
+  expect_error(
+    p$run(list(), min_log_likelihood = -200),
+    "'min_log_likelihood' cannot be used with particle_deterministic")
 })
 
 
