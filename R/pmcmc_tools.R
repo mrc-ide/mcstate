@@ -139,8 +139,6 @@ pmcmc_combine <- function(..., samples = list(...)) {
     } else {
       state <- array_bind(arrays = state)
     }
-
-    combiner <- combine_state_nested
   } else {
     chain <- rep(seq_along(samples), each = nrow(samples[[1]]$pars))
     pars <- do.call(rbind, lapply(samples, "[[", "pars"))
@@ -151,20 +149,18 @@ pmcmc_combine <- function(..., samples = list(...)) {
     } else {
       state <- do.call(cbind, lapply(samples, "[[", "state"))
     }
-
-    combiner <- combine_state
   }
 
   if (is.null(trajectories[[1]])) {
     trajectories <- NULL
   } else {
-    trajectories <- combiner(trajectories)
+    trajectories <- combine_state(trajectories)
   }
 
   if (is.null(restart[[1]])) {
     restart <- NULL
   } else {
-    restart <- combiner(restart)
+    restart <- combine_state(restart)
   }
 
   ## Use the last state for predict as that will probably have most
@@ -210,35 +206,32 @@ check_combine <- function(samples, iteration, state, trajectories, restart) {
   }
 }
 
+
 combine_state <- function(x) {
   base <- lapply(x, function(el) el[names(el) != "state"])
   if (length(unique(base)) != 1L) {
     stop(sprintf("%s data is inconsistent", deparse(substitute(x))))
   }
 
-  state <- lapply(x, function(el) aperm(el$state, c(1, 3, 2)))
-  state <- array(
-    unlist(state),
-    dim(state[[1]]) * c(1, 1, length(x)))
-  state <- aperm(state, c(1, 3, 2))
-  rownames(state) <- rownames(x[[1]]$state)
+  dx <- lapply(x, function(el) dim(el$state))
+  n <- vnapply(dx, "[[", 2)
+  d <- dx[[1L]]
+  d[[2L]] <- sum(n)
 
-  ret <- x[[1]]
-  ret$state <- state
-  ret
-}
-
-combine_state_nested <- function(x) {
-  base <- lapply(x, function(el) el[names(el) != "state"])
-  if (length(unique(base)) != 1L) {
-    stop(sprintf("%s data is inconsistent", deparse(substitute(x))))
+  state <- array(0, d)
+  start <- 0L
+  for (i in seq_along(x)) {
+    j <- seq_len(n[[i]]) + start
+    if (length(d) == 4) {
+      state[, j, , ] <- x[[i]]$state
+    } else {
+      state[, j, ] <- x[[i]]$state
+    }
+    start <- start + n[[i]]
   }
+  rownames(state) <- rownames(x[[1L]]$state)
 
-  state <- aperm(
-    array_bind(arrays = lapply(x, function(y) aperm(y$state, c(1, 4, 3, 2)))),
-    c(1, 4, 3, 2))
-
-  ret <- x[[1]]
+  ret <- x[[1L]]
   ret$state <- state
   ret
 }

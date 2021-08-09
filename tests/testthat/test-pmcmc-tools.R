@@ -438,3 +438,39 @@ test_that("Can't combine inconsistent nested trajectories", {
     pmcmc_combine(a, results[[2]]),
     "trajectories data is inconsistent")
 })
+
+
+test_that("can combine chains for nested model", {
+  results <- example_sir_nested_pmcmc()$results
+
+  results1 <- results[[1]]
+  results2 <- results[[2]]
+  results3 <- results[[3]]
+
+  res <- pmcmc_combine(results1, results2, results3)
+
+  n_mcmc <- nlayer(results1$pars)
+  n_pop <- 2L
+  n_par <- nrow(results1$pars)
+  n_particles <- nrow(results1$state)
+  n_index <- nrow(results1$trajectories$state)
+  n_time <- dim(results1$trajectories$state)[[4]]
+  n_restart <- dim(results1$restart$state)[[4]]
+  n_state <- nrow(results1$state)
+
+  n_mcmc3 <- n_mcmc * 3
+
+  expect_equal(dim(res$pars), c(n_par, n_pop, n_mcmc3))
+  expect_equal(dim(res$probabilities), c(3, n_pop, n_mcmc3))
+  expect_equal(dim(res$state), c(n_state, n_pop, n_mcmc3))
+  expect_equal(dim(res$trajectories$state), c(n_index, n_mcmc3, n_pop, n_time))
+  expect_equal(dim(res$restart$state), c(n_state, n_mcmc3, n_pop, n_restart))
+
+  i <- seq_len(n_mcmc) + n_mcmc
+  expect_equal(res$pars[, , i], results2$pars)
+  expect_equal(res$probabilities[, , i], results2$probabilities)
+  expect_equal(res$state[, , i], results2$state)
+  expect_equal(res$trajectories$state[, i, , ], results2$trajectories$state)
+  expect_equal(res$restart$state[, i, , , drop = FALSE],
+               results2$restart$state)
+})
