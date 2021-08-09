@@ -5,6 +5,7 @@ pmcmc_state <- R6::R6Class(
     filter = NULL,
     pars = NULL,
     control = NULL,
+    deterministic = NULL,
 
     history_pars = NULL,
     history_probabilities = NULL,
@@ -24,17 +25,26 @@ pmcmc_state <- R6::R6Class(
     tick = NULL,
 
     update_history = function() {
-      i <- sample.int(private$filter$n_particles, 1)
-      if (private$control$save_trajectories) {
-        private$curr_trajectories <-
-          sample_trajectory(private$filter$history(i))
-      }
-      if (private$control$save_state) {
-        private$curr_state <- private$filter$state()[, i, drop = TRUE]
-      }
-      if (length(private$control$save_restart) > 0) {
-        private$curr_restart <- private$filter$restart_state(i)
-        dim(private$curr_restart) <- dim(private$curr_restart)[-2L]
+      if (private$deterministic) {
+        if (private$control$save_trajectories) {
+          private$curr_trajectories <- private$filter$history(1L)
+        }
+        if (private$control$save_state) {
+          private$curr_state <- private$filter$state()
+        }
+      } else {
+        i <- sample.int(private$filter$n_particles, 1)
+        if (private$control$save_trajectories) {
+          private$curr_trajectories <-
+            sample_trajectory(private$filter$history(i))
+        }
+        if (private$control$save_state) {
+          private$curr_state <- private$filter$state()[, i, drop = TRUE]
+        }
+        if (length(private$control$save_restart) > 0) {
+          private$curr_restart <- private$filter$restart_state(i)
+          dim(private$curr_restart) <- dim(private$curr_restart)[-2L]
+        }
       }
     },
 
@@ -111,6 +121,7 @@ pmcmc_state <- R6::R6Class(
       private$filter <- filter
       private$pars <- pars
       private$control <- control
+      private$deterministic <- inherits(filter, "particle_deterministic")
 
       private$history_pars <- history_collector(control$n_steps)
       private$history_probabilities <- history_collector(control$n_steps)
@@ -141,8 +152,6 @@ pmcmc_state <- R6::R6Class(
         private$update_history()
       }
 
-
-
       ## Initial version of the history
 
       if (private$control$save_trajectories) {
@@ -166,6 +175,7 @@ pmcmc_state <- R6::R6Class(
       steps <- seq(from = private$curr_step + 1L,
                    length.out = to - private$curr_step)
       control <- private$control
+
       for (i in steps) {
         private$tick()
 
@@ -272,7 +282,7 @@ pmcmc_state <- R6::R6Class(
       if (length(private$control$save_restart) > 0) {
         ## Permute state from [state x save point x mcmc_sample]
         ## to [state x mcmc_sample x save point] to match the predicted state)
-        restart_state  <-
+        restart_state <-
           aperm(list_to_array(private$history_restart$get()), c(1, 3, 2))
         restart <- list(time = private$control$save_restart,
                         state = restart_state)

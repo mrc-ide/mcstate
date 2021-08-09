@@ -6,6 +6,12 @@ test_that("assert_is", {
 })
 
 
+test_that("assert_function", {
+  expect_error(assert_function("x"), "must be a function")
+  expect_silent(assert_function(function(x) x))
+})
+
+
 test_that("assert_integer", {
   expect_error(assert_integer(pi), "'pi' must be an integer")
   expect_identical(assert_integer(1L), 1L)

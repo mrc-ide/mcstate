@@ -458,15 +458,24 @@ particle_resample <- function(weights) {
 ## Private helper for reconstituting a particle filter from its
 ## `$inputs()` data, but possibly changing the seed
 particle_filter_from_inputs <- function(inputs, seed = NULL) {
-  particle_filter$new(data = inputs$data,
-                      model = inputs$model,
-                      n_particles = inputs$n_particles,
-                      compare = inputs$compare,
-                      device_config = inputs$device_config,
-                      index = inputs$index,
-                      initial = inputs$initial,
-                      n_threads = inputs$n_threads,
-                      seed = seed %||% inputs$seed)
+  if (is.null(inputs$n_particles)) {
+    particle_deterministic$new(data = inputs$data,
+                               model = inputs$model,
+                               compare = inputs$compare,
+                               index = inputs$index,
+                               initial = inputs$initial,
+                               n_threads = inputs$n_threads)
+  } else {
+    particle_filter$new(data = inputs$data,
+                        model = inputs$model,
+                        n_particles = inputs$n_particles,
+                        compare = inputs$compare,
+                        device_config = inputs$device_config,
+                        index = inputs$index,
+                        initial = inputs$initial,
+                        n_threads = inputs$n_threads,
+                        seed = seed %||% inputs$seed)
+  }
 }
 
 
