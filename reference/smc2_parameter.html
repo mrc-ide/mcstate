@@ -83,7 +83,7 @@ these together for use with smc2()." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.3</span>
       </span>
     </div>
 
@@ -105,6 +105,9 @@ these together for use with smc2()." />
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/deterministic.html">Deterministic models</a>
+    </li>
     <li>
       <a href="../articles/if2.html">Inference with iterated filtering</a>
     </li>
@@ -216,11 +219,11 @@ after a new parameter is proposed.</p></td>
 #&gt; 
 #&gt; $sample
 #&gt; function(n) rnorm(n)
-#&gt; &lt;environment: 0x7f90bd449820&gt;
+#&gt; &lt;environment: 0x7f8fec31fd98&gt;
 #&gt; 
 #&gt; $prior
 #&gt; function(x) dnorm(n, log = TRUE)
-#&gt; &lt;environment: 0x7f90bd449820&gt;
+#&gt; &lt;environment: 0x7f8fec31fd98&gt;
 #&gt; 
 #&gt; $min
 #&gt; [1] -Inf

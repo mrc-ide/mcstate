@@ -2,11 +2,12 @@ pandoc: 2.7.3
 pkgdown: 1.6.1
 pkgdown_sha: ~
 articles:
+  deterministic: deterministic.html
   if2: if2.html
   kalman: kalman.html
   nested_sir_models: nested_sir_models.html
   parallelisation: parallelisation.html
   restart: restart.html
   sir_models: sir_models.html
-last_built: 2021-07-15T14:50Z
+last_built: 2021-08-09T16:21Z
 
