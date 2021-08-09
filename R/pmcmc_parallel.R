@@ -55,9 +55,11 @@ pmcmc_orchestrator <- R6::R6Class(
 
       ## First stage starts the process and reads in input data, but
       ## this is async over the workers
+      n_threads <- filter_inputs$n_threads
       nested <- inherits(pars, "pmcmc_parameters_nested")
       for (i in seq_len(control$n_workers)) {
-        private$remotes[[i]] <- pmcmc_remote$new(private$path$input, nested)
+        private$remotes[[i]] <-
+          pmcmc_remote$new(private$path$input, n_threads, nested)
         private$sessions[[i]] <- private$remotes[[i]]$session
       }
       ## ...so once the sessions start coming up we start them working
@@ -139,10 +141,12 @@ pmcmc_remote <- R6::R6Class(
     index = NULL,
     n_threads = NULL,
 
-    initialize = function(path, nested) {
+    ## NOTE: n_threads here must match that of the filter inputs
+    initialize = function(path, n_threads, nested) {
       options <- callr::r_session_options(
         load_hook = bquote(.GlobalEnv$input <- readRDS(.(path))))
       self$session <- callr::r_session$new(options = options, wait = FALSE)
+      self$n_threads <- n_threads
       private$nested <- nested
       lockBinding("session", self)
     },
@@ -179,7 +183,6 @@ pmcmc_remote <- R6::R6Class(
         }
       }, list(index, private$nested), package = "mcstate")
       self$index <- index
-      self$n_threads <- private$inputs$n_threads
       list(step = 0L, finished = FALSE)
     },
 
