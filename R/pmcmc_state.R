@@ -121,7 +121,7 @@ pmcmc_state <- R6::R6Class(
       private$filter <- filter
       private$pars <- pars
       private$control <- control
-      private$deterministic <- inherits(filter, "particle_nofilter")
+      private$deterministic <- inherits(filter, "particle_deterministic")
 
       private$history_pars <- history_collector(control$n_steps)
       private$history_probabilities <- history_collector(control$n_steps)

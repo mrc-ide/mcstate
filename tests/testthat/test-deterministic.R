@@ -2,7 +2,7 @@ context("deterministic")
 
 test_that("Can run the deterministic filter", {
   dat <- example_sir()
-  p <- particle_nofilter$new(dat$data, dat$model, dat$compare, dat$index)
+  p <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
   set.seed(1)
   ll <- p$run(dat$pars$model(dat$pars$initial()))
   expect_equal(ll, -245.127512965178)
@@ -25,14 +25,14 @@ test_that("Can control starting point of simulation", {
   pars <- dat$pars$model(dat$pars$initial())
 
   ## The usual version:
-  p1 <- particle_nofilter$new(dat$data, dat$model, dat$compare,
-                              index = dat$index)
+  p1 <- particle_deterministic$new(dat$data, dat$model, dat$compare,
+                                   index = dat$index)
   set.seed(1)
   ll1 <- p1$run(pars)
 
   ## Tuning the start date
-  p2 <- particle_nofilter$new(data, dat$model, dat$compare,
-                              index = dat$index, initial = initial)
+  p2 <- particle_deterministic$new(data, dat$model, dat$compare,
+                                   index = dat$index, initial = initial)
   set.seed(1)
   ll2 <- p2$run(c(pars, list(initial = as.integer(offset))))
   expect_identical(ll1, ll2)
@@ -45,8 +45,8 @@ test_that("Control the initial conditions", {
   initial <- function(info, n_particles, pars) {
     c(1000, pars$I0, 0, 0, 0)
   }
-  p <- particle_nofilter$new(dat$data, dat$model, dat$compare,
-                           index = dat$index, initial = initial)
+  p <- particle_deterministic$new(dat$data, dat$model, dat$compare,
+                                  index = dat$index, initial = initial)
 
   ll1 <- p$run(list(I0 = 200), save_history = TRUE)
   expect_equal(p$history()[, , 1],
@@ -65,16 +65,16 @@ test_that("Control the initial conditions", {
 
 test_that("can't restart deterministic filter", {
   dat <- example_sir()
-  p <- particle_nofilter$new(dat$data, dat$model, dat$compare, dat$index)
+  p <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
   expect_error(
     p$run(pars, save_restart = c(100, 200)),
-    "'save_restart' cannot be used with the deterministic nofilter")
+    "'save_restart' cannot be used with particle_deterministic")
 })
 
 
 test_that("can't return state until filter run", {
   dat <- example_sir()
-  p <- particle_nofilter$new(dat$data, dat$model, dat$compare, dat$index)
+  p <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
   expect_error(p$state(),
                "Model has not yet been run")
 })
@@ -82,7 +82,7 @@ test_that("can't return state until filter run", {
 
 test_that("can't return history until filter run, with save_history", {
   dat <- example_sir()
-  p <- particle_nofilter$new(dat$data, dat$model, dat$compare, dat$index)
+  p <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
   expect_error(p$history(),
                "Model has not yet been run")
   p$run()
@@ -93,7 +93,7 @@ test_that("can't return history until filter run, with save_history", {
 
 test_that("extract history from deterministic filter", {
   dat <- example_sir()
-  p <- particle_nofilter$new(dat$data, dat$model, dat$compare, dat$index)
+  p <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
   p$run(save_history = TRUE)
   h <- p$history()
   expect_equal(dim(h), c(3, 1, 101)) # state, particles, time
@@ -104,20 +104,20 @@ test_that("extract history from deterministic filter", {
 test_that("Validate inputs to the deterministic filter", {
   dat <- example_sir()
   expect_error(
-    particle_nofilter$new(dat$data, NULL, dat$compare, dat$index),
+    particle_deterministic$new(dat$data, NULL, dat$compare, dat$index),
     "'model' must be a dust_generator")
   expect_error(
-    particle_nofilter$new(dat$data, dat$model, dat$compare, TRUE),
+    particle_deterministic$new(dat$data, dat$model, dat$compare, TRUE),
     "'index' must be function if not NULL")
   expect_error(
-    particle_nofilter$new(dat$data, dat$model, dat$compare, dat$index,
-                          initial = 1),
+    particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index,
+                               initial = 1),
     "'initial' must be function if not NULL")
   data_nested <- structure(dat$data,
                            class = c("particle_filter_data",
                                      "particle_filter_data_nested"))
   expect_error(
-    particle_nofilter$new(data_nested, dat$model, dat$compare, dat$index),
+    particle_deterministic$new(data_nested, dat$model, dat$compare, dat$index),
     "nested mode not yet supported")
 })
 
@@ -125,7 +125,7 @@ test_that("Validate inputs to the deterministic filter", {
 test_that("Can run mcmc with deterministic filter", {
   dat <- example_sir()
   control <- pmcmc_control(100, save_trajectories = TRUE)
-  p <- particle_nofilter$new(dat$data, dat$model, dat$compare, dat$index)
+  p <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
   res <- pmcmc(dat$pars, p, NULL, control)
   expect_s3_class(res, "mcstate_pmcmc")
 })
@@ -134,14 +134,14 @@ test_that("Can run mcmc with deterministic filter", {
 test_that("Can run deterministic filter without index", {
   dat <- example_sir()
   n_particles <- 42
-  p1 <- particle_nofilter$new(dat$data, dat$model, dat$compare,
-                              index = dat$index)
+  p1 <- particle_deterministic$new(dat$data, dat$model, dat$compare,
+                                   index = dat$index)
 
   compare2 <- function(state, ...) {
     dat$compare(state[5, , drop = FALSE], ...)
   }
 
-  p2 <- particle_nofilter$new(dat$data, dat$model, compare2)
+  p2 <- particle_deterministic$new(dat$data, dat$model, compare2)
 
   set.seed(1)
   ll1 <- p1$run(save_history = TRUE)
@@ -167,9 +167,9 @@ test_that("initial handles corner cases", {
 
   pars <- list(1, 2, 3)
   info <- vector("list", length(pars))
-  p1 <- nofilter_initial(pars, initial1, info)
-  p2 <- nofilter_initial(pars, initial2, info)
-  p3 <- nofilter_initial(pars, initial3, info)
+  p1 <- deterministic_initial(pars, initial1, info)
+  p2 <- deterministic_initial(pars, initial2, info)
+  p3 <- deterministic_initial(pars, initial3, info)
 
   m <- matrix(rep(1:3, each = 4), 4, 3)
   expect_equal(p1, list(state = m))
@@ -181,8 +181,8 @@ test_that("initial handles corner cases", {
 test_that("initial passes args as expected", {
   dat <- example_sir()
   initial <- mockery::mock(c(1000, 10, 0, 0, 0), cycle = TRUE)
-  p <- particle_nofilter$new(dat$data, dat$model, dat$compare,
-                             index = dat$index, initial = initial)
+  p <- particle_deterministic$new(dat$data, dat$model, dat$compare,
+                                  index = dat$index, initial = initial)
   pars <- list(beta = 0.21, gamma = 0.11)
   ll <- p$run(pars)
   info <- dat$model$new(pars, 0, 1)$info()
@@ -195,8 +195,8 @@ test_that("initial passes args as expected", {
 test_that("initial passes args as expected, for multipar case", {
   dat <- example_sir()
   initial <- mockery::mock(c(1000, 10, 0, 0, 0), cycle = TRUE)
-  p <- particle_nofilter$new(dat$data, dat$model, dat$compare,
-                             index = dat$index, initial = initial)
+  p <- particle_deterministic$new(dat$data, dat$model, dat$compare,
+                                  index = dat$index, initial = initial)
   pars <- list(list(beta = 0.21, gamma = 0.11),
                list(beta = 0.22, gamma = 0.12),
                list(beta = 0.23, gamma = 0.13))
@@ -214,7 +214,7 @@ test_that("initial passes args as expected, for multipar case", {
 
 test_that("Can reference by name in compare", {
   dat <- example_sir()
-  p1 <- particle_nofilter$new(dat$data, dat$model, dat$compare, dat$index)
+  p1 <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
   set.seed(1)
   ll1 <- p1$run(dat$pars$model(dat$pars$initial()),
                 save_history = TRUE)
@@ -241,7 +241,7 @@ test_that("Can reference by name in compare", {
          state = c("S" = 1L, "I" = 2L, "R" = 3L))
   }
 
-  p2 <- particle_nofilter$new(dat$data, dat$model, compare, index)
+  p2 <- particle_deterministic$new(dat$data, dat$model, compare, index)
   set.seed(1)
   ll2 <- p2$run(dat$pars$model(dat$pars$initial()),
                 save_history = TRUE)
@@ -269,8 +269,8 @@ test_that("initial passes args as expected, for multipar case", {
   }
 
   dat <- example_sir()
-  p <- particle_nofilter$new(dat$data, dat$model, compare,
-                             index = dat$index, initial = dat$initial)
+  p <- particle_deterministic$new(dat$data, dat$model, compare,
+                                  index = dat$index, initial = dat$initial)
   pars <- list(list(exp_noise = Inf),
                list(exp_noise = 1e6))
   ll <- p$run_many(pars)
@@ -281,7 +281,7 @@ test_that("initial passes args as expected, for multipar case", {
 
 test_that("reconstruct deterministic filter from inputs", {
   dat <- example_sir()
-  p1 <- particle_nofilter$new(dat$data, dat$model, dat$compare, dat$index)
+  p1 <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
   inputs <- p1$inputs()
   p2 <- particle_filter_from_inputs(inputs)
   expect_s3_class(p2, class(p1))
@@ -295,7 +295,7 @@ test_that("Can run parallel mcmc with deterministic model", {
   n_chains <- 3L
   control <- pmcmc_control(n_steps, save_trajectories = FALSE,
                            n_workers = 2L, n_chains = n_chains)
-  p <- particle_nofilter$new(dat$data, dat$model, dat$compare, dat$index)
+  p <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
   res <- pmcmc(dat$pars, p, NULL, control)
   expect_s3_class(res, "mcstate_pmcmc")
   expect_equal(nrow(res$pars), n_chains * (n_steps + 1))
@@ -304,7 +304,7 @@ test_that("Can run parallel mcmc with deterministic model", {
 
 test_that("Can run parallel mcmc with deterministic model", {
   dat <- example_sir()
-  p <- particle_nofilter$new(dat$data, dat$model, dat$compare, dat$index)
+  p <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
   expect_equal(p$set_n_threads(2L), 1L)
   expect_equal(p$set_n_threads(1L), 2L)
   p$run()

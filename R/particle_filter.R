@@ -459,12 +459,12 @@ particle_resample <- function(weights) {
 ## `$inputs()` data, but possibly changing the seed
 particle_filter_from_inputs <- function(inputs, seed = NULL) {
   if (is.null(inputs$n_particles)) {
-    particle_nofilter$new(data = inputs$data,
-                          model = inputs$model,
-                          compare = inputs$compare,
-                          index = inputs$index,
-                          initial = inputs$initial,
-                          n_threads = inputs$n_threads)
+    particle_deterministic$new(data = inputs$data,
+                               model = inputs$model,
+                               compare = inputs$compare,
+                               index = inputs$index,
+                               initial = inputs$initial,
+                               n_threads = inputs$n_threads)
   } else {
     particle_filter$new(data = inputs$data,
                         model = inputs$model,

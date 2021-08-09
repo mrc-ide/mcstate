@@ -1,12 +1,12 @@
-##' @title Particle "nofilter"
+##' @title Deterministic particle likelihood
 ##'
 ##' @description Create a deterministic version of the
 ##'   [`mcstate::particle_filter`] object, which runs a single
 ##'   particle deterministically.
 ##'
 ##' @export
-particle_nofilter <- R6::R6Class(
-  "particle_nofilter",
+particle_deterministic <- R6::R6Class(
+  "particle_deterministic",
   cloneable = FALSE,
 
   public = list(
@@ -150,7 +150,7 @@ particle_nofilter <- R6::R6Class(
     ##' (`-Inf` if the model is impossible), one per parameter set
     run_many = function(pars, save_history = FALSE, save_restart = NULL) {
       if (!is.null(save_restart)) {
-        stop("'save_restart' cannot be used with the deterministic nofilter")
+        stop("'save_restart' cannot be used with particle_deterministic")
       }
       n_particles <- length(pars)
       steps <- unname(as.matrix(private$data[c("step_start", "step_end")]))
@@ -168,7 +168,8 @@ particle_nofilter <- R6::R6Class(
       }
 
       if (!is.null(private$initial)) {
-        initial_data <- nofilter_initial(pars, private$initial, model$info())
+        initial_data <- deterministic_initial(pars, private$initial,
+                                              model$info())
         steps <- particle_steps(steps, initial_data$step)
         model$set_state(initial_data$state, initial_data$step,
                         deterministic = TRUE)
@@ -179,7 +180,7 @@ particle_nofilter <- R6::R6Class(
       } else {
         ## NOTE: this assumes that all parameterisation result in the
         ## same shape, which is assumed generally.
-        index <- nofilter_index(private$index(model$info()[[1L]]))
+        index <- deterministic_index(private$index(model$info()[[1L]]))
         model$set_index(index$index)
       }
 
@@ -192,7 +193,7 @@ particle_nofilter <- R6::R6Class(
         rownames(y_compare) <- names(index$run)
       }
 
-      ll <- vnapply(seq_len(n_particles), nofilter_likelihood,
+      ll <- vnapply(seq_len(n_particles), deterministic_likelihood,
                     y_compare, private$compare, pars, private$data_split)
 
       if (save_history) {
@@ -301,7 +302,7 @@ particle_nofilter <- R6::R6Class(
   ))
 
 
-nofilter_index <- function(index) {
+deterministic_index <- function(index) {
   index_all <- union(index$run, index$state)
   list(index = index_all,
        run = set_names(match(index$run, index_all), names(index$run)),
@@ -310,7 +311,7 @@ nofilter_index <- function(index) {
 }
 
 
-nofilter_likelihood <- function(idx, y, compare, pars, data) {
+deterministic_likelihood <- function(idx, y, compare, pars, data) {
   n_steps <- length(data)
   ll <- numeric(n_steps)
   for (i in seq_len(n_steps)) {
@@ -321,7 +322,7 @@ nofilter_likelihood <- function(idx, y, compare, pars, data) {
 }
 
 
-nofilter_initial <- function(pars, initial, info) {
+deterministic_initial <- function(pars, initial, info) {
   init <- Map(function(p, i) initial(i, 1L, p), pars, info)
 
   ret <- list()

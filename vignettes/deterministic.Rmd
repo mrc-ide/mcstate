@@ -70,10 +70,10 @@ p1 <- mcstate::particle_filter$new(data, sir, n_particles, compare,
 res1 <- mcstate::pmcmc(pars, p1, control = control)
 ```
 
-then again, with the deterministic filter. The only change is to use the object `mcstate::particle_nofilter` and omit the `n_particles` element to the constructor (there will only ever be one particle!) and the `n_threads` element which has no effect here.
+then again, with the deterministic filter. The only change is to use the object `mcstate::particle_deterministic` and omit the `n_particles` element to the constructor (there will only ever be one particle!) and the `n_threads` element which has no effect here.
 
 ```{r}
-p2 <- mcstate::particle_nofilter$new(data, sir, compare, index = index)
+p2 <- mcstate::particle_deterministic$new(data, sir, compare, index = index)
 res2 <- mcstate::pmcmc(pars, p2, control = control)
 ```
 

@@ -48,7 +48,7 @@
 ##' @export
 pmcmc <- function(pars, filter, initial = NULL, control = NULL) {
   assert_is(pars, c("pmcmc_parameters", "pmcmc_parameters_nested"))
-  assert_is(filter, c("particle_filter", "particle_nofilter"))
+  assert_is(filter, c("particle_filter", "particle_deterministic"))
   assert_is(control, "pmcmc_control")
 
   if (inherits(pars, "pmcmc_parameters_nested")) {
