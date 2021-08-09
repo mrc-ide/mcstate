@@ -302,7 +302,7 @@ test_that("Can run parallel mcmc with deterministic model", {
 })
 
 
-test_that("Can run parallel mcmc with deterministic model", {
+test_that("Can change the number of threads", {
   dat <- example_sir()
   p <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
   expect_equal(p$set_n_threads(2L), 1L)
