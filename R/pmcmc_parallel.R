@@ -120,6 +120,7 @@ pmcmc_orchestrator <- R6::R6Class(
     },
 
     finish = function() {
+      unlink(private$path$root, recursive = TRUE)
       pmcmc_combine(samples = private$results)
     }
   ))
