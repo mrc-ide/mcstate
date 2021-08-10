@@ -79,7 +79,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.4</span>
       </span>
     </div>
 
@@ -152,6 +152,13 @@
       <small>Source: <a href='https://github.com/mrc-ide/mcstate/blob/master/NEWS.md'><code>NEWS.md</code></a></small>
     </div>
 
+    <div id="mcstate-064" class="section level1">
+<h1 class="page-header" data-toc-text="0.6.4">
+<a href="#mcstate-064" class="anchor"></a>mcstate 0.6.4</h1>
+<ul>
+<li>Allow the particle filter to terminate early if we would not be interested in the result. This is useful for <code><a href="../reference/pmcmc.html">mcstate::pmcmc</a></code> which can use it to stop calculating a likelood that would be rejected. Primarily useful when running with relatively low numbers of particles and a high variance in the estimator (<a href='https://github.com/mrc-ide/mcstate/issues/138'>#138</a>)</li>
+</ul>
+</div>
     <div id="mcstate-063" class="section level1">
 <h1 class="page-header" data-toc-text="0.6.3">
 <a href="#mcstate-063" class="anchor"></a>mcstate 0.6.3</h1>

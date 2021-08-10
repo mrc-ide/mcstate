@@ -84,7 +84,7 @@ as the order of the arguments may change in future." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.4</span>
       </span>
     </div>
 
@@ -179,7 +179,8 @@ as the order of the arguments may change in future.</p>
   save_restart <span class='op'>=</span> <span class='cn'>NULL</span>,
   save_trajectories <span class='op'>=</span> <span class='cn'>FALSE</span>,
   progress <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  nested_step_ratio <span class='op'>=</span> <span class='fl'>1</span>
+  nested_step_ratio <span class='op'>=</span> <span class='fl'>1</span>,
+  filter_early_exit <span class='op'>=</span> <span class='cn'>FALSE</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -316,6 +317,15 @@ of this parameter may depend on the true ratio of fixed:varied parameters
 or on desired run-time, for example updating fixed parameters is
 quicker so more varied steps could be more efficient.</p></td>
     </tr>
+    <tr>
+      <th>filter_early_exit</th>
+      <td><p>Logical, indicating if we should allow
+the particle filter to exit early for points that will not be
+accepted. Only use this if your log-likelihood never increases
+between steps. This will the the case where your likelihood
+calculation is a sum of discrete normalised probability
+distributions, but may not be for continuous distributions!</p></td>
+    </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
@@ -366,6 +376,9 @@ detail in <code><a href='../articles/parallelisation.html'>vignette("parallelisa
 #&gt; $progress
 #&gt; [1] FALSE
 #&gt; 
+#&gt; $filter_early_exit
+#&gt; [1] FALSE
+#&gt; 
 #&gt; $nested_step_ratio
 #&gt; [1] 1
 #&gt; 
@@ -409,6 +422,9 @@ detail in <code><a href='../articles/parallelisation.html'>vignette("parallelisa
 #&gt; [1] FALSE
 #&gt; 
 #&gt; $progress
+#&gt; [1] FALSE
+#&gt; 
+#&gt; $filter_early_exit
 #&gt; [1] FALSE
 #&gt; 
 #&gt; $nested_step_ratio
@@ -456,6 +472,9 @@ detail in <code><a href='../articles/parallelisation.html'>vignette("parallelisa
 #&gt; [1] FALSE
 #&gt; 
 #&gt; $progress
+#&gt; [1] FALSE
+#&gt; 
+#&gt; $filter_early_exit
 #&gt; [1] FALSE
 #&gt; 
 #&gt; $nested_step_ratio

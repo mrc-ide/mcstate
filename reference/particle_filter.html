@@ -82,7 +82,7 @@ interface will be implemented later." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.4</span>
       </span>
     </div>
 
@@ -289,7 +289,12 @@ list will be added in a future version!</p></dd>
 <p><hr>
 <a id="method-run"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>run()</code></h3>
 <p>Run the particle filter</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
-<p><div class="r"></p><pre><span class='va'>particle_filter</span><span class='op'>$</span><span class='fu'>run</span><span class='op'>(</span>pars <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='op'>)</span>, save_history <span class='op'>=</span> <span class='cn'>FALSE</span>, save_restart <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre><p></div></p>
+<p><div class="r"></p><pre><span class='va'>particle_filter</span><span class='op'>$</span><span class='fu'>run</span><span class='op'>(</span>
+  pars <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='op'>)</span>,
+  save_history <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  save_restart <span class='op'>=</span> <span class='cn'>NULL</span>,
+  min_log_likelihood <span class='op'>=</span> <span class='cn'>NULL</span>
+<span class='op'>)</span></pre><p></div></p>
 
 <h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
@@ -313,6 +318,17 @@ variable (the <code>time</code> column in <code><a href='particle_filter_data.ht
 terms of steps. The state will be saved after the particle
 filtering operation (i.e., at the end of the step).</p></dd>
 
+<dt><code>min_log_likelihood</code></dt><dd><p>Optionally, a numeric value representing the
+smallest likelihood we are interested in. If given and the particle
+filter drops below this number, then we terminate early and return
+<code>-Inf</code>. In this case, history and final state cannot be returned
+from the filter. This is primarily intended for use with
+<a href='pmcmc.html'>pmcmc</a> where we can avoid computing likelihoods that
+will certainly be rejected. Only suitable for use where
+log-likelihood increments (with the <code>compare</code> function) are always
+negative. This is the case if you use a normalised discrete
+distribution, but not necessarily otherwise.</p></dd>
+
 </dl><p></div></p>
 <h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A single numeric value representing the log-likelihood
@@ -327,7 +343,8 @@ as many steps as needed with <code>$step()</code>.</p><h4 class='hasAnchor' id='
 <p><div class="r"></p><pre><span class='va'>particle_filter</span><span class='op'>$</span><span class='fu'>run_begin</span><span class='op'>(</span>
   pars <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='op'>)</span>,
   save_history <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  save_restart <span class='op'>=</span> <span class='cn'>NULL</span>
+  save_restart <span class='op'>=</span> <span class='cn'>NULL</span>,
+  min_log_likelihood <span class='op'>=</span> <span class='cn'>NULL</span>
 <span class='op'>)</span></pre><p></div></p>
 
 <h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
@@ -339,6 +356,9 @@ particles should be saved. See <code>$run()</code> for details.</p></dd>
 
 <dt><code>save_restart</code></dt><dd><p>Times to save restart state at. See <code>$run()</code> for
 details.</p></dd>
+
+<dt><code>min_log_likelihood</code></dt><dd><p>Optionally, a numeric value representing the
+smallest likelihood we are interested in. See <code>$run()</code> for details.</p></dd>
 
 </dl><p></div></p>
 <h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
