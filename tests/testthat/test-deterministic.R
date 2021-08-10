@@ -302,12 +302,14 @@ test_that("Can run parallel mcmc with deterministic model", {
   dat <- example_sir()
   n_steps <- 30L
   n_chains <- 3L
-  control <- pmcmc_control(n_steps, save_trajectories = FALSE,
-                           n_workers = 2L, n_chains = n_chains)
+  control <- pmcmc_control(n_steps, save_trajectories = TRUE,
+                           n_workers = 2L, n_chains = n_chains,
+                           save_state = TRUE)
   p <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
   res <- pmcmc(dat$pars, p, NULL, control)
   expect_s3_class(res, "mcstate_pmcmc")
   expect_equal(nrow(res$pars), n_chains * (n_steps + 1))
+  expect_s3_class(res$predict$filter$model, "dust_generator")
 })
 
 
