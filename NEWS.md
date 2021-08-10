@@ -1,3 +1,7 @@
+# mcstate 0.6.5
+
+* Reduced overhead in parallel pmcmc with workers, and faster/less memory-hungry chain combination (#142)
+
 # mcstate 0.6.4
 
 * Allow the particle filter to terminate early if we would not be interested in the result. This is useful for `mcstate::pmcmc` which can use it to stop calculating a likelood that would be rejected. Primarily useful when running with relatively low numbers of particles and a high variance in the estimator (#138)

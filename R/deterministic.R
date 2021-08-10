@@ -278,7 +278,8 @@ particle_deterministic <- R6::R6Class(
            index = private$index,
            initial = private$initial,
            compare = private$compare,
-           n_threads = private$n_threads)
+           n_threads = private$n_threads,
+           seed = filter_current_seed(private$last_model, private$seed))
     },
 
     ##' @description

@@ -61,13 +61,18 @@ test_that("throw from callr operation", {
   control <- pmcmc_control(n_steps, n_chains = 3, n_workers = 2,
                            n_steps_each = 5)
 
-  ## Manual set up, as done by pmcmc_orchestrator
   initial <- pmcmc_check_initial(NULL, dat$pars, n_chains)
   seed <- make_seeds(n_chains, NULL)
 
-  inputs <- p0$inputs()
-  inputs$n_threads <- "one"
-  r <- pmcmc_remote$new(dat$pars, initial, inputs, control, seed)
+  control$n_workers <- 0
+  obj <- pmcmc_orchestrator$new(dat$pars, initial, p0, control)
+  path <- r6_private(obj)$path
+
+  inputs <- readRDS(path$input)
+  inputs$filter$n_threads <- "one"
+  suppressWarnings(saveRDS(inputs, path$input))
+
+  r <- pmcmc_remote$new(path$input, 2, FALSE)
   r$wait_session_ready()
   r$init(1L)
   for (i in 1:20) {

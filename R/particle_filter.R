@@ -427,11 +427,6 @@ particle_filter <- R6::R6Class(
     ##' the rng if it has been used (this can be used as a seed to
     ##' restart the model).
     inputs = function() {
-      if (is.null(private$last_model)) {
-        seed <- private$seed
-      } else {
-        seed <- private$last_model$rng_state(first_only = TRUE)
-      }
       list(data = private$data,
            model = self$model,
            n_particles = self$n_particles,
@@ -440,7 +435,7 @@ particle_filter <- R6::R6Class(
            compare = private$compare,
            device_config = private$device_config,
            n_threads = private$n_threads,
-           seed = seed)
+           seed = filter_current_seed(private$last_model, private$seed))
     },
 
     ##' @description
@@ -661,4 +656,12 @@ history_nested <- function(history_value, history_order, history_index,
   }
   rownames(ret) <- names(history_index)
   ret
+}
+
+
+filter_current_seed <- function(model, seed) {
+  if (!is.null(model)) {
+    seed <- model$rng_state(first_only = TRUE)
+  }
+  seed
 }

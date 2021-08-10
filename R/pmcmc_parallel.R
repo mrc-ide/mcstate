@@ -12,30 +12,54 @@ pmcmc_orchestrator <- R6::R6Class(
     results = NULL,
     thread_pool = NULL,
     progress = NULL,
+    path = NULL,
+    filter_inputs = NULL,
     nested = FALSE
   ),
 
   public = list(
-    initialize = function(pars, initial, filter, control) {
+    initialize = function(pars, initial, filter, control, root = NULL) {
       private$control <- control
       private$thread_pool <- thread_pool$new(control$n_threads_total,
                                              control$n_workers)
       private$progress <- pmcmc_parallel_progress(control)
 
-      inputs <- filter$inputs()
-      seed <- make_seeds(control$n_chains, inputs$seed)
-      inputs$n_threads <- private$thread_pool$target
+      filter_inputs <- filter$inputs()
+      seed <- make_seeds(control$n_chains, filter_inputs$seed)
+      filter_inputs$n_threads <- private$thread_pool$target
 
       private$remotes <- vector("list", control$n_workers)
       private$sessions <- vector("list", control$n_workers)
       private$status <- vector("list", control$n_chains)
       private$results <- vector("list", control$n_chains)
+      private$filter_inputs <- filter_inputs
       private$nested <- inherits(pars, "pmcmc_parameters_nested")
 
-      ## First stage starts the process, but this is async...
+      root <- root %||% tempfile()
+      dir.create(root, FALSE, TRUE)
+      private$path <- list(root = root,
+                           input = file.path(root, "input.rds"),
+                           output = file.path(root, "output-%d.rds"))
+
+      input <- list(
+        pars = pars,
+        initial = pmcmc_parallel_initial(control$n_chains, initial),
+        filter = filter_inputs,
+        control = control,
+        seed = seed)
+
+      ## Ignore warning:
+      ##   'package:mcstate' may not be available when loading
+      ## which would cause significantly more issues than here :)
+      suppressWarnings(saveRDS(input, private$path$input))
+
+      ## First stage starts the process and reads in input data, but
+      ## this is async over the workers
+      n_threads <- filter_inputs$n_threads
+      nested <- inherits(pars, "pmcmc_parameters_nested")
       for (i in seq_len(control$n_workers)) {
-        private$remotes[[i]] <- pmcmc_remote$new(
-          pars, initial, inputs, control, seed)
+        private$remotes[[i]] <-
+          pmcmc_remote$new(private$path$input, n_threads, nested)
         private$sessions[[i]] <- private$remotes[[i]]$session
       }
       ## ...so once the sessions start coming up we start them working
@@ -70,8 +94,11 @@ pmcmc_orchestrator <- R6::R6Class(
           ## complicate the book-keeping though.
           remaining <- which(lengths(private$status) == 0)
           for (r in private$remotes[i][finished]) {
-            res <- r$finish()
-            private$results[res$index] <- list(res$data)
+            filename <- sprintf(private$path$output, r$index)
+            res <- r$finish(filename)
+            dat <- readRDS(filename)
+            private$results[[r$index]] <-
+              pmcmc_parallel_predict_filter(dat, private$filter_inputs)
             if (length(remaining) == 0L) {
               r$session$close()
               private$thread_pool$add(r)
@@ -93,6 +120,7 @@ pmcmc_orchestrator <- R6::R6Class(
     },
 
     finish = function() {
+      unlink(private$path$root, recursive = TRUE)
       pmcmc_combine(samples = private$results)
     }
   ))
@@ -104,13 +132,9 @@ pmcmc_orchestrator <- R6::R6Class(
 pmcmc_remote <- R6::R6Class(
   "pmcmc_remote",
   private = list(
-    pars = NULL,
-    initial = NULL,
-    inputs = NULL,
-    control = NULL,
-    seed = NULL,
+    path = NULL,
     step = NULL,
-    nested = FALSE
+    nested = NULL
   ),
 
   public = list(
@@ -118,16 +142,13 @@ pmcmc_remote <- R6::R6Class(
     index = NULL,
     n_threads = NULL,
 
-    initialize = function(pars, initial, inputs, control, seed) {
-      self$session <- callr::r_session$new(wait = FALSE)
-
-      private$pars <- pars
-      private$initial <- initial
-      private$inputs <- inputs
-      private$control <- control
-      private$seed <- seed
-        private$nested <- inherits(pars, "pmcmc_parameters_nested")
-
+    ## NOTE: n_threads here must match that of the filter inputs
+    initialize = function(path, n_threads, nested) {
+      options <- callr::r_session_options(
+        load_hook = bquote(.GlobalEnv$input <- readRDS(.(path))))
+      self$session <- callr::r_session$new(options = options, wait = FALSE)
+      self$n_threads <- n_threads
+      private$nested <- nested
       lockBinding("session", self)
     },
 
@@ -145,26 +166,24 @@ pmcmc_remote <- R6::R6Class(
     ## is *capable* of starting every chain but we do the allocation
     ## dynamically.
     init = function(index) {
-      if (is_3d_array(private$initial)) {
-        initial <- private$initial[, , index]
-      } else {
-        initial <- private$initial[, index]
-      }
-      args <- list(private$pars, initial, private$inputs,
-                   private$control, private$seed[[index]])
-      self$session$call(function(pars, initial, inputs, control, seed) {
+      self$session$call(function(index, nested) {
+        ## simplify resolution, technically not needed
+        input <- .GlobalEnv$input
+        seed <- input$seed[[index]]
+        initial <- input$initial[[index]]
+        control <- input$control
+
         set.seed(seed$r)
-        filter <- particle_filter_from_inputs(inputs, seed$dust)
+        filter <- particle_filter_from_inputs(input$filter, seed$dust)
         control$progress <- FALSE
-        .GlobalEnv$obj <- pmcmc_state$new(pars, initial, filter, control)
-        if (inherits(pars, "pmcmc_parameters_nested")) {
+        .GlobalEnv$obj <- pmcmc_state$new(input$pars, initial, filter, control)
+        if (nested) {
           .GlobalEnv$obj$run_nested()
         } else {
           .GlobalEnv$obj$run()
         }
-      }, args, package = "mcstate")
+      }, list(index, private$nested), package = "mcstate")
       self$index <- index
-      self$n_threads <- private$inputs$n_threads
       list(step = 0L, finished = FALSE)
     },
 
@@ -195,17 +214,19 @@ pmcmc_remote <- R6::R6Class(
       self$n_threads <- n_threads
     },
 
-    ## This one is synchronous
-    finish = function() {
-      if (private$nested) {
-        list(index = self$index,
-             data = self$session$run(function()
-               .GlobalEnv$obj$finish_nested()))
-      } else {
-        list(index = self$index,
-             data = self$session$run(function()
-               .GlobalEnv$obj$finish()))
-      }
+    ## This one is synchronous, and writes to disk. Using callr's I/O
+    ## here is too slow. We might want to make this async, but it will
+    ## really complicate the above!
+    finish = function(filename) {
+      method <- if (private$nested) "finish_nested" else "finish"
+
+      self$session$run(function(method, filename) {
+        results <- .GlobalEnv$obj[[method]]()
+        results$predict$filter <- results$predict$filter$seed
+        suppressWarnings(saveRDS(results, filename))
+      }, list(method, filename))
+
+      list(index = self$index, data = filename)
     }
   ))
 
@@ -332,4 +353,25 @@ pmcmc_parallel_progress <- function(control, force = FALSE) {
       pmcmc_parallel_progress_data(status, n_steps)$result
     }
   }
+}
+
+
+pmcmc_parallel_initial <- function(n_chains, initial) {
+  if (is_3d_array(initial)) {
+    initial <- lapply(seq_len(n_chains), function(index)
+      initial[, , index])
+  } else {
+    initial <- lapply(seq_len(n_chains), function(index)
+      initial[, index])
+  }
+  initial
+}
+
+
+pmcmc_parallel_predict_filter <- function(dat, filter_inputs) {
+  if (!is.null(dat$predict$filter)) {
+    filter_inputs$seed <- dat$predict$filter
+    dat$predict$filter <- filter_inputs
+  }
+  dat
 }
