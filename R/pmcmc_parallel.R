@@ -152,10 +152,10 @@ pmcmc_remote <- R6::R6Class(
       lockBinding("session", self)
     },
 
-    ## 3000ms is the timeout for the session to come alive; an error
+    ## 30000ms is the timeout for the session to come alive; an error
     ## will be thrown if it is not alive by then (this number is used
     ## by callr internally)
-    wait_session_ready = function(timeout = 3000) {
+    wait_session_ready = function(timeout = 30000) {
       self$session$poll_process(timeout)
       self$session$read()
       TRUE
