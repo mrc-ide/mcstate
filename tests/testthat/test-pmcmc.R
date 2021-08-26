@@ -1092,3 +1092,16 @@ test_that("Can run pmcmc with early exit enabled", {
   ## you can see that the RNG streams differ:
   expect_false(identical(p2$inputs()$seed, p1$inputs()$seed))
 })
+
+
+test_that("Fix impossible control parameters", {
+  ctrl <- pmcmc_control(10, n_workers = 1)
+  ctrl$n_steps_each <- 2
+  dat <- example_sir()
+  p <- particle_filter$new(dat$data, dat$model, 20, dat$compare,
+                           index = dat$index, seed = 1L)
+  ## Previously this errored, here we're just looking for completion
+  results <- pmcmc(dat$pars, p, control = ctrl)
+  expect_equal(dim(results$pars), c(11, 2))
+  expect_false(any(is.na(results$pars)))
+})

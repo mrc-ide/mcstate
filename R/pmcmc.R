@@ -174,6 +174,10 @@ pmcmc_multiple_series <- function(pars, initial, filter, control) {
   }
   samples <- vector("list", control$n_chains)
 
+  ## Ensure that even if the control object has been updated we don't
+  ## do anything impossible:
+  control$n_steps_each <- control$n_steps
+
   for (i in seq_along(samples)) {
     samples[[i]] <- pmcmc_run_chain(i, pars, initial, filter, control, seed)
   }
