@@ -175,6 +175,7 @@ particle_deterministic <- R6::R6Class(
                                        n_particles = NULL,
                                        n_threads = private$n_threads,
                                        seed = NULL,
+                                       deterministic = TRUE,
                                        pars_multi = TRUE)
       } else {
         model$update_state(pars = pars, step = steps[[1]])
@@ -185,8 +186,7 @@ particle_deterministic <- R6::R6Class(
                                               model$info())
         steps <- particle_steps(steps, initial_data$step)
         model$update_state(state = initial_data$state,
-                           step = initial_data$step,
-                           deterministic = TRUE)
+                           step = initial_data$step)
       }
 
       if (is.null(private$index)) {
@@ -198,7 +198,7 @@ particle_deterministic <- R6::R6Class(
         model$set_index(index$index)
       }
 
-      y <- model$simulate(c(steps[[1]], steps[, 2]), deterministic = TRUE)
+      y <- model$simulate(c(steps[[1]], steps[, 2]))
 
       if (is.null(index)) {
         y_compare <- y
