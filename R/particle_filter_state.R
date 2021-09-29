@@ -75,16 +75,17 @@ particle_filter_state <- R6::R6Class(
           model$set_data(data_split)
         }
       } else {
-        model$reset(pars, steps[[1L]])
+        model$update_state(pars = pars, step = steps[[1L]])
       }
 
       if (!is.null(initial)) {
         initial_data <- initial(model$info(), n_particles, pars)
         if (is.list(initial_data)) {
           steps <- particle_steps(steps, initial_data$step)
-          model$set_state(initial_data$state, initial_data$step)
+          model$update_state(state = initial_data$state,
+                             step = initial_data$step)
         } else {
-          model$set_state(initial_data)
+          model$update_state(state = initial_data)
         }
       }
 

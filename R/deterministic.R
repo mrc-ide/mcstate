@@ -177,15 +177,16 @@ particle_deterministic <- R6::R6Class(
                                        seed = NULL,
                                        pars_multi = TRUE)
       } else {
-        model$reset(pars, steps[[1]])
+        model$update_state(pars = pars, step = steps[[1]])
       }
 
       if (!is.null(private$initial)) {
         initial_data <- deterministic_initial(pars, private$initial,
                                               model$info())
         steps <- particle_steps(steps, initial_data$step)
-        model$set_state(initial_data$state, initial_data$step,
-                        deterministic = TRUE)
+        model$update_state(state = initial_data$state,
+                           step = initial_data$step,
+                           deterministic = TRUE)
       }
 
       if (is.null(private$index)) {

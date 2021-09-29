@@ -80,7 +80,7 @@ particle_filter_state_nested <- R6::R6Class(
           model$set_data(data_split)
         }
       } else {
-        model$reset(pars, steps[[1L]])
+        model$update_state(pars = pars, step = steps[[1L]])
       }
 
       steps <- set_nested_model_state(model, initial, pars, n_particles, steps)
@@ -357,12 +357,12 @@ set_nested_model_state <- function(model, initial, pars, n_particles, steps) {
         }
 
         steps <- particle_steps(steps, init_step)
-        model$set_state(init_state, init_step)
+        model$update_state(state = init_state, step = init_step)
       } else {
-        model$set_state(list_to_array(initial_data))
+        model$update_state(state = list_to_array(initial_data))
       }
     } else {
-      model$set_state(NULL)
+      model$update_state(state = NULL)
     }
   }
 

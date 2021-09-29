@@ -41,7 +41,7 @@ We can simulate some data from the model:
 ```{r volatility_data_create, include = FALSE}
 data <- local({
   mod <- volatility$new(list(alpha = 0.91, sigma = 1), 0, 1L)
-  mod$set_state(matrix(rnorm(1L, 0, 1L), 1))
+  mod$update_state(state = matrix(rnorm(1L, 0, 1L), 1))
   steps <- seq(0, 100, by = 1)
   res <- mod$simulate(steps)
   observed <- res[1, 1, -1] + rnorm(length(steps) - 1, 0, 1)
