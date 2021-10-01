@@ -139,7 +139,7 @@ if2 <- function(pars, filter, control) {
 
   for (i in seq_len(iterations)) {
     p()
-    model$reset(pars = pars$model(pars_matrix), steps[[1L]])
+    model$update_state(pars = pars$model(pars_matrix), step = steps[[1L]])
     for (t in seq_len(n_steps)) {
       step_end <- steps[t, 2L]
       state <- model$run(step_end)
@@ -156,7 +156,8 @@ if2 <- function(pars, filter, control) {
         kappa <- particle_resample(weights$weights)
         model$reorder(kappa)
         pars_matrix <- pars$walk(pars_matrix[, kappa], pars_sd)
-        model$set_pars(pars$model(pars_matrix))
+        model$update_state(pars = pars$model(pars_matrix),
+                           set_initial_state = FALSE)
       }
     }
     result_pars[, , i] <- pars_matrix

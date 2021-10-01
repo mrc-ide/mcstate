@@ -64,7 +64,7 @@ pmcmc_predict <- function(object, steps, prepend_trajectories = FALSE,
     mod <- model$new(pars, steps[[1]], NULL, n_threads = n_threads,
                      seed = seed, pars_multi = TRUE)
 
-    mod$set_state(state)
+    mod$update_state(state = state)
     if (!is.null(index)) {
       mod$set_index(index)
     }
@@ -95,7 +95,7 @@ pmcmc_predict_nested <- function(object, state, index, model, n_threads,
   mod <- model$new(pars, steps[[1]], NULL, n_threads = n_threads,
                    seed = seed, pars_multi = TRUE)
 
-  mod$set_state(aperm(state, c(1, 3, 2)))
+  mod$update_state(state = aperm(state, c(1, 3, 2)))
   mod$set_index(index)
   y <- mod$simulate(steps)
 

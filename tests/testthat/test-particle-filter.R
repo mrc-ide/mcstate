@@ -372,7 +372,7 @@ test_that("Variable initial starting point of the simulation", {
 
   mod <- p$model$new(list(), step = 0, n_particles = n_particles, seed = 1L)
   tmp <- initial(NULL, n_particles, pars)
-  mod$set_state(tmp$state, tmp$step)
+  mod$update_state(state = tmp$state, step = tmp$step)
   expect_equal(p$history()[, , 1], mod$state()[1:3, ])
   expect_equal(mod$step(), max(tmp$step))
 })

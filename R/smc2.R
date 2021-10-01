@@ -140,7 +140,7 @@ smc2_engine <- R6::R6Class(
              history = x$history))
       for (i in seq_along(private$state$filter)) {
         s <- filter_state[[i]]
-        private$state$filter[[i]]$model$set_state(s$state)
+        private$state$filter[[i]]$model$update_state(state = s$state)
         private$state$filter[[i]]$log_likelihood <- s$log_likelihood
         private$state$filter[[i]]$history <- s$history
       }
