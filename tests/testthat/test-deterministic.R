@@ -5,7 +5,7 @@ test_that("Can run the deterministic filter", {
   p <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
   set.seed(1)
   ll <- p$run(dat$pars$model(dat$pars$initial()))
-  expect_equal(ll, -245.127512965178)
+  expect_equal(ll, -254.317276732767)
 })
 
 

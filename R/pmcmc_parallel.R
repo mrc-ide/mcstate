@@ -251,7 +251,7 @@ make_seeds <- function(n, seed) {
   for (i in seq_len(n)) {
     state <- rng$state()
     ret[[i]] <- list(dust = state,
-                     r = rng$runif(1, 0, 1) * .Machine$integer.max)
+                     r = rng$random_real(1) * .Machine$integer.max)
     rng$long_jump()
   }
   ret

@@ -1,5 +1,5 @@
 example_sir <- function() {
-  set.seed(1)
+  set.seed(42)
   model <- dust::dust_example("sir")
   sir <- model$new(pars = list(), step = 0, n_particles = 1)
   y0 <- sir$state()
