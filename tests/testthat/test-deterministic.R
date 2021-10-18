@@ -294,7 +294,7 @@ test_that("reconstruct deterministic filter from inputs", {
   inputs <- p1$inputs()
   p2 <- particle_filter_from_inputs(inputs)
   expect_s3_class(p2, class(p1))
-  expect_equal(p1$run(), p2$run())
+  expect_equal(p1$run(), p2$run(), tolerance = 1e-5)
 })
 
 
