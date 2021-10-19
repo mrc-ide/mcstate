@@ -5,7 +5,7 @@ test_that("Can run the deterministic filter", {
   p <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
   set.seed(1)
   ll <- p$run(dat$pars$model(dat$pars$initial()))
-  expect_equal(ll, -245.127512965178)
+  expect_equal(ll, -254.317276732767)
 })
 
 
@@ -294,7 +294,7 @@ test_that("reconstruct deterministic filter from inputs", {
   inputs <- p1$inputs()
   p2 <- particle_filter_from_inputs(inputs)
   expect_s3_class(p2, class(p1))
-  expect_equal(p1$run(), p2$run())
+  expect_equal(p1$run(), p2$run(), tolerance = 1e-5)
 })
 
 
