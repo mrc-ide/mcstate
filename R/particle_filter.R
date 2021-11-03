@@ -224,7 +224,7 @@ particle_filter <- R6::R6Class(
       }
 
       if (!is.null(device_config)) {
-        if (!model$public_methods$has_cuda()) {
+        if (!model$public_methods$has_cuda(TRUE)) {
           stop(paste("'device_config' provided, but 'model' does not have",
                      "cuda support"))
         }
