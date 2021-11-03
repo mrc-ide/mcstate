@@ -151,7 +151,7 @@ particle_filter_state_nested <- R6::R6Class(
     ##' value of `step_index`
     run = function() {
       if (is.null(private$compare)) {
-        particle_filter_compiled(self, private, private$device)
+        particle_filter_compiled(self, private)
       } else {
         self$step(private$n_steps)
       }
@@ -212,7 +212,7 @@ particle_filter_state_nested <- R6::R6Class(
 
       for (t in seq(curr + 1L, step_index)) {
         step_end <- steps[t, 2L]
-        state <- model$run(step_end, device = private$device)
+        state <- model$run(step_end)
 
         if (save_history) {
           history_value[, , , t + 1L] <- model$state(save_history_index)

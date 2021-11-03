@@ -1364,17 +1364,11 @@ test_that("Can run a gpu model by passing device through", {
   n_particles <- 100
   set.seed(1)
 
-  model_g <- R6::R6Class(
-    "dust",
-    inherit = dat$model,
-    public = list(
-      has_cuda = function() TRUE,
-      has_compare = function() TRUE))
-
-  p_c <- particle_filter$new(dat$data, model_g, n_particles, NULL,
-                           index = dat$index)
-  p_g <- particle_filter$new(dat$data, model_g, n_particles, NULL,
-                           index = dat$index, device_config = 0)
+  model <- dust::dust_example("sirs")
+  p_c <- particle_filter$new(dat$data, model, n_particles, NULL,
+                             index = dat$index)
+  p_g <- particle_filter$new(dat$data, model, n_particles, NULL,
+                             index = dat$index, device_config = 0)
   expect_null(r6_private(p_c)$device_config)
   expect_equal(r6_private(p_g)$device_config, 0)
 
@@ -1391,8 +1385,11 @@ test_that("Can run a gpu model by passing device through", {
   filter_g$run()
   mockery::expect_called(target_c, 1L)
   mockery::expect_called(target_g, 1L)
-  expect_false(mockery::mock_args(target_c)[[1]][[3]])
-  expect_true(mockery::mock_args(target_g)[[1]][[3]])
+
+  m_c <- mockery::mock_args(target_c)[[1]][[1]]$model
+  m_g <- mockery::mock_args(target_g)[[1]][[1]]$model
+  expect_false(m_c$uses_gpu(TRUE))
+  expect_true(m_g$uses_gpu(TRUE))
 })
 
 

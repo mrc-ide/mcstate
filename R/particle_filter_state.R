@@ -146,7 +146,7 @@ particle_filter_state <- R6::R6Class(
     run = function() {
       if (is.null(private$compare)) {
         ## TODO: add min_log_likelihood support here, needs work in dust?
-        particle_filter_compiled(self, private, private$device)
+        particle_filter_compiled(self, private)
       } else {
         self$step(private$n_steps)
       }
@@ -212,7 +212,7 @@ particle_filter_state <- R6::R6Class(
 
       for (t in seq(curr + 1L, step_index)) {
         step_end <- steps[t, 2L]
-        state <- model$run(step_end, device = private$device)
+        state <- model$run(step_end)
 
         if (save_history) {
           history_value[, , t + 1L] <- model$state(save_history_index)
@@ -305,7 +305,7 @@ particle_filter_state <- R6::R6Class(
 
 ## This is used by both the nested and non-nested particle filter, and
 ## outsources all the work to dust.
-particle_filter_compiled <- function(self, private, device = FALSE) {
+particle_filter_compiled <- function(self, private) {
   history <- self$history
   save_history <- !is.null(history)
   save_history_index <- self$history$index
@@ -316,7 +316,7 @@ particle_filter_compiled <- function(self, private, device = FALSE) {
     on.exit(model$set_index(integer(0)))
   }
 
-  res <- model$filter(save_history, private$save_restart_step, private$device)
+  res <- model$filter(save_history, private$save_restart_step)
 
   self$log_likelihood_step <- NA_real_
   self$log_likelihood <- res$log_likelihood
