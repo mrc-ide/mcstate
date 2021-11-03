@@ -84,7 +84,7 @@ as the order of the arguments may change in future." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.9</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.10</span>
       </span>
     </div>
 
@@ -339,149 +339,152 @@ can. There are two ways of doing this which are discussed in some
 detail in <code><a href='../articles/parallelisation.html'>vignette("parallelisation", package = "mcstate")</a></code>.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'>pmcmc_control</span><span class='op'>(</span><span class='fl'>1000</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; $n_steps
-#&gt; [1] 1000
-#&gt; 
-#&gt; $n_chains
-#&gt; [1] 1
-#&gt; 
-#&gt; $n_workers
-#&gt; [1] 1
-#&gt; 
-#&gt; $n_steps_each
-#&gt; [1] 1000
-#&gt; 
-#&gt; $n_threads_total
-#&gt; NULL
-#&gt; 
-#&gt; $rerun_every
-#&gt; [1] Inf
-#&gt; 
-#&gt; $rerun_random
-#&gt; [1] FALSE
-#&gt; 
-#&gt; $use_parallel_seed
-#&gt; [1] FALSE
-#&gt; 
-#&gt; $save_state
-#&gt; [1] TRUE
-#&gt; 
-#&gt; $save_restart
-#&gt; NULL
-#&gt; 
-#&gt; $save_trajectories
-#&gt; [1] FALSE
-#&gt; 
-#&gt; $progress
-#&gt; [1] FALSE
-#&gt; 
-#&gt; $filter_early_exit
-#&gt; [1] FALSE
-#&gt; 
-#&gt; $nested_step_ratio
-#&gt; [1] 1
-#&gt; 
-#&gt; attr(,"class")
-#&gt; [1] "pmcmc_control"</div><div class='input'>
-<span class='co'># Suppose we have a fairly large node with 16 cores and we want to</span>
-<span class='co'># run 8 chains. We can use all cores for a single chain and run</span>
-<span class='co'># the chains sequentially like this:</span>
-<span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'>pmcmc_control</span><span class='op'>(</span><span class='fl'>1000</span>, n_chains <span class='op'>=</span> <span class='fl'>8</span>, n_threads_total <span class='op'>=</span> <span class='fl'>16</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; $n_steps
-#&gt; [1] 1000
-#&gt; 
-#&gt; $n_chains
-#&gt; [1] 8
-#&gt; 
-#&gt; $n_workers
-#&gt; [1] 1
-#&gt; 
-#&gt; $n_steps_each
-#&gt; [1] 1000
-#&gt; 
-#&gt; $n_threads_total
-#&gt; [1] 16
-#&gt; 
-#&gt; $rerun_every
-#&gt; [1] Inf
-#&gt; 
-#&gt; $rerun_random
-#&gt; [1] FALSE
-#&gt; 
-#&gt; $use_parallel_seed
-#&gt; [1] FALSE
-#&gt; 
-#&gt; $save_state
-#&gt; [1] TRUE
-#&gt; 
-#&gt; $save_restart
-#&gt; NULL
-#&gt; 
-#&gt; $save_trajectories
-#&gt; [1] FALSE
-#&gt; 
-#&gt; $progress
-#&gt; [1] FALSE
-#&gt; 
-#&gt; $filter_early_exit
-#&gt; [1] FALSE
-#&gt; 
-#&gt; $nested_step_ratio
-#&gt; [1] 1
-#&gt; 
-#&gt; attr(,"class")
-#&gt; [1] "pmcmc_control"</div><div class='input'>
-<span class='co'># However, on some platforms (e.g., Windows) this may only realise</span>
-<span class='co'># a 50% total CPU use, in which case you might benefit from</span>
-<span class='co'># splitting these chains over different worker processes (2-4</span>
-<span class='co'># workers is likely the largest useful number).</span>
-<span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'>pmcmc_control</span><span class='op'>(</span><span class='fl'>1000</span>, n_chains <span class='op'>=</span> <span class='fl'>8</span>, n_threads_total <span class='op'>=</span> <span class='fl'>16</span>,
-                       n_workers <span class='op'>=</span> <span class='fl'>4</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; $n_steps
-#&gt; [1] 1000
-#&gt; 
-#&gt; $n_chains
-#&gt; [1] 8
-#&gt; 
-#&gt; $n_workers
-#&gt; [1] 4
-#&gt; 
-#&gt; $n_steps_each
-#&gt; [1] 100
-#&gt; 
-#&gt; $n_threads_total
-#&gt; [1] 16
-#&gt; 
-#&gt; $rerun_every
-#&gt; [1] Inf
-#&gt; 
-#&gt; $rerun_random
-#&gt; [1] FALSE
-#&gt; 
-#&gt; $use_parallel_seed
-#&gt; [1] FALSE
-#&gt; 
-#&gt; $save_state
-#&gt; [1] TRUE
-#&gt; 
-#&gt; $save_restart
-#&gt; NULL
-#&gt; 
-#&gt; $save_trajectories
-#&gt; [1] FALSE
-#&gt; 
-#&gt; $progress
-#&gt; [1] FALSE
-#&gt; 
-#&gt; $filter_early_exit
-#&gt; [1] FALSE
-#&gt; 
-#&gt; $nested_step_ratio
-#&gt; [1] 1
-#&gt; 
-#&gt; attr(,"class")
-#&gt; [1] "pmcmc_control"</div></pre>
+    <pre class="examples"><span class='r-in'><span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'>pmcmc_control</span><span class='op'>(</span><span class='fl'>1000</span><span class='op'>)</span></span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $n_steps</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] 1000</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $n_chains</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] 1</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $n_workers</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] 1</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $n_steps_each</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] 1000</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $n_threads_total</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> NULL</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $rerun_every</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] Inf</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $rerun_random</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] FALSE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $use_parallel_seed</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] FALSE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $save_state</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] TRUE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $save_restart</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> NULL</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $save_trajectories</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] FALSE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $progress</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] FALSE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $filter_early_exit</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] FALSE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $nested_step_ratio</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] 1</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> attr(,"class")</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] "pmcmc_control"</span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># Suppose we have a fairly large node with 16 cores and we want to</span></span>
+<span class='r-in'><span class='co'># run 8 chains. We can use all cores for a single chain and run</span></span>
+<span class='r-in'><span class='co'># the chains sequentially like this:</span></span>
+<span class='r-in'><span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'>pmcmc_control</span><span class='op'>(</span><span class='fl'>1000</span>, n_chains <span class='op'>=</span> <span class='fl'>8</span>, n_threads_total <span class='op'>=</span> <span class='fl'>16</span><span class='op'>)</span></span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $n_steps</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] 1000</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $n_chains</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] 8</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $n_workers</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] 1</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $n_steps_each</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] 1000</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $n_threads_total</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] 16</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $rerun_every</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] Inf</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $rerun_random</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] FALSE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $use_parallel_seed</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] FALSE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $save_state</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] TRUE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $save_restart</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> NULL</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $save_trajectories</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] FALSE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $progress</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] FALSE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $filter_early_exit</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] FALSE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $nested_step_ratio</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] 1</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> attr(,"class")</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] "pmcmc_control"</span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># However, on some platforms (e.g., Windows) this may only realise</span></span>
+<span class='r-in'><span class='co'># a 50% total CPU use, in which case you might benefit from</span></span>
+<span class='r-in'><span class='co'># splitting these chains over different worker processes (2-4</span></span>
+<span class='r-in'><span class='co'># workers is likely the largest useful number).</span></span>
+<span class='r-in'><span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'>pmcmc_control</span><span class='op'>(</span><span class='fl'>1000</span>, n_chains <span class='op'>=</span> <span class='fl'>8</span>, n_threads_total <span class='op'>=</span> <span class='fl'>16</span>,</span>
+<span class='r-in'>                       n_workers <span class='op'>=</span> <span class='fl'>4</span><span class='op'>)</span></span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $n_steps</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] 1000</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $n_chains</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] 8</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $n_workers</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] 4</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $n_steps_each</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] 100</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $n_threads_total</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] 16</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $rerun_every</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] Inf</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $rerun_random</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] FALSE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $use_parallel_seed</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] FALSE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $save_state</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] TRUE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $save_restart</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> NULL</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $save_trajectories</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] FALSE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $progress</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] FALSE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $filter_early_exit</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] FALSE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $nested_step_ratio</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] 1</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> attr(,"class")</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] "pmcmc_control"</span>
+</pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

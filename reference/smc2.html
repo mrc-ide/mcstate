@@ -81,7 +81,7 @@ your own risk." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.9</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.10</span>
       </span>
     </div>
 
@@ -199,176 +199,179 @@ number of particle-filter runs that this run was worth.</p></li>
 
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='co'># We use an example from dust which implements an epidemiological SIR</span>
-<span class='co'># (Susceptible-Infected-Recovered) model; see vignette("sir_models")</span>
-<span class='co'># for more background, as this example follows from the pMCMC example</span>
-<span class='co'># there</span>
-
-<span class='co'># The key tuning here is the number of particles per filter and number</span>
-<span class='co'># of parameter sets to consider simultaneously. Ordinarily these would</span>
-<span class='co'># be set (much) higher with an increase in computing time</span>
-<span class='va'>n_particles</span> <span class='op'>&lt;-</span> <span class='fl'>42</span>
-<span class='va'>n_parameter_sets</span> <span class='op'>&lt;-</span> <span class='fl'>20</span>
-
-<span class='co'># Basic epidemiological (Susceptible-Infected-Recovered) model</span>
-<span class='va'>sir</span> <span class='op'>&lt;-</span> <span class='fu'>dust</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/dust/man/dust_example.html'>dust_example</a></span><span class='op'>(</span><span class='st'>"sir"</span><span class='op'>)</span>
-
-<span class='co'># Pre-computed incidence data</span>
-<span class='va'>incidence</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/utils/read.table.html'>read.csv</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/system.file.html'>system.file</a></span><span class='op'>(</span><span class='st'>"sir_incidence.csv"</span>, package <span class='op'>=</span> <span class='st'>"mcstate"</span><span class='op'>)</span><span class='op'>)</span>
-
-<span class='co'># Annotate the data so that it is suitable for the particle filter to use</span>
-<span class='va'>dat</span> <span class='op'>&lt;-</span> <span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'><a href='particle_filter_data.html'>particle_filter_data</a></span><span class='op'>(</span><span class='va'>incidence</span>, <span class='st'>"day"</span>, <span class='fl'>4</span><span class='op'>)</span>
-
-<span class='co'># Subset the output during run</span>
-<span class='va'>index</span> <span class='op'>&lt;-</span> <span class='kw'>function</span><span class='op'>(</span><span class='va'>info</span><span class='op'>)</span> <span class='op'>{</span>
-  <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span>run <span class='op'>=</span> <span class='fl'>5L</span><span class='op'>)</span>
-<span class='op'>}</span>
-
-<span class='co'># The comparison function, used to compare simulated data with observe</span>
-<span class='co'># data, given the above subset</span>
-<span class='va'>compare</span> <span class='op'>&lt;-</span> <span class='kw'>function</span><span class='op'>(</span><span class='va'>state</span>, <span class='va'>observed</span>, <span class='va'>pars</span><span class='op'>)</span> <span class='op'>{</span>
-  <span class='va'>exp_noise</span> <span class='op'>&lt;-</span> <span class='fl'>1e6</span>
-  <span class='va'>incidence_modelled</span> <span class='op'>&lt;-</span> <span class='va'>state</span><span class='op'>[</span><span class='fl'>1L</span>, , drop <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>]</span>
-  <span class='va'>incidence_observed</span> <span class='op'>&lt;-</span> <span class='va'>observed</span><span class='op'>$</span><span class='va'>cases</span>
-  <span class='va'>lambda</span> <span class='op'>&lt;-</span> <span class='va'>incidence_modelled</span> <span class='op'>+</span>
-    <span class='fu'><a href='https://rdrr.io/r/stats/Exponential.html'>rexp</a></span><span class='op'>(</span>n <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/length.html'>length</a></span><span class='op'>(</span><span class='va'>incidence_modelled</span><span class='op'>)</span>, rate <span class='op'>=</span> <span class='va'>exp_noise</span><span class='op'>)</span>
-  <span class='fu'><a href='https://rdrr.io/r/stats/Poisson.html'>dpois</a></span><span class='op'>(</span>x <span class='op'>=</span> <span class='va'>incidence_observed</span>, lambda <span class='op'>=</span> <span class='va'>lambda</span>, log <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span>
-<span class='op'>}</span>
-
-<span class='co'># Finally, construct the particle filter:</span>
-<span class='va'>filter</span> <span class='op'>&lt;-</span> <span class='fu'>mcstate</span><span class='fu'>::</span><span class='va'><a href='particle_filter.html'>particle_filter</a></span><span class='op'>$</span><span class='fu'>new</span><span class='op'>(</span><span class='va'>dat</span>, <span class='va'>sir</span>, <span class='va'>n_particles</span>, <span class='va'>compare</span>,
-                                       index <span class='op'>=</span> <span class='va'>index</span><span class='op'>)</span>
-
-<span class='co'># To control the smc2 we need to specify the parameters to consider</span>
-<span class='va'>pars</span> <span class='op'>&lt;-</span> <span class='fu'>mcstate</span><span class='fu'>::</span><span class='va'><a href='smc2_parameters.html'>smc2_parameters</a></span><span class='op'>$</span><span class='fu'>new</span><span class='op'>(</span>
-  <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span>
-    <span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'><a href='smc2_parameter.html'>smc2_parameter</a></span><span class='op'>(</span><span class='st'>"beta"</span>,
-                            <span class='kw'>function</span><span class='op'>(</span><span class='va'>n</span><span class='op'>)</span> <span class='fu'><a href='https://rdrr.io/r/stats/Uniform.html'>runif</a></span><span class='op'>(</span><span class='va'>n</span>, <span class='fl'>0</span>, <span class='fl'>1</span><span class='op'>)</span>,
-                            <span class='kw'>function</span><span class='op'>(</span><span class='va'>x</span><span class='op'>)</span> <span class='fu'><a href='https://rdrr.io/r/stats/Uniform.html'>dunif</a></span><span class='op'>(</span><span class='va'>x</span>, <span class='fl'>0</span>, <span class='fl'>1</span>, log <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span>,
-                            min <span class='op'>=</span> <span class='fl'>0</span>, max <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span>,
-    <span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'><a href='smc2_parameter.html'>smc2_parameter</a></span><span class='op'>(</span><span class='st'>"gamma"</span>,
-                            <span class='kw'>function</span><span class='op'>(</span><span class='va'>n</span><span class='op'>)</span> <span class='fu'><a href='https://rdrr.io/r/stats/Uniform.html'>runif</a></span><span class='op'>(</span><span class='va'>n</span>, <span class='fl'>0</span>, <span class='fl'>1</span><span class='op'>)</span>,
-                            <span class='kw'>function</span><span class='op'>(</span><span class='va'>x</span><span class='op'>)</span> <span class='fu'><a href='https://rdrr.io/r/stats/Uniform.html'>dunif</a></span><span class='op'>(</span><span class='va'>x</span>, <span class='fl'>0</span>, <span class='fl'>1</span>, log <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span>,
-                            min <span class='op'>=</span> <span class='fl'>0</span>, max <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span><span class='op'>)</span><span class='op'>)</span>
-<span class='va'>control</span> <span class='op'>&lt;-</span> <span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'><a href='smc2_control.html'>smc2_control</a></span><span class='op'>(</span><span class='va'>n_parameter_sets</span>, progress <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span>
-
-<span class='co'># Then we run the particle filter</span>
-<span class='va'>res</span> <span class='op'>&lt;-</span> <span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'>smc2</span><span class='op'>(</span><span class='va'>pars</span>, <span class='va'>filter</span>, <span class='va'>control</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Finished 100 steps in 4 secs</span></div><div class='input'>
-<span class='co'># This returns quite a lot of information about the fit, and this will</span>
-<span class='co'># change in future versions</span>
-<span class='va'>res</span>
-</div><div class='output co'>#&gt; $pars
-#&gt;            beta     gamma
-#&gt;  [1,] 0.8786062 0.6437136
-#&gt;  [2,] 0.9214060 0.7206962
-#&gt;  [3,] 0.7794009 0.4554216
-#&gt;  [4,] 0.9031054 0.3912214
-#&gt;  [5,] 0.9848284 0.5753385
-#&gt;  [6,] 0.9683735 0.6812068
-#&gt;  [7,] 0.9665211 0.4632114
-#&gt;  [8,] 0.9304471 0.2533553
-#&gt;  [9,] 0.9304471 0.2533553
-#&gt; [10,] 0.8417721 0.3962091
-#&gt; [11,] 0.8908930 0.4795897
-#&gt; [12,] 0.8129269 0.3707690
-#&gt; [13,] 0.9935318 0.7692723
-#&gt; [14,] 0.9212062 0.7203307
-#&gt; [15,] 0.8415764 0.5830177
-#&gt; [16,] 0.5277357 0.2802811
-#&gt; [17,] 0.4028228 0.3333174
-#&gt; [18,] 0.8161944 0.4787353
-#&gt; [19,] 0.6855155 0.5679502
-#&gt; [20,] 0.6855155 0.5679502
-#&gt; 
-#&gt; $probabilities
-#&gt;       log_prior log_likelihood log_posterior        weight
-#&gt;  [1,]         0      -278.7735     -278.7735  2.859476e-05
-#&gt;  [2,]         0      -278.0422     -278.0422  5.941255e-05
-#&gt;  [3,]         0      -277.0136     -277.0136  1.661937e-04
-#&gt;  [4,]         0      -350.8526     -350.8526  1.421469e-36
-#&gt;  [5,]         0      -286.5330     -286.5330  1.220080e-08
-#&gt;  [6,]         0      -280.7715     -280.7715  3.877727e-06
-#&gt;  [7,]         0      -317.9326     -317.9326  2.816504e-22
-#&gt;  [8,]         0      -608.5820     -608.5820 1.668316e-148
-#&gt;  [9,]         0      -596.4430     -596.4430 3.120076e-143
-#&gt; [10,]         0      -344.8674     -344.8674  5.650361e-34
-#&gt; [11,]         0      -295.5379     -295.5379  1.498378e-12
-#&gt; [12,]         0      -317.7717     -317.7717  3.308255e-22
-#&gt; [13,]         0      -278.1509     -278.1509  5.329317e-05
-#&gt; [14,]         0      -274.7557     -274.7557  1.589230e-03
-#&gt; [15,]         0      -278.7987     -278.7987  2.788502e-05
-#&gt; [16,]         0      -271.2130     -271.2130  5.492417e-02
-#&gt; [17,]         0      -274.1308     -274.1308  2.968949e-03
-#&gt; [18,]         0      -282.8102     -282.8102  5.048456e-07
-#&gt; [19,]         0      -269.2382     -269.2382  3.957467e-01
-#&gt; [20,]         0      -268.9192     -268.9192  5.444312e-01
-#&gt; 
-#&gt; $statistics
-#&gt; $statistics$ess
-#&gt;   [1] 15.640930 10.775486  9.537136 15.205944 12.313101 12.119734 10.451670
-#&gt;   [8]  9.566562 12.447094  9.683855 10.935335  4.253650  9.891268  9.084123
-#&gt;  [15]  7.209652  8.681930  7.257702  3.807916  5.315583  4.614897  3.200618
-#&gt;  [22]  5.443249  1.368950  1.743904  3.647132  2.199062  2.356738  2.232530
-#&gt;  [29]  2.859938  8.504770  6.573243  9.261848 14.853334  9.588694 18.801232
-#&gt;  [36] 17.723347 18.388918 18.032706 17.375412 16.467848 16.065108 14.738381
-#&gt;  [43] 15.622150 13.482905 13.155182 11.727117 13.730075 13.846506 13.874801
-#&gt;  [50] 14.004910 14.413095 13.474362 14.668527  9.540205 18.880216 18.020297
-#&gt;  [57] 17.775742 16.306056 16.621497 16.876997 15.329050 13.763136 13.014696
-#&gt;  [64] 11.998772 11.349339  8.966360 17.046908 17.768898 16.355222 14.700180
-#&gt;  [71] 13.935344 13.562562 12.992445 12.817996 10.891351  9.562253 17.190674
-#&gt;  [78] 16.500475 14.630750 14.734692 15.731766 15.777220 14.400955 12.398735
-#&gt;  [85] 11.150965 11.847114 12.193318  9.354824 18.845585 15.779387 10.876748
-#&gt;  [92]  8.177334 19.224516 19.504540 19.244692 17.179103 15.726231 15.974851
-#&gt;  [99] 15.526603 13.804860
-#&gt; 
-#&gt; $statistics$acceptance_rate
-#&gt;   [1]   NA   NA 0.80   NA   NA   NA   NA 0.75   NA 0.70   NA 0.70 0.45 0.50 0.40
-#&gt;  [16] 0.35 0.15 0.30 0.35 0.45 0.40 0.15 0.05 0.25 0.20 0.35 0.40 0.50 0.30 0.55
-#&gt;  [31] 0.30 0.50   NA 0.50   NA   NA   NA   NA   NA   NA   NA   NA   NA   NA   NA
-#&gt;  [46]   NA   NA   NA   NA   NA   NA   NA   NA 0.35   NA   NA   NA   NA   NA   NA
-#&gt;  [61]   NA   NA   NA   NA   NA 0.30   NA   NA   NA   NA   NA   NA   NA   NA   NA
-#&gt;  [76] 0.35   NA   NA   NA   NA   NA   NA   NA   NA   NA   NA   NA 0.40   NA   NA
-#&gt;  [91]   NA 0.30   NA   NA   NA   NA   NA   NA   NA   NA
-#&gt; 
-#&gt; $statistics$n_particles
-#&gt; [1] 42
-#&gt; 
-#&gt; $statistics$n_parameter_sets
-#&gt; [1] 20
-#&gt; 
-#&gt; $statistics$n_steps
-#&gt; [1] 100
-#&gt; 
-#&gt; $statistics$effort
-#&gt; [1] 198.6
-#&gt; 
-#&gt; 
-#&gt; attr(,"class")
-#&gt; [1] "smc2_result"</div><div class='input'>
-<span class='co'># Most useful is likely the predict method:</span>
-<span class='fu'><a href='https://rdrr.io/r/stats/predict.html'>predict</a></span><span class='op'>(</span><span class='va'>res</span><span class='op'>)</span>
-</div><div class='output co'>#&gt;            beta     gamma
-#&gt;  [1,] 0.6855155 0.5679502
-#&gt;  [2,] 0.6855155 0.5679502
-#&gt;  [3,] 0.6855155 0.5679502
-#&gt;  [4,] 0.5277357 0.2802811
-#&gt;  [5,] 0.6855155 0.5679502
-#&gt;  [6,] 0.6855155 0.5679502
-#&gt;  [7,] 0.6855155 0.5679502
-#&gt;  [8,] 0.6855155 0.5679502
-#&gt;  [9,] 0.6855155 0.5679502
-#&gt; [10,] 0.6855155 0.5679502
-#&gt; [11,] 0.6855155 0.5679502
-#&gt; [12,] 0.6855155 0.5679502
-#&gt; [13,] 0.6855155 0.5679502
-#&gt; [14,] 0.6855155 0.5679502
-#&gt; [15,] 0.6855155 0.5679502
-#&gt; [16,] 0.6855155 0.5679502
-#&gt; [17,] 0.6855155 0.5679502
-#&gt; [18,] 0.6855155 0.5679502
-#&gt; [19,] 0.6855155 0.5679502
-#&gt; [20,] 0.6855155 0.5679502</div></pre>
+    <pre class="examples"><span class='r-in'><span class='co'># We use an example from dust which implements an epidemiological SIR</span></span>
+<span class='r-in'><span class='co'># (Susceptible-Infected-Recovered) model; see vignette("sir_models")</span></span>
+<span class='r-in'><span class='co'># for more background, as this example follows from the pMCMC example</span></span>
+<span class='r-in'><span class='co'># there</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># The key tuning here is the number of particles per filter and number</span></span>
+<span class='r-in'><span class='co'># of parameter sets to consider simultaneously. Ordinarily these would</span></span>
+<span class='r-in'><span class='co'># be set (much) higher with an increase in computing time</span></span>
+<span class='r-in'><span class='va'>n_particles</span> <span class='op'>&lt;-</span> <span class='fl'>42</span></span>
+<span class='r-in'><span class='va'>n_parameter_sets</span> <span class='op'>&lt;-</span> <span class='fl'>20</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># Basic epidemiological (Susceptible-Infected-Recovered) model</span></span>
+<span class='r-in'><span class='va'>sir</span> <span class='op'>&lt;-</span> <span class='fu'>dust</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/dust/man/dust_example.html'>dust_example</a></span><span class='op'>(</span><span class='st'>"sir"</span><span class='op'>)</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># Pre-computed incidence data</span></span>
+<span class='r-in'><span class='va'>incidence</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/utils/read.table.html'>read.csv</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/system.file.html'>system.file</a></span><span class='op'>(</span><span class='st'>"sir_incidence.csv"</span>, package <span class='op'>=</span> <span class='st'>"mcstate"</span><span class='op'>)</span><span class='op'>)</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># Annotate the data so that it is suitable for the particle filter to use</span></span>
+<span class='r-in'><span class='va'>dat</span> <span class='op'>&lt;-</span> <span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'><a href='particle_filter_data.html'>particle_filter_data</a></span><span class='op'>(</span><span class='va'>incidence</span>, <span class='st'>"day"</span>, <span class='fl'>4</span><span class='op'>)</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># Subset the output during run</span></span>
+<span class='r-in'><span class='va'>index</span> <span class='op'>&lt;-</span> <span class='kw'>function</span><span class='op'>(</span><span class='va'>info</span><span class='op'>)</span> <span class='op'>{</span></span>
+<span class='r-in'>  <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span>run <span class='op'>=</span> <span class='fl'>5L</span><span class='op'>)</span></span>
+<span class='r-in'><span class='op'>}</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># The comparison function, used to compare simulated data with observe</span></span>
+<span class='r-in'><span class='co'># data, given the above subset</span></span>
+<span class='r-in'><span class='va'>compare</span> <span class='op'>&lt;-</span> <span class='kw'>function</span><span class='op'>(</span><span class='va'>state</span>, <span class='va'>observed</span>, <span class='va'>pars</span><span class='op'>)</span> <span class='op'>{</span></span>
+<span class='r-in'>  <span class='va'>exp_noise</span> <span class='op'>&lt;-</span> <span class='fl'>1e6</span></span>
+<span class='r-in'>  <span class='va'>incidence_modelled</span> <span class='op'>&lt;-</span> <span class='va'>state</span><span class='op'>[</span><span class='fl'>1L</span>, , drop <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>]</span></span>
+<span class='r-in'>  <span class='va'>incidence_observed</span> <span class='op'>&lt;-</span> <span class='va'>observed</span><span class='op'>$</span><span class='va'>cases</span></span>
+<span class='r-in'>  <span class='va'>lambda</span> <span class='op'>&lt;-</span> <span class='va'>incidence_modelled</span> <span class='op'>+</span></span>
+<span class='r-in'>    <span class='fu'><a href='https://rdrr.io/r/stats/Exponential.html'>rexp</a></span><span class='op'>(</span>n <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/length.html'>length</a></span><span class='op'>(</span><span class='va'>incidence_modelled</span><span class='op'>)</span>, rate <span class='op'>=</span> <span class='va'>exp_noise</span><span class='op'>)</span></span>
+<span class='r-in'>  <span class='fu'><a href='https://rdrr.io/r/stats/Poisson.html'>dpois</a></span><span class='op'>(</span>x <span class='op'>=</span> <span class='va'>incidence_observed</span>, lambda <span class='op'>=</span> <span class='va'>lambda</span>, log <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span></span>
+<span class='r-in'><span class='op'>}</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># Finally, construct the particle filter:</span></span>
+<span class='r-in'><span class='va'>filter</span> <span class='op'>&lt;-</span> <span class='fu'>mcstate</span><span class='fu'>::</span><span class='va'><a href='particle_filter.html'>particle_filter</a></span><span class='op'>$</span><span class='fu'>new</span><span class='op'>(</span><span class='va'>dat</span>, <span class='va'>sir</span>, <span class='va'>n_particles</span>, <span class='va'>compare</span>,</span>
+<span class='r-in'>                                       index <span class='op'>=</span> <span class='va'>index</span><span class='op'>)</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># To control the smc2 we need to specify the parameters to consider</span></span>
+<span class='r-in'><span class='va'>pars</span> <span class='op'>&lt;-</span> <span class='fu'>mcstate</span><span class='fu'>::</span><span class='va'><a href='smc2_parameters.html'>smc2_parameters</a></span><span class='op'>$</span><span class='fu'>new</span><span class='op'>(</span></span>
+<span class='r-in'>  <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span></span>
+<span class='r-in'>    <span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'><a href='smc2_parameter.html'>smc2_parameter</a></span><span class='op'>(</span><span class='st'>"beta"</span>,</span>
+<span class='r-in'>                            <span class='kw'>function</span><span class='op'>(</span><span class='va'>n</span><span class='op'>)</span> <span class='fu'><a href='https://rdrr.io/r/stats/Uniform.html'>runif</a></span><span class='op'>(</span><span class='va'>n</span>, <span class='fl'>0</span>, <span class='fl'>1</span><span class='op'>)</span>,</span>
+<span class='r-in'>                            <span class='kw'>function</span><span class='op'>(</span><span class='va'>x</span><span class='op'>)</span> <span class='fu'><a href='https://rdrr.io/r/stats/Uniform.html'>dunif</a></span><span class='op'>(</span><span class='va'>x</span>, <span class='fl'>0</span>, <span class='fl'>1</span>, log <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span>,</span>
+<span class='r-in'>                            min <span class='op'>=</span> <span class='fl'>0</span>, max <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span>,</span>
+<span class='r-in'>    <span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'><a href='smc2_parameter.html'>smc2_parameter</a></span><span class='op'>(</span><span class='st'>"gamma"</span>,</span>
+<span class='r-in'>                            <span class='kw'>function</span><span class='op'>(</span><span class='va'>n</span><span class='op'>)</span> <span class='fu'><a href='https://rdrr.io/r/stats/Uniform.html'>runif</a></span><span class='op'>(</span><span class='va'>n</span>, <span class='fl'>0</span>, <span class='fl'>1</span><span class='op'>)</span>,</span>
+<span class='r-in'>                            <span class='kw'>function</span><span class='op'>(</span><span class='va'>x</span><span class='op'>)</span> <span class='fu'><a href='https://rdrr.io/r/stats/Uniform.html'>dunif</a></span><span class='op'>(</span><span class='va'>x</span>, <span class='fl'>0</span>, <span class='fl'>1</span>, log <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span>,</span>
+<span class='r-in'>                            min <span class='op'>=</span> <span class='fl'>0</span>, max <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span><span class='op'>)</span><span class='op'>)</span></span>
+<span class='r-in'><span class='va'>control</span> <span class='op'>&lt;-</span> <span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'><a href='smc2_control.html'>smc2_control</a></span><span class='op'>(</span><span class='va'>n_parameter_sets</span>, progress <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># Then we run the particle filter</span></span>
+<span class='r-in'><span class='va'>res</span> <span class='op'>&lt;-</span> <span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'>smc2</span><span class='op'>(</span><span class='va'>pars</span>, <span class='va'>filter</span>, <span class='va'>control</span><span class='op'>)</span></span>
+<span class='r-msg co'><span class='r-pr'>#&gt;</span> Finished 100 steps in 4 secs</span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># This returns quite a lot of information about the fit, and this will</span></span>
+<span class='r-in'><span class='co'># change in future versions</span></span>
+<span class='r-in'><span class='va'>res</span></span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $pars</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>            beta     gamma</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [1,] 0.8786062 0.6437136</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [2,] 0.9214060 0.7206962</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [3,] 0.7794009 0.4554216</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [4,] 0.9031054 0.3912214</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [5,] 0.9848284 0.5753385</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [6,] 0.9683735 0.6812068</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [7,] 0.9665211 0.4632114</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [8,] 0.9304471 0.2533553</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [9,] 0.9304471 0.2533553</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [10,] 0.8417721 0.3962091</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [11,] 0.8908930 0.4795897</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [12,] 0.8129269 0.3707690</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [13,] 0.9935318 0.7692723</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [14,] 0.9212062 0.7203307</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [15,] 0.8415764 0.5830177</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [16,] 0.5277357 0.2802811</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [17,] 0.4028228 0.3333174</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [18,] 0.8161944 0.4787353</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [19,] 0.6855155 0.5679502</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [20,] 0.6855155 0.5679502</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $probabilities</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>       log_prior log_likelihood log_posterior        weight</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [1,]         0      -278.7735     -278.7735  2.859476e-05</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [2,]         0      -278.0422     -278.0422  5.941255e-05</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [3,]         0      -277.0136     -277.0136  1.661937e-04</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [4,]         0      -350.8526     -350.8526  1.421469e-36</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [5,]         0      -286.5330     -286.5330  1.220080e-08</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [6,]         0      -280.7715     -280.7715  3.877727e-06</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [7,]         0      -317.9326     -317.9326  2.816504e-22</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [8,]         0      -608.5820     -608.5820 1.668316e-148</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [9,]         0      -596.4430     -596.4430 3.120076e-143</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [10,]         0      -344.8674     -344.8674  5.650361e-34</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [11,]         0      -295.5379     -295.5379  1.498378e-12</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [12,]         0      -317.7717     -317.7717  3.308255e-22</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [13,]         0      -278.1509     -278.1509  5.329317e-05</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [14,]         0      -274.7557     -274.7557  1.589230e-03</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [15,]         0      -278.7987     -278.7987  2.788502e-05</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [16,]         0      -271.2130     -271.2130  5.492417e-02</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [17,]         0      -274.1308     -274.1308  2.968949e-03</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [18,]         0      -282.8102     -282.8102  5.048456e-07</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [19,]         0      -269.2382     -269.2382  3.957467e-01</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [20,]         0      -268.9192     -268.9192  5.444312e-01</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $statistics</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $statistics$ess</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   [1] 15.640930 10.775486  9.537136 15.205944 12.313101 12.119734 10.451670</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   [8]  9.566562 12.447094  9.683855 10.935335  4.253650  9.891268  9.084123</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [15]  7.209652  8.681930  7.257702  3.807916  5.315583  4.614897  3.200618</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [22]  5.443249  1.368950  1.743904  3.647132  2.199062  2.356738  2.232530</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [29]  2.859938  8.504770  6.573243  9.261848 14.853334  9.588694 18.801232</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [36] 17.723347 18.388918 18.032706 17.375412 16.467848 16.065108 14.738381</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [43] 15.622150 13.482905 13.155182 11.727117 13.730075 13.846506 13.874801</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [50] 14.004910 14.413095 13.474362 14.668527  9.540205 18.880216 18.020297</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [57] 17.775742 16.306056 16.621497 16.876997 15.329050 13.763136 13.014696</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [64] 11.998772 11.349339  8.966360 17.046908 17.768898 16.355222 14.700180</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [71] 13.935344 13.562562 12.992445 12.817996 10.891351  9.562253 17.190674</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [78] 16.500475 14.630750 14.734692 15.731766 15.777220 14.400955 12.398735</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [85] 11.150965 11.847114 12.193318  9.354824 18.845585 15.779387 10.876748</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [92]  8.177334 19.224516 19.504540 19.244692 17.179103 15.726231 15.974851</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [99] 15.526603 13.804860</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $statistics$acceptance_rate</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   [1]   NA   NA 0.80   NA   NA   NA   NA 0.75   NA 0.70   NA 0.70 0.45 0.50 0.40</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [16] 0.35 0.15 0.30 0.35 0.45 0.40 0.15 0.05 0.25 0.20 0.35 0.40 0.50 0.30 0.55</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [31] 0.30 0.50   NA 0.50   NA   NA   NA   NA   NA   NA   NA   NA   NA   NA   NA</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [46]   NA   NA   NA   NA   NA   NA   NA   NA 0.35   NA   NA   NA   NA   NA   NA</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [61]   NA   NA   NA   NA   NA 0.30   NA   NA   NA   NA   NA   NA   NA   NA   NA</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [76] 0.35   NA   NA   NA   NA   NA   NA   NA   NA   NA   NA   NA 0.40   NA   NA</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [91]   NA 0.30   NA   NA   NA   NA   NA   NA   NA   NA</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $statistics$n_particles</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] 42</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $statistics$n_parameter_sets</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] 20</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $statistics$n_steps</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] 100</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $statistics$effort</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] 198.6</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> attr(,"class")</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] "smc2_result"</span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># Most useful is likely the predict method:</span></span>
+<span class='r-in'><span class='fu'><a href='https://rdrr.io/r/stats/predict.html'>predict</a></span><span class='op'>(</span><span class='va'>res</span><span class='op'>)</span></span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>            beta     gamma</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [1,] 0.6855155 0.5679502</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [2,] 0.6855155 0.5679502</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [3,] 0.6855155 0.5679502</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [4,] 0.5277357 0.2802811</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [5,] 0.6855155 0.5679502</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [6,] 0.6855155 0.5679502</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [7,] 0.6855155 0.5679502</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [8,] 0.6855155 0.5679502</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  [9,] 0.6855155 0.5679502</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [10,] 0.6855155 0.5679502</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [11,] 0.6855155 0.5679502</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [12,] 0.6855155 0.5679502</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [13,] 0.6855155 0.5679502</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [14,] 0.6855155 0.5679502</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [15,] 0.6855155 0.5679502</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [16,] 0.6855155 0.5679502</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [17,] 0.6855155 0.5679502</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [18,] 0.6855155 0.5679502</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [19,] 0.6855155 0.5679502</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [20,] 0.6855155 0.5679502</span>
+</pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

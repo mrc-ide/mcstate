@@ -83,7 +83,7 @@ dropped." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.9</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.10</span>
       </span>
     </div>
 
@@ -184,37 +184,41 @@ dropped.</p>
     <p>An array</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'>
-<span class='co'># Suppose we have an array with a redundant 2nd dimension</span>
-<span class='va'>m</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/array.html'>array</a></span><span class='op'>(</span><span class='fl'>1</span><span class='op'>:</span><span class='fl'>25</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>5</span>, <span class='fl'>1</span>, <span class='fl'>5</span><span class='op'>)</span><span class='op'>)</span>
-
-<span class='co'># commonly we might drop this with</span>
-<span class='fu'><a href='https://rdrr.io/r/base/drop.html'>drop</a></span><span class='op'>(</span><span class='va'>m</span><span class='op'>)</span>
-</div><div class='output co'>#&gt;      [,1] [,2] [,3] [,4] [,5]
-#&gt; [1,]    1    6   11   16   21
-#&gt; [2,]    2    7   12   17   22
-#&gt; [3,]    3    8   13   18   23
-#&gt; [4,]    4    9   14   19   24
-#&gt; [5,]    5   10   15   20   25</div><div class='input'>
-<span class='co'># in this case, array_drop is the same:</span>
-<span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'>array_drop</span><span class='op'>(</span><span class='va'>m</span>, <span class='fl'>2</span><span class='op'>)</span>
-</div><div class='output co'>#&gt;      [,1] [,2] [,3] [,4] [,5]
-#&gt; [1,]    1    6   11   16   21
-#&gt; [2,]    2    7   12   17   22
-#&gt; [3,]    3    8   13   18   23
-#&gt; [4,]    4    9   14   19   24
-#&gt; [5,]    5   10   15   20   25</div><div class='input'>
-<span class='co'># However, suppose that our matrix had, in this case, a first</span>
-<span class='co'># dimension that was also 1 but we did not want to drop it:</span>
-<span class='va'>m2</span> <span class='op'>&lt;-</span> <span class='va'>m</span><span class='op'>[</span><span class='fl'>1</span>, , , drop <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>]</span>
-
-<span class='co'># Here, drop(m2) returns just a vector, discarding our first dimension</span>
-<span class='fu'><a href='https://rdrr.io/r/base/drop.html'>drop</a></span><span class='op'>(</span><span class='va'>m2</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; [1]  1  6 11 16 21</div><div class='input'>
-<span class='co'># However, array_drop will preserve that dimension</span>
-<span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'>array_drop</span><span class='op'>(</span><span class='va'>m2</span>, <span class='fl'>2</span><span class='op'>)</span>
-</div><div class='output co'>#&gt;      [,1] [,2] [,3] [,4] [,5]
-#&gt; [1,]    1    6   11   16   21</div></pre>
+    <pre class="examples"><span class='r-in'></span>
+<span class='r-in'><span class='co'># Suppose we have an array with a redundant 2nd dimension</span></span>
+<span class='r-in'><span class='va'>m</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/array.html'>array</a></span><span class='op'>(</span><span class='fl'>1</span><span class='op'>:</span><span class='fl'>25</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>5</span>, <span class='fl'>1</span>, <span class='fl'>5</span><span class='op'>)</span><span class='op'>)</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># commonly we might drop this with</span></span>
+<span class='r-in'><span class='fu'><a href='https://rdrr.io/r/base/drop.html'>drop</a></span><span class='op'>(</span><span class='va'>m</span><span class='op'>)</span></span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>      [,1] [,2] [,3] [,4] [,5]</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1,]    1    6   11   16   21</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [2,]    2    7   12   17   22</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [3,]    3    8   13   18   23</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [4,]    4    9   14   19   24</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [5,]    5   10   15   20   25</span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># in this case, array_drop is the same:</span></span>
+<span class='r-in'><span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'>array_drop</span><span class='op'>(</span><span class='va'>m</span>, <span class='fl'>2</span><span class='op'>)</span></span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>      [,1] [,2] [,3] [,4] [,5]</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1,]    1    6   11   16   21</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [2,]    2    7   12   17   22</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [3,]    3    8   13   18   23</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [4,]    4    9   14   19   24</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [5,]    5   10   15   20   25</span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># However, suppose that our matrix had, in this case, a first</span></span>
+<span class='r-in'><span class='co'># dimension that was also 1 but we did not want to drop it:</span></span>
+<span class='r-in'><span class='va'>m2</span> <span class='op'>&lt;-</span> <span class='va'>m</span><span class='op'>[</span><span class='fl'>1</span>, , , drop <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>]</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># Here, drop(m2) returns just a vector, discarding our first dimension</span></span>
+<span class='r-in'><span class='fu'><a href='https://rdrr.io/r/base/drop.html'>drop</a></span><span class='op'>(</span><span class='va'>m2</span><span class='op'>)</span></span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1]  1  6 11 16 21</span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># However, array_drop will preserve that dimension</span></span>
+<span class='r-in'><span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'>array_drop</span><span class='op'>(</span><span class='va'>m2</span>, <span class='fl'>2</span><span class='op'>)</span></span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>      [,1] [,2] [,3] [,4] [,5]</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1,]    1    6   11   16   21</span>
+</pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

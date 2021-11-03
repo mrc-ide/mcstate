@@ -38,7 +38,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.9</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.10</span>
       </span>
     </div>
 
@@ -117,7 +117,7 @@
 
     
     
-<p>Stochastic models are slow! Ignoring issues of parallelism and fast random numbers (see <code>vignette("design")</code>), you still must run the model some number of times within a particle filter to estimate the likelihood. We’re experimenting with alternative approaches to approximate the likelihood, including running the stochastic models “deterministically” with a single particle. In this case calls to <code><a href="https://rdrr.io/r/stats/Binomial.html">rbinom(n, p)</a></code> (for example) will be replaced with their mean (<code>n * p</code>). This is not exactly the same model as the stochastic model, nor is it directly even a limit case of it. However, we hope that it still lands in about the right area of high probability density and can be used for a pilot run before running a pmcmc properly.</p>
+<p>Stochastic models are slow! Ignoring issues of parallelism and fast random numbers (see <code>vignette("design")</code>), you still must run the model some number of times within a particle filter to estimate the likelihood. We’re experimenting with alternative approaches to approximate the likelihood, including running the stochastic models “deterministically” with a single particle. In this case calls to <code>rbinom(n, p)</code> (for example) will be replaced with their mean (<code>n * p</code>). This is not exactly the same model as the stochastic model, nor is it directly even a limit case of it. However, we hope that it still lands in about the right area of high probability density and can be used for a pilot run before running a pmcmc properly.</p>
 <p>We demonstrate this, as in <code><a href="../articles/sir_models.html">vignette("sir_models")</a></code> with our simple SIR model.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">sir</span> <span class="op">&lt;-</span> <span class="fu">dust</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/dust/man/dust_example.html">dust_example</a></span><span class="op">(</span><span class="st">"sir"</span><span class="op">)</span></code></pre></div>

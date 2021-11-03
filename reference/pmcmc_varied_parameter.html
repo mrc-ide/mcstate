@@ -83,7 +83,7 @@ these together for use with pmcmc()." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.9</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.10</span>
       </span>
     </div>
 
@@ -225,67 +225,68 @@ populations.</p></td>
 
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'>pmcmc_varied_parameter</span><span class='op'>(</span>
-  name <span class='op'>=</span> <span class='st'>"size"</span>,
-  populations <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"Europe"</span>, <span class='st'>"America"</span><span class='op'>)</span>,
-  initial <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>100</span>, <span class='fl'>200</span><span class='op'>)</span>,
-  min <span class='op'>=</span> <span class='fl'>0</span>,
-  max <span class='op'>=</span> <span class='cn'>Inf</span>,
-  discrete <span class='op'>=</span> <span class='cn'>TRUE</span>,
-  prior <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='va'>dnorm</span>, <span class='va'>dexp</span><span class='op'>)</span>
-<span class='op'>)</span>
-</div><div class='output co'>#&gt; $Europe
-#&gt; $name
-#&gt; [1] "size"
-#&gt; 
-#&gt; $initial
-#&gt; [1] 100
-#&gt; 
-#&gt; $min
-#&gt; [1] 0
-#&gt; 
-#&gt; $max
-#&gt; [1] Inf
-#&gt; 
-#&gt; $discrete
-#&gt; [1] TRUE
-#&gt; 
-#&gt; $prior
-#&gt; function (x, mean = 0, sd = 1, log = FALSE) 
-#&gt; .Call(C_dnorm, x, mean, sd, log)
-#&gt; &lt;bytecode: 0x7fbd46682c98&gt;
-#&gt; &lt;environment: namespace:stats&gt;
-#&gt; 
-#&gt; attr(,"class")
-#&gt; [1] "pmcmc_parameter"
-#&gt; 
-#&gt; $America
-#&gt; $name
-#&gt; [1] "size"
-#&gt; 
-#&gt; $initial
-#&gt; [1] 200
-#&gt; 
-#&gt; $min
-#&gt; [1] 0
-#&gt; 
-#&gt; $max
-#&gt; [1] Inf
-#&gt; 
-#&gt; $discrete
-#&gt; [1] TRUE
-#&gt; 
-#&gt; $prior
-#&gt; function (x, rate = 1, log = FALSE) 
-#&gt; .Call(C_dexp, x, 1/rate, log)
-#&gt; &lt;bytecode: 0x7fbd3fe496d0&gt;
-#&gt; &lt;environment: namespace:stats&gt;
-#&gt; 
-#&gt; attr(,"class")
-#&gt; [1] "pmcmc_parameter"
-#&gt; 
-#&gt; attr(,"class")
-#&gt; [1] "pmcmc_varied_parameter"</div></pre>
+    <pre class="examples"><span class='r-in'><span class='fu'>pmcmc_varied_parameter</span><span class='op'>(</span></span>
+<span class='r-in'>  name <span class='op'>=</span> <span class='st'>"size"</span>,</span>
+<span class='r-in'>  populations <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"Europe"</span>, <span class='st'>"America"</span><span class='op'>)</span>,</span>
+<span class='r-in'>  initial <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>100</span>, <span class='fl'>200</span><span class='op'>)</span>,</span>
+<span class='r-in'>  min <span class='op'>=</span> <span class='fl'>0</span>,</span>
+<span class='r-in'>  max <span class='op'>=</span> <span class='cn'>Inf</span>,</span>
+<span class='r-in'>  discrete <span class='op'>=</span> <span class='cn'>TRUE</span>,</span>
+<span class='r-in'>  prior <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='va'>dnorm</span>, <span class='va'>dexp</span><span class='op'>)</span></span>
+<span class='r-in'><span class='op'>)</span></span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $Europe</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $name</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] "size"</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $initial</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] 100</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $min</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] 0</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $max</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] Inf</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $discrete</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] TRUE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $prior</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> function (x, mean = 0, sd = 1, log = FALSE) </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> .Call(C_dnorm, x, mean, sd, log)</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> &lt;bytecode: 0x7feb43686a68&gt;</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> &lt;environment: namespace:stats&gt;</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> attr(,"class")</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] "pmcmc_parameter"</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $America</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $name</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] "size"</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $initial</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] 200</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $min</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] 0</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $max</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] Inf</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $discrete</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] TRUE</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> $prior</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> function (x, rate = 1, log = FALSE) </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> .Call(C_dexp, x, 1/rate, log)</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> &lt;bytecode: 0x7feb462288d8&gt;</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> &lt;environment: namespace:stats&gt;</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> attr(,"class")</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] "pmcmc_parameter"</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> attr(,"class")</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] "pmcmc_varied_parameter"</span>
+</pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

@@ -82,7 +82,7 @@ particle deterministically." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.9</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.10</span>
       </span>
     </div>
 
@@ -251,7 +251,7 @@ constructor, i.e., not less than the first element of
 <code>step_start</code> and not more than <code>step_end</code>). Your function
 can also return a vector or matrix of <code>state</code> and not alter
 the starting step, which is equivalent to returning
-<code><a href='https://rdrr.io/r/base/list.html'>list(state = state, step = NULL)</a></code>.</p></dd>
+<code>list(state = state, step = NULL)</code>.</p></dd>
 
 <dt><code>n_threads</code></dt><dd><p>Number of threads to use when running the
 simulation. Defaults to 1, and should not be set higher than the

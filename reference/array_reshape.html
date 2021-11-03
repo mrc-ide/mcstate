@@ -85,7 +85,7 @@ of parameter sets that are pooled over some other grouping factors
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.9</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.10</span>
       </span>
     </div>
 
@@ -195,19 +195,21 @@ of parameter sets that are pooled over some other grouping factors
     <div class='dont-index'><p><a href='array_flatten.html'>array_flatten</a> which undoes this operation</p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='co'># Suppose we had a 4 x 6 array of data:</span>
-<span class='va'>m</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/matrix.html'>matrix</a></span><span class='op'>(</span><span class='fl'>1</span><span class='op'>:</span><span class='fl'>24</span>, <span class='fl'>4</span>, <span class='fl'>6</span><span class='op'>)</span>
-
-<span class='co'># And suppose that the second dimension really represented a 2 x 3</span>
-<span class='co'># matrix; so that looking at one copy of the 2nd dimension we see</span>
-<span class='va'>m</span><span class='op'>[</span><span class='fl'>1</span>, <span class='op'>]</span>
-</div><div class='output co'>#&gt; [1]  1  5  9 13 17 21</div><div class='input'>
-<span class='co'># But instead we might want to see</span>
-<span class='va'>res</span> <span class='op'>&lt;-</span> <span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'>array_reshape</span><span class='op'>(</span><span class='va'>m</span>, <span class='fl'>2</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>2</span>, <span class='fl'>3</span><span class='op'>)</span><span class='op'>)</span>
-<span class='va'>res</span><span class='op'>[</span><span class='fl'>1</span>, , <span class='op'>]</span>
-</div><div class='output co'>#&gt;      [,1] [,2] [,3]
-#&gt; [1,]    1    9   17
-#&gt; [2,]    5   13   21</div></pre>
+    <pre class="examples"><span class='r-in'><span class='co'># Suppose we had a 4 x 6 array of data:</span></span>
+<span class='r-in'><span class='va'>m</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/matrix.html'>matrix</a></span><span class='op'>(</span><span class='fl'>1</span><span class='op'>:</span><span class='fl'>24</span>, <span class='fl'>4</span>, <span class='fl'>6</span><span class='op'>)</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># And suppose that the second dimension really represented a 2 x 3</span></span>
+<span class='r-in'><span class='co'># matrix; so that looking at one copy of the 2nd dimension we see</span></span>
+<span class='r-in'><span class='va'>m</span><span class='op'>[</span><span class='fl'>1</span>, <span class='op'>]</span></span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1]  1  5  9 13 17 21</span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># But instead we might want to see</span></span>
+<span class='r-in'><span class='va'>res</span> <span class='op'>&lt;-</span> <span class='fu'>mcstate</span><span class='fu'>::</span><span class='fu'>array_reshape</span><span class='op'>(</span><span class='va'>m</span>, <span class='fl'>2</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>2</span>, <span class='fl'>3</span><span class='op'>)</span><span class='op'>)</span></span>
+<span class='r-in'><span class='va'>res</span><span class='op'>[</span><span class='fl'>1</span>, , <span class='op'>]</span></span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>      [,1] [,2] [,3]</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1,]    1    9   17</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [2,]    5   13   21</span>
+</pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
