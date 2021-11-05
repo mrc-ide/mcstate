@@ -98,7 +98,7 @@ Create the particle filter
   initial = NULL,
   n_threads = 1L,
   seed = NULL,
-  device_config = NULL
+  gpu_config = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -172,15 +172,13 @@ and \code{\link[dust:dust_rng]{dust::dust_rng}} for more details. Note that the 
 stream is unrelated from R's random number generator, except for
 initialisation with \code{seed = NULL}.}
 
-\item{\code{device_config}}{Device configuration, typically an integer
+\item{\code{gpu_config}}{GPU configuration, typically an integer
 indicating the device to use, where the model has GPU support.
-If not given, then the default value of \code{NULL} will fall back on the
-first found device if any are available. An error is thrown if the
-device id given is larger than those reported to be available (note
-that CUDA numbers devices from 0, so that '0' is the first device,
-and so on). Negative values disable the use of a device. See the
-method \verb{$device_info()} for available device ids; this can be called
-before object creation as \code{{{name}}$public_methods$device_info()}.
+An error is thrown if the device id given is larger than those
+reported to be available (note that CUDA numbers devices from 0,
+so that '0' is the first device, so on). See the method \verb{$gpu_info()}
+for available device ids; this can be called before object creation
+as \code{model$public_methods$gpu_info()}.
 For additional control, provide a list with elements \code{device_id}
 and \code{run_block_size}. Further options (and validation) of this
 list will be added in a future version!}

@@ -119,7 +119,8 @@ Run the deterministic particle filter
 \if{html}{\out{<div class="r">}}\preformatted{particle_deterministic$run(
   pars = list(),
   save_history = FALSE,
-  save_restart = NULL
+  save_restart = NULL,
+  min_log_likelihood = -Inf
 )}\if{html}{\out{</div>}}
 }
 
@@ -142,6 +143,10 @@ queried later with the \verb{$history} method on the object.}
 
 \item{\code{save_restart}}{An integer vector of time points to save
 restart infomation for. Not currently supported.}
+
+\item{\code{min_log_likelihood}}{Not currently supported, exists to match
+the inteface with \link{particle_filter}. Providing a value
+larger than -Inf will cause an error.}
 }
 \if{html}{\out{</div>}}
 }
@@ -162,7 +167,8 @@ with \code{n_threads} greater than 1.
 \if{html}{\out{<div class="r">}}\preformatted{particle_deterministic$run_many(
   pars,
   save_history = FALSE,
-  save_restart = NULL
+  save_restart = NULL,
+  min_log_likelihood = -Inf
 )}\if{html}{\out{</div>}}
 }
 
@@ -177,6 +183,10 @@ particles should be saved.}
 
 \item{\code{save_restart}}{An integer vector of time points to save
 restart infomation for. Not currently supported.}
+
+\item{\code{min_log_likelihood}}{Not currently supported, exists to match
+the inteface with \link{particle_filter}. Providing a value
+larger than -Inf will cause an error.}
 }
 \if{html}{\out{</div>}}
 }

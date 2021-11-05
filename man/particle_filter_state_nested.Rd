@@ -66,7 +66,7 @@ documented.
   initial,
   index,
   compare,
-  device_config,
+  gpu_config,
   seed,
   save_history,
   save_restart

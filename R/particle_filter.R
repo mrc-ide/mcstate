@@ -71,7 +71,7 @@ particle_filter <- R6::R6Class(
     index = NULL,
     initial = NULL,
     compare = NULL,
-    device_config = NULL,
+    gpu_config = NULL,
     ## Control for dust
     seed = NULL,
     n_threads = NULL,
@@ -158,22 +158,20 @@ particle_filter <- R6::R6Class(
     ##' stream is unrelated from R's random number generator, except for
     ##' initialisation with `seed = NULL`.
     ##'
-    ##' @param device_config Device configuration, typically an integer
+    ##' @param gpu_config GPU configuration, typically an integer
     ##' indicating the device to use, where the model has GPU support.
-    ##' If not given, then the default value of `NULL` will fall back on the
-    ##' first found device if any are available. An error is thrown if the
-    ##' device id given is larger than those reported to be available (note
-    ##' that CUDA numbers devices from 0, so that '0' is the first device,
-    ##' and so on). Negative values disable the use of a device. See the
-    ##' method `$device_info()` for available device ids; this can be called
-    ##' before object creation as `{{name}}$public_methods$device_info()`.
+    ##' An error is thrown if the device id given is larger than those
+    ##' reported to be available (note that CUDA numbers devices from 0,
+    ##' so that '0' is the first device, so on). See the method `$gpu_info()`
+    ##' for available device ids; this can be called before object creation
+    ##' as `model$public_methods$gpu_info()`.
     ##' For additional control, provide a list with elements `device_id`
     ##' and `run_block_size`. Further options (and validation) of this
     ##' list will be added in a future version!
     initialize = function(data, model, n_particles, compare,
                           index = NULL, initial = NULL,
                           n_threads = 1L, seed = NULL,
-                          device_config = NULL) {
+                          gpu_config = NULL) {
       if (!is_dust_generator(model)) {
         stop("'model' must be a dust_generator")
       }
@@ -223,15 +221,15 @@ particle_filter <- R6::R6Class(
         stop("Your model does not have a built-in 'compare' function")
       }
 
-      if (!is.null(device_config)) {
-        if (!model$public_methods$has_cuda(TRUE)) {
-          stop(paste("'device_config' provided, but 'model' does not have",
-                     "cuda support"))
+      if (!is.null(gpu_config)) {
+        if (!model$public_methods$has_gpu_support(TRUE)) {
+          stop(paste("'gpu_config' provided, but 'model' does not have",
+                     "GPU support"))
         }
       }
 
       private$compare <- compare
-      private$device_config <- device_config
+      private$gpu_config <- gpu_config
       private$index <- index
       private$initial <- initial
 
@@ -316,13 +314,13 @@ particle_filter <- R6::R6Class(
           pars, self$model, private$last_model, private$data,
           private$data_split, private$steps, self$n_particles,
           private$n_threads, private$initial, private$index, private$compare,
-          private$device_config, private$seed, save_history, save_restart)
+          private$gpu_config, private$seed, save_history, save_restart)
       } else {
         particle_filter_state$new(
           pars, self$model, private$last_model, private$data,
           private$data_split, private$steps, self$n_particles,
           private$n_threads, private$initial, private$index, private$compare,
-          private$device_config, private$seed, min_log_likelihood,
+          private$gpu_config, private$seed, min_log_likelihood,
           save_history, save_restart)
       }
     },
@@ -433,7 +431,7 @@ particle_filter <- R6::R6Class(
            index = private$index,
            initial = private$initial,
            compare = private$compare,
-           device_config = private$device_config,
+           gpu_config = private$gpu_config,
            n_threads = private$n_threads,
            seed = filter_current_seed(private$last_model, private$seed))
     },
@@ -483,7 +481,7 @@ particle_filter_from_inputs <- function(inputs, seed = NULL) {
                         model = inputs$model,
                         n_particles = inputs$n_particles,
                         compare = inputs$compare,
-                        device_config = inputs$device_config,
+                        gpu_config = inputs$gpu_config,
                         index = inputs$index,
                         initial = inputs$initial,
                         n_threads = inputs$n_threads,
