@@ -39,6 +39,13 @@ rmvnorm_generator <- function(vcv) {
   if (!isSymmetric(vcv, tol = sqrt(.Machine$double.eps))) {
     stop("vcv must be symmetric")
   }
+
+  i_include <- !apply(vcv == 0, 1, all)
+
+  if (!all(i_include)) {
+    vcv <- vcv[i_include, i_include, drop = FALSE]
+  }
+
   ev <- eigen(vcv, symmetric = TRUE)
   if (!all(ev$values >= -sqrt(.Machine$double.eps) * abs(ev$values[1]))) {
     stop("vcv must be positive definite")
@@ -46,8 +53,16 @@ rmvnorm_generator <- function(vcv) {
   n <- nrow(vcv)
   res <- t(ev$vectors %*% (t(ev$vectors) * sqrt(pmax(ev$values, 0))))
 
-  function(mean, scale = 1.0) {
-    mean + drop(rnorm(ncol(vcv)) %*% (res * sqrt(scale)))
+  if (all(i_include)) {
+    function(mean, scale = 1.0) {
+      mean + drop(rnorm(ncol(vcv)) %*% (res * sqrt(scale)))
+    }
+  } else {
+    function(mean, scale = 1.0) {
+      x <- numeric(length(i_include))
+      x[i_include] <- drop(rnorm(ncol(vcv)) %*% (res * sqrt(scale)))
+      mean + x
+    }
   }
 }
 
