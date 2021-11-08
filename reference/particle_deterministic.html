@@ -82,7 +82,7 @@ particle deterministically." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.11</span>
       </span>
     </div>
 
@@ -266,7 +266,8 @@ particle for now.</p></dd>
 <p><div class="r"></p><pre><span class='va'>particle_deterministic</span><span class='op'>$</span><span class='fu'>run</span><span class='op'>(</span>
   pars <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='op'>)</span>,
   save_history <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  save_restart <span class='op'>=</span> <span class='cn'>NULL</span>
+  save_restart <span class='op'>=</span> <span class='cn'>NULL</span>,
+  min_log_likelihood <span class='op'>=</span> <span class='op'>-</span><span class='cn'>Inf</span>
 <span class='op'>)</span></pre><p></div></p>
 
 <h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
@@ -288,6 +289,10 @@ queried later with the <code>$history</code> method on the object.</p></dd>
 <dt><code>save_restart</code></dt><dd><p>An integer vector of time points to save
 restart infomation for. Not currently supported.</p></dd>
 
+<dt><code>min_log_likelihood</code></dt><dd><p>Not currently supported, exists to match
+the inteface with <a href='particle_filter.html'>particle_filter</a>. Providing a value
+larger than -Inf will cause an error.</p></dd>
+
 </dl><p></div></p>
 <h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A single numeric value representing the log-likelihood
@@ -301,7 +306,8 @@ with <code>n_threads</code> greater than 1.</p><h4 class='hasAnchor' id='argumen
 <p><div class="r"></p><pre><span class='va'>particle_deterministic</span><span class='op'>$</span><span class='fu'>run_many</span><span class='op'>(</span>
   <span class='va'>pars</span>,
   save_history <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  save_restart <span class='op'>=</span> <span class='cn'>NULL</span>
+  save_restart <span class='op'>=</span> <span class='cn'>NULL</span>,
+  min_log_likelihood <span class='op'>=</span> <span class='op'>-</span><span class='cn'>Inf</span>
 <span class='op'>)</span></pre><p></div></p>
 
 <h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
@@ -314,6 +320,10 @@ particles should be saved.</p></dd>
 
 <dt><code>save_restart</code></dt><dd><p>An integer vector of time points to save
 restart infomation for. Not currently supported.</p></dd>
+
+<dt><code>min_log_likelihood</code></dt><dd><p>Not currently supported, exists to match
+the inteface with <a href='particle_filter.html'>particle_filter</a>. Providing a value
+larger than -Inf will cause an error.</p></dd>
 
 </dl><p></div></p>
 <h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
