@@ -26,7 +26,7 @@ particle_filter_state <- R6::R6Class(
     initial = NULL,
     index = NULL,
     compare = NULL,
-    device = NULL,
+    gpu = NULL,
     save_restart_step = NULL,
     save_restart = NULL,
     min_log_likelihood = NULL,
@@ -62,14 +62,14 @@ particle_filter_state <- R6::R6Class(
     ##' documented.
     initialize = function(pars, generator, model, data, data_split, steps,
                           n_particles, n_threads, initial, index, compare,
-                          device_config, seed, min_log_likelihood,
+                          gpu_config, seed, min_log_likelihood,
                           save_history, save_restart) {
       ## NOTE: this will generate a warning when updating docs but
       ## that's ok; see https://github.com/r-lib/roxygen2/issues/1067
       if (is.null(model)) {
         model <- generator$new(pars = pars, step = steps[[1L]],
                                n_particles = n_particles, n_threads = n_threads,
-                               seed = seed, device_config = device_config)
+                               seed = seed, gpu_config = gpu_config)
         if (is.null(compare)) {
           model$set_index(integer(0))
           model$set_data(data_split)
@@ -130,7 +130,7 @@ particle_filter_state <- R6::R6Class(
       private$initial <- initial
       private$index <- index
       private$compare <- compare
-      private$device <- !is.null(device_config)
+      private$gpu <- !is.null(gpu_config)
       private$min_log_likelihood <- min_log_likelihood
       private$save_restart_step <- save_restart_step
       private$save_restart <- save_restart
@@ -281,14 +281,14 @@ particle_filter_state <- R6::R6Class(
     ##'
     ##' @param pars New model parameters
     fork = function(pars) {
-      stopifnot(!private$device) # this won't work
-      device_config <- NULL
+      stopifnot(!private$gpu) # this won't work
+      gpu_config <- NULL
       seed <- self$model$rng_state()
       save_history <- !is.null(self$history)
       ret <- particle_filter_state$new(
         pars, private$generator, NULL, private$data, private$data_split,
         private$steps, private$n_particles, private$n_threads,
-        private$initial, private$index, private$compare, device_config,
+        private$initial, private$index, private$compare, gpu_config,
         seed, private$min_log_likelihood, save_history, private$save_restart)
 
       ## Run it up to the same point
