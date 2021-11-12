@@ -24,6 +24,7 @@ re-bound)}
 \item \href{#method-run_many}{\code{particle_deterministic$run_many()}}
 \item \href{#method-state}{\code{particle_deterministic$state()}}
 \item \href{#method-history}{\code{particle_deterministic$history()}}
+\item \href{#method-restart_state}{\code{particle_deterministic$restart_state()}}
 \item \href{#method-inputs}{\code{particle_deterministic$inputs()}}
 \item \href{#method-set_n_threads}{\code{particle_deterministic$set_n_threads()}}
 }
@@ -236,6 +237,39 @@ time point.
 \describe{
 \item{\code{index_particle}}{Optional vector of particle indices to return.
 If \code{NULL} we return all particles' histories.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-restart_state"></a>}}
+\if{latex}{\out{\hypertarget{method-restart_state}{}}}
+\subsection{Method \code{restart_state()}}{
+Return the full particle filter state at points back in time
+that were saved with the \code{save_restart} argument to
+\verb{$run()}. If available, this will return a 3d array, with
+dimensions representing (1) particle state, (2) particle index,
+(3) time point. If nested parameters are used then returns a 4d array,
+with dimensions representing (1) particle state, (2) particle index,
+(3) population, (4) time point. This could be quite large, especially
+if you are using the \code{index} argument to create the particle filter
+and return a subset of all state generally. In the stochastic version,
+this is different the saved trajectories returned by \verb{$history()}
+because earlier saved state is not filtered by later filtering,
+but in the deterministic model we run with a single particle so it
+\emph{is} the same.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{particle_deterministic$restart_state(index_particle = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{index_particle}}{Optional vector of particle indices to return.
+If \code{NULL} we return all particles' states. Practically because the
+only valid value of index_particle is "1", this has no effect and
+it is included primarily for compatibility with the stochastic
+interface.}
 }
 \if{html}{\out{</div>}}
 }
