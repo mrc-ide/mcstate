@@ -318,11 +318,12 @@ particle_deterministic <- R6::R6Class(
         ## NOTE: anything other than 1 here will go poorly; we might
         ## replace with rep(1, length(restart_state)) or at least
         ## validate?
-        if (length(dim(restart_state)) == 4) {
-          restart_state <- restart_state[, index_particle, , , drop = FALSE]
-        } else {
-          restart_state <- restart_state[, index_particle, , drop = FALSE]
-        }
+        ##
+        ## TODO: nested deterministic filter is not supported so this
+        ## is always TRUE; see stochastic filter for the logic when
+        ## this is enabled.
+        stopifnot(length(dim(restart_state)) == 3)
+        restart_state <- restart_state[, index_particle, , drop = FALSE]
       }
       restart_state
     },
