@@ -1105,3 +1105,42 @@ test_that("Fix impossible control parameters", {
   expect_equal(dim(results$pars), c(11, 2))
   expect_false(any(is.na(results$pars)))
 })
+
+
+test_that("Can save intermediate state to restart", {
+  dat <- example_sir()
+  p1 <- particle_deterministic$new(dat$data, dat$model, dat$compare,
+                                   index = dat$index)
+  p2 <- particle_deterministic$new(dat$data, dat$model, dat$compare,
+                                   index = dat$index)
+  p3 <- particle_deterministic$new(dat$data, dat$model, dat$compare,
+                                   index = dat$index)
+  control1 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE)
+  control2 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE,
+                            save_restart = 20)
+  control3 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE,
+                            save_restart = c(20, 30))
+
+  set.seed(1)
+  res1 <- pmcmc(dat$pars, p1, control = control1)
+  set.seed(1)
+  res2 <- pmcmc(dat$pars, p2, control = control2)
+  set.seed(1)
+  res3 <- pmcmc(dat$pars, p3, control = control3)
+
+  ## Same actual run
+  expect_identical(res1$trajectories, res2$trajectories)
+  expect_identical(res1$trajectories, res3$trajectories)
+
+  expect_null(res1$restart)
+
+  expect_is(res2$restart, "list")
+  expect_equal(res2$restart$time, 20)
+  expect_equal(dim(res2$restart$state), c(5, 31, 1))
+
+  expect_is(res3$restart, "list")
+  expect_equal(res3$restart$time, c(20, 30))
+  expect_equal(dim(res3$restart$state), c(5, 31, 2))
+
+  expect_equal(res3$restart$state[, , 1], res2$restart$state[, , 1])
+})

@@ -32,6 +32,10 @@ pmcmc_state <- R6::R6Class(
         if (private$control$save_state) {
           private$curr_state <- private$filter$state()
         }
+        if (length(private$control$save_restart) > 0) {
+          private$curr_restart <- private$filter$restart_state()
+          dim(private$curr_restart) <- dim(private$curr_restart)[-2L]
+        }
       } else {
         i <- sample.int(private$filter$n_particles, 1)
         if (private$control$save_trajectories) {

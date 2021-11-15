@@ -63,12 +63,30 @@ test_that("Control the initial conditions", {
 })
 
 
-test_that("can't restart deterministic filter", {
+test_that("can collect restart from deterministic filter", {
   dat <- example_sir()
-  p <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
-  expect_error(
-    p$run(list(), save_restart = c(100, 200)),
-    "'save_restart' cannot be used with particle_deterministic")
+  set.seed(1)
+  p1 <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
+  expect_error(p1$restart_state(),
+               "Model has not yet been run")
+  res1 <- p1$run(list())
+
+  set.seed(1)
+  p2 <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
+  res2 <- p2$run(list(), save_restart = c(25, 50), save_history = TRUE)
+
+  expect_equal(res1, res2)
+  expect_error(p1$restart_state(),
+               "Can't get history as model was run with save_restart = NULL")
+
+  h <- p2$history()
+  r <- p2$restart_state()
+  expect_equal(dim(r), c(5, 1, 2))
+  expect_equal(h[, , 26], r[1:3, 1, 1])
+  expect_equal(h[, , 51], r[1:3, 1, 2])
+
+  ## Can resample correctly:
+  expect_equal(p2$restart_state(1L), p2$restart_state())
 })
 
 

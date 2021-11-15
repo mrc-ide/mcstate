@@ -159,9 +159,6 @@ particle_deterministic <- R6::R6Class(
     ##' (`-Inf` if the model is impossible), one per parameter set
     run_many = function(pars, save_history = FALSE, save_restart = NULL,
                         min_log_likelihood = -Inf) {
-      if (!is.null(save_restart)) {
-        stop("'save_restart' cannot be used with particle_deterministic")
-      }
       if (min_log_likelihood > -Inf) {
         stop("'min_log_likelihood' cannot be used with particle_deterministic")
       }
@@ -198,7 +195,24 @@ particle_deterministic <- R6::R6Class(
         model$set_index(index$index)
       }
 
-      y <- model$simulate(c(steps[[1]], steps[, 2]))
+      if (is.null(save_restart)) {
+        y <- model$simulate(c(steps[[1]], steps[, 2]))
+        restart_state <- NULL
+      } else {
+        steps_split <- deterministic_steps_restart(steps, save_restart,
+                                                   private$data)
+        restart_state <- vector("list", length(save_restart))
+        y <- vector("list", length(steps_split))
+        for (i in seq_along(steps_split)) {
+          y[[i]] <- model$simulate(steps_split[[i]])
+          if (i <= length(save_restart)) {
+            s <- model$state()
+            restart_state[[i]] <- array_reshape(s, 1, c(nrow(s), 1))
+          }
+        }
+        y <- array_bind(arrays = y)
+        restart_state <- array_bind(arrays = restart_state)
+      }
 
       if (is.null(index)) {
         y_compare <- y
@@ -224,6 +238,7 @@ particle_deterministic <- R6::R6Class(
 
       private$last_model <- model
       private$last_history <- history
+      private$last_restart_state <- restart_state
 
       ll
     },
@@ -270,6 +285,50 @@ particle_deterministic <- R6::R6Class(
     },
 
     ##' @description
+    ##' Return the full particle filter state at points back in time
+    ##' that were saved with the `save_restart` argument to
+    ##' `$run()`. If available, this will return a 3d array, with
+    ##' dimensions representing (1) particle state, (2) particle index,
+    ##' (3) time point. If nested parameters are used then returns a 4d array,
+    ##' with dimensions representing (1) particle state, (2) particle index,
+    ##' (3) population, (4) time point. This could be quite large, especially
+    ##' if you are using the `index` argument to create the particle filter
+    ##' and return a subset of all state generally. In the stochastic version,
+    ##' this is different the saved trajectories returned by `$history()`
+    ##' because earlier saved state is not filtered by later filtering,
+    ##' but in the deterministic model we run with a single particle so it
+    ##' *is* the same.
+    ##'
+    ##' @param index_particle Optional vector of particle indices to return.
+    ##' If `NULL` we return all particles' states. Practically because the
+    ##' only valid value of index_particle is "1", this has no effect and
+    ##' it is included primarily for compatibility with the stochastic
+    ##' interface.
+    restart_state = function(index_particle = NULL) {
+      if (is.null(private$last_model)) {
+        ## uncovered
+        stop("Model has not yet been run")
+      }
+      restart_state <- private$last_restart_state
+      if (is.null(restart_state)) {
+        stop("Can't get history as model was run with save_restart = NULL")
+      }
+      if (!is.null(index_particle)) {
+        ## uncovered
+        ## NOTE: anything other than 1 here will go poorly; we might
+        ## replace with rep(1, length(restart_state)) or at least
+        ## validate?
+        ##
+        ## TODO: nested deterministic filter is not supported so this
+        ## is always TRUE; see stochastic filter for the logic when
+        ## this is enabled.
+        stopifnot(length(dim(restart_state)) == 3)
+        restart_state <- restart_state[, index_particle, , drop = FALSE]
+      }
+      restart_state
+    },
+
+    ##' @description
     ##' Return a list of inputs used to configure the deterministic particle
     ##' filter. These correspond directly to the argument names for the
     ##' constructor and are the same as the input arguments.
@@ -280,7 +339,7 @@ particle_deterministic <- R6::R6Class(
            initial = private$initial,
            compare = private$compare,
            n_threads = private$n_threads,
-           seed = filter_current_seed(private$last_model, private$seed))
+           seed = filter_current_seed(private$last_model, NULL))
     },
 
     ##' @description
@@ -313,7 +372,8 @@ particle_deterministic <- R6::R6Class(
     index = NULL,
     compare = NULL,
     last_model = NULL,
-    last_history = NULL
+    last_history = NULL,
+    last_restart_state = NULL
   ))
 
 
@@ -354,4 +414,17 @@ deterministic_initial <- function(pars, initial, info) {
   }
 
   ret
+}
+
+
+deterministic_steps_restart <- function(steps, save_restart, data) {
+  save_restart_step <- check_save_restart(save_restart, data)
+  i <- match(save_restart_step, steps[, 2])
+  if (last(i) < nrow(steps)) {
+    i <- c(i, nrow(steps))
+  }
+  j <- rep(seq_along(i), diff(c(0, i)))
+  steps_split <- unname(split(steps[, 2], j))
+  steps_split[[1]] <- c(steps[[1]], steps_split[[1]])
+  steps_split
 }

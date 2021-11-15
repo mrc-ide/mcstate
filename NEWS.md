@@ -1,3 +1,7 @@
+# mcstate 0.6.13
+
+* Allow saving restart from the deterministic filter (#153)
+
 # mcstate 0.6.5
 
 * Reduced overhead in parallel pmcmc with workers, and faster/less memory-hungry chain combination (#142)
