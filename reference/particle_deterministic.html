@@ -82,7 +82,7 @@ particle deterministically." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.12</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.13</span>
       </span>
     </div>
 
@@ -182,6 +182,7 @@ re-bound)</p></dd>
 <li><p><a href='#method-run_many'><code>particle_deterministic$run_many()</code></a></p></li>
 <li><p><a href='#method-state'><code>particle_deterministic$state()</code></a></p></li>
 <li><p><a href='#method-history'><code>particle_deterministic$history()</code></a></p></li>
+<li><p><a href='#method-restart_state'><code>particle_deterministic$restart_state()</code></a></p></li>
 <li><p><a href='#method-inputs'><code>particle_deterministic$inputs()</code></a></p></li>
 <li><p><a href='#method-set_n_threads'><code>particle_deterministic$set_n_threads()</code></a></p></li>
 </ul>
@@ -358,6 +359,32 @@ time point.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arg
 <p><div class="arguments"></p><dl>
 <dt><code>index_particle</code></dt><dd><p>Optional vector of particle indices to return.
 If <code>NULL</code> we return all particles' histories.</p></dd>
+
+</dl><p></div></p>
+<p><hr>
+<a id="method-restart_state"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>restart_state()</code></h3>
+<p>Return the full particle filter state at points back in time
+that were saved with the <code>save_restart</code> argument to
+<code>$run()</code>. If available, this will return a 3d array, with
+dimensions representing (1) particle state, (2) particle index,
+(3) time point. If nested parameters are used then returns a 4d array,
+with dimensions representing (1) particle state, (2) particle index,
+(3) population, (4) time point. This could be quite large, especially
+if you are using the <code>index</code> argument to create the particle filter
+and return a subset of all state generally. In the stochastic version,
+this is different the saved trajectories returned by <code>$history()</code>
+because earlier saved state is not filtered by later filtering,
+but in the deterministic model we run with a single particle so it
+<em>is</em> the same.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>particle_deterministic</span><span class='op'>$</span><span class='fu'>restart_state</span><span class='op'>(</span>index_particle <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre><p></div></p>
+
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
+<dt><code>index_particle</code></dt><dd><p>Optional vector of particle indices to return.
+If <code>NULL</code> we return all particles' states. Practically because the
+only valid value of index_particle is "1", this has no effect and
+it is included primarily for compatibility with the stochastic
+interface.</p></dd>
 
 </dl><p></div></p>
 <p><hr>
