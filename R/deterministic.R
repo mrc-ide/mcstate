@@ -206,10 +206,12 @@ particle_deterministic <- R6::R6Class(
         for (i in seq_along(steps_split)) {
           y[[i]] <- model$simulate(steps_split[[i]])
           if (i <= length(save_restart)) {
-            restart_state[[i]] <- model$state()
+            s <- model$state()
+            restart_state[[i]] <- array_reshape(s, 1, c(nrow(s), 1))
           }
         }
         y <- array_bind(arrays = y)
+        restart_state <- array_bind(arrays = restart_state)
       }
 
       if (is.null(index)) {
@@ -304,6 +306,7 @@ particle_deterministic <- R6::R6Class(
     ##' interface.
     restart_state = function(index_particle = NULL) {
       if (is.null(private$last_model)) {
+        ## uncovered
         stop("Model has not yet been run")
       }
       restart_state <- private$last_restart_state
@@ -311,6 +314,7 @@ particle_deterministic <- R6::R6Class(
         stop("Can't get history as model was run with save_restart = NULL")
       }
       if (!is.null(index_particle)) {
+        ## uncovered
         ## NOTE: anything other than 1 here will go poorly; we might
         ## replace with rep(1, length(restart_state)) or at least
         ## validate?
