@@ -109,7 +109,7 @@ test_that("make seeds with integer returns length-32 raws", {
 
 
 test_that("make seeds with long raw retains size", {
-  seed <- dust::dust_rng$new(NULL, n_generators = 3)$state()
+  seed <- dust::dust_rng$new(NULL, n_streams = 3)$state()
   s <- make_seeds(2L, seed)
   expect_length(s, 2L)
   expect_setequal(names(s[[1]]), c("dust", "r"))
