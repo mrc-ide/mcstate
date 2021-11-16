@@ -243,11 +243,11 @@ pmcmc_remote <- R6::R6Class(
 ## question, but this should do as well as most reasonable attempts.
 make_seeds <- function(n, seed) {
   ret <- vector("list", n)
-  n_generators <- 1L
+  n_streams <- 1L
   if (is.raw(seed)) {
-    n_generators <- length(seed) / 32L # 4 uint64_t, each 8 bytes
+    n_streams <- length(seed) / 32L # 4 uint64_t, each 8 bytes
   }
-  rng <- dust::dust_rng$new(seed, n_generators)
+  rng <- dust::dust_rng$new(seed, n_streams)
   for (i in seq_len(n)) {
     state <- rng$state()
     ret[[i]] <- list(dust = state,
