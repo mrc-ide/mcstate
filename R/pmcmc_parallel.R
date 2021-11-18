@@ -251,11 +251,18 @@ make_seeds <- function(n, seed, model) {
 
   seed_dust <- dust::dust_rng_distributed_state(seed, n_streams, n, model)
 
-  ## Grab another source of independent numbers to create the R seeds
-  ## with by doing one further long jump from the last state
+  ## Grab another source of independent numbers to create the R
+  ## seeds. This is essentially (though not identically) the behaviour
+  ## of mcstate <= 0.6.16 which drew one number for the R seed from
+  ## each generator but here we draw them all from the first.
   ##
-  ## Using integers on 1..2^24 (16777216) for the R seed as always
-  ## integer representable.
+  ## An alternative approach would be to take one long jump then
+  ## generate seeds from that independent generator, but that has the
+  ## downside of the R seed for each chain being dependent on the
+  ## number of chains run.
+  ##
+  ## We rescale the real number to an integer on 1..2^24 (16777216)
+  ## for the R seed as this will always integer representable.
   rng <- dust::dust_rng$new(seed_dust[[1]])$long_jump()
   seed_r <- ceiling(rng$random_real(n) * 2^24)
 
