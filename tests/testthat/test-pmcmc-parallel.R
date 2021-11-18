@@ -13,7 +13,7 @@ test_that("basic parallel operation", {
   ans <- pmcmc(dat$pars, p0, control = control)
 
   ## Run two chains manually with a given pair of seeds:
-  s <- make_seeds(n_chains, 1L)
+  s <- make_seeds(n_chains, 1L, dat$model)
   f <- function(idx) {
     set.seed(s[[idx]]$r)
     p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
@@ -62,7 +62,7 @@ test_that("throw from callr operation", {
                            n_steps_each = 5)
 
   initial <- pmcmc_check_initial(NULL, dat$pars, n_chains)
-  seed <- make_seeds(n_chains, NULL)
+  seed <- make_seeds(n_chains, NULL, dat$model)
 
   control$n_workers <- 0
   obj <- pmcmc_orchestrator$new(dat$pars, initial, p0, control)
@@ -98,19 +98,21 @@ test_that("running pmcmc with progress = TRUE prints messages", {
 
 
 test_that("make seeds with integer returns length-32 raws", {
-  s <- make_seeds(2, 1)
+  algorithm <- "xoshiro256plus"
+  s <- make_seeds(2, 1, algorithm)
   expect_length(s, 2L)
   expect_setequal(names(s[[1]]), c("dust", "r"))
   expect_length(s[[1]]$dust, 32L)
   expect_is(s[[1]]$dust, "raw")
-  expect_identical(make_seeds(2, 1), s)
-  expect_identical(make_seeds(4, 1)[1:2], s)
+  expect_identical(make_seeds(2, 1, algorithm), s)
+  expect_identical(make_seeds(4, 1, algorithm)[1:2], s)
 })
 
 
 test_that("make seeds with long raw retains size", {
+  algorithm <- "xoshiro256plus"
   seed <- dust::dust_rng$new(NULL, n_streams = 3)$state()
-  s <- make_seeds(2L, seed)
+  s <- make_seeds(2L, seed, algorithm)
   expect_length(s, 2L)
   expect_setequal(names(s[[1]]), c("dust", "r"))
   expect_identical(s[[1]]$dust, seed)
@@ -266,7 +268,7 @@ test_that("basic parallel operation nested", {
   ans <- pmcmc(pars, p0, control = control)
 
   ## Run two chains manually with a given pair of seeds:
-  s <- make_seeds(n_chains, 1L)
+  s <- make_seeds(n_chains, 1L, dat$model)
   f <- function(idx) {
     set.seed(s[[idx]]$r)
     p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,

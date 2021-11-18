@@ -103,7 +103,7 @@ pmcmc_chains_prepare <- function(pars, filter, initial = NULL, control = NULL) {
     initial <- pmcmc_check_initial(initial, pars, control$n_chains)
   }
 
-  seed <- make_seeds(control$n_chains, filter$inputs()$seed)
+  seed <- make_seeds(control$n_chains, filter$inputs()$seed, filter$model)
 
   ret <- list(pars = pars, initial = initial, filter = filter,
               control = control, seed = seed)
@@ -168,7 +168,7 @@ pmcmc_single_chain_nested <- function(pars, initial, filter, control,
 
 pmcmc_multiple_series <- function(pars, initial, filter, control) {
   if (control$use_parallel_seed) {
-    seed <- make_seeds(control$n_chains, filter$inputs()$seed)
+    seed <- make_seeds(control$n_chains, filter$inputs()$seed, filter$model)
   } else {
     seed <- NULL
   }

@@ -25,7 +25,7 @@ pmcmc_orchestrator <- R6::R6Class(
       private$progress <- pmcmc_parallel_progress(control)
 
       filter_inputs <- filter$inputs()
-      seed <- make_seeds(control$n_chains, filter_inputs$seed)
+      seed <- make_seeds(control$n_chains, filter_inputs$seed, filter$model)
       filter_inputs$n_threads <- private$thread_pool$target
 
       private$remotes <- vector("list", control$n_workers)
@@ -241,20 +241,25 @@ pmcmc_remote <- R6::R6Class(
 ## single seed, which is itself sensibly chosen. Whether or not this
 ## leads to a sensible initialisation for R's RNG is a different
 ## question, but this should do as well as most reasonable attempts.
-make_seeds <- function(n, seed) {
-  ret <- vector("list", n)
+make_seeds <- function(n, seed, model) {
   n_streams <- 1L
   if (is.raw(seed)) {
+    ## This is not always correct and varies with the model; move to
+    ## make this explicit I think in the next step.
     n_streams <- length(seed) / 32L # 4 uint64_t, each 8 bytes
   }
-  rng <- dust::dust_rng$new(seed, n_streams)
-  for (i in seq_len(n)) {
-    state <- rng$state()
-    ret[[i]] <- list(dust = state,
-                     r = rng$random_real(1) * .Machine$integer.max)
-    rng$long_jump()
-  }
-  ret
+
+  seed_dust <- dust::dust_rng_distributed_state(seed, n_streams, n, model)
+
+  ## Grab another source of independent numbers to create the R seeds
+  ## with by doing one further long jump from the last state
+  ##
+  ## Using integers on 1..2^24 (16777216) for the R seed as always
+  ## integer representable.
+  rng <- dust::dust_rng$new(seed_dust[[1]])$long_jump()
+  seed_r <- ceiling(rng$random_real(n) * 2^24)
+
+  Map(list, dust = seed_dust, r = seed_r)
 }
 
 
