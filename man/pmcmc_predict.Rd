@@ -37,10 +37,9 @@ pick up from the same RNG stream used in the simulation if you
 pass in \code{seed = object$predict$seed}. However, do not do this if
 you are gong to run \code{pmcmc_predict()} multiple times the result
 will be identical. If you do want to call predict with this
-state multiple times you should call
-\code{\link[dust:dust_rng_state_long_jump]{dust::dust_rng_state_long_jump()}} with a \code{times} argument of \code{i}
-for the \code{i}'th usage (i.e., once for the first usage,
-two times for the 2nd, etc).}
+state multiple times you should create a persistant rng state
+object (e.g., with \link[dust:dust_rng]{dust::dust_rng} and perform a "long jump"
+between each call.}
 }
 \description{
 Run predictions from the results of \code{\link[=pmcmc]{pmcmc()}}. This

@@ -104,6 +104,8 @@ particle_deterministic <- R6::R6Class(
         private$initial <- assert_function(initial)
       }
       private$n_threads <- n_threads
+
+      self$model <- model
       lockBinding("model", self)
     },
 

@@ -25,10 +25,9 @@
 ##'   pass in `seed = object$predict$seed`. However, do not do this if
 ##'   you are gong to run `pmcmc_predict()` multiple times the result
 ##'   will be identical. If you do want to call predict with this
-##'   state multiple times you should call
-##'   [dust::dust_rng_state_long_jump()] with a `times` argument of `i`
-##'   for the `i`'th usage (i.e., once for the first usage,
-##'   two times for the 2nd, etc).
+##'   state multiple times you should create a persistant rng state
+##'   object (e.g., with [dust::dust_rng] and perform a "long jump"
+##'   between each call.
 ##'
 ##' @param prepend_trajectories Prepend trajectories from the particle
 ##'   filter to the predictions created here.
