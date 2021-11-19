@@ -82,7 +82,7 @@ the object, using R's S3 dispatch." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.14</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.16</span>
       </span>
     </div>
 
@@ -207,10 +207,9 @@ pick up from the same RNG stream used in the simulation if you
 pass in <code>seed = object$predict$seed</code>. However, do not do this if
 you are gong to run <code>pmcmc_predict()</code> multiple times the result
 will be identical. If you do want to call predict with this
-state multiple times you should call
-<code><a href='https://rdrr.io/pkg/dust/man/dust_rng_state_long_jump.html'>dust::dust_rng_state_long_jump()</a></code> with a <code>times</code> argument of <code>i</code>
-for the <code>i</code>'th usage (i.e., once for the first usage,
-two times for the 2nd, etc).</p></td>
+state multiple times you should create a persistant rng state
+object (e.g., with <a href='https://rdrr.io/pkg/dust/man/dust_rng.html'>dust::dust_rng</a> and perform a "long jump"
+between each call.</p></td>
     </tr>
     </table>
 
