@@ -326,23 +326,23 @@ rmarkdown::paged_table(combined_data)
 
 We then need to add this into our comparison function, and in doing so we will also demonstrate the use of the `index` parameter for the particle filter.
 
-For models with a very large state space returning only those compartments required by the comparison function can be important for efficiency. The only model outputs needed from the comparison function are $S$ and $D$. So, an index function to extract just this part of the state can be defined, which operates on dust generators `info()`:
+For models with a very large state space returning only those states required by the comparison function can be important for efficiency. The only model outputs needed from the comparison function are $S_inc$ and $D_inc$, i.e. the number of new cases and deaths. So, an index function to extract just this part of the state can be defined, which operates on dust generators `info()`:
 
 ```{r}
 index <- function(info) {
-  list(run = c(info$index$S_inc,
-               info$index$D_inc),
-       state = c(info$index$S,
-                 info$index$I,
-                 info$index$R,
-                 info$index$D))
+  list(run = c(cases = info$index$S_inc,
+               deaths = info$index$D_inc),
+       state = c(S = info$index$S,
+                 I = info$index$I,
+                 R = info$index$R,
+                 D = info$index$D))
 }
 
 death_model <- gen_death$new(pars = list(), step = 0, n_particles = 1L)
 index(death_model$info())
 ```
 
-Which sends the comparison function the indices listed under `run`, in this case the number of susceptibles, and saves any compartments listed under `state` if the history is kept. In the `compare()` function the index of `state` now corresponds to `index$run`. The missing data must be checked for, and contribute 0 to the likelihood if found:
+The index function sends the comparison function the indices listed under `run`, in this case the number of new cases and deaths, and saves any compartments listed under `state` if the history is kept. If the `run` and `state` vectors have named entries, these names will be passed to the particle filter, making it simple to refer to the model states in the comparison function and in the state history. In the comparison function, missing data must be checked for and must contribute 0 to the likelihood if found:
 
 ```{r}
 # log-likelihood of Poisson count
@@ -361,13 +361,13 @@ ll_pois <- function(obs, model) {
 
 # Sum log likelihoods from each datastream
 combined_compare <- function(state, observed, pars = NULL) {
-  ll_cases <- ll_pois(observed$cases, state[1, , drop = TRUE])
-  ll_deaths <- ll_pois(observed$deaths, state[2, , drop = TRUE])
+  ll_cases <- ll_pois(observed$cases, state["cases", , drop = TRUE])
+  ll_deaths <- ll_pois(observed$deaths, state["deaths", , drop = TRUE])
   ll_cases + ll_deaths
 }
 ```
 
-This can be used to set up a particle filter as before:
+The comparison and `index()` functions can be used to set up a particle filter as before, which now has a named history:
 
 ```{r}
 n_particles <- 100L
@@ -377,7 +377,8 @@ filter <- mcstate::particle_filter$new(data = combined_data,
                                        compare = combined_compare,
                                        index = index,
                                        seed = 1L)
-filter$run(save_history = FALSE, pars = list(dt = dt))
+filter$run(save_history = TRUE, pars = list(dt = dt))
+dimnames(filter$history())
 ```
 
-and this can be used to run the `pmcmc()` method, as above.
+This filter can be used to run the `pmcmc()` method, as above.
