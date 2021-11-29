@@ -77,6 +77,7 @@ particle_filter <- R6::R6Class(
     n_threads = NULL,
     ## Updated when the model is run
     last_model = NULL,
+    last_state = NULL,
     last_history = NULL,
     last_restart_state = NULL
   ),
@@ -283,8 +284,60 @@ particle_filter <- R6::R6Class(
       obj$run()
       private$last_history <- obj$history
       private$last_model <- obj$model
+      private$last_state <- function(index) obj$model$state(index)
       private$last_restart_state <- obj$restart_state
       obj$log_likelihood
+    },
+
+    run_staged = function(pars, epochs,
+                          save_history = FALSE, save_restart = NULL,
+                          min_log_likelihood = NULL) {
+      stages <- filter_check_stages(pars, epochs, private$steps)
+
+      filter_state <- lapply(stages, function(s)
+        self$run_begin(s$pars, save_history, save_restart,
+                         min_log_likelihood))
+
+      for (i in seq_along(stages)) {
+        if (i > 1) {
+          m_prev <- filter_state[[i - 1L]]$model
+          m_curr <- filter_state[[i]]$model
+          state <- stages[[i]]$transform$state(m_prev$state(), m_prev, m_curr)
+          filter_state[[i]]$continue(filter_state[[i - 1L]], state)
+        }
+        filter_state[[i]]$step(stages[[i]]$step_index)
+      }
+
+      models <- lapply(filter_state, function(x) x$model)
+
+      ## Push the final rng state into the first version of the model,
+      ## completing the cycle.
+      models[[1]]$set_rng_state(last(models)$rng_state())
+
+      ## We return this first model in the sequence as that's where
+      ## the next run will start from:
+      private$last_model <- models[[1]]
+      private$last_state <- function(index) last(models)$state(index)
+
+      ## This needs writing and is nontrivial
+      if (save_history) {
+        stop("Writeme")
+      } else {
+        private$last_history <- NULL
+      }
+
+      ## This needs writing and is not terrible, however it does break
+      ## a few assumptions about equal sizes and that will have some
+      ## downstream implications.  We might require in the first
+      ## instance that the restart states are conformable and then
+      ## look at relaxing that if needed.
+      if (!is.null(save_restart)) {
+        stop("Writeme")
+      } else {
+        private$last_restart_state <- NULL
+      }
+
+      last(filter_state)$log_likelihood
     },
 
     ##' @description Begin a particle filter run. This is part of the
@@ -333,11 +386,11 @@ particle_filter <- R6::R6Class(
     ##'
     ##' @param index_state Optional vector of states to extract
     state = function(index_state = NULL) {
-      if (is.null(private$last_model)) {
+      if (is.null(private$last_state)) {
         stop("Model has not yet been run")
       }
       ## TODO: should get an option to take a single trajectory
-      private$last_model$state(index_state)
+      private$last_state(index_state)
     },
 
     ##' @description Extract the particle trajectories. Requires that
@@ -662,4 +715,70 @@ filter_current_seed <- function(model, seed) {
     seed <- model$rng_state(first_only = TRUE)
   }
   seed
+}
+
+
+filter_check_stages <- function(pars_base, epochs, steps) {
+  ok <- vlapply(epochs, inherits, "filter_epoch")
+  if (any(!ok)) {
+    stop("Expected all elements of 'epochs' to be 'filter_epoch' objects")
+  }
+
+  step_index <- c(match(vnapply(epochs, "[[", "start"), steps[, 2]),
+                  nrow(steps))
+  if (any(is.na(step_index))) {
+    stop(sprintf("Could not map epoch to filter step: error for %s",
+                 paste(which(is.na(step_index)), collapse = ", ")))
+  }
+
+  n_stages <- length(epochs) + 1L
+
+  ret <- vector("list", n_stages)
+
+  for (i in seq_len(n_stages)) {
+    if (i == 1L) {
+      pars <- pars_base
+      transform <- NULL
+    } else {
+      ## TODO: I am unsure if the transforms should be consecutive or
+      ## against the base parameters. I've set this up to be against
+      ## the base parameters, even though that is different to the way
+      ## state must be treated, as I think that's the only easy way to
+      ## work with this.
+      transform <- epochs[[i - 1L]]$transform
+      pars <- transform$pars(pars_base)
+    }
+
+    ret[[i]] <- list(pars = pars,
+                     step_index = step_index[[i]],
+                     transform = transform)
+  }
+
+  ret
+}
+
+
+filter_epoch <- function(start, pars = NULL, state = NULL,
+                         trajectories = NULL) {
+  no_change <- function(x, ...) x
+  if (is.null(pars)) {
+    pars <- no_change
+  }
+  if (is.null(state)) {
+    state <- no_change
+  }
+  if (is.null(trajectories)) {
+    trajectories <- no_change
+  }
+  assert_function(pars)
+  assert_function(state)
+  assert_function(trajectories)
+
+  ret <- list(start = start,
+              transform = list(pars = pars,
+                               state = state,
+                               trajectories = trajectories))
+
+  class(ret) <- "filter_epoch"
+  ret
 }

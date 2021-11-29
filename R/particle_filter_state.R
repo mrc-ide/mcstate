@@ -30,12 +30,30 @@ particle_filter_state <- R6::R6Class(
     save_restart_step = NULL,
     save_restart = NULL,
     min_log_likelihood = NULL,
-    current_step_index = 0L
+
+    spawn = function(pars, state) {
+      stopifnot(!private$gpu) # this won't work
+      gpu_config <- NULL
+      seed <- self$model$rng_state()
+      save_history <- !is.null(self$history)
+      if (is.null(state)) {
+        initial <- private$initial
+      } else {
+        initial <- function(...) {
+          list(state = state, step = self$model$step())
+        }
+      }
+      model <- NULL
+      particle_filter_state$new(
+        pars, private$generator, model, private$data, private$data_split,
+        private$steps, private$n_particles, private$n_threads,
+        initial, private$index, private$compare, gpu_config,
+        seed, private$min_log_likelihood, save_history, private$save_restart)
+    }
   ),
 
   public = list(
-    ##' @field model The dust model generator being simulated (cannot be
-    ##'   re-bound)
+    ##' @field model The dust model being simulated
     model = NULL,
 
     ##' @field history The particle history, if created with
@@ -56,6 +74,9 @@ particle_filter_state <- R6::R6Class(
     ##' last step (i.e., the contribution to `log_likelihood` made on the
     ##' last call to `$step()`.
     log_likelihood_step = NULL,
+
+    ##' @field current_step_index The index of the last completed step.
+    current_step_index = 0L,
 
     ##' @description Initialise the particle filter state. Ordinarily
     ##' this should not be called by users, and so arguments are not
@@ -152,6 +173,19 @@ particle_filter_state <- R6::R6Class(
       }
     },
 
+    continue = function(other, state) {
+      self$model$set_rng_state(other$model$rng_state())
+      self$update_state(other$current_step_index, state)
+      self$log_likelihood_step <- other$log_likelihood_step
+      self$log_likelihood <- other$log_likelihood
+    },
+
+    update_state = function(step_index, state) {
+      self$current_step_index <- step_index
+      step <- private$steps[step_index, 2]
+      self$model$update_state(state = state, step = step)
+    },
+
     ##' @description Take a step with the particle filter. This moves
     ##' the particle filter forward one step within the *data* (which
     ##' may correspond to more than one step with your model) and
@@ -168,7 +202,7 @@ particle_filter_state <- R6::R6Class(
     step = function(step_index, partial = FALSE) {
       steps <- private$steps
       n_steps <- private$n_steps
-      curr <- private$current_step_index
+      curr <- self$current_step_index
       if (curr >= n_steps) {
         stop("Particle filter has reached the end of the data")
       }
@@ -253,7 +287,7 @@ particle_filter_state <- R6::R6Class(
 
       self$log_likelihood_step <- log_likelihood_step
       self$log_likelihood <- log_likelihood
-      private$current_step_index <- step_index
+      self$current_step_index <- step_index
       if (save_history) {
         history$value <- history_value
         history$order <- history_order
@@ -270,6 +304,14 @@ particle_filter_state <- R6::R6Class(
       }
     },
 
+    update = function(pars, state) {
+      ## this is *very* similar to fork, which exists to support pmc2, except:
+      ## * we provide state
+      ## * we could continue with the same model object, though this is
+      ##   not implemented yet.
+      private$spawn(pars, state)
+    },
+
     ##' @description Create a new `particle_filter_state` object based
     ##' on this one (same model, position in time within the data) but
     ##' with new parameters. To do this, we create a new
@@ -281,18 +323,10 @@ particle_filter_state <- R6::R6Class(
     ##'
     ##' @param pars New model parameters
     fork = function(pars) {
-      stopifnot(!private$gpu) # this won't work
-      gpu_config <- NULL
-      seed <- self$model$rng_state()
-      save_history <- !is.null(self$history)
-      ret <- particle_filter_state$new(
-        pars, private$generator, NULL, private$data, private$data_split,
-        private$steps, private$n_particles, private$n_threads,
-        private$initial, private$index, private$compare, gpu_config,
-        seed, private$min_log_likelihood, save_history, private$save_restart)
+      ret <- private$spawn(pars, NULL)
 
       ## Run it up to the same point
-      ret$step(private$current_step_index)
+      ret$step(self$current_step_index)
 
       ## Set the seed in the parent model
       self$model$set_rng_state(ret$model$rng_state())
@@ -320,7 +354,7 @@ particle_filter_compiled <- function(self, private) {
 
   self$log_likelihood_step <- NA_real_
   self$log_likelihood <- res$log_likelihood
-  private$current_step_index <- private$n_steps
+  self$current_step_index <- private$n_steps
   if (save_history) {
     self$history <- list(value = res$trajectories,
                          index = save_history_index)
