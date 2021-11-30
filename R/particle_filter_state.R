@@ -271,7 +271,7 @@ particle_filter_state <- R6::R6Class(
       }
     },
 
-    ##' @description Crate a new `particle_filter_state` object based on
+    ##' @description Create a new `particle_filter_state` object based on
     ##' this one (same model, position in time within the data) but with
     ##' new parameters, to support the "multistage particle filter".
     ##' Unlike `fork_smc2`, here the parameters may imply a different
@@ -280,14 +280,10 @@ particle_filter_state <- R6::R6Class(
     ##' transformed at that point.
     ##'
     ##' @param pars New model parameters
+    ##'
     ##' @param transform_state A function to transform the model state
-    ##'   from the old to the new parameter set.  This takes as arguments
-    ##'   `state` (the model state from the parent model), `model_old`
-    ##'   (the old model) and `model_new` (the new model, initialised
-    ##'   with `pars`).  From these you can access things like dimensions,
-    ##'   indices and parameters to move things around (e.g., via `$info()`
-    ##'   and `$pars()`).  The model objects should otherwise be treated
-    ##'   as read-only; specifically do not run the model forward!
+    ##'   from the old to the new parameter set.  See
+    ##'   [mcstate::multistage_epoch()] for details.
     fork_multistage = function(pars, transform_state) {
       stopifnot(!private$gpu) # this won't work
       gpu_config <- NULL
@@ -313,8 +309,6 @@ particle_filter_state <- R6::R6Class(
       ret$log_likelihood <- self$log_likelihood
       ret$log_likelihood_step <- self$log_likelihood_step
 
-      ## We really should save the history here if we wanted to be
-      ## able to get the state at the beginning of the change.
       ret
     },
 
