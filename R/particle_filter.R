@@ -306,8 +306,8 @@ particle_filter <- R6::R6Class(
           model_prev <- filter_state$model
           state_prev <- filter_state$model$state()
 
-          filter_state <- filter_state$update_pars(stages[[i]]$pars,
-                                                   stages[[i]]$transform$state)
+          filter_state <- filter_state$fork_multistage(
+            stages[[i]]$pars, stages[[i]]$transform$state)
         }
         filter_state$step(stages[[i]]$step_index)
         models[[i]] <- filter_state$model
