@@ -28,8 +28,7 @@ particle_filter_state_nested <- R6::R6Class(
     compare = NULL,
     gpu = NULL,
     save_restart_step = NULL,
-    save_restart = NULL,
-    current_step_index = 0L
+    save_restart = NULL
   ),
 
   public = list(
@@ -55,6 +54,9 @@ particle_filter_state_nested <- R6::R6Class(
     ##' last step (i.e., the contribution to `log_likelihood` made on the
     ##' last call to `$step()`.
     log_likelihood_step = NULL,
+
+    ##' @field current_step_index The index of the last completed step.
+    current_step_index = 0L,
 
     ##' @description Initialise the particle filter state. Ordinarily
     ##' this should not be called by users, and so arguments are not
@@ -170,7 +172,7 @@ particle_filter_state_nested <- R6::R6Class(
     step = function(step_index) {
       steps <- private$steps
       n_steps <- private$n_steps
-      curr <- private$current_step_index
+      curr <- self$current_step_index
       if (curr >= n_steps) {
         stop("Particle filter has reached the end of the data")
       }
@@ -265,7 +267,7 @@ particle_filter_state_nested <- R6::R6Class(
 
       self$log_likelihood_step <- log_likelihood_step
       self$log_likelihood <- log_likelihood
-      private$current_step_index <- step_index
+      self$current_step_index <- step_index
       if (save_history) {
         history$value <- history_value
         history$order <- history_order
@@ -300,7 +302,7 @@ particle_filter_state_nested <- R6::R6Class(
         seed, save_history, private$save_restart)
 
       ## Run it up to the same point
-      ret$step(private$current_step_index)
+      ret$step(self$current_step_index)
 
       ## Set the seed in the parent model
       self$model$set_rng_state(ret$model$rng_state())
