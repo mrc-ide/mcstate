@@ -145,13 +145,6 @@ join_histories <- function(history, step_index) {
 
   end <- step_index + 1L
   start <- c(1L, end[-length(end)] + 1L)
-  ## It's possible here that we should use
-  ##
-  ## > c(1L, end[-length(end)])
-  ##
-  ## for the start to record the state value immediately at change;
-  ## either case is "correct", though at the moment we don't have the
-  ## possibility of recording the latter case.
 
   for (i in seq_along(history)) {
     j <- match(names(history[[i]]$index), nms)
