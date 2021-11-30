@@ -23,7 +23,7 @@ BugReports: https://github.com/mrc-ide/mcstate/issues
 Imports:
     R6,
     callr (>= 3.7.0),
-    dust (>= 0.11.15),
+    dust (>= 0.11.20),
     processx,
     progress (>= 1.2.0)
 Suggests:

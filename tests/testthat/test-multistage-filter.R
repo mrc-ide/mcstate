@@ -1,22 +1,28 @@
 test_that("A trivial multistage filter is identical to single stage", {
   dat <- example_sir()
+  ## TODO: move this into the example, will break some tests though?
+  index <- function(info) {
+    list(run = 5L, state = c(S = 1, I = 2, R = 3))
+  }
 
   epochs <- list()
   pars <- dat$pars$model(dat$pars$initial())
   set.seed(1)
   filter1 <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
-                                 index = dat$index, seed = 1L)
-  ll1 <- filter1$run(pars)
+                                 index = index, seed = 1L)
+  ll1 <- filter1$run(pars, save_history = TRUE)
 
   set.seed(1)
   filter2 <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
-                                 index = dat$index, seed = 1L)
-  ll2 <- filter2$run_staged(pars, epochs)
+                                 index = index, seed = 1L)
+  ll2 <- filter2$run_staged(pars, epochs, save_history = TRUE)
 
   expect_identical(ll1, ll2)
   expect_identical(
     r6_private(filter1)$last_model$rng_state(),
     r6_private(filter2)$last_model$rng_state())
+
+  expect_identical(filter1$history(), filter2$history())
 })
 
 
@@ -27,18 +33,20 @@ test_that("An effectless multistage filter is identical to single stage", {
   pars <- dat$pars$model(dat$pars$initial())
   set.seed(1)
   filter1 <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
-                                 index = dat$index, seed = 1L)
-  ll1 <- filter1$run(pars)
+                                 index = index, seed = 1L)
+  ll1 <- filter1$run(pars, save_history = TRUE)
 
   set.seed(1)
   filter2 <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
-                                 index = dat$index, seed = 1L)
-  ll2 <- filter2$run_staged(pars, epochs)
+                                 index = index, seed = 1L)
+  ll2 <- filter2$run_staged(pars, epochs, save_history = TRUE)
 
   expect_identical(ll1, ll2)
   expect_identical(
     r6_private(filter1)$last_model$rng_state(),
     r6_private(filter2)$last_model$rng_state())
+
+  expect_identical(filter1$history(), filter2$history())
 })
 
 
@@ -82,6 +90,12 @@ test_that("Can transform state size", {
     apply(dnorm(state, log = TRUE), 2, max)
   }
 
+  index <- function(info) {
+    i <- seq(1, info$len, by = 2L)
+    names(i) <- letters[i]
+    list(run = i, state = i)
+  }
+
   transform_state <- function(y, model_old, model_new) {
     n_old <- model_old$pars()$len
     n_new <- model_new$pars()$len
@@ -91,10 +105,6 @@ test_that("Can transform state size", {
       y <- y[seq_len(n_new), ]
     }
     y
-  }
-
-  transform_trajectories <- function(y, model) {
-    y[1:5, ]
   }
 
   ## There's going to be some work here to update this so that it's
@@ -108,15 +118,16 @@ test_that("Can transform state size", {
   epochs <- list(
     filter_epoch(40,
                  pars = list(len = 20, sd = 1),
-                 state = transform_state,
-                 trajectories = transform_trajectories)
+                 state = transform_state),
     filter_epoch(100,
                  pars = list(len = 5, sd = 1),
-                 state = transform_state,
-                 trajectories = transform_trajectories))
+                 state = transform_state))
 
-  filter <- particle_filter$new(data, model, 42, compare = compare, seed = 1L)
-  filter$run_staged(pars, epochs)
+  filter <- particle_filter$new(data, model, 42,
+                                compare = compare, index = index,
+                                seed = 1L)
+  filter$run_staged(pars, epochs, save_history = TRUE)
+  h <- filter$history()
 
   ## What can I usefully test for here? nothing yet.
 })

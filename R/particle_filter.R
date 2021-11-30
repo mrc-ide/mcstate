@@ -313,6 +313,13 @@ particle_filter <- R6::R6Class(
         models[[i]] <- filter_state$model
         history[[i]] <- filter_state$history
         restart[[i]] <- filter_state$restart
+
+        ## TODO: this would be better done as part of the updating
+        ## above, we might move it there, as well as extracting the
+        ## updated state at that point.
+        if (i > 1) {
+          history[[i]]$value[, , 1] <- NA_real_
+        }
       }
 
       ## Push the final rng state into the first version of the model,
@@ -324,30 +331,9 @@ particle_filter <- R6::R6Class(
       private$last_model <- models[[1]]
       private$last_state <- function(index) last(models)$state(index)
 
-      ## This needs writing and is nontrivial
       if (save_history) {
-        value <- lapply(history, function(x) x$value[1:5, , , drop = FALSE])
-        order <- lapply(history, "[[", "order")
-        index <- lapply(history, "[[", "index")
-
-        if (!is.null(history[[1]]$index)) {
-          ## Aha, we could do this automatically based on the index:
-          ##
-          ## If named, then we collect unique names
-          ## If unnamed, then we just pad.
-
-          ## If we have variable index then that needs dealing with
-          ## too, but is not terrible to do.  Suppose in one model we save
-          ## S1, I1, R1 -> 1:3
-          ## and in another *also*
-          ## S2, I2, R3 -> 1:3
-          stop("WRITEME")
-        }
-
-
-
-
-
+        step_index <- vnapply(stages, "[[", "step_index")
+        private$last_history <- join_histories(history, step_index)
       } else {
         private$last_history <- NULL
       }
@@ -796,4 +782,45 @@ filter_epoch <- function(start, pars = NULL, state = NULL) {
 
   class(ret) <- "filter_epoch"
   ret
+}
+
+
+join_histories <- function(history, step_index) {
+  if (is.null(names(history[[1]]$index))) {
+    ## it is possible but unlikely that we could use non-named things
+    ## sensibly. We don't need that in sircovid yet so ignoring for
+    ## now.
+    stop("Named index required")
+  }
+
+  nms <- unique(unlist(lapply(history, function(x) names(x$index))))
+
+  ## TODO: The only use of history_index later is for names. We should
+  ## refactor that to make it history_names
+
+  ## We should not be doing the join by learning where the filtering
+  ## has got to do this properly
+  value <- array(NA_real_, c(length(nms), dim(history[[1]]$value)[-1]))
+  order <- array(NA_integer_, dim(history[[1]]$order))
+  index <- rep(NA_integer_, length(nms))
+  names(index) <- nms
+
+  end <- step_index + 1L
+  start <- c(1L, end[-length(end)] + 1L)
+  ## It's possible here that we should use
+  ##
+  ## > c(1L, end[-length(end)])
+  ##
+  ## for the start to record the state value immediately at change;
+  ## either case is "correct", though at the moment we don't have the
+  ## possibility of recording the latter case.
+
+  for (i in seq_along(history)) {
+    j <- match(names(history[[i]]$index), nms)
+    k <- seq(start[[i]], end[[i]])
+    value[j, , k] <- history[[i]]$value[, , k]
+    order[, k] <- history[[i]]$order[, k]
+  }
+
+  list(value = value, order = order, index = index)
 }
