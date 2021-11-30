@@ -79,7 +79,73 @@ particle_filter <- R6::R6Class(
     last_model = NULL,
     last_state = NULL,
     last_history = NULL,
-    last_restart_state = NULL
+    last_restart_state = NULL,
+
+    run_simple = function(pars, save_history, save_restart,
+                          min_log_likelihood) {
+      obj <- self$run_begin(pars, save_history, save_restart,
+                            min_log_likelihood = min_log_likelihood)
+      obj$run()
+      private$last_history <- obj$history
+      private$last_model <- obj$model
+      private$last_state <- function(index) obj$model$state(index)
+      private$last_restart_state <- obj$restart_state
+      obj$log_likelihood
+    },
+
+    run_multistage = function(pars, epochs, save_history, save_restart,
+                          min_log_likelihood) {
+      stages <- filter_check_stages(pars, epochs, private$steps)
+
+      models <- vector("list", length(stages))
+      history <- vector("list", length(stages))
+      restart <- vector("list", length(stages))
+
+      for (i in seq_along(stages)) {
+        if (i == 1) {
+          obj <- self$run_begin(
+            stages[[i]]$pars, save_history, save_restart, min_log_likelihood)
+        } else {
+          obj <- obj$fork_multistage(
+            stages[[i]]$pars, stages[[i]]$transform$state)
+        }
+        obj$step(stages[[i]]$step_index)
+        models[[i]] <- obj$model
+        history[i] <- list(obj$history)
+        restart[i] <- list(obj$restart)
+      }
+
+      ## Push the final rng state into the first version of the model,
+      ## completing the cycle.
+      models[[1]]$set_rng_state(last(models)$rng_state())
+
+      ## We return this first model in the sequence as that's where
+      ## the next run will start from, but state from the last model
+      ## because that's where we got to.
+      private$last_model <- models[[1]]
+      private$last_state <- function(index) last(models)$state(index)
+
+      step_index <- vnapply(stages, "[[", "step_index")
+
+      if (save_history) {
+        private$last_history <- join_histories(history, step_index)
+      } else {
+        private$last_history <- NULL
+      }
+
+      ## This needs writing and is not terrible, however it does break
+      ## a few assumptions about equal sizes and that will have some
+      ## downstream implications.  We might require in the first
+      ## instance that the restart states are conformable and then
+      ## look at relaxing that if needed.
+      if (!is.null(save_restart)) {
+        private$last_restart_state <- join_restart_state(restart, step_index)
+      } else {
+        private$last_restart_state <- NULL
+      }
+
+      obj$log_likelihood
+    }
   ),
 
   public = list(
@@ -254,6 +320,8 @@ particle_filter <- R6::R6Class(
     ##' `pars$initial$whatever`), but this is up to you. Extra keys
     ##' are silently ignored by dust models.
     ##'
+    ##' @param epochs Optionally, a list of scheduled changes to the model.
+    ##'
     ##' @param save_history Logical, indicating if the history of all
     ##' particles should be saved. If saving history, then it can be
     ##' queried later with the `$history` method on the object.
@@ -277,83 +345,16 @@ particle_filter <- R6::R6Class(
     ##'
     ##' @return A single numeric value representing the log-likelihood
     ##' (`-Inf` if the model is impossible)
-    run = function(pars = list(), save_history = FALSE, save_restart = NULL,
+    run = function(pars = list(), epochs = NULL,
+                   save_history = FALSE, save_restart = NULL,
                    min_log_likelihood = NULL) {
-      obj <- self$run_begin(pars, save_history, save_restart,
-                            min_log_likelihood = min_log_likelihood)
-      obj$run()
-      private$last_history <- obj$history
-      private$last_model <- obj$model
-      private$last_state <- function(index) obj$model$state(index)
-      private$last_restart_state <- obj$restart_state
-      obj$log_likelihood
-    },
-
-    run_staged = function(pars, epochs,
-                          save_history = FALSE, save_restart = NULL,
-                          min_log_likelihood = NULL) {
-      stages <- filter_check_stages(pars, epochs, private$steps)
-
-      models <- vector("list", length(stages))
-      history <- vector("list", length(stages))
-      restart <- vector("list", length(stages))
-
-      for (i in seq_along(stages)) {
-        if (i == 1) {
-          filter_state <- self$run_begin(
-            stages[[i]]$pars, save_history, save_restart, min_log_likelihood)
-        } else {
-          model_prev <- filter_state$model
-          state_prev <- filter_state$model$state()
-
-          filter_state <- filter_state$fork_multistage(
-            stages[[i]]$pars, stages[[i]]$transform$state)
-        }
-        filter_state$step(stages[[i]]$step_index)
-        models[[i]] <- filter_state$model
-        if (save_history) {
-          history[[i]] <- filter_state$history
-          ## TODO: this would be better done as part of the updating
-          ## above, we might move it there, as well as extracting the
-          ## updated state at that point.
-          if (i > 1) {
-            history[[i]]$value[, , 1] <- NA_real_
-          }
-        }
-        if (!is.null(save_restart)) {
-          restart[[i]] <- filter_state$restart
-        }
-
-      }
-
-      ## Push the final rng state into the first version of the model,
-      ## completing the cycle.
-      models[[1]]$set_rng_state(last(models)$rng_state())
-
-      ## We return this first model in the sequence as that's where
-      ## the next run will start from:
-      private$last_model <- models[[1]]
-      private$last_state <- function(index) last(models)$state(index)
-
-      if (save_history) {
-        step_index <- vnapply(stages, "[[", "step_index")
-        private$last_history <- join_histories(history, step_index)
+      if (is.null(epochs)) {
+        private$run_simple(pars, save_history, save_restart,
+                           min_log_likelihood)
       } else {
-        private$last_history <- NULL
+        private$run_multistage(pars, epochs, save_history, save_restart,
+                               min_log_likelihood)
       }
-
-      ## This needs writing and is not terrible, however it does break
-      ## a few assumptions about equal sizes and that will have some
-      ## downstream implications.  We might require in the first
-      ## instance that the restart states are conformable and then
-      ## look at relaxing that if needed.
-      if (!is.null(save_restart)) {
-        stop("Writeme")
-      } else {
-        private$last_restart_state <- NULL
-      }
-
-      filter_state$log_likelihood
     },
 
     ##' @description Begin a particle filter run. This is part of the
@@ -827,4 +828,9 @@ join_histories <- function(history, step_index) {
   }
 
   list(value = value, order = order, index = index)
+}
+
+
+join_restart_state <- function(restart, step_index) {
+  stop("writeme")
 }

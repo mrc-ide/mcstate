@@ -15,7 +15,7 @@ test_that("A trivial multistage filter is identical to single stage", {
   set.seed(1)
   filter2 <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
                                  index = index, seed = 1L)
-  ll2 <- filter2$run_staged(pars, epochs, save_history = TRUE)
+  ll2 <- filter2$run(pars, epochs, save_history = TRUE)
 
   expect_identical(ll1, ll2)
   expect_identical(
@@ -43,7 +43,7 @@ test_that("An effectless multistage filter is identical to single stage", {
   set.seed(1)
   filter2 <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
                                  index = index, seed = 1L)
-  ll2 <- filter2$run_staged(pars, epochs, save_history = TRUE)
+  ll2 <- filter2$run(pars, epochs, save_history = TRUE)
 
   expect_identical(ll1, ll2)
   expect_identical(
@@ -77,7 +77,7 @@ test_that("Can transform state in the model", {
   set.seed(1)
   filter2 <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
                                  index = dat$index, seed = 1L)
-  ll2 <- filter2$run_staged(pars, epochs)
+  ll2 <- filter2$run(pars, epochs)
 
   expect_false(ll1 == ll2)
   expect_equal(colSums(filter1$state(1:3)), rep(1010, 42))
@@ -131,7 +131,7 @@ test_that("Can transform state size", {
                                 compare = compare, index = index,
                                 seed = 1L)
   ## Here we just check that we can run this at all.
-  expect_silent(filter$run_staged(pars, epochs, save_history = TRUE))
+  expect_silent(filter$run(pars, epochs, save_history = TRUE))
 })
 
 
@@ -212,7 +212,7 @@ test_that("multistage, dimension changing, model agrees with single stage", {
                  state = transform_state))
 
   filter <- new_filter()
-  ll_staged <- filter$run_staged(pars, epochs, save_history = TRUE)
+  ll_staged <- filter$run(pars, epochs, save_history = TRUE)
   h_staged <- filter$history()
   expect_identical(ll_staged, ll_20)
 
