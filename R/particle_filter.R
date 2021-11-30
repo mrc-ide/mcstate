@@ -320,8 +320,6 @@ particle_filter <- R6::R6Class(
     ##' `pars$initial$whatever`), but this is up to you. Extra keys
     ##' are silently ignored by dust models.
     ##'
-    ##' @param epochs Optionally, a list of scheduled changes to the model.
-    ##'
     ##' @param save_history Logical, indicating if the history of all
     ##' particles should be saved. If saving history, then it can be
     ##' queried later with the `$history` method on the object.
@@ -345,8 +343,7 @@ particle_filter <- R6::R6Class(
     ##'
     ##' @return A single numeric value representing the log-likelihood
     ##' (`-Inf` if the model is impossible)
-    run = function(pars = list(), epochs = NULL,
-                   save_history = FALSE, save_restart = NULL,
+    run = function(pars = list(), save_history = FALSE, save_restart = NULL,
                    min_log_likelihood = NULL) {
       if (inherits(pars, "multistage_parameters")) {
         private$run_multistage(pars, save_history, save_restart,
