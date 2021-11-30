@@ -311,15 +311,19 @@ particle_filter <- R6::R6Class(
         }
         filter_state$step(stages[[i]]$step_index)
         models[[i]] <- filter_state$model
-        history[[i]] <- filter_state$history
-        restart[[i]] <- filter_state$restart
-
-        ## TODO: this would be better done as part of the updating
-        ## above, we might move it there, as well as extracting the
-        ## updated state at that point.
-        if (i > 1) {
-          history[[i]]$value[, , 1] <- NA_real_
+        if (save_history) {
+          history[[i]] <- filter_state$history
+          ## TODO: this would be better done as part of the updating
+          ## above, we might move it there, as well as extracting the
+          ## updated state at that point.
+          if (i > 1) {
+            history[[i]]$value[, , 1] <- NA_real_
+          }
         }
+        if (!is.null(save_restart)) {
+          restart[[i]] <- filter_state$restart
+        }
+
       }
 
       ## Push the final rng state into the first version of the model,

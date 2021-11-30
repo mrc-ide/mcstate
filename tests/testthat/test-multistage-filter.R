@@ -29,6 +29,10 @@ test_that("A trivial multistage filter is identical to single stage", {
 test_that("An effectless multistage filter is identical to single stage", {
   dat <- example_sir()
 
+  index <- function(info) {
+    list(run = 5L, state = c(S = 1, I = 2, R = 3))
+  }
+
   epochs <- list(filter_epoch(40), filter_epoch(80))
   pars <- dat$pars$model(dat$pars$initial())
   set.seed(1)
@@ -126,8 +130,100 @@ test_that("Can transform state size", {
   filter <- particle_filter$new(data, model, 42,
                                 compare = compare, index = index,
                                 seed = 1L)
-  filter$run_staged(pars, epochs, save_history = TRUE)
-  h <- filter$history()
+  ## Here we just check that we can run this at all.
+  expect_silent(filter$run_staged(pars, epochs, save_history = TRUE))
+})
 
-  ## What can I usefully test for here? nothing yet.
+
+test_that("multistage, dimension changing, model agrees with single stage", {
+  ## A small, very silly, model designed to help work with the
+  ## multistage filter.  We have a model we can change the dimensions of
+  ## without changing the way that the random number draws will work
+  ## because only the first entry will be stochastic.
+  model <- odin.dust::odin_dust({
+    len <- user(integer = TRUE)
+    update(x[1]) <- x[1] + rnorm(0, 0.1)
+    update(x[2:len]) <- i + step / 10
+    initial(x[]) <- 0
+    dim(x) <- len
+  }, verbose = FALSE)
+
+  data <- particle_filter_data(data.frame(time = 1:50, observed = rnorm(50)),
+                               "time", 4)
+  ## Nonsense model
+  compare <- function(state, observed, pars) {
+    dnorm(state - observed$observed, log = TRUE)
+  }
+
+  index <- function(info) {
+    i <- seq(1, info$len, by = 2L)
+    names(i) <- letters[i]
+    list(run = 1L, state = i)
+  }
+
+  transform_state <- function(y, model_old, model_new) {
+    n_old <- model_old$pars()$len
+    n_new <- model_new$pars()$len
+    if (n_new > n_old) {
+      y <- rbind(y, matrix(0, n_new - n_old, ncol(y)))
+    } else {
+      y <- y[seq_len(n_new), ]
+    }
+    y
+  }
+
+  new_filter <- function() {
+    set.seed(1)
+    particle_filter$new(data, model, 42,
+                        compare = compare, index = index,
+                        seed = 1L)
+  }
+
+  ## First show that the likelihood and associated history does not vary
+  ## with the number of states for the simple filter; we need this
+  ## property to hold to do the next tests.
+  filter_10 <- new_filter()
+  ll_10 <- filter_10$run(list(len = 10), save_history = TRUE)
+  h_10 <- filter_10$history()
+
+  filter_15 <- new_filter()
+  ll_15 <- filter_15$run(list(len = 15), save_history = TRUE)
+  h_15 <- filter_15$history()
+
+  filter_20 <- new_filter()
+  ll_20 <- filter_20$run(list(len = 20), save_history = TRUE)
+  h_20 <- filter_20$history()
+
+  expect_identical(ll_10, ll_20)
+  expect_identical(ll_15, ll_20)
+  expect_identical(h_10, h_20[1:5, , ])
+  expect_identical(h_15, h_20[1:8, , ])
+
+  ## Now, we can set up some runs where we fiddle with the size of the
+  ## model over time, and we should see that it matches the histories
+  ## above:
+  pars <- list(len = 10)
+  epochs <- list(
+    filter_epoch(40,
+                 pars = list(len = 20),
+                 state = transform_state),
+    filter_epoch(100,
+                 pars = list(len = 15),
+                 state = transform_state))
+
+  filter <- new_filter()
+  ll_staged <- filter$run_staged(pars, epochs, save_history = TRUE)
+  h_staged <- filter$history()
+  expect_identical(ll_staged, ll_20)
+
+  ## OK, we are off here, and quite impressively so.
+
+  ## common states are easy to check:
+  expect_equal(h_staged[1:5, , ], h_20[1:5, , ])
+
+  h_cmp <- h_20
+  h_cmp[6:10, ,  1:11] <- NA
+  h_cmp[9:10, , 27:51] <- NA
+  expect_identical(is.na(h_staged), is.na(h_cmp))
+  expect_identical(h_staged, h_cmp)
 })
