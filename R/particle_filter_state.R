@@ -180,6 +180,36 @@ particle_filter_state <- R6::R6Class(
       self$log_likelihood <- other$log_likelihood
     },
 
+    update_pars = function(pars, transform_state) {
+      stopifnot(!private$gpu) # this won't work
+      gpu_config <- NULL
+      model <- NULL
+      seed <- self$model$rng_state()
+      save_history <- !is.null(self$history)
+      initial <- NULL
+
+      if (is.null(pars)) {
+        pars <- self$model$pars()
+      }
+      ret <- particle_filter_state$new(
+        pars, private$generator, model, private$data, private$data_split,
+        private$steps, private$n_particles, private$n_threads,
+        initial, private$index, private$compare, gpu_config,
+        seed, private$min_log_likelihood, save_history, private$save_restart)
+
+      state <- transform_state(self$model$state(), self$model, ret$model)
+      step <- self$model$step()
+
+      ret$model$update_state(state = state, step = step)
+      ret$current_step_index <- self$current_step_index
+      ret$log_likelihood <- self$log_likelihood
+      ret$log_likelihood_step <- self$log_likelihood_step
+
+      ## We really should save the history here if we wanted to be
+      ## able to get the state at the beginning of the change.
+      ret
+    },
+
     update_state = function(step_index, state) {
       self$current_step_index <- step_index
       step <- private$steps[step_index, 2]

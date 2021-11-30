@@ -294,21 +294,26 @@ particle_filter <- R6::R6Class(
                           min_log_likelihood = NULL) {
       stages <- filter_check_stages(pars, epochs, private$steps)
 
-      filter_state <- lapply(stages, function(s)
-        self$run_begin(s$pars, save_history, save_restart,
-                         min_log_likelihood))
+      models <- vector("list", length(stages))
+      history <- vector("list", length(stages))
+      restart <- vector("list", length(stages))
 
       for (i in seq_along(stages)) {
-        if (i > 1) {
-          m_prev <- filter_state[[i - 1L]]$model
-          m_curr <- filter_state[[i]]$model
-          state <- stages[[i]]$transform$state(m_prev$state(), m_prev, m_curr)
-          filter_state[[i]]$continue(filter_state[[i - 1L]], state)
-        }
-        filter_state[[i]]$step(stages[[i]]$step_index)
-      }
+        if (i == 1) {
+          filter_state <- self$run_begin(
+            stages[[i]]$pars, save_history, save_restart, min_log_likelihood)
+        } else {
+          model_prev <- filter_state$model
+          state_prev <- filter_state$model$state()
 
-      models <- lapply(filter_state, function(x) x$model)
+          filter_state <- filter_state$update_pars(stages[[i]]$pars,
+                                                   stages[[i]]$transform$state)
+        }
+        filter_state$step(stages[[i]]$step_index)
+        models[[i]] <- filter_state$model
+        history[[i]] <- filter_state$history
+        restart[[i]] <- filter_state$restart
+      }
 
       ## Push the final rng state into the first version of the model,
       ## completing the cycle.
@@ -321,7 +326,28 @@ particle_filter <- R6::R6Class(
 
       ## This needs writing and is nontrivial
       if (save_history) {
-        stop("Writeme")
+        value <- lapply(history, function(x) x$value[1:5, , , drop = FALSE])
+        order <- lapply(history, "[[", "order")
+        index <- lapply(history, "[[", "index")
+
+        if (!is.null(history[[1]]$index)) {
+          ## Aha, we could do this automatically based on the index:
+          ##
+          ## If named, then we collect unique names
+          ## If unnamed, then we just pad.
+
+          ## If we have variable index then that needs dealing with
+          ## too, but is not terrible to do.  Suppose in one model we save
+          ## S1, I1, R1 -> 1:3
+          ## and in another *also*
+          ## S2, I2, R3 -> 1:3
+          stop("WRITEME")
+        }
+
+
+
+
+
       } else {
         private$last_history <- NULL
       }
@@ -337,7 +363,7 @@ particle_filter <- R6::R6Class(
         private$last_restart_state <- NULL
       }
 
-      last(filter_state)$log_likelihood
+      filter_state$log_likelihood
     },
 
     ##' @description Begin a particle filter run. This is part of the
@@ -724,6 +750,11 @@ filter_check_stages <- function(pars_base, epochs, steps) {
     stop("Expected all elements of 'epochs' to be 'filter_epoch' objects")
   }
 
+  sets_pars <- vlapply(epochs, function(x) is.null(x$pars))
+  if (any(sets_pars) && !all(sets_pars)) {
+    stop("If changing parameters, all epochs must contain 'pars'")
+  }
+
   step_index <- c(match(vnapply(epochs, "[[", "start"), steps[, 2]),
                   nrow(steps))
   if (any(is.na(step_index))) {
@@ -740,13 +771,8 @@ filter_check_stages <- function(pars_base, epochs, steps) {
       pars <- pars_base
       transform <- NULL
     } else {
-      ## TODO: I am unsure if the transforms should be consecutive or
-      ## against the base parameters. I've set this up to be against
-      ## the base parameters, even though that is different to the way
-      ## state must be treated, as I think that's the only easy way to
-      ## work with this.
+      pars <- epochs[[i - 1L]]$pars
       transform <- epochs[[i - 1L]]$transform
-      pars <- transform$pars(pars_base)
     }
 
     ret[[i]] <- list(pars = pars,
@@ -758,26 +784,15 @@ filter_check_stages <- function(pars_base, epochs, steps) {
 }
 
 
-filter_epoch <- function(start, pars = NULL, state = NULL,
-                         trajectories = NULL) {
-  no_change <- function(x, ...) x
-  if (is.null(pars)) {
-    pars <- no_change
-  }
+filter_epoch <- function(start, pars = NULL, state = NULL) {
   if (is.null(state)) {
-    state <- no_change
+    state <- function(x, ...) x
   }
-  if (is.null(trajectories)) {
-    trajectories <- no_change
-  }
-  assert_function(pars)
   assert_function(state)
-  assert_function(trajectories)
 
   ret <- list(start = start,
-              transform = list(pars = pars,
-                               state = state,
-                               trajectories = trajectories))
+              pars = pars,
+              transform = list(state = state))
 
   class(ret) <- "filter_epoch"
   ret
