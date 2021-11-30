@@ -1,21 +1,101 @@
+test_that("can construct multistage_epoch objects", {
+  expect_equal(
+    multistage_epoch(10),
+    structure(list(start = 10, pars = NULL,
+                   transform_state = transform_state_identity),
+              class = "multistage_epoch"))
+  transform <- function(x, ...) {
+    x + 1
+  }
+  expect_equal(
+    multistage_epoch(10, transform_state = transform),
+    structure(list(start = 10, pars = NULL, transform_state = transform),
+              class = "multistage_epoch"))
+  expect_equal(
+    multistage_epoch(10, list(a = 1), transform),
+    structure(list(start = 10, pars = list(a = 1), transform_state = transform),
+              class = "multistage_epoch"))
+
+  expect_error(
+    multistage_epoch(10, list(a = 1), TRUE),
+    "'transform_state' must be a function")
+})
+
+
+test_that("Can construct trivial multistage_parameters object", {
+  base <- list(a = 1)
+  res <- multistage_parameters(base, list())
+  expect_equal(
+    res,
+    structure(
+      list(list(pars = base, start = NULL, transform_state = NULL)),
+      class = "multistage_parameters"))
+})
+
+
+test_that("Can construct multistage_parameters object with 2 stages", {
+  base <- list(a = 1)
+  epochs <- list(
+    multistage_epoch(20, list(a = 2)),
+    multistage_epoch(30, list(a = 3)))
+
+  res <- multistage_parameters(base, epochs)
+  expect_length(res, 3)
+  expect_s3_class(res, "multistage_parameters")
+
+  expect_equal(res[[1]],
+               list(pars = base, start = NULL, transform_state = NULL))
+  expect_equal(res[[2]],
+               list(pars = list(a = 2),
+                    start = 20,
+                    transform_state = transform_state_identity))
+  expect_equal(res[[3]],
+               list(pars = list(a = 3),
+                    start = 30,
+                    transform_state = transform_state_identity))
+})
+
+
+test_that("parameter changes must be consistent", {
+  base <- list(a = 1)
+  epochs <- list(
+    multistage_epoch(20),
+    multistage_epoch(30, list(a = 3)))
+  expect_error(
+    multistage_parameters(base, epochs),
+    "If changing parameters, all epochs must contain 'pars'")
+})
+
+
+test_that("all epoch entries must be multistage_epoch objects", {
+  base <- list(a = 1)
+  epochs <- list(
+    multistage_epoch(20),
+    NULL)
+  expect_error(
+    multistage_parameters(base, epochs),
+    "Expected all elements of 'epochs' to be 'multistage_epoch' objects")
+})
+
+
 test_that("A trivial multistage filter is identical to single stage", {
   dat <- example_sir()
   ## TODO: move this into the example, will break some tests though?
   index <- function(info) {
     list(run = 5L, state = c(S = 1, I = 2, R = 3))
   }
+  pars_base <- dat$pars$model(dat$pars$initial())
+  pars <- multistage_parameters(pars_base, list())
 
-  epochs <- list()
-  pars <- dat$pars$model(dat$pars$initial())
   set.seed(1)
   filter1 <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
                                  index = index, seed = 1L)
-  ll1 <- filter1$run(pars, save_history = TRUE)
+  ll1 <- filter1$run(pars_base, save_history = TRUE)
 
   set.seed(1)
   filter2 <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
                                  index = index, seed = 1L)
-  ll2 <- filter2$run(pars, epochs, save_history = TRUE)
+  ll2 <- filter2$run(pars, save_history = TRUE)
 
   expect_identical(ll1, ll2)
   expect_identical(
@@ -29,21 +109,23 @@ test_that("A trivial multistage filter is identical to single stage", {
 test_that("An effectless multistage filter is identical to single stage", {
   dat <- example_sir()
 
+  ## TODO: see above
   index <- function(info) {
     list(run = 5L, state = c(S = 1, I = 2, R = 3))
   }
 
-  epochs <- list(filter_epoch(40), filter_epoch(80))
-  pars <- dat$pars$model(dat$pars$initial())
+  epochs <- list(multistage_epoch(10), multistage_epoch(20))
+  pars_base <- dat$pars$model(dat$pars$initial())
+  pars <- multistage_parameters(pars_base, epochs)
   set.seed(1)
   filter1 <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
                                  index = index, seed = 1L)
-  ll1 <- filter1$run(pars, save_history = TRUE)
+  ll1 <- filter1$run(pars_base, save_history = TRUE)
 
   set.seed(1)
   filter2 <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
                                  index = index, seed = 1L)
-  ll2 <- filter2$run(pars, epochs, save_history = TRUE)
+  ll2 <- filter2$run(pars, save_history = TRUE)
 
   expect_identical(ll1, ll2)
   expect_identical(
@@ -65,14 +147,16 @@ test_that("Can transform state in the model", {
   }
 
   epochs <- list(
-    filter_epoch(40, state = transform_state),
-    filter_epoch(80, state = transform_state))
+    multistage_epoch(10, transform_state = transform_state),
+    multistage_epoch(20, transform_state = transform_state))
 
-  pars <- dat$pars$model(dat$pars$initial())
+  pars_base <- dat$pars$model(dat$pars$initial())
+  pars <- multistage_parameters(pars_base, epochs)
+
   set.seed(1)
   filter1 <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
                                  index = dat$index, seed = 1L)
-  ll1 <- filter1$run(pars)
+  ll1 <- filter1$run(pars_base)
 
   set.seed(1)
   filter2 <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
@@ -118,20 +202,21 @@ test_that("Can transform state size", {
   ## There's some pretty major work in pmcmc to get this sorted though
   ## as we need to generate all of this out of the mcmc parameters,
   ## and that's its own challenge.
-  pars <- list(len = 10, sd = 1)
+  pars_base <- list(len = 10, sd = 1)
   epochs <- list(
-    filter_epoch(40,
+    multistage_epoch(10,
                  pars = list(len = 20, sd = 1),
-                 state = transform_state),
-    filter_epoch(100,
+                 transform_state = transform_state),
+    multistage_epoch(25,
                  pars = list(len = 5, sd = 1),
-                 state = transform_state))
+                 transform_state = transform_state))
+  pars <- multistage_parameters(pars_base, epochs)
 
   filter <- particle_filter$new(data, model, 42,
                                 compare = compare, index = index,
                                 seed = 1L)
   ## Here we just check that we can run this at all.
-  expect_silent(filter$run(pars, epochs, save_history = TRUE))
+  expect_silent(filter$run(pars, save_history = TRUE))
 })
 
 
@@ -202,25 +287,25 @@ test_that("multistage, dimension changing, model agrees with single stage", {
   ## Now, we can set up some runs where we fiddle with the size of the
   ## model over time, and we should see that it matches the histories
   ## above:
-  pars <- list(len = 10)
+  pars_base <- list(len = 10)
   epochs <- list(
-    filter_epoch(40,
+    multistage_epoch(10,
                  pars = list(len = 20),
-                 state = transform_state),
-    filter_epoch(100,
+                 transform_state = transform_state),
+    multistage_epoch(25,
                  pars = list(len = 15),
-                 state = transform_state))
+                 transform_state = transform_state))
+  pars <- multistage_parameters(pars_base, epochs)
 
   filter <- new_filter()
   ll_staged <- filter$run(pars, epochs, save_history = TRUE)
   h_staged <- filter$history()
   expect_identical(ll_staged, ll_20)
 
-  ## OK, we are off here, and quite impressively so.
-
-  ## common states are easy to check:
+  ## Common states are easy to check:
   expect_equal(h_staged[1:5, , ], h_20[1:5, , ])
 
+  ## The full set requires a bit more work:
   h_cmp <- h_20
   h_cmp[6:10, ,  1:11] <- NA
   h_cmp[9:10, , 27:51] <- NA

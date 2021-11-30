@@ -93,9 +93,9 @@ particle_filter <- R6::R6Class(
       obj$log_likelihood
     },
 
-    run_multistage = function(pars, epochs, save_history, save_restart,
-                          min_log_likelihood) {
-      stages <- filter_check_stages(pars, epochs, private$steps)
+    run_multistage = function(pars, save_history, save_restart,
+                              min_log_likelihood) {
+      stages <- filter_check_times(pars, private$data)
 
       models <- vector("list", length(stages))
       history <- vector("list", length(stages))
@@ -107,7 +107,7 @@ particle_filter <- R6::R6Class(
             stages[[i]]$pars, save_history, save_restart, min_log_likelihood)
         } else {
           obj <- obj$fork_multistage(
-            stages[[i]]$pars, stages[[i]]$transform$state)
+            stages[[i]]$pars, stages[[i]]$transform_state)
         }
         obj$step(stages[[i]]$step_index)
         models[[i]] <- obj$model
@@ -348,12 +348,12 @@ particle_filter <- R6::R6Class(
     run = function(pars = list(), epochs = NULL,
                    save_history = FALSE, save_restart = NULL,
                    min_log_likelihood = NULL) {
-      if (is.null(epochs)) {
+      if (inherits(pars, "multistage_parameters")) {
+        private$run_multistage(pars, save_history, save_restart,
+                               min_log_likelihood)
+      } else {
         private$run_simple(pars, save_history, save_restart,
                            min_log_likelihood)
-      } else {
-        private$run_multistage(pars, epochs, save_history, save_restart,
-                               min_log_likelihood)
       }
     },
 
@@ -732,105 +732,4 @@ filter_current_seed <- function(model, seed) {
     seed <- model$rng_state(first_only = TRUE)
   }
   seed
-}
-
-
-filter_check_stages <- function(pars_base, epochs, steps) {
-  ok <- vlapply(epochs, inherits, "filter_epoch")
-  if (any(!ok)) {
-    stop("Expected all elements of 'epochs' to be 'filter_epoch' objects")
-  }
-
-  sets_pars <- vlapply(epochs, function(x) is.null(x$pars))
-  if (any(sets_pars) && !all(sets_pars)) {
-    stop("If changing parameters, all epochs must contain 'pars'")
-  }
-
-  step_index <- c(match(vnapply(epochs, "[[", "start"), steps[, 2]),
-                  nrow(steps))
-  if (any(is.na(step_index))) {
-    stop(sprintf("Could not map epoch to filter step: error for %s",
-                 paste(which(is.na(step_index)), collapse = ", ")))
-  }
-
-  n_stages <- length(epochs) + 1L
-
-  ret <- vector("list", n_stages)
-
-  for (i in seq_len(n_stages)) {
-    if (i == 1L) {
-      pars <- pars_base
-      transform <- NULL
-    } else {
-      pars <- epochs[[i - 1L]]$pars
-      transform <- epochs[[i - 1L]]$transform
-    }
-
-    ret[[i]] <- list(pars = pars,
-                     step_index = step_index[[i]],
-                     transform = transform)
-  }
-
-  ret
-}
-
-
-filter_epoch <- function(start, pars = NULL, state = NULL) {
-  if (is.null(state)) {
-    state <- function(x, ...) x
-  }
-  assert_function(state)
-
-  ret <- list(start = start,
-              pars = pars,
-              transform = list(state = state))
-
-  class(ret) <- "filter_epoch"
-  ret
-}
-
-
-join_histories <- function(history, step_index) {
-  if (is.null(names(history[[1]]$index))) {
-    ## it is possible but unlikely that we could use non-named things
-    ## sensibly. We don't need that in sircovid yet so ignoring for
-    ## now.
-    stop("Named index required")
-  }
-
-  nms <- unique(unlist(lapply(history, function(x) names(x$index))))
-
-  ## TODO: The only use of history_index later is for names. We should
-  ## refactor that to make it history_names
-
-  ## We should not be doing the join by learning where the filtering
-  ## has got to do this properly
-  value <- array(NA_real_, c(length(nms), dim(history[[1]]$value)[-1]))
-  order <- array(NA_integer_, dim(history[[1]]$order))
-  index <- rep(NA_integer_, length(nms))
-  names(index) <- nms
-
-  end <- step_index + 1L
-  start <- c(1L, end[-length(end)] + 1L)
-  ## It's possible here that we should use
-  ##
-  ## > c(1L, end[-length(end)])
-  ##
-  ## for the start to record the state value immediately at change;
-  ## either case is "correct", though at the moment we don't have the
-  ## possibility of recording the latter case.
-
-  for (i in seq_along(history)) {
-    j <- match(names(history[[i]]$index), nms)
-    k <- seq(start[[i]], end[[i]])
-    value[j, , k] <- history[[i]]$value[, , k]
-    order[, k] <- history[[i]]$order[, k]
-  }
-
-  list(value = value, order = order, index = index)
-}
-
-
-join_restart_state <- function(restart, step_index) {
-  stop("writeme")
 }
