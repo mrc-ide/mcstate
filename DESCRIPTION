@@ -16,7 +16,6 @@ Description: Implements Monte Carlo methods for state-space models
     work with odin/dust models, but we will see how general it becomes.
 License: MIT + file LICENSE
 Encoding: UTF-8
-LazyData: true
 Language: en-GB
 URL: https://github.com/mrc-ide/mcstate
 BugReports: https://github.com/mrc-ide/mcstate/issues
