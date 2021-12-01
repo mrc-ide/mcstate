@@ -290,7 +290,7 @@ particle_filter_state_nested <- R6::R6Class(
     ##' the same step as the parent model.
     ##'
     ##' @param pars New model parameters
-    fork = function(pars) {
+    fork_smc2 = function(pars) {
       stopifnot(!private$gpu) # this won't work
       gpu_config <- NULL
       seed <- self$model$rng_state()
