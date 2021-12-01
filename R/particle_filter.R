@@ -133,11 +133,6 @@ particle_filter <- R6::R6Class(
         private$last_history <- NULL
       }
 
-      ## This needs writing and is not terrible, however it does break
-      ## a few assumptions about equal sizes and that will have some
-      ## downstream implications.  We might require in the first
-      ## instance that the restart states are conformable and then
-      ## look at relaxing that if needed.
       if (!is.null(save_restart)) {
         private$last_restart_state <- join_restart_state(restart, save_restart)
       } else {

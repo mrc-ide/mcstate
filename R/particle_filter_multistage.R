@@ -27,7 +27,6 @@ multistage_parameters <- function(pars, epochs) {
 
   ret <- vector("list", n_stages)
 
-  ## possibly worth storing in the other order?
   for (i in seq_len(n_stages)) {
     if (i == 1L) {
       pars_i <- pars
@@ -103,7 +102,8 @@ transform_state_identity <- function(x, ...) {
 
 filter_check_times <- function(pars, data) {
   ## There's an awkward bit of bookkeeping here; we need to find out
-  ## when each phase *ends*
+  ## when each phase *ends*, as that is the index that we do the
+  ## switch at.
   time_end_data <- data[[paste0(attr(data, "time"), "_end")]]
   time_start_pars <- vnapply(pars[-1], "[[", "start")
   step_index <- c(
@@ -136,8 +136,6 @@ join_histories <- function(history, step_index) {
   ## TODO: The only use of history_index later is for names. We should
   ## refactor that to make it history_names
 
-  ## We should not be doing the join by learning where the filtering
-  ## has got to do this properly
   value <- array(NA_real_, c(length(nms), dim(history[[1]]$value)[-1]))
   order <- array(NA_integer_, dim(history[[1]]$order))
   index <- rep(NA_integer_, length(nms))
