@@ -460,6 +460,6 @@ example_variable <- function() {
     y
   }
 
-  list(model = model, data = data, compare = compare, index= index,
+  list(model = model, data = data, compare = compare, index = index,
        transform_state = transform_state)
 }
