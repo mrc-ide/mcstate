@@ -421,3 +421,45 @@ random_array <- function(dim, named = FALSE) {
   }
   array(runif(prod(dim)), dim, dimnames = dn)
 }
+
+
+example_variable <- function() {
+  ## A small, very silly, model designed to help work with the
+  ## multistage filter.  We have a model we can change the dimensions of
+  ## without changing the way that the random number draws will work
+  ## because only the first entry will be stochastic.
+  model <- odin.dust::odin_dust({
+    len <- user(integer = TRUE)
+    update(x[1]) <- x[1] + rnorm(0, 0.1)
+    update(x[2:len]) <- i + step / 10
+    initial(x[]) <- 0
+    dim(x) <- len
+  }, verbose = FALSE)
+
+  data <- particle_filter_data(data.frame(time = 1:50, observed = rnorm(50)),
+                               "time", 4)
+  ## Nonsense model
+  compare <- function(state, observed, pars) {
+    dnorm(state - observed$observed, log = TRUE)
+  }
+
+  index <- function(info) {
+    i <- seq(1, info$len, by = 2L)
+    names(i) <- letters[i]
+    list(run = 1L, state = i)
+  }
+
+  transform_state <- function(y, model_old, model_new) {
+    n_old <- model_old$pars()$len
+    n_new <- model_new$pars()$len
+    if (n_new > n_old) {
+      y <- rbind(y, matrix(0, n_new - n_old, ncol(y)))
+    } else {
+      y <- y[seq_len(n_new), ]
+    }
+    y
+  }
+
+  list(model = model, data = data, compare = compare, index= index,
+       transform_state = transform_state)
+}

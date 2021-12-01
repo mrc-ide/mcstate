@@ -80,7 +80,9 @@ test_that("all epoch entries must be multistage_epoch objects", {
 
 test_that("A trivial multistage filter is identical to single stage", {
   dat <- example_sir()
-  ## TODO: move this into the example, will break some tests though?
+
+  ## we need a named index throughout here, and can't use the one in
+  ## the example.
   index <- function(info) {
     list(run = 5L, state = c(S = 1, I = 2, R = 3))
   }
@@ -108,8 +110,6 @@ test_that("A trivial multistage filter is identical to single stage", {
 
 test_that("An effectless multistage filter is identical to single stage", {
   dat <- example_sir()
-
-  ## TODO: see above
   index <- function(info) {
     list(run = 5L, state = c(S = 1, I = 2, R = 3))
   }
@@ -181,30 +181,7 @@ test_that("Can transform state in the model", {
 
 
 test_that("Can transform state size", {
-  model <- dust::dust_example("variable")
-  data <- particle_filter_data(data.frame(time = 1:50, observed = rnorm(50)),
-                               "time", 4)
-  ## Nonsense model
-  compare <- function(state, observed, pars) {
-    apply(dnorm(state, log = TRUE), 2, max)
-  }
-
-  index <- function(info) {
-    i <- seq(1, info$len, by = 2L)
-    names(i) <- letters[i]
-    list(run = i, state = i)
-  }
-
-  transform_state <- function(y, model_old, model_new) {
-    n_old <- model_old$pars()$len
-    n_new <- model_new$pars()$len
-    if (n_new > n_old) {
-      y <- rbind(y, matrix(0, n_new - n_old, ncol(y)))
-    } else {
-      y <- y[seq_len(n_new), ]
-    }
-    y
-  }
+  dat <- example_variable()
 
   ## There's going to be some work here to update this so that it's
   ## easy to work with.  Possibly we just set a blank epoch at the
@@ -217,14 +194,14 @@ test_that("Can transform state size", {
   epochs <- list(
     multistage_epoch(10,
                  pars = list(len = 20, sd = 1),
-                 transform_state = transform_state),
+                 transform_state = dat$transform_state),
     multistage_epoch(25,
                  pars = list(len = 5, sd = 1),
-                 transform_state = transform_state))
+                 transform_state = dat$transform_state))
   pars <- multistage_parameters(pars_base, epochs)
 
-  filter <- particle_filter$new(data, model, 42,
-                                compare = compare, index = index,
+  filter <- particle_filter$new(dat$data, dat$model, 42,
+                                compare = dat$compare, index = dat$index,
                                 seed = 1L)
   ## Here we just check that we can run this at all.
   expect_silent(filter$run(pars, save_history = TRUE))
@@ -232,46 +209,11 @@ test_that("Can transform state size", {
 
 
 test_that("multistage, dimension changing, model agrees with single stage", {
-  ## A small, very silly, model designed to help work with the
-  ## multistage filter.  We have a model we can change the dimensions of
-  ## without changing the way that the random number draws will work
-  ## because only the first entry will be stochastic.
-  model <- odin.dust::odin_dust({
-    len <- user(integer = TRUE)
-    update(x[1]) <- x[1] + rnorm(0, 0.1)
-    update(x[2:len]) <- i + step / 10
-    initial(x[]) <- 0
-    dim(x) <- len
-  }, verbose = FALSE)
-
-  data <- particle_filter_data(data.frame(time = 1:50, observed = rnorm(50)),
-                               "time", 4)
-  ## Nonsense model
-  compare <- function(state, observed, pars) {
-    dnorm(state - observed$observed, log = TRUE)
-  }
-
-  index <- function(info) {
-    i <- seq(1, info$len, by = 2L)
-    names(i) <- letters[i]
-    list(run = 1L, state = i)
-  }
-
-  transform_state <- function(y, model_old, model_new) {
-    n_old <- model_old$pars()$len
-    n_new <- model_new$pars()$len
-    if (n_new > n_old) {
-      y <- rbind(y, matrix(0, n_new - n_old, ncol(y)))
-    } else {
-      y <- y[seq_len(n_new), ]
-    }
-    y
-  }
-
+  dat <- example_variable()
   new_filter <- function() {
     set.seed(1)
-    particle_filter$new(data, model, 42,
-                        compare = compare, index = index,
+    particle_filter$new(dat$data, dat$model, 42,
+                        compare = dat$compare, index = dat$index,
                         seed = 1L)
   }
 
@@ -302,10 +244,10 @@ test_that("multistage, dimension changing, model agrees with single stage", {
   epochs <- list(
     multistage_epoch(10,
                  pars = list(len = 20),
-                 transform_state = transform_state),
+                 transform_state = dat$transform_state),
     multistage_epoch(25,
                  pars = list(len = 15),
-                 transform_state = transform_state))
+                 transform_state = dat$transform_state))
   pars <- multistage_parameters(pars_base, epochs)
 
   filter <- new_filter()
@@ -327,8 +269,6 @@ test_that("multistage, dimension changing, model agrees with single stage", {
 
 test_that("All times must be found in the data", {
   dat <- example_sir()
-
-  ## TODO: see above
   index <- function(info) {
     list(run = 5L, state = c(S = 1, I = 2, R = 3))
   }
@@ -350,7 +290,6 @@ test_that("All times must be found in the data", {
 
 test_that("Require named index for history-saving multistage filter", {
   dat <- example_sir()
-
   index <- function(info) {
     list(run = 5L, state = 1:3)
   }
@@ -367,30 +306,7 @@ test_that("Require named index for history-saving multistage filter", {
 
 
 test_that("Can't save restart when size changes", {
-  model <- dust::dust_example("variable")
-  data <- particle_filter_data(data.frame(time = 1:50, observed = rnorm(50)),
-                               "time", 4)
-  ## Nonsense model
-  compare <- function(state, observed, pars) {
-    apply(dnorm(state, log = TRUE), 2, max)
-  }
-
-  index <- function(info) {
-    i <- seq(1, info$len, by = 2L)
-    names(i) <- letters[i]
-    list(run = i, state = i)
-  }
-
-  transform_state <- function(y, model_old, model_new) {
-    n_old <- model_old$pars()$len
-    n_new <- model_new$pars()$len
-    if (n_new > n_old) {
-      y <- rbind(y, matrix(0, n_new - n_old, ncol(y)))
-    } else {
-      y <- y[seq_len(n_new), ]
-    }
-    y
-  }
+  dat <- example_variable()
 
   ## There's going to be some work here to update this so that it's
   ## easy to work with.  Possibly we just set a blank epoch at the
@@ -403,14 +319,14 @@ test_that("Can't save restart when size changes", {
   epochs <- list(
     multistage_epoch(10,
                  pars = list(len = 20, sd = 1),
-                 transform_state = transform_state),
+                 transform_state = dat$transform_state),
     multistage_epoch(25,
                  pars = list(len = 5, sd = 1),
-                 transform_state = transform_state))
+                 transform_state = dat$transform_state))
   pars <- multistage_parameters(pars_base, epochs)
 
-  filter <- particle_filter$new(data, model, 42,
-                                compare = compare, index = index,
+  filter <- particle_filter$new(dat$data, dat$model, 42,
+                                compare = dat$compare, index = dat$index,
                                 seed = 1L)
 
   ## Fine getting restart from the last stage
