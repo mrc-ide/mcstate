@@ -10,6 +10,7 @@ test_that("null-or-value works", {
 
 test_that("rmvnorm_generator agrees with rmvnorm", {
   testthat::skip_on_cran() # depends on another package's internals
+  testthat::skip_if_not_installed("mvtnorm")
   vcv <- matrix(c(4, 2, 2, 3), ncol = 2)
   set.seed(1)
   cmp <- replicate(100, drop(mvtnorm::rmvnorm(1, sigma = vcv)))

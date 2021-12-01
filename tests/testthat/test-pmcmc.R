@@ -20,6 +20,7 @@ test_that("mcmc works for uniform distribution on unit square", {
 
 
 test_that("mcmc works for multivariate gaussian", {
+  testthat::skip_if_not_installed("mvtnorm")
   dat <- example_mvnorm()
   control <- pmcmc_control(1000, save_state = FALSE, save_trajectories = FALSE)
 
@@ -707,6 +708,7 @@ test_that("pmcmc nested Uniform on unit square", {
 })
 
 test_that("pmcmc nested multivariate gaussian", {
+  testthat::skip_if_not_installed("mvtnorm")
   dat <- example_mvnorm_shared()
   control <- pmcmc_control(500, save_state = FALSE, save_trajectories = FALSE)
 
