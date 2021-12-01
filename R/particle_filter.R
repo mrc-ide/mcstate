@@ -345,6 +345,7 @@ particle_filter <- R6::R6Class(
     ##' (`-Inf` if the model is impossible)
     run = function(pars = list(), save_history = FALSE, save_restart = NULL,
                    min_log_likelihood = NULL) {
+      assert_scalar_logical(save_history)
       if (inherits(pars, "multistage_parameters")) {
         private$run_multistage(pars, save_history, save_restart,
                                min_log_likelihood)

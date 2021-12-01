@@ -161,7 +161,7 @@ test_that("Can transform state in the model", {
   set.seed(1)
   filter2 <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
                                  index = dat$index, seed = 1L)
-  ll2 <- filter2$run(pars, epochs)
+  ll2 <- filter2$run(pars)
 
   expect_false(ll1 == ll2)
   expect_equal(colSums(filter1$state(1:3)), rep(1010, 42))
@@ -298,7 +298,7 @@ test_that("multistage, dimension changing, model agrees with single stage", {
   pars <- multistage_parameters(pars_base, epochs)
 
   filter <- new_filter()
-  ll_staged <- filter$run(pars, epochs, save_history = TRUE)
+  ll_staged <- filter$run(pars, save_history = TRUE)
   h_staged <- filter$history()
   expect_identical(ll_staged, ll_20)
 
