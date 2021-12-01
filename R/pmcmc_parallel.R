@@ -209,9 +209,10 @@ pmcmc_remote <- R6::R6Class(
     },
 
     set_n_threads = function(n_threads) {
-      self$session$run(function(n) .GlobalEnv$obj$set_n_threads(n),
-                       list(n_threads))
+      prev <- self$session$run(function(n) .GlobalEnv$obj$set_n_threads(n),
+                               list(n_threads))
       self$n_threads <- n_threads
+      invisible(prev)
     },
 
     ## This one is synchronous, and writes to disk. Using callr's I/O

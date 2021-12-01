@@ -282,3 +282,49 @@ test_that("basic parallel operation nested", {
   expect_equal(cmp$pars, ans$pars)
   expect_equal(cmp$state, ans$state)
 })
+
+
+## Recent versions of callr/processx/covr have conspired to not reveal
+## this bit of logic through an integration test
+test_that("throw from callr operation", {
+  skip_on_cran()
+
+  dat <- example_sir()
+  n_particles <- 42
+  n_steps <- 30
+  n_chains <- 3
+  p0 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  control <- pmcmc_control(n_steps, n_chains = 3, n_workers = 2,
+                           n_steps_each = 5)
+
+  initial <- pmcmc_check_initial(NULL, dat$pars, n_chains)
+  seed <- make_seeds(n_chains, NULL, dat$model)
+
+  control$n_workers <- 0
+  obj <- pmcmc_orchestrator$new(dat$pars, initial, p0, control)
+  path <- r6_private(obj)$path
+
+  r <- pmcmc_remote$new(path$input, 1, FALSE)
+  r$wait_session_ready()
+  r$init(1L)
+  for (i in 1:20) {
+    if (r$session$poll_process(1000) == "ready") {
+      break
+    } else {
+      Sys.sleep(0.1)
+    }
+  }
+  r$read()
+  expect_equal(r$n_threads, 1)
+
+  prev <- r$set_n_threads(2)
+  expect_equal(prev, 1)
+  expect_equal(r$n_threads, 2)
+
+  prev <- r$set_n_threads(1)
+  expect_equal(prev, 2)
+  expect_equal(r$n_threads, 1)
+
+  r$session$kill(1)
+})
