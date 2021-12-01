@@ -112,7 +112,7 @@ particle_filter <- R6::R6Class(
         obj$step(stages[[i]]$step_index)
         models[[i]] <- obj$model
         history[i] <- list(obj$history)
-        restart[i] <- list(obj$restart)
+        restart[i] <- list(obj$restart_state)
       }
 
       ## Push the final rng state into the first version of the model,
@@ -139,7 +139,7 @@ particle_filter <- R6::R6Class(
       ## instance that the restart states are conformable and then
       ## look at relaxing that if needed.
       if (!is.null(save_restart)) {
-        private$last_restart_state <- join_restart_state(restart, step_index)
+        private$last_restart_state <- join_restart_state(restart, save_restart)
       } else {
         private$last_restart_state <- NULL
       }

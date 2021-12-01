@@ -157,6 +157,21 @@ join_histories <- function(history, step_index) {
 }
 
 
-join_restart_state <- function(restart, step_index) {
-  stop("writeme")
+## Currently this does not allow saving restart state over models
+## where the dimensionality changes over time (or rather, we can't
+## save restart information over parts with different sizes).  We
+## might be able to relax that later - simplest would be to no longer
+## store a multidimensional array, perhaps nicer would be to create
+## some weird wrapper object that allowed multidimensional arrays that
+## differ in the size of their first dimension.
+join_restart_state <- function(restart, time) {
+  state <- lapply(restart, function(x)
+    x[, , !is.na(x[1, 1, ]), drop = FALSE])
+  state <- state[lengths(state) > 0]
+  n <- viapply(state, nrow)
+  if (length(unique(n)) > 1) {
+    err <- paste(sprintf("  - time %s: %s rows", time, n), collapse = "\n")
+    stop("Restart state varies in size over the simulation:\n", err)
+  }
+  array_bind(arrays = state)
 }

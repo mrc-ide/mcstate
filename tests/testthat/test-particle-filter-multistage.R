@@ -117,15 +117,17 @@ test_that("An effectless multistage filter is identical to single stage", {
   epochs <- list(multistage_epoch(10), multistage_epoch(20))
   pars_base <- dat$pars$model(dat$pars$initial())
   pars <- multistage_parameters(pars_base, epochs)
+  restart <- c(5, 15, 25)
+
   set.seed(1)
   filter1 <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
                                  index = index, seed = 1L)
-  ll1 <- filter1$run(pars_base, save_history = TRUE)
+  ll1 <- filter1$run(pars_base, save_history = TRUE, save_restart = restart)
 
   set.seed(1)
   filter2 <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
                                  index = index, seed = 1L)
-  ll2 <- filter2$run(pars, save_history = TRUE)
+  ll2 <- filter2$run(pars, save_history = TRUE, save_restart = restart)
 
   expect_identical(ll1, ll2)
   expect_identical(
@@ -133,6 +135,7 @@ test_that("An effectless multistage filter is identical to single stage", {
     r6_private(filter2)$last_model$rng_state())
 
   expect_identical(filter1$history(), filter2$history())
+  expect_identical(filter1$restart_state(), filter2$restart_state())
 })
 
 
@@ -140,7 +143,8 @@ test_that("Can transform state in the model", {
   dat <- example_sir()
 
   ## Something that will leave an effect; if we add new individuals at
-  ## these time points then we'll see the population size increase.
+  ## these time points then we'll see the population size increase,
+  ## both at the end of the simulation and in the restart data.
   transform_state <- function(y, model_old, model_new) {
     y[2, ] <- y[2, ] + 20
     y
@@ -158,14 +162,21 @@ test_that("Can transform state in the model", {
                                  index = dat$index, seed = 1L)
   ll1 <- filter1$run(pars_base)
 
+  restart <- c(5, 15, 25)
   set.seed(1)
   filter2 <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
                                  index = dat$index, seed = 1L)
-  ll2 <- filter2$run(pars)
+  ll2 <- filter2$run(pars, save_restart = restart)
 
   expect_false(ll1 == ll2)
   expect_equal(colSums(filter1$state(1:3)), rep(1010, 42))
   expect_equal(colSums(filter2$state(1:3)), rep(1050, 42))
+
+  r <- filter2$restart_state()
+  expect_equal(dim(r), c(5, 42, 3))
+  expect_equal(
+    apply(r[1:3, , ], 2:3, sum),
+    matrix(c(1010, 1030, 1050), 42, 3, byrow = TRUE))
 })
 
 
@@ -334,4 +345,85 @@ test_that("All times must be found in the data", {
   expect_error(
     filter$run(multistage_parameters(pars_base, epochs)),
     "Could not map epoch to filter time: error for 1, 3")
+})
+
+
+test_that("Require named index for history-saving multistage filter", {
+  dat <- example_sir()
+
+  index <- function(info) {
+    list(run = 5L, state = 1:3)
+  }
+
+  pars_base <- dat$pars$model(dat$pars$initial())
+  epochs <- list(multistage_epoch(10),
+                 multistage_epoch(20))
+  filter <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
+                                index = index, seed = 1L)
+  expect_error(
+    filter$run(multistage_parameters(pars_base, epochs), save_history = TRUE),
+    "Named index required")
+})
+
+
+test_that("Can't save restart when size changes", {
+  model <- dust::dust_example("variable")
+  data <- particle_filter_data(data.frame(time = 1:50, observed = rnorm(50)),
+                               "time", 4)
+  ## Nonsense model
+  compare <- function(state, observed, pars) {
+    apply(dnorm(state, log = TRUE), 2, max)
+  }
+
+  index <- function(info) {
+    i <- seq(1, info$len, by = 2L)
+    names(i) <- letters[i]
+    list(run = i, state = i)
+  }
+
+  transform_state <- function(y, model_old, model_new) {
+    n_old <- model_old$pars()$len
+    n_new <- model_new$pars()$len
+    if (n_new > n_old) {
+      y <- rbind(y, matrix(0, n_new - n_old, ncol(y)))
+    } else {
+      y <- y[seq_len(n_new), ]
+    }
+    y
+  }
+
+  ## There's going to be some work here to update this so that it's
+  ## easy to work with.  Possibly we just set a blank epoch at the
+  ## beginning - that's not terrible and is at least symmetrical.
+  ##
+  ## There's some pretty major work in pmcmc to get this sorted though
+  ## as we need to generate all of this out of the mcmc parameters,
+  ## and that's its own challenge.
+  pars_base <- list(len = 10, sd = 1)
+  epochs <- list(
+    multistage_epoch(10,
+                 pars = list(len = 20, sd = 1),
+                 transform_state = transform_state),
+    multistage_epoch(25,
+                 pars = list(len = 5, sd = 1),
+                 transform_state = transform_state))
+  pars <- multistage_parameters(pars_base, epochs)
+
+  filter <- particle_filter$new(data, model, 42,
+                                compare = compare, index = index,
+                                seed = 1L)
+
+  ## Fine getting restart from the last stage
+  filter$run(pars, save_restart = c(30, 40, 50))
+  expect_equal(dim(filter$restart_state()), c(5, 42, 3))
+
+  ## Or some other stage
+  filter$run(pars, save_restart = c(11, 15, 20))
+  expect_equal(dim(filter$restart_state()), c(20, 42, 3))
+
+  ## But can't do anything here:
+  err <- expect_error(
+    filter$run(pars, save_restart = c(5, 15, 30)),
+    "Restart state varies in size over the simulation")
+  expect_match(err$message, "time 15: 20 rows", all = FALSE)
 })
