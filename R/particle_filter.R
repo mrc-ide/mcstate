@@ -95,7 +95,7 @@ particle_filter <- R6::R6Class(
 
     run_multistage = function(pars, save_history, save_restart,
                               min_log_likelihood) {
-      stages <- filter_check_times(pars, private$data)
+      stages <- filter_check_times(pars, private$data, save_restart)
 
       models <- vector("list", length(stages))
       history <- vector("list", length(stages))
@@ -125,16 +125,14 @@ particle_filter <- R6::R6Class(
       private$last_model <- models[[1]]
       private$last_state <- function(index) last(models)$state(index)
 
-      step_index <- vnapply(stages, "[[", "step_index")
-
       if (save_history) {
-        private$last_history <- join_histories(history, step_index)
+        private$last_history <- join_histories(history, stages)
       } else {
         private$last_history <- NULL
       }
 
       if (!is.null(save_restart)) {
-        private$last_restart_state <- join_restart_state(restart, save_restart)
+        private$last_restart_state <- join_restart_state(restart, stages)
       } else {
         private$last_restart_state <- NULL
       }

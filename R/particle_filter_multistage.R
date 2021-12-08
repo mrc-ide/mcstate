@@ -100,11 +100,12 @@ transform_state_identity <- function(x, ...) {
 }
 
 
-filter_check_times <- function(pars, data) {
+filter_check_times <- function(pars, data, save_restart) {
   ## There's an awkward bit of bookkeeping here; we need to find out
   ## when each phase *ends*, as that is the index that we do the
   ## switch at.
-  time_end_data <- data[[paste0(attr(data, "time"), "_end")]]
+  time_variable <- attr(data, "time")
+  time_end_data <- data[[paste0(time_variable, "_end")]]
   time_start_pars <- vnapply(pars[-1], "[[", "start")
   step_index <- c(
     match(time_start_pars, time_end_data),
@@ -115,15 +116,32 @@ filter_check_times <- function(pars, data) {
                  paste(which(is.na(step_index)), collapse = ", ")))
   }
 
+  ## this is a bookkeeping and interpretation nightmare so disallow it:
+  err <- intersect(save_restart, time_start_pars)
+  if (length(err) > 0) {
+    stop(sprintf("save_restart cannot include epoch change: error for %s",
+                 paste(err, collapse = ", ")))
+  }
+
+  ## With that ruled out, the bookkeeping to split the restart dates
+  ## over epochs is tolerable:
+  save_restart_stage <- findInterval(save_restart, c(0, time_start_pars))
+  save_restart_index <- seq_along(save_restart)
+
   for (i in seq_along(pars)) {
     pars[[i]]$step_index <- step_index[[i]]
+    if (!is.null(save_restart)) {
+      pars[[i]]$restart_index <- save_restart_index[save_restart_stage == i]
+    }
   }
 
   pars
 }
 
 
-join_histories <- function(history, step_index) {
+join_histories <- function(history, stages) {
+  step_index <- vnapply(stages, "[[", "step_index")
+
   if (is.null(names(history[[1]]$index))) {
     ## it is possible but unlikely that we could use non-named things
     ## sensibly. We don't need that in sircovid yet so ignoring for
@@ -162,14 +180,16 @@ join_histories <- function(history, step_index) {
 ## store a multidimensional array, perhaps nicer would be to create
 ## some weird wrapper object that allowed multidimensional arrays that
 ## differ in the size of their first dimension.
-join_restart_state <- function(restart, time) {
-  state <- lapply(restart, function(x)
-    x[, , !is.na(x[1, 1, ]), drop = FALSE])
+join_restart_state <- function(restart, stages) {
+  state <- lapply(seq_along(stages), function(i)
+    restart[[i]][, , stages[[i]]$restart_index, drop = FALSE])
   state <- state[lengths(state) > 0]
+
   n <- viapply(state, nrow)
   if (length(unique(n)) > 1) {
-    err <- paste(sprintf("  - time %s: %s rows", time, n), collapse = "\n")
+    err <- paste(sprintf("  - %d: %s rows", seq_along(n), n), collapse = "\n")
     stop("Restart state varies in size over the simulation:\n", err)
   }
+
   array_bind(arrays = state)
 }

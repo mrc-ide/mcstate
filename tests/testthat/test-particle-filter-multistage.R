@@ -341,5 +341,73 @@ test_that("Can't save restart when size changes", {
   err <- expect_error(
     filter$run(pars, save_restart = c(5, 15, 30)),
     "Restart state varies in size over the simulation")
-  expect_match(err$message, "time 15: 20 rows", all = FALSE)
+  expect_match(err$message, "2: 20 rows", all = FALSE)
+})
+
+
+test_that("Prevent restart on epoch changes", {
+  dat <- example_variable()
+
+  ## There's going to be some work here to update this so that it's
+  ## easy to work with.  Possibly we just set a blank epoch at the
+  ## beginning - that's not terrible and is at least symmetrical.
+  ##
+  ## There's some pretty major work in pmcmc to get this sorted though
+  ## as we need to generate all of this out of the mcmc parameters,
+  ## and that's its own challenge.
+  pars_base <- list(len = 10, sd = 1)
+  epochs <- list(
+    multistage_epoch(10,
+                 pars = list(len = 20, sd = 1),
+                 transform_state = dat$transform_state),
+    multistage_epoch(25,
+                 pars = list(len = 5, sd = 1),
+                 transform_state = dat$transform_state))
+  pars <- multistage_parameters(pars_base, epochs)
+
+  filter <- particle_filter$new(dat$data, dat$model, 42,
+                                compare = dat$compare, index = dat$index,
+                                seed = 1L)
+  expect_error(
+    filter$run(pars, save_restart = 10),
+    "save_restart cannot include epoch change: error for 10")
+  expect_error(
+    filter$run(pars, save_restart = c(5, 10, 15)),
+    "save_restart cannot include epoch change: error for 10")
+  expect_error(
+    filter$run(pars, save_restart = c(5, 10, 15, 20, 25, 30)),
+    "save_restart cannot include epoch change: error for 10, 25")
+})
+
+
+test_that("Gracefully cope with early exit", {
+  dat <- example_variable()
+
+  ## There's going to be some work here to update this so that it's
+  ## easy to work with.  Possibly we just set a blank epoch at the
+  ## beginning - that's not terrible and is at least symmetrical.
+  ##
+  ## There's some pretty major work in pmcmc to get this sorted though
+  ## as we need to generate all of this out of the mcmc parameters,
+  ## and that's its own challenge.
+  pars_base <- list(len = 10, sd = 1)
+  epochs <- list(
+    multistage_epoch(10,
+                 pars = list(len = 20, sd = 1),
+                 transform_state = dat$transform_state),
+    multistage_epoch(25,
+                 pars = list(len = 5, sd = 1),
+                 transform_state = dat$transform_state))
+  pars <- multistage_parameters(pars_base, epochs)
+
+  filter <- particle_filter$new(dat$data, dat$model, 42,
+                                compare = dat$compare, index = dat$index,
+                                seed = 1L)
+
+  expect_equal(
+    filter$run(pars, save_restart = 40, min_log_likelihood = -20),
+    -Inf)
+
+  ## Our restart state is consistent, even if it is junk:
+  expect_equal(filter$restart_state(), array(NA_real_, c(5, 42, 1)))
 })
