@@ -26,6 +26,8 @@
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
+    
+
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -38,18 +40,12 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.17</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.7.0</span>
       </span>
     </div>
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-<li>
-  <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
-     
-  </a>
-</li>
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
@@ -89,7 +85,7 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://github.com/mrc-ide/mcstate/">
+  <a href="https://github.com/mrc-ide/mcstate/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
      
   </a>
@@ -110,7 +106,7 @@
       <h1 data-toc-skip>Parallelisation of inference</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/mrc-ide/mcstate/blob/master/vignettes/parallelisation.Rmd"><code>vignettes/parallelisation.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/mrc-ide/mcstate/blob/HEAD/vignettes/parallelisation.Rmd" class="external-link"><code>vignettes/parallelisation.Rmd</code></a></small>
       <div class="hidden name"><code>parallelisation.Rmd</code></div>
 
     </div>
@@ -118,9 +114,9 @@
     
     
 <p>In the SIR model vignette we ran four separate MCMC chains in serial. For more computationally intensive models you can speed this up if you have many CPU cores available.</p>
-<div id="within-model-parallelism" class="section level2">
-<h2 class="hasAnchor">
-<a href="#within-model-parallelism" class="anchor"></a>Within-model parallelism</h2>
+<div class="section level2">
+<h2 id="within-model-parallelism">Within-model parallelism<a class="anchor" aria-label="anchor" href="#within-model-parallelism"></a>
+</h2>
 <p>Because <code>mcstate</code> uses <code>dust</code>, it can run each particle in parallel, between the timesteps that you have data for. For this to be possible, <code>openmp</code> must be enabled in the compilation step, which you can check by using the <code>has_openmp()</code> method on your model:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">model</span><span class="op">$</span><span class="va">public_methods</span><span class="op">$</span><span class="fu">has_openmp</span><span class="op">(</span><span class="op">)</span>
@@ -133,17 +129,17 @@
                                        compare <span class="op">=</span> <span class="va">compare</span>,
                                        n_threads <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></code></pre></div>
 <p>When you pass this filter object through to <code>mcstate::mcmc</code>, the particle filter will then run using 4 threads.</p>
-<p>You can wrap this <code>n_threads</code> argument with <code><a href="https://rdrr.io/pkg/dust/man/dust_openmp_threads.html">dust::dust_openmp_threads</a></code>, for example</p>
+<p>You can wrap this <code>n_threads</code> argument with <code><a href="https://rdrr.io/pkg/dust/man/dust_openmp_threads.html" class="external-link">dust::dust_openmp_threads</a></code>, for example</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu">dust</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/dust/man/dust_openmp_threads.html">dust_openmp_threads</a></span><span class="op">(</span><span class="fl">100</span>, action <span class="op">=</span> <span class="st">"fix"</span><span class="op">)</span>
+<code class="sourceCode R"><span class="fu">dust</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/dust/man/dust_openmp_threads.html" class="external-link">dust_openmp_threads</a></span><span class="op">(</span><span class="fl">100</span>, action <span class="op">=</span> <span class="st">"fix"</span><span class="op">)</span>
 <span class="co">#&gt; Requested number of threads '100' exceeds a limit of '1'</span>
 <span class="co">#&gt;  See dust::dust_openmp_threads() for details</span>
 <span class="co">#&gt; [1] 1</span></code></pre></div>
 <p>which will adjust the number of threads used (alternative actions include “message” or “error”).</p>
 </div>
-<div id="between-chain-parallelism" class="section level2">
-<h2 class="hasAnchor">
-<a href="#between-chain-parallelism" class="anchor"></a>Between-chain parallelism</h2>
+<div class="section level2">
+<h2 id="between-chain-parallelism">Between-chain parallelism<a class="anchor" aria-label="anchor" href="#between-chain-parallelism"></a>
+</h2>
 <p>If your model is quick to run, like the SIR example, it may be more efficient to use cores to run parallel <em>chains</em> instead of parallel particles. This is because relatively little time is spent in the parallelised fraction of the code, and more in the serial parts (the mcmc bookkeeping, your compare functions in the particle filter, copying data between the R and C++ interface; basically anything other than the number crunching in the core of the model).</p>
 <p>We can do this by passing the <code>n_workers</code> argument to <code><a href="../reference/pmcmc_control.html">mcstate::pmcmc_control</a></code>; this will create separate worker processes and share chains out across them. You can have fewer workers than chains, and each worker can use more than one core if needed (subject to a few constraints documented in the help page).</p>
 <p>In this case, the number of threads used to create the particle filter is <em>ignored</em> (because the particle filter will be created on each process) and the total number of threads to use should be provided by the <code>n_threads_total</code> argument to <code><a href="../reference/pmcmc_control.html">mcstate::pmcmc_control</a></code>.</p>
@@ -157,9 +153,9 @@
 <p>If your system <em>does</em> support OpenMP, then once chains start finishing their threads will be allocated to the ongoing chains.</p>
 <p>The random numbers are configured in such a way that the final result will be dependent only on the seed to create your <code>filter</code> object and not the number of worker processes or threads used. However, the algorithm does differ slightly by default to that used without workers. To use this parallel behaviour even when <code>n_workers</code> is 1, set <code>use_parallel_seed = TRUE</code> within <code><a href="../reference/pmcmc_control.html">mcstate::pmcmc_control</a></code>.</p>
 </div>
-<div id="considerations" class="section level2">
-<h2 class="hasAnchor">
-<a href="#considerations" class="anchor"></a>Considerations</h2>
+<div class="section level2">
+<h2 id="considerations">Considerations<a class="anchor" aria-label="anchor" href="#considerations"></a>
+</h2>
 <p>Parallelism at the level of particles (increasing the number of threads available to the particle filter) has very low overhead and is potentially very efficient as the “serial” part of the calculation here is just the comparison functions. On Linux we see linear scaling of performance with cores; i.e., that if you double the number of cores you halve the running time.</p>
 <p>However, on Windows we do not realise this level of efficiency (for reasons under investigation). In that case you will want to use multiple worker processes; these are essentially isolated from each other and on windows can lead to higher efficiencies. You should only need 2-4 worker processes in order to use 100% of your CPU, with the total number of threads set to the number of cores you have available. This approach may take a few seconds longer over the whole run than a perfectly efficient run, but potentially significantly less time than the realised efficiency we see on windows.</p>
 </div>
@@ -176,11 +172,13 @@
 
 
       <footer><div class="copyright">
-  <p>Developed by Rich FitzJohn, Marc Baguelin, Edward Knock, Lilith Whittles, John Lees, Raphael Sonabend.</p>
+  <p></p>
+<p>Developed by Rich FitzJohn, Marc Baguelin, Edward Knock, Lilith Whittles, John Lees, Raphael Sonabend.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
+  <p></p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.1.</p>
 </div>
 
       </footer>
@@ -188,6 +186,8 @@
 
   
 
+
+  
 
   </body>
 </html>

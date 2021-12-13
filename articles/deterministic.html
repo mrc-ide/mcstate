@@ -26,6 +26,8 @@
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
+    
+
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -38,18 +40,12 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6.17</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.7.0</span>
       </span>
     </div>
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-<li>
-  <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
-     
-  </a>
-</li>
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
@@ -89,7 +85,7 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://github.com/mrc-ide/mcstate/">
+  <a href="https://github.com/mrc-ide/mcstate/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
      
   </a>
@@ -110,7 +106,7 @@
       <h1 data-toc-skip>Deterministic models</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/mrc-ide/mcstate/blob/master/vignettes/deterministic.Rmd"><code>vignettes/deterministic.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/mrc-ide/mcstate/blob/HEAD/vignettes/deterministic.Rmd" class="external-link"><code>vignettes/deterministic.Rmd</code></a></small>
       <div class="hidden name"><code>deterministic.Rmd</code></div>
 
     </div>
@@ -120,38 +116,38 @@
 <p>Stochastic models are slow! Ignoring issues of parallelism and fast random numbers (see <code>vignette("design")</code>), you still must run the model some number of times within a particle filter to estimate the likelihood. We’re experimenting with alternative approaches to approximate the likelihood, including running the stochastic models “deterministically” with a single particle. In this case calls to <code>rbinom(n, p)</code> (for example) will be replaced with their mean (<code>n * p</code>). This is not exactly the same model as the stochastic model, nor is it directly even a limit case of it. However, we hope that it still lands in about the right area of high probability density and can be used for a pilot run before running a pmcmc properly.</p>
 <p>We demonstrate this, as in <code><a href="../articles/sir_models.html">vignette("sir_models")</a></code> with our simple SIR model.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">sir</span> <span class="op">&lt;-</span> <span class="fu">dust</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/dust/man/dust_example.html">dust_example</a></span><span class="op">(</span><span class="st">"sir"</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span class="va">sir</span> <span class="op">&lt;-</span> <span class="fu">dust</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/dust/man/dust_example.html" class="external-link">dust_example</a></span><span class="op">(</span><span class="st">"sir"</span><span class="op">)</span></code></pre></div>
 <p>The data set is included within the package:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">incidence</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html">read.csv</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"sir_incidence.csv"</span>, package <span class="op">=</span> <span class="st">"mcstate"</span><span class="op">)</span><span class="op">)</span>
+<code class="sourceCode R"><span class="va">incidence</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"sir_incidence.csv"</span>, package <span class="op">=</span> <span class="st">"mcstate"</span><span class="op">)</span><span class="op">)</span>
 <span class="va">dt</span> <span class="op">&lt;-</span> <span class="fl">0.25</span>
 <span class="va">data</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/particle_filter_data.html">particle_filter_data</a></span><span class="op">(</span><span class="va">incidence</span>, time <span class="op">=</span> <span class="st">"day"</span>, rate <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="va">dt</span><span class="op">)</span></code></pre></div>
 <p>A comparison function</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">compare</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">state</span>, <span class="va">observed</span>, <span class="va">pars</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span>
-  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span><span class="op">(</span><span class="va">observed</span><span class="op">$</span><span class="va">cases</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span>
-    <span class="kw"><a href="https://rdrr.io/r/base/function.html">return</a></span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span>
+  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">observed</span><span class="op">$</span><span class="va">cases</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span>
+    <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span>
   <span class="op">}</span>
   <span class="va">exp_noise</span> <span class="op">&lt;-</span> <span class="fl">1e6</span>
   <span class="va">incidence_modelled</span> <span class="op">&lt;-</span> <span class="va">state</span><span class="op">[</span><span class="fl">1</span>, , drop <span class="op">=</span> <span class="cn">TRUE</span><span class="op">]</span>
   <span class="va">incidence_observed</span> <span class="op">&lt;-</span> <span class="va">observed</span><span class="op">$</span><span class="va">cases</span>
   <span class="va">lambda</span> <span class="op">&lt;-</span> <span class="va">incidence_modelled</span> <span class="op">+</span>
-    <span class="fu"><a href="https://rdrr.io/r/stats/Exponential.html">rexp</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">incidence_modelled</span><span class="op">)</span>, rate <span class="op">=</span> <span class="va">exp_noise</span><span class="op">)</span>
-  <span class="fu"><a href="https://rdrr.io/r/stats/Poisson.html">dpois</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">incidence_observed</span>, lambda <span class="op">=</span> <span class="va">lambda</span>, log <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
+    <span class="fu"><a href="https://rdrr.io/r/stats/Exponential.html" class="external-link">rexp</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">incidence_modelled</span><span class="op">)</span>, rate <span class="op">=</span> <span class="va">exp_noise</span><span class="op">)</span>
+  <span class="fu"><a href="https://rdrr.io/r/stats/Poisson.html" class="external-link">dpois</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">incidence_observed</span>, lambda <span class="op">=</span> <span class="va">lambda</span>, log <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
 <span class="op">}</span></code></pre></div>
 <p>An index function for filtering the run state</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">index</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">info</span><span class="op">)</span> <span class="op">{</span>
-  <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>run <span class="op">=</span> <span class="fl">5L</span>, state <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span>
+  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>run <span class="op">=</span> <span class="fl">5L</span>, state <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span>
 <span class="op">}</span></code></pre></div>
 <p>Parameter information for the pMCMC, including a roughly tuned kernel so that we get adequate mixing</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">proposal_kernel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.00057</span>, <span class="fl">0.00034</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.00034</span>, <span class="fl">0.00026</span><span class="op">)</span><span class="op">)</span>
+<code class="sourceCode R"><span class="va">proposal_kernel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.00057</span>, <span class="fl">0.00034</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.00034</span>, <span class="fl">0.00026</span><span class="op">)</span><span class="op">)</span>
 <span class="va">pars</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="va"><a href="../reference/pmcmc_parameters.html">pmcmc_parameters</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>
-  <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_parameter.html">pmcmc_parameter</a></span><span class="op">(</span><span class="st">"beta"</span>, <span class="fl">0.2</span>, min <span class="op">=</span> <span class="fl">0</span>, max <span class="op">=</span> <span class="fl">1</span>,
-                                prior <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">p</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html">log</a></span><span class="op">(</span><span class="fl">1e-10</span><span class="op">)</span><span class="op">)</span>,
+  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_parameter.html">pmcmc_parameter</a></span><span class="op">(</span><span class="st">"beta"</span>, <span class="fl">0.2</span>, min <span class="op">=</span> <span class="fl">0</span>, max <span class="op">=</span> <span class="fl">1</span>,
+                                prior <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">p</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1e-10</span><span class="op">)</span><span class="op">)</span>,
        <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_parameter.html">pmcmc_parameter</a></span><span class="op">(</span><span class="st">"gamma"</span>, <span class="fl">0.1</span>, min <span class="op">=</span> <span class="fl">0</span>, max <span class="op">=</span> <span class="fl">1</span>,
-                                prior <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">p</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html">log</a></span><span class="op">(</span><span class="fl">1e-10</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,
+                                prior <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">p</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1e-10</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,
   proposal <span class="op">=</span> <span class="va">proposal_kernel</span><span class="op">)</span></code></pre></div>
 <p>First, run a stochastic fit, as in <code><a href="../articles/sir_models.html">vignette("sir_models")</a></code>. Here we use 500 particles to get a low-variance estimate of the likelood:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
@@ -159,7 +155,7 @@
 <span class="va">control</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_control.html">pmcmc_control</a></span><span class="op">(</span><span class="fl">300</span><span class="op">)</span>
 <span class="va">p1</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="va"><a href="../reference/particle_filter.html">particle_filter</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">data</span>, <span class="va">sir</span>, <span class="va">n_particles</span>, <span class="va">compare</span>,
                                    index <span class="op">=</span> <span class="va">index</span>,
-                                   n_threads <span class="op">=</span> <span class="fu">dust</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/dust/man/dust_openmp_threads.html">dust_openmp_threads</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>
+                                   n_threads <span class="op">=</span> <span class="fu">dust</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/dust/man/dust_openmp_threads.html" class="external-link">dust_openmp_threads</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>
 <span class="va">res1</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc.html">pmcmc</a></span><span class="op">(</span><span class="va">pars</span>, <span class="va">p1</span>, control <span class="op">=</span> <span class="va">control</span><span class="op">)</span></code></pre></div>
 <p>then again, with the deterministic filter. The only change is to use the object <code><a href="../reference/particle_deterministic.html">mcstate::particle_deterministic</a></code> and omit the <code>n_particles</code> element to the constructor (there will only ever be one particle!) and the <code>n_threads</code> element which has no effect here.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
@@ -167,10 +163,10 @@
 <span class="va">res2</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc.html">pmcmc</a></span><span class="op">(</span><span class="va">pars</span>, <span class="va">p2</span>, control <span class="op">=</span> <span class="va">control</span><span class="op">)</span></code></pre></div>
 <p>Here, we plot the estimated points for the stochastic (blue) and deterministic (red) parameter samples, showing overlapping but different distributions:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">res1</span><span class="op">$</span><span class="va">pars</span>, col <span class="op">=</span> <span class="st">"#0000ff55"</span>, pch <span class="op">=</span> <span class="fl">19</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/points.html">points</a></span><span class="op">(</span><span class="va">res2</span><span class="op">$</span><span class="va">pars</span>, col <span class="op">=</span> <span class="st">"#ff000055"</span>, pch <span class="op">=</span> <span class="fl">19</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/legend.html">legend</a></span><span class="op">(</span><span class="st">"topleft"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"Stochastic"</span>, <span class="st">"Deterministic"</span><span class="op">)</span>,
-       pch <span class="op">=</span> <span class="fl">19</span>, col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"blue"</span>, <span class="st">"red"</span><span class="op">)</span>, bty <span class="op">=</span> <span class="st">"n"</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res1</span><span class="op">$</span><span class="va">pars</span>, col <span class="op">=</span> <span class="st">"#0000ff55"</span>, pch <span class="op">=</span> <span class="fl">19</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/graphics/points.html" class="external-link">points</a></span><span class="op">(</span><span class="va">res2</span><span class="op">$</span><span class="va">pars</span>, col <span class="op">=</span> <span class="st">"#ff000055"</span>, pch <span class="op">=</span> <span class="fl">19</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"topleft"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Stochastic"</span>, <span class="st">"Deterministic"</span><span class="op">)</span>,
+       pch <span class="op">=</span> <span class="fl">19</span>, col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"blue"</span>, <span class="st">"red"</span><span class="op">)</span>, bty <span class="op">=</span> <span class="st">"n"</span><span class="op">)</span></code></pre></div>
 <p><img src="deterministic_files/figure-html/unnamed-chunk-8-1.png" width="700"></p>
   </div>
 
@@ -183,11 +179,13 @@
 
 
       <footer><div class="copyright">
-  <p>Developed by Rich FitzJohn, Marc Baguelin, Edward Knock, Lilith Whittles, John Lees, Raphael Sonabend.</p>
+  <p></p>
+<p>Developed by Rich FitzJohn, Marc Baguelin, Edward Knock, Lilith Whittles, John Lees, Raphael Sonabend.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
+  <p></p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.1.</p>
 </div>
 
       </footer>
@@ -195,6 +193,8 @@
 
   
 
+
+  
 
   </body>
 </html>
