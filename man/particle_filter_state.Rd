@@ -18,8 +18,7 @@ them, but don't).
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{model}}{The dust model generator being simulated (cannot be
-re-bound)}
+\item{\code{model}}{The dust model being simulated}
 
 \item{\code{history}}{The particle history, if created with
 \code{save_history = TRUE}. This is an internal format subject to}
@@ -34,6 +33,8 @@ This is a 3d array as described in \link{particle_filter}}
 \item{\code{log_likelihood_step}}{The log-likelihood attributable to the
 last step (i.e., the contribution to \code{log_likelihood} made on the
 last call to \verb{$step()}.}
+
+\item{\code{current_step_index}}{The index of the last completed step.}
 }
 \if{html}{\out{</div>}}
 }
@@ -43,7 +44,8 @@ last call to \verb{$step()}.}
 \item \href{#method-new}{\code{particle_filter_state$new()}}
 \item \href{#method-run}{\code{particle_filter_state$run()}}
 \item \href{#method-step}{\code{particle_filter_state$step()}}
-\item \href{#method-fork}{\code{particle_filter_state$fork()}}
+\item \href{#method-fork_multistage}{\code{particle_filter_state$fork_multistage()}}
+\item \href{#method-fork_smc2}{\code{particle_filter_state$fork_smc2()}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -115,19 +117,47 @@ likelihood, due to this step, rather than the full likelihood so far.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-fork"></a>}}
-\if{latex}{\out{\hypertarget{method-fork}{}}}
-\subsection{Method \code{fork()}}{
+\if{html}{\out{<a id="method-fork_multistage"></a>}}
+\if{latex}{\out{\hypertarget{method-fork_multistage}{}}}
+\subsection{Method \code{fork_multistage()}}{
+Create a new \code{particle_filter_state} object based on
+this one (same model, position in time within the data) but with
+new parameters, to support the "multistage particle filter".
+Unlike \code{fork_smc2}, here the parameters may imply a different
+model shape and arbitrary transformations of the state are
+allowed.  The model is not rerun to the current point, just
+transformed at that point.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter_state$fork_multistage(pars, transform_state)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{pars}}{New model parameters}
+
+\item{\code{transform_state}}{A function to transform the model state
+from the old to the new parameter set.  See
+\code{\link[=multistage_epoch]{multistage_epoch()}} for details.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-fork_smc2"></a>}}
+\if{latex}{\out{\hypertarget{method-fork_smc2}{}}}
+\subsection{Method \code{fork_smc2()}}{
 Create a new \code{particle_filter_state} object based
 on this one (same model, position in time within the data) but
-with new parameters. To do this, we create a new
+with new parameters, run up to the date, to support the \code{\link[=smc2]{smc2()}}
+algorithm. To do this, we create a new
 \code{particle_filter_state} with new parameters at the beginning of
 the simulation (corresponding to the start of your data or the
 \code{initial} argument to \link{particle_filter}) with your new
 \code{pars}, and then run the filter foward in time until it reaches
 the same step as the parent model.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_filter_state$fork(pars)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter_state$fork_smc2(pars)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

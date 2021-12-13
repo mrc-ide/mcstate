@@ -808,7 +808,7 @@ test_that("Can fork a particle_filter_state object", {
   tmp <- obj$model$rng_state()
 
   set.seed(1)
-  res <- obj$fork(list(beta = 0.15))
+  res <- obj$fork_smc2(list(beta = 0.15))
   expect_identical(res$model$rng_state(), obj$model$rng_state())
   expect_false(identical(obj$model$rng_state(), tmp))
 
@@ -1052,7 +1052,7 @@ test_that("Can fork a particle_filter_state_nested object", {
   tmp <- obj$model$rng_state()
 
   set.seed(1)
-  res <- obj$fork(pars)
+  res <- obj$fork_smc2(pars)
   expect_identical(res$model$rng_state(), obj$model$rng_state())
   expect_false(identical(obj$model$rng_state(), tmp))
 

@@ -1,3 +1,7 @@
+# mcstate 0.7.0
+
+* Multi-stage particle filter implemented, allowing arbitrary changes to model structure during a particle filter run (#159)
+
 # mcstate 0.6.13
 
 * Allow saving restart from the deterministic filter (#153)

@@ -34,6 +34,8 @@ This is a 4d array as described in \link{particle_filter}}
 \item{\code{log_likelihood_step}}{The log-likelihood attributable to the
 last step (i.e., the contribution to \code{log_likelihood} made on the
 last call to \verb{$step()}.}
+
+\item{\code{current_step_index}}{The index of the last completed step.}
 }
 \if{html}{\out{</div>}}
 }

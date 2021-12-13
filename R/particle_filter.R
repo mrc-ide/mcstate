@@ -77,8 +77,68 @@ particle_filter <- R6::R6Class(
     n_threads = NULL,
     ## Updated when the model is run
     last_model = NULL,
+    last_state = NULL,
     last_history = NULL,
-    last_restart_state = NULL
+    last_restart_state = NULL,
+
+    run_simple = function(pars, save_history, save_restart,
+                          min_log_likelihood) {
+      obj <- self$run_begin(pars, save_history, save_restart,
+                            min_log_likelihood = min_log_likelihood)
+      obj$run()
+      private$last_history <- obj$history
+      private$last_model <- obj$model
+      private$last_state <- function(index) obj$model$state(index)
+      private$last_restart_state <- obj$restart_state
+      obj$log_likelihood
+    },
+
+    run_multistage = function(pars, save_history, save_restart,
+                              min_log_likelihood) {
+      stages <- filter_check_times(pars, private$data, save_restart)
+
+      models <- vector("list", length(stages))
+      history <- vector("list", length(stages))
+      restart <- vector("list", length(stages))
+
+      for (i in seq_along(stages)) {
+        if (i == 1) {
+          obj <- self$run_begin(
+            stages[[i]]$pars, save_history, save_restart, min_log_likelihood)
+        } else {
+          obj <- obj$fork_multistage(
+            stages[[i]]$pars, stages[[i]]$transform_state)
+        }
+        obj$step(stages[[i]]$step_index)
+        models[[i]] <- obj$model
+        history[i] <- list(obj$history)
+        restart[i] <- list(obj$restart_state)
+      }
+
+      ## Push the final rng state into the first version of the model,
+      ## completing the cycle.
+      models[[1]]$set_rng_state(last(models)$rng_state())
+
+      ## We return this first model in the sequence as that's where
+      ## the next run will start from, but state from the last model
+      ## because that's where we got to.
+      private$last_model <- models[[1]]
+      private$last_state <- function(index) last(models)$state(index)
+
+      if (save_history) {
+        private$last_history <- join_histories(history, stages)
+      } else {
+        private$last_history <- NULL
+      }
+
+      if (!is.null(save_restart)) {
+        private$last_restart_state <- join_restart_state(restart, stages)
+      } else {
+        private$last_restart_state <- NULL
+      }
+
+      obj$log_likelihood
+    }
   ),
 
   public = list(
@@ -278,13 +338,14 @@ particle_filter <- R6::R6Class(
     ##' (`-Inf` if the model is impossible)
     run = function(pars = list(), save_history = FALSE, save_restart = NULL,
                    min_log_likelihood = NULL) {
-      obj <- self$run_begin(pars, save_history, save_restart,
-                            min_log_likelihood = min_log_likelihood)
-      obj$run()
-      private$last_history <- obj$history
-      private$last_model <- obj$model
-      private$last_restart_state <- obj$restart_state
-      obj$log_likelihood
+      assert_scalar_logical(save_history)
+      if (inherits(pars, "multistage_parameters")) {
+        private$run_multistage(pars, save_history, save_restart,
+                               min_log_likelihood)
+      } else {
+        private$run_simple(pars, save_history, save_restart,
+                           min_log_likelihood)
+      }
     },
 
     ##' @description Begin a particle filter run. This is part of the
@@ -333,11 +394,11 @@ particle_filter <- R6::R6Class(
     ##'
     ##' @param index_state Optional vector of states to extract
     state = function(index_state = NULL) {
-      if (is.null(private$last_model)) {
+      if (is.null(private$last_state)) {
         stop("Model has not yet been run")
       }
       ## TODO: should get an option to take a single trajectory
-      private$last_model$state(index_state)
+      private$last_state(index_state)
     },
 
     ##' @description Extract the particle trajectories. Requires that

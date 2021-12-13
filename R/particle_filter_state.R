@@ -29,13 +29,11 @@ particle_filter_state <- R6::R6Class(
     gpu = NULL,
     save_restart_step = NULL,
     save_restart = NULL,
-    min_log_likelihood = NULL,
-    current_step_index = 0L
+    min_log_likelihood = NULL
   ),
 
   public = list(
-    ##' @field model The dust model generator being simulated (cannot be
-    ##'   re-bound)
+    ##' @field model The dust model being simulated
     model = NULL,
 
     ##' @field history The particle history, if created with
@@ -56,6 +54,9 @@ particle_filter_state <- R6::R6Class(
     ##' last step (i.e., the contribution to `log_likelihood` made on the
     ##' last call to `$step()`.
     log_likelihood_step = NULL,
+
+    ##' @field current_step_index The index of the last completed step.
+    current_step_index = 0L,
 
     ##' @description Initialise the particle filter state. Ordinarily
     ##' this should not be called by users, and so arguments are not
@@ -168,7 +169,7 @@ particle_filter_state <- R6::R6Class(
     step = function(step_index, partial = FALSE) {
       steps <- private$steps
       n_steps <- private$n_steps
-      curr <- private$current_step_index
+      curr <- self$current_step_index
       if (curr >= n_steps) {
         stop("Particle filter has reached the end of the data")
       }
@@ -253,7 +254,7 @@ particle_filter_state <- R6::R6Class(
 
       self$log_likelihood_step <- log_likelihood_step
       self$log_likelihood <- log_likelihood
-      private$current_step_index <- step_index
+      self$current_step_index <- step_index
       if (save_history) {
         history$value <- history_value
         history$order <- history_order
@@ -270,9 +271,51 @@ particle_filter_state <- R6::R6Class(
       }
     },
 
+    ##' @description Create a new `particle_filter_state` object based on
+    ##' this one (same model, position in time within the data) but with
+    ##' new parameters, to support the "multistage particle filter".
+    ##' Unlike `fork_smc2`, here the parameters may imply a different
+    ##' model shape and arbitrary transformations of the state are
+    ##' allowed.  The model is not rerun to the current point, just
+    ##' transformed at that point.
+    ##'
+    ##' @param pars New model parameters
+    ##'
+    ##' @param transform_state A function to transform the model state
+    ##'   from the old to the new parameter set.  See
+    ##'   [mcstate::multistage_epoch()] for details.
+    fork_multistage = function(pars, transform_state) {
+      stopifnot(!private$gpu) # this won't work
+      gpu_config <- NULL
+      model <- NULL
+      seed <- self$model$rng_state()
+      save_history <- !is.null(self$history)
+      initial <- NULL
+
+      if (is.null(pars)) {
+        pars <- self$model$pars()
+      }
+      ret <- particle_filter_state$new(
+        pars, private$generator, model, private$data, private$data_split,
+        private$steps, private$n_particles, private$n_threads,
+        initial, private$index, private$compare, gpu_config,
+        seed, private$min_log_likelihood, save_history, private$save_restart)
+
+      state <- transform_state(self$model$state(), self$model, ret$model)
+      step <- self$model$step()
+
+      ret$model$update_state(state = state, step = step)
+      ret$current_step_index <- self$current_step_index
+      ret$log_likelihood <- self$log_likelihood
+      ret$log_likelihood_step <- self$log_likelihood_step
+
+      ret
+    },
+
     ##' @description Create a new `particle_filter_state` object based
     ##' on this one (same model, position in time within the data) but
-    ##' with new parameters. To do this, we create a new
+    ##' with new parameters, run up to the date, to support the [smc2()]
+    ##' algorithm. To do this, we create a new
     ##' `particle_filter_state` with new parameters at the beginning of
     ##' the simulation (corresponding to the start of your data or the
     ##' `initial` argument to [mcstate::particle_filter]) with your new
@@ -280,19 +323,21 @@ particle_filter_state <- R6::R6Class(
     ##' the same step as the parent model.
     ##'
     ##' @param pars New model parameters
-    fork = function(pars) {
+    fork_smc2 = function(pars) {
       stopifnot(!private$gpu) # this won't work
       gpu_config <- NULL
+      model <- NULL
       seed <- self$model$rng_state()
       save_history <- !is.null(self$history)
+
       ret <- particle_filter_state$new(
-        pars, private$generator, NULL, private$data, private$data_split,
+        pars, private$generator, model, private$data, private$data_split,
         private$steps, private$n_particles, private$n_threads,
         private$initial, private$index, private$compare, gpu_config,
         seed, private$min_log_likelihood, save_history, private$save_restart)
 
       ## Run it up to the same point
-      ret$step(private$current_step_index)
+      ret$step(self$current_step_index)
 
       ## Set the seed in the parent model
       self$model$set_rng_state(ret$model$rng_state())
@@ -320,7 +365,7 @@ particle_filter_compiled <- function(self, private) {
 
   self$log_likelihood_step <- NA_real_
   self$log_likelihood <- res$log_likelihood
-  private$current_step_index <- private$n_steps
+  self$current_step_index <- private$n_steps
   if (save_history) {
     self$history <- list(value = res$trajectories,
                          index = save_history_index)

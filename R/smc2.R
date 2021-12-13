@@ -167,7 +167,7 @@ smc2_engine <- R6::R6Class(
       ## that way.
       for (i in seq_along(filter)) {
         if (is.finite(log_prior[[i]])) {
-          filter[[i]] <- private$state$filter[[i]]$fork(pars_model[[i]])
+          filter[[i]] <- private$state$filter[[i]]$fork_smc2(pars_model[[i]])
           log_likelihood[[i]] <- filter[[i]]$log_likelihood
         }
       }
