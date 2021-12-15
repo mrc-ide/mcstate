@@ -35,10 +35,7 @@ particle_deterministic <- R6::R6Class(
     ##' time's row in the `data` object provided here in the
     ##' constructor.  `pars` is any additional parameters passed
     ##' through to the comparison function (via the `pars`
-    ##' argument to `$run`). Alternatively, `compare` can be `NULL`
-    ##' if your model provides a built-in compile compare function
-    ##' (if `model$public_methods$has_compare()` is `TRUE`), which may
-    ##' be faster.
+    ##' argument to `$run`).
     ##'
     ##' @param index An index function. This is used to compute the
     ##' "interesting" indexes of your model. It must be a function of
@@ -96,6 +93,7 @@ particle_deterministic <- R6::R6Class(
       private$generator <- model
       private$data <- data
       private$data_split <- df_to_list_of_lists(data)
+      private$steps <- unname(as.matrix(data[c("step_start", "step_end")]))
       private$compare <- assert_function(compare)
       if (!is.null(index)) {
         private$index <- assert_function(index)
@@ -161,92 +159,54 @@ particle_deterministic <- R6::R6Class(
     ##' (`-Inf` if the model is impossible), one per parameter set
     run_many = function(pars, save_history = FALSE, save_restart = NULL,
                         min_log_likelihood = -Inf) {
+
+      ## This becomes "private$run_simple()" and we'll switch based on
+      ## the multistage parameters once we work out how run_many will
+      ## work for them, of course.
+
+      obj <- self$run_begin(pars, save_history, save_restart,
+                            min_log_likelihood = min_log_likelihood)
+      obj$run()
+      private$last_history <- obj$history
+      private$last_model <- obj$model
+      private$last_state <- function(index) obj$model$state(index)
+      private$last_restart_state <- obj$restart_state
+      obj$log_likelihood
+    },
+
+    ##' @description Begin a deterministic run. This is part of the
+    ##' "advanced" interface; typically you will want to use `$run()`
+    ##' or `$run_many()` which provide a user-facing wrapper around
+    ##' this function. Once created with `$run_begin()`, you should take
+    ##' as many steps as needed with `$step()`.
+    ##'
+    ##' @param pars A list representing parameters. See `$run_many()`
+    ##'   for details (and *not* `$run()`)
+    ##'
+    ##' @param save_history Logical, indicating if the history of all
+    ##'   particles should be saved. See `$run()` for details.
+    ##'
+    ##' @param save_restart Times to save restart state at. See `$run()` for
+    ##'   details.
+    ##'
+    ##' @param min_log_likelihood Not currently supported, exists to match
+    ##'   the inteface with [mcstate::particle_filter]. Providing a value
+    ##'   larger than -Inf will cause an error.
+    ##'
+    ##' @return An object of class `particle_deterministic_state`, with methods
+    ##' `step` and `end`. This interface is still subject to change.
+    run_begin = function(pars, save_history = FALSE, save_restart = NULL,
+                         min_log_likelihood = NULL) {
+      assert_scalar_logical(save_history)
       if (min_log_likelihood > -Inf) {
         stop("'min_log_likelihood' cannot be used with particle_deterministic")
       }
-      n_particles <- length(pars)
-      steps <- unname(as.matrix(private$data[c("step_start", "step_end")]))
-      model <- private$last_model
-      resize <- !is.null(model) && n_particles != model$n_particles()
-
-      if (is.null(model) || resize) {
-        model <- private$generator$new(pars = pars, step = steps[[1]],
-                                       n_particles = NULL,
-                                       n_threads = private$n_threads,
-                                       seed = NULL,
-                                       deterministic = TRUE,
-                                       pars_multi = TRUE)
-      } else {
-        model$update_state(pars = pars, step = steps[[1]])
-      }
-
-      if (!is.null(private$initial)) {
-        initial_data <- Map(function(p, i) private$initial(i, 1L, p),
-                    pars, model$info())
-        if (any(vlapply(initial_data, is.list))) {
-          stop("Setting 'step' from initial no longer supported")
-        }
-        state <- vapply(initial_data, identity, initial_data[[1]])
-        model$update_state(state = state)
-      }
-
-      if (is.null(private$index)) {
-        index <- NULL
-      } else {
-        ## NOTE: this assumes that all parameterisation result in the
-        ## same shape, which is assumed generally.
-        index <- deterministic_index(private$index(model$info()[[1L]]))
-        model$set_index(index$index)
-      }
-
-      if (is.null(save_restart)) {
-        y <- model$simulate(c(steps[[1]], steps[, 2]))
-        restart_state <- NULL
-      } else {
-        steps_split <- deterministic_steps_restart(steps, save_restart,
-                                                   private$data)
-        restart_state <- vector("list", length(save_restart))
-        y <- vector("list", length(steps_split))
-        for (i in seq_along(steps_split)) {
-          y[[i]] <- model$simulate(steps_split[[i]])
-          if (i <= length(save_restart)) {
-            s <- model$state()
-            restart_state[[i]] <- array_reshape(s, 1, c(nrow(s), 1))
-          }
-        }
-        y <- array_bind(arrays = y)
-        restart_state <- array_bind(arrays = restart_state)
-      }
-
-      if (is.null(index)) {
-        y_compare <- y
-      } else {
-        y_compare <- y[index$run, , , drop = FALSE]
-        rownames(y_compare) <- names(index$run)
-      }
-
-      ll <- vnapply(seq_len(n_particles), deterministic_likelihood,
-                    y_compare, private$compare, pars, private$data_split)
-
-      if (save_history) {
-        if (is.null(index)) {
-          y_history <- y
-        } else {
-          y_history <- y[index$state, , , drop = FALSE]
-          rownames(y_history) <- names(index$state)
-        }
-        history <- list(value = y_history, index = index$predict)
-      } else {
-        history <- NULL
-      }
-
-      private$last_model <- model
-      private$last_history <- history
-      private$last_restart_state <- restart_state
-
-      ll
+      particle_deterministic_state$new(
+        pars, self$model, private$last_model, private$data,
+        private$data_split, private$steps, private$n_threads,
+        private$initial, private$index, private$compare,
+        save_history, save_restart)
     },
-
 
     ##' @description Extract the current model state, optionally filtering.
     ##' If the model has not yet been run, then this method will throw an
@@ -377,6 +337,7 @@ particle_deterministic <- R6::R6Class(
     compare = NULL,
     last_model = NULL,
     last_history = NULL,
+    last_state = NULL,
     last_restart_state = NULL
   ))
 
