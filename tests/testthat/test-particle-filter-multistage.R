@@ -268,6 +268,7 @@ test_that("multistage, dimension changing, model agrees with single stage", {
 
 
 test_that("All times must be found in the data", {
+  skip("now obsolete")
   dat <- example_sir()
   index <- function(info) {
     list(run = 5L, state = c(S = 1, I = 2, R = 3))
@@ -410,4 +411,43 @@ test_that("Gracefully cope with early exit", {
 
   ## Our restart state is consistent, even if it is junk:
   expect_equal(filter$restart_state(), array(NA_real_, c(5, 42, 1)))
+})
+
+
+test_that("Can run a multistage filter from part way through", {
+  dat <- example_variable()
+
+  ## There's going to be some work here to update this so that it's
+  ## easy to work with.  Possibly we just set a blank epoch at the
+  ## beginning - that's not terrible and is at least symmetrical.
+  ##
+  ## There's some pretty major work in pmcmc to get this sorted though
+  ## as we need to generate all of this out of the mcmc parameters,
+  ## and that's its own challenge.
+  pars_base <- list(len = 10, sd = 1)
+  epochs <- list(
+    multistage_epoch(10,
+                 pars = list(len = 20, sd = 1),
+                 transform_state = dat$transform_state),
+    multistage_epoch(25,
+                 pars = list(len = 5, sd = 1),
+                 transform_state = dat$transform_state))
+  pars <- multistage_parameters(pars_base, epochs)
+
+  t_min <- 35
+  step_min <- t_min * attr(dat$data, "rate")
+  data <- dat$data
+  data <- dat$data[dat$data$time_end > t_min, ]
+
+  initial <- function(info, n_particles, pars) {
+    list(state = rep(0, info$len), step = step_min)
+  }
+
+  filter <- particle_filter$new(data, dat$model, 42,
+                                compare = dat$compare, index = dat$index,
+                                initial = initial, seed = 1L)
+  filter$run(pars, save_history = TRUE)
+
+  ## Here we just check that we can run this at all.
+  expect_silent(filter$run(pars, save_history = TRUE))
 })

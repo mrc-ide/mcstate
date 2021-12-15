@@ -111,7 +111,8 @@ filter_check_times <- function(pars, data, save_restart) {
     match(time_start_pars, time_end_data),
     length(time_end_data))
 
-  if (any(is.na(step_index))) {
+  if (all(is.na(step_index))) {
+    ## I think that this only occurs now if there is no overlap?
     stop(sprintf("Could not map epoch to filter time: error for %s",
                  paste(which(is.na(step_index)), collapse = ", ")))
   }
@@ -121,6 +122,12 @@ filter_check_times <- function(pars, data, save_restart) {
   if (length(err) > 0) {
     stop(sprintf("save_restart cannot include epoch change: error for %s",
                  paste(err, collapse = ", ")))
+  }
+
+  ## This is easy enough, but we don't need it right now and the
+  ## bookkeeping is tedious
+  if (length(save_restart) > 0 && any(is.na(step_index))) {
+    stop("partial multistage + restart not yet supported")
   }
 
   ## With that ruled out, the bookkeeping to split the restart dates
@@ -133,6 +140,10 @@ filter_check_times <- function(pars, data, save_restart) {
     if (!is.null(save_restart)) {
       pars[[i]]$restart_index <- save_restart_index[save_restart_stage == i]
     }
+  }
+
+  if (any(is.na(step_index))) {
+    pars <- pars[!is.na(step_index)]
   }
 
   pars
