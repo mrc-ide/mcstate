@@ -222,10 +222,6 @@ normalise <- function(x) {
   x / sum(x)
 }
 
-try_list_get <- function(list, nm) {
-  tryCatch(list[[nm]], error = function(e) NULL)
-}
-
 
 test_integer <- function(x, name = deparse(substitute(x)),
                          what = "integer") {
