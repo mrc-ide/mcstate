@@ -267,27 +267,6 @@ test_that("multistage, dimension changing, model agrees with single stage", {
 })
 
 
-test_that("All times must be found in the data", {
-  dat <- example_sir()
-  index <- function(info) {
-    list(run = 5L, state = c(S = 1, I = 2, R = 3))
-  }
-
-  pars_base <- dat$pars$model(dat$pars$initial())
-  epochs <- list(multistage_epoch(10.5),
-                 multistage_epoch(20),
-                 multistage_epoch(200))
-  filter <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
-                                index = index, seed = 1L)
-  expect_error(
-    filter$run(multistage_parameters(pars_base, epochs[1:2])),
-    "Could not map epoch to filter time: error for 1")
-  expect_error(
-    filter$run(multistage_parameters(pars_base, epochs)),
-    "Could not map epoch to filter time: error for 1, 3")
-})
-
-
 test_that("Require named index for history-saving multistage filter", {
   dat <- example_sir()
   index <- function(info) {
