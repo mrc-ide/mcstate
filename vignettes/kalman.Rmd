@@ -66,8 +66,7 @@ We also model the initialisation process:
 
 ```{r, volatility_initial}
 volatility_initial <- function(info, n_particles, pars) {
-  list(step = 0,
-       state = matrix(rnorm(n_particles, 0, pars$sd), 1))
+  matrix(rnorm(n_particles, 0, pars$sd), 1)
 }
 
 pars <- list(

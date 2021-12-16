@@ -534,10 +534,8 @@ test_that("can restart the mcmc using saved state", {
   expect_equal(dim(res1$restart$state), c(5, 51, 1))
   s <- res1$restart$state[, , 1]
   d2 <- dat$data[dat$data$day_start >= 40, ]
-  ## This is probably something that we can automate
-  initial2 <- function(info, n_particles, pars) {
-    list(state = s[, sample.int(ncol(s), n_particles, replace = TRUE)])
-  }
+
+  initial2 <- particle_filter_initial(s)
   p2 <- particle_filter$new(d2, dat$model, n_particles, dat$compare,
                             index = dat$index, initial = initial2)
   control2 <- pmcmc_control(50, save_trajectories = TRUE, save_state = TRUE,
@@ -1145,4 +1143,15 @@ test_that("Can save intermediate state to restart", {
   expect_equal(dim(res3$restart$state), c(5, 31, 2))
 
   expect_equal(res3$restart$state[, , 1], res2$restart$state[, , 1])
+})
+
+
+test_that("Can create restart initial function", {
+  m <- matrix(1:70 - 1, 10)
+  f <- particle_filter_initial(m)
+  expect_identical(parent.env(environment(f)), baseenv())
+  res <- f(NULL, 3, NULL)
+  expect_equal(dim(res), c(10, 3))
+  expect_equal(res %% 10, matrix(0:9, 10, 3))
+  expect_true(all(diff(res %/% 10) == 0))
 })

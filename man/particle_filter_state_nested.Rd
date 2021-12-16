@@ -45,7 +45,7 @@ last call to \verb{$step()}.}
 \item \href{#method-new}{\code{particle_filter_state_nested$new()}}
 \item \href{#method-run}{\code{particle_filter_state_nested$run()}}
 \item \href{#method-step}{\code{particle_filter_state_nested$step()}}
-\item \href{#method-fork}{\code{particle_filter_state_nested$fork()}}
+\item \href{#method-fork_smc2}{\code{particle_filter_state_nested$fork_smc2()}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -113,9 +113,9 @@ the end of the data.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-fork"></a>}}
-\if{latex}{\out{\hypertarget{method-fork}{}}}
-\subsection{Method \code{fork()}}{
+\if{html}{\out{<a id="method-fork_smc2"></a>}}
+\if{latex}{\out{\hypertarget{method-fork_smc2}{}}}
+\subsection{Method \code{fork_smc2()}}{
 Create a new \code{particle_filter_state_nested} object based
 on this one (same model, position in time within the data) but
 with new parameters. To do this, we create a new
@@ -125,7 +125,7 @@ the simulation (corresponding to the start of your data or the
 \code{pars}, and then run the filter foward in time until it reaches
 the same step as the parent model.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_filter_state_nested$fork(pars)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter_state_nested$fork_smc2(pars)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
