@@ -133,13 +133,10 @@ hist(res1$restart$state[2, , ], xlab = "Number infected",
 
 This matrix includes all information to restart the stochastic process and we can use this to run a pmcmc that starts the particle filter that runs over data starting from day 40. Note that this is *not* the same model as it does fit to the first 40 days of the epidemic so we expect parameters to differ (it's a bit like allowing a break in parameters at day = 40 except our initial parameter sets here *do* include both parts.
 
-The key part is to create an `initial` function for the particle function that will create suitable initial conditions. We do this by sampling `n_particles` worth of particles out of this matrix. (The `initial` function must conform to mcstate's interface so we accept `info` and `pars` here even though we ignore them)
+The key part is to create an `initial` function for the particle function that will create suitable initial conditions. We do this by sampling `n_particles` worth of particles out of this matrix. (The `initial` function must conform to mcstate's interface so we accept `info` and `pars` here even though we ignore them).  Most cases can use the `mcstate::particle_filter_initial` to do this, as below.
 
 ```{r}
-s <- res1$restart$state[, , 1]
-initial <- function(info, n_particles, pars) {
-  list(state = s[, sample.int(ncol(s), n_particles, replace = TRUE)])
-}
+initial <- mcstate::particle_filter_initial(res1$restart$state[, , 1])
 ```
 
 Then subset the data that we will fit to and create a new particle filter

@@ -1,3 +1,8 @@
+# mcstate 0.7.1
+
+* New helper function `mcstate::particle_filter_initial` for creating particle filter initial state functions from restart data.
+* Drop support for changing initial step via the particle filter initial function
+
 # mcstate 0.7.0
 
 * Multi-stage particle filter implemented, allowing arbitrary changes to model structure during a particle filter run (#159)
