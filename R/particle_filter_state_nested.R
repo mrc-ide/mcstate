@@ -332,5 +332,11 @@ set_nested_model_state <- function(model, initial, pars, n_particles) {
     stop(sprintf("initial() produced unequal state lengths %s",
                  str_collapse(len)))
   }
-  model$update_state(state = list_to_array(state))
+
+  if (is.null(dim(state[[1]]))) {
+    state_array <- matrix(unlist(state, FALSE, FALSE), ncol = length(pars))
+  } else {
+    state_array <- list_to_array(state)
+  }
+  model$update_state(state = state_array)
 }
