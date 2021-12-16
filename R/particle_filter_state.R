@@ -82,12 +82,9 @@ particle_filter_state <- R6::R6Class(
       if (!is.null(initial)) {
         initial_data <- initial(model$info(), n_particles, pars)
         if (is.list(initial_data)) {
-          steps <- particle_steps(steps, initial_data$step)
-          model$update_state(state = initial_data$state,
-                             step = initial_data$step)
-        } else {
-          model$update_state(state = initial_data)
+          stop("Setting 'step' from initial no longer supported")
         }
+        model$update_state(state = initial_data)
       }
 
       index_data <- if (is.null(index)) NULL else index(model$info())

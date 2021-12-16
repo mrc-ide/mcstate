@@ -140,30 +140,45 @@ test_that("Control the starting point of the simulation", {
   }
 
   dat <- example_sir()
-  n_particles <- 42
-  data <- dat$data
-  offset <- 400
-  data[c("step_start", "step_end")] <-
-    data[c("step_start", "step_end")] + offset
-  data$step_start[[1]] <- 0
 
   ## The usual version:
+  n_particles <- 42
   p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index)
   set.seed(1)
   ll1 <- p1$run()
 
+  data_raw <- dat$data_raw
+  data_raw$day <- data_raw$day + 100
+  data <- particle_filter_data(data_raw, "day", 4, 100)
+
   ## Tuning the start date
   p2 <- particle_filter$new(data, dat$model, n_particles, dat$compare,
-                            index = dat$index, initial = initial)
+                            index = dat$index)
   set.seed(1)
-  ll2 <- p2$run(list(initial = as.integer(offset)))
+  ll2 <- p2$run()
   expect_identical(ll1, ll2)
 
   ## Running from the beginning is much worse:
   set.seed(1)
-  ll3 <- p2$run(list(initial = 0L))
+  data <- particle_filter_data(data_raw, "day", 4, 1)
+  p3 <- particle_filter$new(data, dat$model, n_particles, dat$compare,
+                            index = dat$index)
+  ll3 <- p3$run()
   expect_true(ll3 < ll1)
+})
+
+
+test_that("Cannot use previous initial condition approach", {
+  initial <- function(info, n_particles, pars) {
+    list(step = 2)
+  }
+
+  dat <- example_sir()
+  n_particles <- 42
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, initial = initial)
+  expect_error(p$run(), "Setting 'step' from initial no longer supported")
 })
 
 
@@ -279,102 +294,6 @@ test_that("initialise with complex state", {
   ll <- p$run(pars, save_history = TRUE)
   expect_equal(p$history()[, , 1],
                initial(NULL, n_particles, pars)[1:3, ])
-})
-
-
-test_that("Control the starting point of the simulation", {
-  dat <- example_sir()
-  n_particles <- 42
-
-  data <- dat$data
-  ## Drop extra columns that are confusing in this context
-  data <- data[setdiff(names(data), c("day_start", "day_end"))]
-  ## Offset the data by a considerable margin:
-  offset <- 400
-  data[c("step_start", "step_end")] <-
-    data[c("step_start", "step_end")] + offset
-  ## A burnin step:
-  intro <- data[1, ]
-  intro$incidence <- NA
-  intro$step_start <- 0
-  intro$step_end <- data$step_start[[1]]
-  ## Our combination data:
-  data <- rbind(intro, data)
-
-  ## Now we can start work with an "interesting" starting point.
-
-  ## The usual version, with normal data:
-  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index)
-  set.seed(1)
-  ll1 <- p1$run()
-
-  ## Then tune the start date to get the same effect:
-  initial <- function(info, n_particles, pars) {
-    list(state = c(1000, pars$I0, 0, 0, 0),
-         step = pars$step)
-  }
-
-  ## Tuning the start date
-  p2 <- particle_filter$new(data, dat$model, n_particles, dat$compare,
-                            index = dat$index, initial = initial)
-  set.seed(1)
-  ll2 <- p2$run(list(I0 = 10, step = offset),
-                save_history = TRUE)
-
-  expect_identical(ll1, ll2)
-
-  ## Running from the beginning is much worse:
-  set.seed(1)
-  ll3 <- p2$run(list(I0 = 10, step = 0),
-                save_history = TRUE)
-  expect_true(ll3 < ll1)
-})
-
-
-test_that("Variable initial starting point of the simulation", {
-  dat <- example_sir()
-  n_particles <- 42
-
-  data <- dat$data
-  ## Drop extra columns that are confusing in this context
-  data <- data[setdiff(names(data), c("day_start", "day_end"))]
-  ## Offset the data by a considerable margin:
-  offset <- 400
-  data[c("step_start", "step_end")] <-
-    data[c("step_start", "step_end")] + offset
-  ## A burnin step:
-  intro <- data[1, ]
-  intro$incidence <- NA
-  intro$step_start <- 0
-  intro$step_end <- data$step_start[[1]]
-  ## Our combination data:
-  data <- rbind(intro, data)
-
-  ## Then tune the start date to get the same effect:
-  initial <- function(info, n_particles, pars) {
-    set.seed(1)
-    i0 <- rpois(n_particles, pars$I0)
-    step <- pars$step_offset - rpois(n_particles, pars$step_mean)
-    list(state = rbind(1000, i0, 0, 0, 0, deparse.level = 0),
-         step = step)
-  }
-  compare <- function(...) {
-    NULL
-  }
-
-  p <- particle_filter$new(data, dat$model, n_particles, compare,
-                           index = dat$index, initial = initial, seed = 1L)
-  pars <- list(I0 = 10, step_mean = 20, step_offset = 400)
-  set.seed(1)
-  ll <- p$run(pars, save_history = TRUE)
-  expect_equal(ll, 0)
-
-  mod <- p$model$new(list(), step = 0, n_particles = n_particles, seed = 1L)
-  tmp <- initial(NULL, n_particles, pars)
-  mod$update_state(state = tmp$state, step = tmp$step)
-  expect_equal(p$history()[, , 1], mod$state()[1:3, ])
-  expect_equal(mod$step(), max(tmp$step))
 })
 
 

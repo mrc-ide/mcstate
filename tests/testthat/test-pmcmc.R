@@ -536,7 +536,7 @@ test_that("can restart the mcmc using saved state", {
   d2 <- dat$data[dat$data$day_start >= 40, ]
   ## This is probably something that we can automate
   initial2 <- function(info, n_particles, pars) {
-    list(state = s[, sample.int(ncol(s), n_particles, replace = TRUE)])
+    s[, sample.int(ncol(s), n_particles, replace = TRUE)]
   }
   p2 <- particle_filter$new(d2, dat$model, n_particles, dat$compare,
                             index = dat$index, initial = initial2)
