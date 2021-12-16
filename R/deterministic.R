@@ -181,11 +181,13 @@ particle_deterministic <- R6::R6Class(
       }
 
       if (!is.null(private$initial)) {
-        initial_data <- deterministic_initial(pars, private$initial,
-                                              model$info())
-        steps <- particle_steps(steps, initial_data$step)
-        model$update_state(state = initial_data$state,
-                           step = initial_data$step)
+        initial_data <- Map(function(p, i) private$initial(i, 1L, p),
+                    pars, model$info())
+        if (any(vlapply(initial_data, is.list))) {
+          stop("Setting 'step' from initial no longer supported")
+        }
+        state <- vapply(initial_data, identity, initial_data[[1]])
+        model$update_state(state = state)
       }
 
       if (is.null(private$index)) {
@@ -398,25 +400,6 @@ deterministic_likelihood <- function(idx, y, compare, pars, data) {
   sum(ll)
 }
 
-
-deterministic_initial <- function(pars, initial, info) {
-  init <- Map(function(p, i) initial(i, 1L, p), pars, info)
-
-  ret <- list()
-  if (is.list(init[[1]])) {
-    if ("state" %in% names(init[[1]])) {
-      ret$state <- vapply(init, function(x) x$state, init[[1]]$state)
-    }
-
-    if ("step" %in% names(init[[1]])) {
-      ret$step <- vnapply(init, function(x) x$step)
-    }
-  } else {
-    ret$state <- vapply(init, identity, init[[1]])
-  }
-
-  ret
-}
 
 
 deterministic_steps_restart <- function(steps, save_restart, data) {

@@ -10,17 +10,7 @@ test_that("Can run the deterministic filter", {
 
 
 test_that("Can control starting point of simulation", {
-  initial <- function(info, n_particles, pars) {
-    list(step = pars$initial)
-  }
-
   dat <- example_sir()
-
-  data <- dat$data
-  offset <- 400
-  data[c("step_start", "step_end")] <-
-    data[c("step_start", "step_end")] + offset
-  data$step_start[[1]] <- 0
 
   pars <- dat$pars$model(dat$pars$initial())
 
@@ -31,10 +21,15 @@ test_that("Can control starting point of simulation", {
   ll1 <- p1$run(pars)
 
   ## Tuning the start date
+  data_raw <- dat$data_raw
+  data_raw$day <- data_raw$day + 100
+  data <- particle_filter_data(data_raw, "day", 4, 100)
+
+  ## Tuning the start date
   p2 <- particle_deterministic$new(data, dat$model, dat$compare,
-                                   index = dat$index, initial = initial)
+                                   index = dat$index)
   set.seed(1)
-  ll2 <- p2$run(c(pars, list(initial = as.integer(offset))))
+  ll2 <- p2$run(pars)
   expect_identical(ll1, ll2)
 })
 
@@ -181,30 +176,6 @@ test_that("Can run deterministic filter without index", {
 })
 
 
-test_that("initial handles corner cases", {
-  initial1 <- function(info, n_particles, pars) {
-    rep(pars, 4)
-  }
-  initial2 <- function(info, n_particles, pars) {
-    list(state = rep(pars, 4))
-  }
-  initial3 <- function(info, n_particles, pars) {
-    list(state = rep(pars, 4), step = pars * 2)
-  }
-
-  pars <- list(1, 2, 3)
-  info <- vector("list", length(pars))
-  p1 <- deterministic_initial(pars, initial1, info)
-  p2 <- deterministic_initial(pars, initial2, info)
-  p3 <- deterministic_initial(pars, initial3, info)
-
-  m <- matrix(rep(1:3, each = 4), 4, 3)
-  expect_equal(p1, list(state = m))
-  expect_equal(p2, p1)
-  expect_equal(p3, list(state = m, step = c(2, 4, 6)))
-})
-
-
 test_that("initial passes args as expected", {
   dat <- example_sir()
   initial <- mockery::mock(c(1000, 10, 0, 0, 0), cycle = TRUE)
@@ -339,4 +310,15 @@ test_that("Can change the number of threads", {
   p$run()
   expect_equal(p$set_n_threads(2L), 1L)
   expect_equal(p$set_n_threads(1L), 2L)
+})
+
+
+test_that("Cannot use previous initial condition approach", {
+  initial <- function(info, n_particles, pars) {
+    list(step = 2)
+  }
+  dat <- example_sir()
+  p <- particle_deterministic$new(dat$data, dat$model, dat$compare,
+                                  index = dat$index, initial = initial)
+  expect_error(p$run(), "Setting 'step' from initial no longer supported")
 })

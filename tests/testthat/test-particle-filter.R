@@ -135,10 +135,6 @@ test_that("Control the comparison function", {
 
 
 test_that("Control the starting point of the simulation", {
-  initial <- function(info, n_particles, pars) {
-    list(step = pars$initial)
-  }
-
   dat <- example_sir()
 
   ## The usual version:
