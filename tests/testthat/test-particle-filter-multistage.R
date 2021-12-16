@@ -460,3 +460,44 @@ test_that("Can filter multistage parameters based on data", {
   expect_equal(f(10, d), cbind(c(2, 20)))
   expect_equal(f(9, d), cbind(c(2, 20)))
 })
+
+
+## This is not a great test, but covers the key bits; that we filter
+## down the parameters to the right set, in particular.
+test_that("Can run a multistage filter from part way through", {
+  dat <- example_variable()
+
+  pars_base <- list(len = 10, sd = 1)
+  epochs <- list(
+    multistage_epoch(10,
+                 pars = list(len = 20, sd = 1),
+                 transform_state = dat$transform_state),
+    multistage_epoch(25,
+                 pars = list(len = 5, sd = 1),
+                 transform_state = dat$transform_state))
+  pars <- multistage_parameters(pars_base, epochs)
+
+  t_min <- 35
+  step_min <- t_min * attr(dat$data, "rate")
+  data <- dat$data
+  data <- dat$data[dat$data$time_end > t_min, ]
+
+  initial <- function(info, n_particles, pars) {
+    rep(0, info$len)
+  }
+
+  filter <- particle_filter$new(data, dat$model, 42,
+                                compare = dat$compare, index = dat$index,
+                                initial = initial, seed = 1L)
+  filter$run(pars, save_history = TRUE)
+
+  ## No problems stitching together the history, now all in a single
+  ## case.
+  h <- filter$history()
+  expect_equal(dim(h), c(3, 42, nrow(data) + 1))
+  expect_false(any(is.na(h)))
+
+  p <- filter_check_times(pars, data, NULL)
+  expect_length(p, 1)
+  expect_equal(p[[1]]$pars$len, 5)
+})
