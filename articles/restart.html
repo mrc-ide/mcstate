@@ -40,7 +40,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.7.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.7.1</span>
       </span>
     </div>
 
@@ -203,12 +203,9 @@
      main <span class="op">=</span> <span class="st">"Distribution of number infected over mcmc samples"</span><span class="op">)</span></code></pre></div>
 <p><img src="restart_files/figure-html/unnamed-chunk-12-1.png" width="672"></p>
 <p>This matrix includes all information to restart the stochastic process and we can use this to run a pmcmc that starts the particle filter that runs over data starting from day 40. Note that this is <em>not</em> the same model as it does fit to the first 40 days of the epidemic so we expect parameters to differ (it’s a bit like allowing a break in parameters at day = 40 except our initial parameter sets here <em>do</em> include both parts.</p>
-<p>The key part is to create an <code>initial</code> function for the particle function that will create suitable initial conditions. We do this by sampling <code>n_particles</code> worth of particles out of this matrix. (The <code>initial</code> function must conform to mcstate’s interface so we accept <code>info</code> and <code>pars</code> here even though we ignore them)</p>
+<p>The key part is to create an <code>initial</code> function for the particle function that will create suitable initial conditions. We do this by sampling <code>n_particles</code> worth of particles out of this matrix. (The <code>initial</code> function must conform to mcstate’s interface so we accept <code>info</code> and <code>pars</code> here even though we ignore them). Most cases can use the <code><a href="../reference/particle_filter_initial.html">mcstate::particle_filter_initial</a></code> to do this, as below.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">s</span> <span class="op">&lt;-</span> <span class="va">res1</span><span class="op">$</span><span class="va">restart</span><span class="op">$</span><span class="va">state</span><span class="op">[</span>, , <span class="fl">1</span><span class="op">]</span>
-<span class="va">initial</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">info</span>, <span class="va">n_particles</span>, <span class="va">pars</span><span class="op">)</span> <span class="op">{</span>
-  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>state <span class="op">=</span> <span class="va">s</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample.int</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">s</span><span class="op">)</span>, <span class="va">n_particles</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">]</span><span class="op">)</span>
-<span class="op">}</span></code></pre></div>
+<code class="sourceCode R"><span class="va">initial</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/particle_filter_initial.html">particle_filter_initial</a></span><span class="op">(</span><span class="va">res1</span><span class="op">$</span><span class="va">restart</span><span class="op">$</span><span class="va">state</span><span class="op">[</span>, , <span class="fl">1</span><span class="op">]</span><span class="op">)</span></code></pre></div>
 <p>Then subset the data that we will fit to and create a new particle filter</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">data2</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">[</span><span class="va">data</span><span class="op">$</span><span class="va">day_start</span> <span class="op">&gt;=</span> <span class="fl">40</span>, <span class="op">]</span>
