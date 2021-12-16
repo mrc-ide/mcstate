@@ -411,3 +411,52 @@ test_that("Gracefully cope with early exit", {
   ## Our restart state is consistent, even if it is junk:
   expect_equal(filter$restart_state(), array(NA_real_, c(5, 42, 1)))
 })
+
+
+## epochs:         t2        t3
+## data:
+##   |----------|                    1 only
+##        |-----------|              1-2, t2 must exist
+##              |--------------|     1-3, t2 and t3 must exist
+##                    |--|           2 only
+##                        |-------|  2-3, t3 must exist
+##                              |--| 3 only
+test_that("Can filter multistage parameters based on data", {
+  ## We need a little helper here to remove the tedium
+  f <- function(t, d) {
+    base <- list(i = 1)
+    epochs <- lapply(seq_along(t), function(i)
+      multistage_epoch(t[[i]], pars = list(i = i + 1)))
+    p <- multistage_parameters(base, epochs)
+    res <- filter_check_times(p, d, NULL)
+    vapply(res, function(x) c(x$pars$i, x$step_index), numeric(2))
+  }
+
+  d <- particle_filter_data(data.frame(time = 11:30, value = runif(20)),
+                            "time", 4)
+
+  expect_equal(f(integer(0), d), cbind(c(1, 20)))
+  ## Changes all before any data; use last
+  expect_equal(f(1:3, d), cbind(c(4, 20)))
+  ## Changes all after any data; use first
+  expect_equal(f(41:43, d), cbind(c(1, 20)))
+
+  ## An epoch that starts after the data ends is ignored:
+  expect_equal(f(c(20, 60), d), cbind(c(1, 10), c(2, 20)))
+  ## An epoch that finishes before the data starts is ignored
+  expect_equal(f(c(5, 20), d), cbind(c(2, 10), c(3, 20)))
+
+  ## The common case:
+  expect_equal(f(c(15, 25), d), cbind(c(1, 5), c(2, 15), c(3, 20)))
+
+  ## Error case; this can't really be triggered until we get non-unit
+  ## time changes supported:
+  expect_error(f(c(5, 20.5), d),
+               "Could not map epoch to filter time: error for stage 2")
+  expect_error(f(c(5, 6, 20.5, 25), d),
+               "Could not map epoch to filter time: error for stage 3")
+
+  ## Special case where things are against the first boundary:
+  expect_equal(f(10, d), cbind(c(2, 20)))
+  expect_equal(f(9, d), cbind(c(2, 20)))
+})

@@ -105,19 +105,34 @@ filter_check_times <- function(pars, data, save_restart) {
   ## when each phase *ends*, as that is the index that we do the
   ## switch at.
   time_variable <- attr(data, "time")
-  time_end_data <- data[[paste0(time_variable, "_end")]]
-  time_start_pars <- vnapply(pars[-1], "[[", "start")
+  time_data_start <- data[[paste0(time_variable, "_start")]]
+  time_data_end   <- data[[paste0(time_variable, "_end")]]
+
+  time_pars <- vnapply(pars[-1], "[[", "start")
+  time_pars_start <- c(-Inf, time_pars)
+  time_pars_end <- c(time_pars, Inf)
+
+  drop <-
+    time_pars_end <= time_data_start[[1]] |
+    time_pars_start > last(time_data_end)
+
+  if (any(drop)) {
+    pars <- pars[!drop]
+    time_pars <- vnapply(pars[-1], "[[", "start")
+  }
+  index <- which(!drop)
+
   step_index <- c(
-    match(time_start_pars, time_end_data),
-    length(time_end_data))
+    match(time_pars, time_data_end),
+    length(time_data_end))
 
   if (any(is.na(step_index))) {
-    stop(sprintf("Could not map epoch to filter time: error for %s",
-                 paste(which(is.na(step_index)), collapse = ", ")))
+    stop(sprintf("Could not map epoch to filter time: error for stage %s",
+                 paste(index[is.na(step_index)], collapse = ", ")))
   }
 
   ## this is a bookkeeping and interpretation nightmare so disallow it:
-  err <- intersect(save_restart, time_start_pars)
+  err <- intersect(save_restart, time_pars)
   if (length(err) > 0) {
     stop(sprintf("save_restart cannot include epoch change: error for %s",
                  paste(err, collapse = ", ")))
@@ -125,7 +140,7 @@ filter_check_times <- function(pars, data, save_restart) {
 
   ## With that ruled out, the bookkeeping to split the restart dates
   ## over epochs is tolerable:
-  save_restart_stage <- findInterval(save_restart, c(0, time_start_pars))
+  save_restart_stage <- findInterval(save_restart, c(0, time_pars))
   save_restart_index <- seq_along(save_restart)
 
   for (i in seq_along(pars)) {
