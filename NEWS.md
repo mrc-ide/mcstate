@@ -1,3 +1,8 @@
+# mcstate 0.7.2
+
+* Multistage particle filters now cope with running data covering a subset of their stages
+* Drop support for chnging initial step via particle filter initial function for deterministic and nested filters
+
 # mcstate 0.7.1
 
 * New helper function `mcstate::particle_filter_initial` for creating particle filter initial state functions from restart data.

@@ -267,27 +267,6 @@ test_that("multistage, dimension changing, model agrees with single stage", {
 })
 
 
-test_that("All times must be found in the data", {
-  dat <- example_sir()
-  index <- function(info) {
-    list(run = 5L, state = c(S = 1, I = 2, R = 3))
-  }
-
-  pars_base <- dat$pars$model(dat$pars$initial())
-  epochs <- list(multistage_epoch(10.5),
-                 multistage_epoch(20),
-                 multistage_epoch(200))
-  filter <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
-                                index = index, seed = 1L)
-  expect_error(
-    filter$run(multistage_parameters(pars_base, epochs[1:2])),
-    "Could not map epoch to filter time: error for 1")
-  expect_error(
-    filter$run(multistage_parameters(pars_base, epochs)),
-    "Could not map epoch to filter time: error for 1, 3")
-})
-
-
 test_that("Require named index for history-saving multistage filter", {
   dat <- example_sir()
   index <- function(info) {
@@ -410,4 +389,94 @@ test_that("Gracefully cope with early exit", {
 
   ## Our restart state is consistent, even if it is junk:
   expect_equal(filter$restart_state(), array(NA_real_, c(5, 42, 1)))
+})
+
+
+## epochs:         t2        t3
+## data:
+##   |----------|                    1 only
+##        |-----------|              1-2, t2 must exist
+##              |--------------|     1-3, t2 and t3 must exist
+##                    |--|           2 only
+##                        |-------|  2-3, t3 must exist
+##                              |--| 3 only
+test_that("Can filter multistage parameters based on data", {
+  ## We need a little helper here to remove the tedium
+  f <- function(t, d) {
+    base <- list(i = 1)
+    epochs <- lapply(seq_along(t), function(i)
+      multistage_epoch(t[[i]], pars = list(i = i + 1)))
+    p <- multistage_parameters(base, epochs)
+    res <- filter_check_times(p, d, NULL)
+    vapply(res, function(x) c(x$pars$i, x$step_index), numeric(2))
+  }
+
+  d <- particle_filter_data(data.frame(time = 11:30, value = runif(20)),
+                            "time", 4)
+
+  expect_equal(f(integer(0), d), cbind(c(1, 20)))
+  ## Changes all before any data; use last
+  expect_equal(f(1:3, d), cbind(c(4, 20)))
+  ## Changes all after any data; use first
+  expect_equal(f(41:43, d), cbind(c(1, 20)))
+
+  ## An epoch that starts after the data ends is ignored:
+  expect_equal(f(c(20, 60), d), cbind(c(1, 10), c(2, 20)))
+  ## An epoch that finishes before the data starts is ignored
+  expect_equal(f(c(5, 20), d), cbind(c(2, 10), c(3, 20)))
+
+  ## The common case:
+  expect_equal(f(c(15, 25), d), cbind(c(1, 5), c(2, 15), c(3, 20)))
+
+  ## Error case; this can't really be triggered until we get non-unit
+  ## time changes supported:
+  expect_error(f(c(5, 20.5), d),
+               "Could not map epoch to filter time: error for stage 2")
+  expect_error(f(c(5, 6, 20.5, 25), d),
+               "Could not map epoch to filter time: error for stage 3")
+
+  ## Special case where things are against the first boundary:
+  expect_equal(f(10, d), cbind(c(2, 20)))
+  expect_equal(f(9, d), cbind(c(2, 20)))
+})
+
+
+## This is not a great test, but covers the key bits; that we filter
+## down the parameters to the right set, in particular.
+test_that("Can run a multistage filter from part way through", {
+  dat <- example_variable()
+
+  pars_base <- list(len = 10, sd = 1)
+  epochs <- list(
+    multistage_epoch(10,
+                 pars = list(len = 20, sd = 1),
+                 transform_state = dat$transform_state),
+    multistage_epoch(25,
+                 pars = list(len = 5, sd = 1),
+                 transform_state = dat$transform_state))
+  pars <- multistage_parameters(pars_base, epochs)
+
+  t_min <- 35
+  step_min <- t_min * attr(dat$data, "rate")
+  data <- dat$data
+  data <- dat$data[dat$data$time_end > t_min, ]
+
+  initial <- function(info, n_particles, pars) {
+    rep(0, info$len)
+  }
+
+  filter <- particle_filter$new(data, dat$model, 42,
+                                compare = dat$compare, index = dat$index,
+                                initial = initial, seed = 1L)
+  filter$run(pars, save_history = TRUE)
+
+  ## No problems stitching together the history, now all in a single
+  ## case.
+  h <- filter$history()
+  expect_equal(dim(h), c(3, 42, nrow(data) + 1))
+  expect_false(any(is.na(h)))
+
+  p <- filter_check_times(pars, data, NULL)
+  expect_length(p, 1)
+  expect_equal(p[[1]]$pars$len, 5)
 })

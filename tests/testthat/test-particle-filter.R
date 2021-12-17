@@ -135,10 +135,6 @@ test_that("Control the comparison function", {
 
 
 test_that("Control the starting point of the simulation", {
-  initial <- function(info, n_particles, pars) {
-    list(step = pars$initial)
-  }
-
   dat <- example_sir()
 
   ## The usual version:
@@ -148,11 +144,11 @@ test_that("Control the starting point of the simulation", {
   set.seed(1)
   ll1 <- p1$run()
 
+  ## Tuning the start date
   data_raw <- dat$data_raw
   data_raw$day <- data_raw$day + 100
   data <- particle_filter_data(data_raw, "day", 4, 100)
 
-  ## Tuning the start date
   p2 <- particle_filter$new(data, dat$model, n_particles, dat$compare,
                             index = dat$index)
   set.seed(1)
@@ -903,7 +899,7 @@ test_that("particle filter state nested - errors", {
   set.seed(1)
 
   pars <- list(list(beta = 0.2, gamma = 0.1),
-                               list(beta = 0.3, gamma = 0.1))
+               list(beta = 0.3, gamma = 0.1))
 
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index)
@@ -911,43 +907,21 @@ test_that("particle filter state nested - errors", {
   expect_error(p$run(pars[1]), "the length")
 })
 
-test_that("nested pf with initial", {
+test_that("can't change initial step via initial in nested filter", {
   initial <- function(info, n_particles, pars) {
-    list(step = pars$initial)
+    list(step = 0)
   }
 
   dat <- example_sir_shared()
   n_particles <- 42
-  data <- dat$data
-  offset <- 400
-  data[c("step_start", "step_end")] <-
-    data[c("step_start", "step_end")] + offset
-  data$step_start[c(1, 101)] <- 0
 
   pars <- list(list(beta = 0.2, gamma = 0.1),
-                               list(beta = 0.3, gamma = 0.1))
+               list(beta = 0.3, gamma = 0.1))
 
-  ## The usual version:
-  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index)
-  set.seed(1)
-  ll1 <- p1$run(pars)
-
-  ## Tuning the start date
-  p2 <- particle_filter$new(data, dat$model, n_particles, dat$compare,
-                            index = dat$index, initial = initial)
-  set.seed(1)
-  pars <- list(list(beta = 0.2, gamma = 0.1, initial = as.integer(offset)),
-               list(beta = 0.3, gamma = 0.1, initial = as.integer(offset)))
-  ll2 <- p2$run(pars)
-  expect_identical(ll1, ll2)
-
-  ## Running from the beginning is much worse:
-  set.seed(1)
-  pars <- list(list(beta = 0.2, gamma = 0.1, initial = 0),
-               list(beta = 0.3, gamma = 0.1, initial = 0))
-  ll3 <- p2$run(pars)
-  expect_true(all(ll3 < ll1))
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, initial = initial)
+  expect_error(p$run(pars),
+               "Setting 'step' from initial no longer supported")
 })
 
 test_that("Can fork a particle_filter_state_nested object", {
@@ -1075,47 +1049,6 @@ test_that("nested particle filter initial not list", {
   expect_is(p$run(pars), "numeric")
 })
 
-test_that("nested particle filter initial - silent length pop", {
-  dat <- example_sir_shared()
-  n_particles <- 42
-  initial <- function(...) list(step = 1)
-  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                           index = dat$index, initial = initial, seed = 100)
-  pars <- list(list(beta = 0.2, gamma = 0.1),
-               list(beta = 0.3, gamma = 0.1))
-  expect_silent(p$run(pars))
-
-  dat <- example_sir_shared()
-  n_particles <- 42
-  initial <- function(...) list(step = numeric(42))
-  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                           index = dat$index, initial = initial, seed = 100)
-  pars <- list(list(beta = 0.2, gamma = 0.1),
-               list(beta = 0.3, gamma = 0.1))
-  expect_silent(p$run(pars))
-})
-
-test_that("nested particle filter initial - error wrong length", {
-  dat <- example_sir_shared()
-  n_particles <- 42
-  initial <- function(...) list(step = 2:4)
-  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                           index = dat$index, initial = initial, seed = 100)
-  pars <- list(list(beta = 0.2, gamma = 0.1),
-               list(beta = 0.3, gamma = 0.1))
-  expect_error(p$run(pars), "length")
-
-  dat <- example_sir_shared()
-  n_particles <- 42
-  initial <- function(info, n_particles, pars) {
-    list(step = pars$initial)
-  }
-  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                           index = dat$index, initial = initial, seed = 100)
-  pars <- list(list(beta = 0.2, gamma = 0.1, initial = 0),
-               list(beta = 0.3, gamma = 0.1, initial = 0:1))
-  expect_error(p$run(pars), "unequal step")
-})
 
 test_that("return names on nested history, if present", {
   dat <- example_sir_shared()
@@ -1185,51 +1118,25 @@ test_that("Control the starting point of a nested simulation", {
   dat <- example_sir_shared()
   n_particles <- 42
 
-  data <- dat$data
-  ## Drop extra columns that are confusing in this context
-  data <- data[setdiff(names(data), c("day_start", "day_end"))]
-  ## Offset the data by a considerable margin:
-  offset <- 400
-  data[c("step_start", "step_end")] <-
-    data[c("step_start", "step_end")] + offset
-  ## A burnin step:
-  ## pop a
-  intro_a <- data[data$population == "a", ][1, ]
-  intro_a$incidence <- NA
-  intro_a$step_start <- 0
-  intro_a$step_end <- data$step_start[[1]]
-  ## pop b
-  intro_b <- data[data$population == "b", ][1, ]
-  intro_b$incidence <- NA
-  intro_b$step_start <- 0
-  intro_b$step_end <- data$step_start[[1]]
-  ## Our combination data:
-  data <- rbind(intro_a,
-                data[data$population == "a", ],
-                intro_b,
-                data[data$population == "b", ])
+  pars <- list(list(I0 = 10, beta = 0.2, gamma = 0.1),
+               list(I0 = 10, beta = 0.3, gamma = 0.1))
 
-  pars <- list(list(I0 = 10, beta = 0.2, gamma = 0.1, step = offset),
-               list(I0 = 10, beta = 0.3, gamma = 0.1, step = offset))
-
-  ## The usual version, with normal data:
+  ## The usual version
   p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index)
   set.seed(1)
   ll1 <- p1$run(pars)
 
-  ## Then tune the start date to get the same effect:
-  initial <- function(info, n_particles, pars) {
-    list(state = c(1000, pars$I0, 0, 0, 0),
-         step = pars$step)
-  }
-
   ## Tuning the start date
+  data_raw <- dat$data_raw
+  data_raw$day <- data_raw$day + 100
+  data <- particle_filter_data(data_raw, time = "day", 4, 100,
+                               population = "populations")
+
   p2 <- particle_filter$new(data, dat$model, n_particles, dat$compare,
-                            index = dat$index, initial = initial)
+                            index = dat$index)
   set.seed(1)
   ll2 <- p2$run(pars)
-
   expect_identical(ll1, ll2)
 })
 
@@ -1241,7 +1148,7 @@ test_that("nested error on unequal state", {
                list(I0 = 10, beta = 0.3, gamma = 0.1))
 
   initial <- function(info, n_particles, pars) {
-    list(state = c(1000, pars$I0, 0, 0, 0))
+    c(1000, pars$I0, 0, 0, 0)
   }
 
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
@@ -1258,7 +1165,7 @@ test_that("nested silent on initial w. state w/o step", {
                list(beta = 0.3, gamma = 0.1))
 
   initial <- function(info, n_particles, pars) {
-    list(state = c(1000, 0, 0, 0, 0))
+    c(1000, 0, 0, 0, 0)
   }
 
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
