@@ -322,3 +322,30 @@ test_that("Cannot use previous initial condition approach", {
                                   index = dat$index, initial = initial)
   expect_error(p$run(), "Setting 'step' from initial no longer supported")
 })
+
+
+test_that("Can partially run a deterministic particle and resume", {
+  dat <- example_sir()
+  pars <- dat$pars$model(dat$pars$initial())
+
+  set.seed(1)
+  p1 <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
+  ll1 <- p1$run(pars, save_history = TRUE)
+
+  set.seed(1)
+  p2 <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
+  s2 <- p2$run_begin(list(pars), save_history = TRUE)
+  ll2 <- s2$run()
+  expect_identical(ll2, ll1)
+  expect_identical(s2$history$value, p1$history())
+
+  set.seed(1)
+  p3 <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
+  s3 <- p3$run_begin(list(pars), save_history = TRUE)
+  ll3_1 <- s3$step(50)
+  ll3_2 <- s3$step(100)
+  ## To get these to be identical we must loop over the data in the
+  ## other order (by pars-within-time, then time)
+  expect_equal(ll3_2, ll1, tolerance = 1e-11)
+  expect_equal(s3$history$value, p1$history(), tolerance = 1e-11)
+})

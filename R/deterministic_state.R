@@ -121,7 +121,7 @@ particle_deterministic_state <- R6::R6Class(
 
       ## Variable (see also history)
       self$model <- model
-      self$log_likelihood <- 0.0
+      self$log_likelihood <- rep(0.0, length(pars))
     },
 
     ##' @description Run the particle filter to the end of the data. This is
@@ -195,7 +195,7 @@ particle_deterministic_state <- R6::R6Class(
       ## of these.  We can immediately run this over all parameter
       ## sets at once if we do not have parameters involved in the
       ## observation function too.
-      log_likelihood <- vnapply(
+      log_likelihood <- self$log_likelihood + vnapply(
         seq_along(private$pars), deterministic_likelihood,
         y_compare, private$compare, private$pars,
         private$data_split[idx])

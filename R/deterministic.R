@@ -196,7 +196,7 @@ particle_deterministic <- R6::R6Class(
     ##' @return An object of class `particle_deterministic_state`, with methods
     ##' `step` and `end`. This interface is still subject to change.
     run_begin = function(pars, save_history = FALSE, save_restart = NULL,
-                         min_log_likelihood = NULL) {
+                         min_log_likelihood = -Inf) {
       assert_scalar_logical(save_history)
       if (min_log_likelihood > -Inf) {
         stop("'min_log_likelihood' cannot be used with particle_deterministic")
