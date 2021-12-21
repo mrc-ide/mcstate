@@ -13,7 +13,6 @@ particle_deterministic_state <- R6::R6Class(
     data = NULL,
     data_split = NULL,
     steps = NULL,
-    n_steps = NULL,
     n_threads = NULL,
     initial = NULL,
     index = NULL,
@@ -110,7 +109,6 @@ particle_deterministic_state <- R6::R6Class(
       private$data <- data
       private$data_split <- data_split
       private$steps <- steps
-      private$n_steps <- nrow(steps)
       private$n_threads <- n_threads
       private$initial <- initial
       private$index <- index
@@ -128,25 +126,12 @@ particle_deterministic_state <- R6::R6Class(
     ##' a convenience function around `$step()` which provides the correct
     ##' value of `step_index`
     run = function() {
-      self$step(private$n_steps)
+      self$step(nrow(private$steps))
     },
 
     step = function(step_index) {
-      n_steps <- private$n_steps
       curr <- self$current_step_index
-      ## TODO: Share with particle filter state, as it is identical
-      if (curr >= n_steps) {
-        stop("Particle deterministic has reached the end of the data")
-      }
-      if (step_index > n_steps) {
-        stop(sprintf("step_index %d is beyond the length of the data (max %d)",
-                     step_index, n_steps))
-      }
-      if (step_index <= curr) {
-        stop(sprintf(
-          "Particle filter has already run step index %d (to model step %d)",
-          step_index, private$steps[step_index, 2]))
-      }
+      check_step(curr, step_index, private$steps)
 
       model <- self$model
       index <- private$index
