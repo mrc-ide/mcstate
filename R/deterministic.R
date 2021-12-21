@@ -9,6 +9,22 @@ particle_deterministic <- R6::R6Class(
   "particle_deterministic",
   cloneable = FALSE,
 
+  private = list(
+    generator = NULL,
+    data = NULL,
+    data_split = NULL,
+    steps = NULL,
+    n_steps = NULL,
+    n_threads = NULL,
+    initial = NULL,
+    index = NULL,
+    compare = NULL,
+    last_model = NULL,
+    last_history = NULL,
+    last_state = NULL,
+    last_restart_state = NULL
+  ),
+
   public = list(
     ##' @field model The dust model generator being simulated (cannot be
     ##' re-bound)
@@ -159,19 +175,16 @@ particle_deterministic <- R6::R6Class(
     ##' (`-Inf` if the model is impossible), one per parameter set
     run_many = function(pars, save_history = FALSE, save_restart = NULL,
                         min_log_likelihood = -Inf) {
-
-      ## This becomes "private$run_simple()" and we'll switch based on
-      ## the multistage parameters once we work out how run_many will
-      ## work for them, of course.
-
-      obj <- self$run_begin(pars, save_history, save_restart,
-                            min_log_likelihood = min_log_likelihood)
-      obj$run()
-      private$last_history <- obj$history
-      private$last_model <- obj$model
-      private$last_state <- function(index) obj$model$state(index)
-      private$last_restart_state <- obj$restart_state
-      obj$log_likelihood
+      is_multistage <- vlapply(pars, inherits, "multistage_parameters")
+      if (all(is_multistage)) {
+        filter_run_multistage(self, private, pars, save_history, save_restart,
+                              min_log_likelihood)
+      } else if (!any(is_multistage)) {
+        filter_run_simple(self, private, pars, save_history, save_restart,
+                          min_log_likelihood)
+      } else {
+        stop("'pars' must be either all multistage or all ")
+      }
     },
 
     ##' @description Begin a deterministic run. This is part of the
@@ -324,19 +337,4 @@ particle_deterministic <- R6::R6Class(
       }
       invisible(prev)
     }
-  ),
-  private = list(
-    generator = NULL,
-    data = NULL,
-    data_split = NULL,
-    steps = NULL,
-    n_steps = NULL,
-    n_threads = NULL,
-    initial = NULL,
-    index = NULL,
-    compare = NULL,
-    last_model = NULL,
-    last_history = NULL,
-    last_state = NULL,
-    last_restart_state = NULL
   ))
