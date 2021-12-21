@@ -65,11 +65,13 @@ particle_deterministic_state <- R6::R6Class(
       }
 
       if (!is.null(initial)) {
-        initial_data <- deterministic_initial(pars, private$initial,
-                                              model$info())
-        steps <- particle_steps(steps, initial_data$step)
-        model$update_state(state = initial_data$state,
-                           step = initial_data$step)
+        initial_data <- Map(function(p, i) initial(i, 1L, p),
+                            pars, model$info())
+        if (any(vlapply(initial_data, is.list))) {
+          stop("Setting 'step' from initial no longer supported")
+        }
+        state <- vapply(initial_data, identity, initial_data[[1]])
+        model$update_state(state = state)
       }
 
       if (is.null(index)) {
