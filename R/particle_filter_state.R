@@ -128,6 +128,8 @@ particle_filter_state <- R6::R6Class(
       private$initial <- initial
       private$index <- index
       private$compare <- compare
+      private$gpu <- !is.null(gpu_config)
+      private$min_log_likelihood <- min_log_likelihood
       private$save_restart_step <- save_restart_step
       private$save_restart <- save_restart
 
@@ -187,6 +189,7 @@ particle_filter_state <- R6::R6Class(
         stop("Can't use low-level step with compiled particle filter (yet)")
       }
 
+      steps <- private$steps
       data_split <- private$data_split
       pars <- private$pars
 
