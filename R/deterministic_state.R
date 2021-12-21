@@ -83,6 +83,27 @@ particle_deterministic_state <- R6::R6Class(
         model$set_index(index$index)
       }
 
+      if (save_history) {
+        len <- nrow(steps) + 1L
+        state <- model$state(index$predict)
+        history_value <- array(NA_real_, c(dim(state), len))
+        history_value[, , 1] <- state
+        rownames(history_value) <- names(index$predict)
+        self$history <- list(
+          value = history_value,
+          index = index$predict)
+      }
+
+      save_restart_step <- check_save_restart(save_restart, data)
+      if (length(save_restart_step) > 0) {
+        self$restart_state <- array(NA_real_,
+                                    c(model$n_state(),
+                                      n_particles,
+                                      length(save_restart)))
+      } else {
+        self$restart_state <- NULL
+      }
+
       ## Constants
       private$generator <- generator
       private$pars <- pars
@@ -95,7 +116,7 @@ particle_deterministic_state <- R6::R6Class(
       private$index <- index
       private$compare <- compare
       private$save_history <- save_history
-      ## private$save_restart_step <- save_restart_step
+      private$save_restart_step <- save_restart_step
       private$save_restart <- save_restart
 
       ## Variable (see also history)
@@ -111,10 +132,9 @@ particle_deterministic_state <- R6::R6Class(
     },
 
     step = function(step_index) {
-      steps <- private$steps
       n_steps <- private$n_steps
       curr <- self$current_step_index
-      ## TODO: Share with particle filter state
+      ## TODO: Share with particle filter state, as it is identical
       if (curr >= n_steps) {
         stop("Particle deterministic has reached the end of the data")
       }
@@ -125,7 +145,7 @@ particle_deterministic_state <- R6::R6Class(
       if (step_index <= curr) {
         stop(sprintf(
           "Particle filter has already run step index %d (to model step %d)",
-          step_index, steps[step_index, 2]))
+          step_index, private$steps[step_index, 2]))
       }
 
       model <- self$model
@@ -134,31 +154,27 @@ particle_deterministic_state <- R6::R6Class(
       save_history <- private$save_history
 
       restart_state <- self$restart_state
-      save_restart_step <- private$save_restart_step
       save_restart <- !is.null(restart_state)
 
+      ## Unlike the normal particle filter, we do this all in one shot
+      idx <- (curr + 1):step_index
+      step_end <- private$steps[idx, 2]
+
       if (save_restart) {
-        stop("fixme")
-        ## steps_split <- deterministic_steps_restart(steps, save_restart,
-        ##                                            private$data)
-        ## restart_state <- vector("list", length(save_restart))
-        ## y <- vector("list", length(steps_split))
-        ## for (i in seq_along(steps_split)) {
-        ##   y[[i]] <- model$simulate(steps_split[[i]])
-        ##   if (i <= length(save_restart)) {
-        ##     s <- model$state()
-        ##     restart_state[[i]] <- array_reshape(s, 1, c(nrow(s), 1))
-        ##   }
-        ## }
-        ## y <- array_bind(arrays = y)
-        ## restart_state <- array_bind(arrays = restart_state)
-      } else {
-        if (curr == 0) {
-          s <- c(steps[[1]], steps[seq_len(step_index), 2])
-        } else {
-          s <- steps[curr:step_index, 2]
+        phases <- deterministic_steps_restart(
+          private$save_restart_step, step_end)
+        y <- vector("list", length(phases))
+        for (i in seq_along(phases)) {
+          phase <- phases[[i]]
+          y[[i]] <- model$simulate(phase$step_end)
+          if (!is.na(phase$restart)) {
+            restart_state[, , phase$restart] <- model$state()
+          }
         }
-        y <- model$simulate(s)
+        self$restart_state <- restart_state
+        y <- array_bind(arrays = y)
+      } else {
+        y <- model$simulate(step_end)
         restart_state <- NULL
       }
 
@@ -168,22 +184,28 @@ particle_deterministic_state <- R6::R6Class(
         y_compare <- y[index$run, , , drop = FALSE]
         rownames(y_compare) <- names(index$run)
       }
+
+      ## The likelihood is a loop over both:
+      ##
+      ## 1. the different parameter sets (because these might affect
+      ##    the observation function)
+      ## 2. the different timesteps which have different data points
+      ##
+      ## A clever function might be able to vecorise away one or both
+      ## of these.  We can immediately run this over all parameter
+      ## sets at once if we do not have parameters involved in the
+      ## observation function too.
       log_likelihood <- vnapply(
         seq_along(private$pars), deterministic_likelihood,
-        y_compare, private$compare, private$pars, private$data_split)
-
-      if (save_restart) {
-        stop("fixme")
-      }
+        y_compare, private$compare, private$pars,
+        private$data_split[idx])
 
       if (save_history) {
-        if (is.null(index)) {
-          y_history <- y
-        } else {
-          y_history <- y[index$state, , , drop = FALSE]
-          rownames(y_history) <- names(index$state)
+        if (!is.null(index)) {
+          y <- y[index$state, , , drop = FALSE]
         }
-        self$history <- list(value = y_history, index = index$predict)
+        ## We need to offset by 1 to allow for the initial conditions
+        self$history$value[, , idx + 1L] <- y
       } else {
         self$history <- NULL
       }
@@ -198,3 +220,44 @@ particle_deterministic_state <- R6::R6Class(
       stop("Writeme")
     }
   ))
+
+
+deterministic_likelihood <- function(idx, y, compare, pars, data) {
+  ll <- numeric(length(data))
+  for (i in seq_along(ll)) {
+    y_i <- array_drop(y[, idx, i, drop = FALSE], 3L)
+    ll[i] <- compare(y_i, data[[i]], pars[[idx]])
+  }
+  sum(ll)
+}
+
+
+deterministic_steps_restart <- function(save_restart_step, step_end) {
+  i <- match(save_restart_step, step_end)
+  j <- which(!is.na(i))
+
+  ## No restart in this block, do the easy exit:
+  if (length(j) == 0L) {
+    return(list(step_end = step_end, restart = NA_integer_))
+  }
+
+  i <- i[j]
+  if (length(i) == 0 || last(i) < length(step_end)) { # first part now dead?
+    i <- c(i, length(step_end))
+    j <- c(j, NA_integer_)
+  }
+
+  ## This feels like it could be done more efficiently this is at
+  ## least fairly compact:
+  step_end <- unname(split(step_end, rep(seq_along(i), diff(c(0, i)))))
+  Map(list, step_end = step_end, restart = j)
+}
+
+
+deterministic_index <- function(index) {
+  index_all <- union(index$run, index$state)
+  list(index = index_all,
+       run = set_names(match(index$run, index_all), names(index$run)),
+       state = set_names(match(index$state, index_all), names(index$state)),
+       predict = index$state)
+}

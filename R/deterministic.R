@@ -340,37 +340,3 @@ particle_deterministic <- R6::R6Class(
     last_state = NULL,
     last_restart_state = NULL
   ))
-
-
-deterministic_index <- function(index) {
-  index_all <- union(index$run, index$state)
-  list(index = index_all,
-       run = set_names(match(index$run, index_all), names(index$run)),
-       state = set_names(match(index$state, index_all), names(index$state)),
-       predict = index$state)
-}
-
-
-deterministic_likelihood <- function(idx, y, compare, pars, data) {
-  n_steps <- length(data)
-  ll <- numeric(n_steps)
-  for (i in seq_len(n_steps)) {
-    y_i <- array_drop(y[, idx, i + 1L, drop = FALSE], 3L)
-    ll[i] <- compare(y_i, data[[i]], pars[[idx]])
-  }
-  sum(ll)
-}
-
-
-
-deterministic_steps_restart <- function(steps, save_restart, data) {
-  save_restart_step <- check_save_restart(save_restart, data)
-  i <- match(save_restart_step, steps[, 2])
-  if (last(i) < nrow(steps)) {
-    i <- c(i, nrow(steps))
-  }
-  j <- rep(seq_along(i), diff(c(0, i)))
-  steps_split <- unname(split(steps[, 2], j))
-  steps_split[[1]] <- c(steps[[1]], steps_split[[1]])
-  steps_split
-}
