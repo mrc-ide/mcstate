@@ -202,7 +202,26 @@ particle_deterministic_state <- R6::R6Class(
     },
 
     fork_multistage = function(pars, transform_state) {
-      stop("Writeme")
+      model <- NULL
+      save_history <- !is.null(self$history)
+      initial <- NULL
+
+      if (is.null(pars)) {
+        pars <- self$model$pars()
+      }
+      ret <- particle_deterministic_state$new(
+        pars, private$generator, model, private$data, private$data_split,
+        private$steps, private$n_threads, initial, private$index,
+        private$compare, save_history, private$save_restart)
+
+      state <- transform_state(self$model$state(), self$model, ret$model)
+      step <- self$model$step()
+
+      ret$model$update_state(state = state, step = step)
+      ret$current_step_index <- self$current_step_index
+      ret$log_likelihood <- self$log_likelihood
+
+      ret
     }
   ))
 

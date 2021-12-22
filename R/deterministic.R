@@ -349,6 +349,7 @@ multistage_pars_invert <- function(pars) {
     stop("Incompatible length pars")
   }
 
+  ## Loop over phases
   for (i in seq_along(ret)) {
     if (i > 1 && length(pars) > 1) {
       err_start <- vnapply(pars[-1], function(x) x[[i]]$start) != ret$start
@@ -361,7 +362,15 @@ multistage_pars_invert <- function(pars) {
         stop(sprintf("Incompatible 'transform_state' time at phase %d", i))
       }
     }
-    ret[[i]]$pars <- lapply(pars, function(x) x[[i]]$pars)
+    if (is.null(ret[[i]]$pars)) {
+      ## Not sure that this is really allowed at phase 1 at all...
+      err_pars <- !vlapply(pars[-1], function(x) is.null(x[[i]]$pars))
+      if (any(err_pars)) {
+        stop(sprintf("Incompatible 'pars' time at phase %d", i))
+      }
+    } else {
+      ret[[i]]$pars <- lapply(pars, function(x) x[[i]]$pars)
+    }
   }
 
   ret
