@@ -169,8 +169,13 @@ join_histories <- function(history, stages) {
   ## TODO: The only use of history_index later is for names. We should
   ## refactor that to make it history_names
 
+  ## This is not present for deterministic models!
+  has_order <- !is.null(history[[1]]$order)
+
   value <- array(NA_real_, c(length(nms), dim(history[[1]]$value)[-1]))
-  order <- array(NA_integer_, dim(history[[1]]$order))
+  if (has_order) {
+    order <- array(NA_integer_, dim(history[[1]]$order))
+  }
   index <- rep(NA_integer_, length(nms))
   names(index) <- nms
 
@@ -181,10 +186,17 @@ join_histories <- function(history, stages) {
     j <- match(names(history[[i]]$index), nms)
     k <- seq(start[[i]], end[[i]])
     value[j, , k] <- history[[i]]$value[, , k]
-    order[, k] <- history[[i]]$order[, k]
+    if (has_order) {
+      order[, k] <- history[[i]]$order[, k]
+    }
   }
 
-  list(value = value, order = order, index = index)
+  if (has_order) {
+    list(value = value, order = order, index = index)
+  } else {
+    rownames(value) <- names(index)
+    list(value = value, index = index)
+  }
 }
 
 

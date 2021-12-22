@@ -177,6 +177,7 @@ particle_deterministic <- R6::R6Class(
                         min_log_likelihood = -Inf) {
       is_multistage <- vlapply(pars, inherits, "multistage_parameters")
       if (all(is_multistage)) {
+        pars <- multistage_pars_invert(pars)
         filter_run_multistage(self, private, pars, save_history, save_restart,
                               min_log_likelihood)
       } else if (!any(is_multistage)) {
@@ -338,3 +339,30 @@ particle_deterministic <- R6::R6Class(
       invisible(prev)
     }
   ))
+
+
+## Take a list of multistage parameters and convert into a multistage
+## parameters with each pars element being a list.
+multistage_pars_invert <- function(pars) {
+  ret <- pars[[1L]]
+  if (length(pars) > 1 && any(lengths(pars) != length(ret))) {
+    stop("Incompatible length pars")
+  }
+
+  for (i in seq_along(ret)) {
+    if (i > 1 && length(pars) > 1) {
+      err_start <- vnapply(pars[-1], function(x) x[[i]]$start) != ret$start
+      if (any(err_start)) {
+        stop(sprintf("Incompatible 'start' time at phase %d", i))
+      }
+      err_transform <- vlapply(pars[-1], function(x)
+        identical(x[[i]]$transform_state, ret$transform_state))
+      if (any(err_transform)) {
+        stop(sprintf("Incompatible 'transform_state' time at phase %d", i))
+      }
+    }
+    ret[[i]]$pars <- lapply(pars, function(x) x[[i]]$pars)
+  }
+
+  ret
+}
