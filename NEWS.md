@@ -1,3 +1,8 @@
+# mcstate 0.7.3
+
+* Allow multistage parameters to work with the "deterministic" particle
+* New `mcstate::particle_deterministic_state` object for advanced use of the deterministic particle
+
 # mcstate 0.7.2
 
 * Multistage particle filters now cope with running data covering a subset of their stages
