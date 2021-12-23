@@ -16,6 +16,7 @@ particle_deterministic_state <- R6::R6Class(
     n_threads = NULL,
     initial = NULL,
     index = NULL,
+    index_data = NULL,
     compare = NULL,
     save_history = NULL,
     save_restart_step = NULL,
@@ -74,23 +75,23 @@ particle_deterministic_state <- R6::R6Class(
       }
 
       if (is.null(index)) {
-        index <- NULL
+        index_data <- NULL
       } else {
         ## NOTE: this assumes that all parameterisation result in the
         ## same shape, which is assumed generally.
-        index <- deterministic_index(index(model$info()[[1L]]))
-        model$set_index(index$index)
+        index_data <- deterministic_index(index(model$info()[[1L]]))
+        model$set_index(index_data$index)
       }
 
       if (save_history) {
         len <- nrow(steps) + 1L
-        state <- model$state(index$predict)
+        state <- model$state(index_data$predict)
         history_value <- array(NA_real_, c(dim(state), len))
         history_value[, , 1] <- state
-        rownames(history_value) <- names(index$predict)
+        rownames(history_value) <- names(index_data$predict)
         self$history <- list(
           value = history_value,
-          index = index$predict)
+          index = index_data$predict)
       }
 
       save_restart_step <- check_save_restart(save_restart, data)
@@ -112,6 +113,7 @@ particle_deterministic_state <- R6::R6Class(
       private$n_threads <- n_threads
       private$initial <- initial
       private$index <- index
+      private$index_data <- index_data
       private$compare <- compare
       private$save_history <- save_history
       private$save_restart_step <- save_restart_step
@@ -134,7 +136,7 @@ particle_deterministic_state <- R6::R6Class(
       check_step(curr, step_index, private$steps)
 
       model <- self$model
-      index <- private$index
+      index <- private$index_data
 
       save_history <- private$save_history
 

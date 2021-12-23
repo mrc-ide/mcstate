@@ -455,7 +455,7 @@ example_variable <- function() {
     if (n_new > n_old) {
       y <- rbind(y, matrix(0, n_new - n_old, ncol(y)))
     } else {
-      y <- y[seq_len(n_new), ]
+      y <- y[seq_len(n_new), , drop = FALSE]
     }
     y
   }

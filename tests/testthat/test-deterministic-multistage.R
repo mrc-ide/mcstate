@@ -61,3 +61,77 @@ test_that("An effectless multistage filter is identical to single stage", {
   expect_identical(filter1$history(), filter2$history())
   expect_identical(filter1$restart_state(), filter2$restart_state())
 })
+
+
+test_that("multistage, dimension changing, model agrees with single stage", {
+  dat <- example_variable()
+  new_filter <- function() {
+    set.seed(1)
+    particle_deterministic$new(dat$data, dat$model, compare = dat$compare,
+                               index = dat$index)
+  }
+  transform_state <- function(y, model_old, model_new) {
+    n_old <- model_old$pars()[[1]]$len
+    n_new <- model_new$pars()[[1]]$len
+    if (n_new > n_old) {
+      y <- rbind(y, matrix(0, n_new - n_old, ncol(y)))
+    } else {
+      y <- y[seq_len(n_new), , drop = FALSE]
+    }
+    y
+  }
+
+  ## First show that the likelihood and associated history does not vary
+  ## with the number of states for the simple filter; we need this
+  ## property to hold to do the next tests.
+  filter_10 <- new_filter()
+  ll_10 <- filter_10$run(list(len = 10), save_history = TRUE)
+  h_10 <- filter_10$history()
+
+  filter_15 <- new_filter()
+  ll_15 <- filter_15$run(list(len = 15), save_history = TRUE)
+  h_15 <- filter_15$history()
+
+  filter_20 <- new_filter()
+  ll_20 <- filter_20$run(list(len = 20), save_history = TRUE)
+  h_20 <- filter_20$history()
+
+  expect_identical(ll_10, ll_20)
+  expect_identical(ll_15, ll_20)
+  expect_identical(h_10, h_20[1:5, , , drop = FALSE])
+  expect_identical(h_15, h_20[1:8, , , drop = FALSE])
+
+  ## Now, we can set up some runs where we fiddle with the size of the
+  ## model over time, and we should see that it matches the histories
+  ## above:
+  pars_base <- list(len = 10)
+  epochs <- list(
+    multistage_epoch(10,
+                 pars = list(len = 20),
+                 transform_state = transform_state),
+    multistage_epoch(25,
+                 pars = list(len = 15),
+                 transform_state = transform_state))
+  pars <- multistage_parameters(pars_base, epochs)
+
+  ## Looks like I have a slight issue with creating the new model
+  ## state, something to fix up next, but probably not insurmountable.
+
+  ## Most of the issues here are that we set this up to work for any
+  ## number of parameters at once, and that is just not working well
+  ## here.
+  filter <- new_filter()
+  ll_staged <- filter$run(pars, save_history = TRUE)
+  h_staged <- filter$history()
+  expect_equal(ll_staged, ll_20, tolerance = 1e-10)
+
+  ## Common states are easy to check:
+  expect_equal(h_staged[1:5, , ], h_20[1:5, , ])
+
+  ## The full set requires a bit more work:
+  h_cmp <- h_20
+  h_cmp[6:10, ,  1:11] <- NA
+  h_cmp[9:10, , 27:51] <- NA
+  expect_identical(is.na(h_staged), is.na(h_cmp))
+  expect_identical(h_staged, h_cmp)
+})
