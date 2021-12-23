@@ -244,7 +244,7 @@ deterministic_steps_restart <- function(save_restart_step, step_end) {
 
   ## No restart in this block, do the easy exit:
   if (length(j) == 0L) {
-    return(list(step_end = step_end, restart = NA_integer_))
+    return(list(list(step_end = step_end, restart = NA_integer_)))
   }
 
   i <- i[j]

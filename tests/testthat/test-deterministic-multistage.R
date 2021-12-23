@@ -70,16 +70,6 @@ test_that("multistage, dimension changing, model agrees with single stage", {
     particle_deterministic$new(dat$data, dat$model, compare = dat$compare,
                                index = dat$index)
   }
-  transform_state <- function(y, model_old, model_new) {
-    n_old <- model_old$pars()[[1]]$len
-    n_new <- model_new$pars()[[1]]$len
-    if (n_new > n_old) {
-      y <- rbind(y, matrix(0, n_new - n_old, ncol(y)))
-    } else {
-      y <- y[seq_len(n_new), , drop = FALSE]
-    }
-    y
-  }
 
   ## First show that the likelihood and associated history does not vary
   ## with the number of states for the simple filter; we need this
@@ -108,10 +98,10 @@ test_that("multistage, dimension changing, model agrees with single stage", {
   epochs <- list(
     multistage_epoch(10,
                  pars = list(len = 20),
-                 transform_state = transform_state),
+                 transform_state = dat$transform_state_deterministic),
     multistage_epoch(25,
                  pars = list(len = 15),
-                 transform_state = transform_state))
+                 transform_state = dat$transform_state_deterministic))
   pars <- multistage_parameters(pars_base, epochs)
 
   ## Looks like I have a slight issue with creating the new model
@@ -134,4 +124,43 @@ test_that("multistage, dimension changing, model agrees with single stage", {
   h_cmp[9:10, , 27:51] <- NA
   expect_identical(is.na(h_staged), is.na(h_cmp))
   expect_identical(h_staged, h_cmp)
+})
+
+
+test_that("Can't save restart when size changes", {
+  dat <- example_variable()
+
+  ## There's going to be some work here to update this so that it's
+  ## easy to work with.  Possibly we just set a blank epoch at the
+  ## beginning - that's not terrible and is at least symmetrical.
+  ##
+  ## There's some pretty major work in pmcmc to get this sorted though
+  ## as we need to generate all of this out of the mcmc parameters,
+  ## and that's its own challenge.
+  pars_base <- list(len = 10, sd = 1)
+  epochs <- list(
+    multistage_epoch(10,
+                 pars = list(len = 20, sd = 1),
+                 transform_state = dat$transform_state_deterministic),
+    multistage_epoch(25,
+                 pars = list(len = 5, sd = 1),
+                 transform_state = dat$transform_state_deterministic))
+  pars <- multistage_parameters(pars_base, epochs)
+
+  filter <- particle_deterministic$new(dat$data, dat$model, dat$compare,
+                                       index = dat$index)
+
+  ## Fine getting restart from the last stage
+  filter$run(pars, save_restart = c(30, 40, 50))
+  expect_equal(dim(filter$restart_state()), c(5, 1, 3))
+
+  ## Or some other stage
+  filter$run(pars, save_restart = c(11, 15, 20))
+  expect_equal(dim(filter$restart_state()), c(20, 1, 3))
+
+  ## But can't do anything here:
+  err <- expect_error(
+    filter$run(pars, save_restart = c(5, 15, 30)),
+    "Restart state varies in size over the simulation")
+  expect_match(err$message, "2: 20 rows", all = FALSE)
 })
