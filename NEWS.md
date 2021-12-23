@@ -2,6 +2,7 @@
 
 * Allow multistage parameters to work with the "deterministic" particle
 * New `mcstate::particle_deterministic_state` object for advanced use of the deterministic particle
+* Deterministic particle loses the `run_many` method
 
 # mcstate 0.7.2
 

@@ -461,18 +461,6 @@ example_variable <- function() {
   }
 
 
-  transform_state_deterministic <- function(y, model_old, model_new) {
-    n_old <- model_old$pars()[[1]]$len
-    n_new <- model_new$pars()[[1]]$len
-    if (n_new > n_old) {
-      y <- rbind(y, matrix(0, n_new - n_old, ncol(y)))
-    } else {
-      y <- y[seq_len(n_new), , drop = FALSE]
-    }
-    y
-  }
-
   list(model = model, data = data, compare = compare, index = index,
-       transform_state = transform_state,
-       transform_state_deterministic = transform_state_deterministic)
+       transform_state = transform_state)
 }

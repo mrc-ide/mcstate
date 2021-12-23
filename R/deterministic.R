@@ -150,32 +150,6 @@ particle_deterministic <- R6::R6Class(
     ##' (`-Inf` if the model is impossible)
     run = function(pars = list(), save_history = FALSE, save_restart = NULL,
                    min_log_likelihood = -Inf) {
-      self$run_many(list(pars), save_history, save_restart, min_log_likelihood)
-    },
-
-    ##' @description Run the deterministic particle filter on several
-    ##' parameter sets simultaneously. This acts as a wrapper around
-    ##' `$run()`, though runs will be in parallel if the object was created
-    ##' with `n_threads` greater than 1.
-    ##'
-    ##' @param pars A list of parameter sets, each element of which would
-    ##'  be suitable to pass to `$run()`
-    ##'
-    ##' @param save_history Logical, indicating if the history of all
-    ##' particles should be saved.
-    ##'
-    ##' @param save_restart An integer vector of time points to save
-    ##' restart infomation for. Not currently supported.
-    ##'
-    ##' @param min_log_likelihood Not currently supported, exists to match
-    ##'   the inteface with [mcstate::particle_filter]. Providing a value
-    ##'   larger than -Inf will cause an error.
-    ##'
-    ##' @return A numeric vector of values representing the log-likelihood
-    ##' (`-Inf` if the model is impossible), one per parameter set
-    run_many = function(pars, save_history = FALSE, save_restart = NULL,
-                        min_log_likelihood = -Inf) {
-      pars <- particle_deterministic_pars(pars)
       if (inherits(pars, "multistage_parameters")) {
         filter_run_multistage(self, private, pars, save_history, save_restart,
                               min_log_likelihood)
@@ -187,7 +161,7 @@ particle_deterministic <- R6::R6Class(
 
     ##' @description Begin a deterministic run. This is part of the
     ##' "advanced" interface; typically you will want to use `$run()`
-    ##' or `$run_many()` which provide a user-facing wrapper around
+    ##' which provides a user-facing wrapper around
     ##' this function. Once created with `$run_begin()`, you should take
     ##' as many steps as needed with `$step()`.
     ##'
@@ -336,53 +310,3 @@ particle_deterministic <- R6::R6Class(
       invisible(prev)
     }
   ))
-
-
-particle_deterministic_pars <- function(pars) {
-  if (length(pars) == 0L) {
-    stop("At least one parameter set required")
-  }
-  is_multistage <- vlapply(pars, inherits, "multistage_parameters")
-  if (!any(is_multistage)) {
-    return(pars)
-  }
-  if (!all(is_multistage)) {
-    stop("'pars' must be either all multistage or all non-multistage")
-  }
-
-  ## Take a list of multistage parameters and convert into a multistage
-  ## parameters with each pars element being a list.
-  ret <- pars[[1L]]
-  if (length(pars) > 1 && any(lengths(pars) != length(ret))) {
-    stop(sprintf(
-      "Incompatible numbers of stages in pars: found %s stages",
-      paste(sort(unique(lengths(pars))), collapse = ", ")))
-  }
-
-  ## Loop over phases
-  for (i in seq_along(ret)) {
-    if (i > 1 && length(pars) > 1) {
-      err_start <- vlapply(pars[-1], function(x)
-        x[[i]]$start != ret[[i]]$start)
-      if (any(err_start)) {
-        stop(sprintf("Incompatible 'start' time at phase %d", i))
-      }
-      err_transform <- vlapply(pars[-1], function(x)
-        !identical(x[[i]]$transform_state, ret[[i]]$transform_state))
-      if (any(err_transform)) {
-        stop(sprintf("Incompatible 'transform_state' at phase %d", i))
-      }
-    }
-    p <- lapply(pars, function(x) x[[i]]$pars)
-    is_null <- vlapply(p, is.null)
-    err_pars <- is_null[-1] != is_null[[1]]
-    if (any(err_pars)) {
-      stop(sprintf("Incompatible 'pars' at phase %d", i))
-    }
-    if (!all(is_null)) {
-      ret[[i]]$pars <- p
-    }
-  }
-
-  ret
-}

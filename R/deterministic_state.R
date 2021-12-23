@@ -73,27 +73,21 @@ particle_deterministic_state <- R6::R6Class(
     initialize = function(pars, generator, model, data, data_split, steps,
                           n_threads, initial, index, compare,
                           save_history, save_restart) {
-      n_particles <- length(pars)
-      resize <- !is.null(model) && n_particles != model$n_particles()
-      if (is.null(model) || resize) {
+      n_particles <- 1L
+      if (is.null(model)) {
         model <- generator$new(pars = pars, step = steps[[1]],
-                               n_particles = NULL,
-                               n_threads = n_threads,
-                               seed = NULL,
-                               deterministic = TRUE,
-                               pars_multi = TRUE)
+                               n_particles = n_particles, n_threads = n_threads,
+                               seed = NULL, deterministic = TRUE)
       } else {
         model$update_state(pars = pars, step = steps[[1]])
       }
 
       if (!is.null(initial)) {
-        initial_data <- Map(function(p, i) initial(i, 1L, p),
-                            pars, model$info())
-        if (any(vlapply(initial_data, is.list))) {
+        initial_data <- initial(model$info(), n_particles, pars)
+        if (is.list(initial_data)) {
           stop("Setting 'step' from initial no longer supported")
         }
-        state <- vapply(initial_data, identity, initial_data[[1]])
-        model$update_state(state = state)
+        model$update_state(state = initial_data)
       }
 
       if (is.null(index)) {
@@ -101,7 +95,7 @@ particle_deterministic_state <- R6::R6Class(
       } else {
         ## NOTE: this assumes that all parameterisation result in the
         ## same shape, which is assumed generally.
-        index_data <- deterministic_index(index(model$info()[[1L]]))
+        index_data <- deterministic_index(index(model$info()))
         model$set_index(index_data$index)
       }
 
@@ -143,7 +137,7 @@ particle_deterministic_state <- R6::R6Class(
 
       ## Variable (see also history)
       self$model <- model
-      self$log_likelihood <- rep(0.0, length(pars))
+      self$log_likelihood <- 0.0
     },
 
     ##' @description Run the deterministic particle to the end of the data.
@@ -214,10 +208,9 @@ particle_deterministic_state <- R6::R6Class(
       ## of these.  We can immediately run this over all parameter
       ## sets at once if we do not have parameters involved in the
       ## observation function too.
-      log_likelihood <- self$log_likelihood + vnapply(
-        seq_along(private$pars), deterministic_likelihood,
-        y_compare, private$compare, private$pars,
-        private$data_split[idx])
+      log_likelihood <- self$log_likelihood +
+        deterministic_likelihood(y_compare, private$compare,
+                                 private$pars, private$data_split[idx])
 
       if (save_history) {
         if (!is.null(index)) {
@@ -269,11 +262,11 @@ particle_deterministic_state <- R6::R6Class(
   ))
 
 
-deterministic_likelihood <- function(idx, y, compare, pars, data) {
+deterministic_likelihood <- function(y, compare, pars, data) {
   ll <- numeric(length(data))
   for (i in seq_along(ll)) {
-    y_i <- array_drop(y[, idx, i, drop = FALSE], 3L)
-    ll[i] <- compare(y_i, data[[i]], pars[[idx]])
+    y_i <- array_drop(y[, 1L, i, drop = FALSE], 3L)
+    ll[i] <- compare(y_i, data[[i]], pars)
   }
   sum(ll)
 }
