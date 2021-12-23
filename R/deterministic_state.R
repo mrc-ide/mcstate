@@ -1,5 +1,14 @@
-## It is quite possible that we can merge this with
-## particle_filter_state but I am also not sure that will be helpful.
+##' @title Deterministic particle state
+##'
+##' @description Deterministic particle internal state. This object is
+##'   not ordinarily constructed directly by users, but via the
+##'   `$run_begin` method to [mcstate::particle_deterministic]. It
+##'   provides an advanced interface to the deterministic particle
+##'   that allows partially running over part of the time trajectory.
+##'
+##' This state object has a number of public fields that you can read
+##'   but must not write (they are not read-only so you *could* write
+##'   them, but don't).
 particle_deterministic_state <- R6::R6Class(
   "particle_deterministic_state",
   cloneable = FALSE,
@@ -45,9 +54,22 @@ particle_deterministic_state <- R6::R6Class(
 
     ## As for private fields; missing
     ## n_particles, gpu_config, min_log_likelihood but also missing seed
-    ##' @description Initialise the particle filter state. Ordinarily
-    ##' this should not be called by users, and so arguments are not
+    ##' @description Initialise the deterministic particle state. Ordinarily
+    ##' this should not be called by users, and so arguments are barely
     ##' documented.
+    ##'
+    ##' @param pars Parameters for a single phase
+    ##' @param generator A dust generator object
+    ##' @param model If the generator has previously been initialised
+    ##' @param data A [mcstate::particle_filter_data] data object
+    ##' @param data_split The same data as `data` but split by step
+    ##' @param steps A matrix of step beginning and ends
+    ##' @param n_threads The number of threads to use
+    ##' @param initial Initial condition function (or `NULL`)
+    ##' @param index Index function (or `NULL`)
+    ##' @param compare Compare function
+    ##' @param save_history Logical, indicating if we should save history
+    ##' @param save_restart Vector of steps to save restart at
     initialize = function(pars, generator, model, data, data_split, steps,
                           n_threads, initial, index, compare,
                           save_history, save_restart) {
@@ -124,13 +146,23 @@ particle_deterministic_state <- R6::R6Class(
       self$log_likelihood <- rep(0.0, length(pars))
     },
 
-    ##' @description Run the particle filter to the end of the data. This is
-    ##' a convenience function around `$step()` which provides the correct
-    ##' value of `step_index`
+    ##' @description Run the deterministic particle to the end of the data.
+    ##' This is a convenience function around `$step()` which provides the
+    ##' correct value of `step_index`
     run = function() {
       self$step(nrow(private$steps))
     },
 
+    ##' @description Take a step with the deterministic particle. This moves
+    ##' the system forward one step within the *data* (which
+    ##' may correspond to more than one step with your model) and
+    ##' returns the likelihood so far.
+    ##'
+    ##' @param step_index The step *index* to move to. This is not the same
+    ##' as the model step, nor time, so be careful (it's the index within
+    ##' the data provided to the filter). It is an error to provide
+    ##' a value here that is lower than the current step index, or past
+    ##' the end of the data.
     step = function(step_index) {
       curr <- self$current_step_index
       check_step(curr, step_index, private$steps)
@@ -203,6 +235,15 @@ particle_deterministic_state <- R6::R6Class(
       log_likelihood
     },
 
+    ##' @description Create a new `deterministic_particle_state` object based
+    ##' on this one (same model, position in time within the data) but with
+    ##' new parameters, to support the "multistage particle filter".
+    ##'
+    ##' @param pars New model parameters
+    ##'
+    ##' @param transform_state A function to transform the model state
+    ##'   from the old to the new parameter set.  See
+    ##'   [mcstate::multistage_epoch()] for details.
     fork_multistage = function(pars, transform_state) {
       model <- NULL
       save_history <- !is.null(self$history)

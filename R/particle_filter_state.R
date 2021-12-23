@@ -58,8 +58,24 @@ particle_filter_state <- R6::R6Class(
     current_step_index = 0L,
 
     ##' @description Initialise the particle filter state. Ordinarily
-    ##' this should not be called by users, and so arguments are not
+    ##' this should not be called by users, and so arguments are barely
     ##' documented.
+    ##' @param pars Parameters for a single phase
+    ##' @param generator A dust generator object
+    ##' @param model If the generator has previously been initialised
+    ##' @param data A [mcstate::particle_filter_data] data object
+    ##' @param data_split The same data as `data` but split by step
+    ##' @param steps A matrix of step beginning and ends
+    ##' @param n_particles Number of particles to use
+    ##' @param n_threads The number of threads to use
+    ##' @param initial Initial condition function (or `NULL`)
+    ##' @param index Index function (or `NULL`)
+    ##' @param compare Compare function
+    ##' @param gpu_config GPU configuration, passed to `generator`
+    ##' @param seed Initial RNG seed
+    ##' @param min_log_likelihood Early termination control
+    ##' @param save_history Logical, indicating if we should save history
+    ##' @param save_restart Vector of steps to save restart at
     initialize = function(pars, generator, model, data, data_split, steps,
                           n_particles, n_threads, initial, index, compare,
                           gpu_config, seed, min_log_likelihood,
