@@ -19,7 +19,7 @@ particle deterministically."><meta property="og:image" content="/logo.png"><!-- 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.7.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.7.3</span>
       </span>
     </div>
 
@@ -102,7 +102,7 @@ re-bound)</p></dd>
 
 <ul><li><p><a href="#method-new"><code>particle_deterministic$new()</code></a></p></li>
 <li><p><a href="#method-run"><code>particle_deterministic$run()</code></a></p></li>
-<li><p><a href="#method-run_many"><code>particle_deterministic$run_many()</code></a></p></li>
+<li><p><a href="#method-run_begin"><code>particle_deterministic$run_begin()</code></a></p></li>
 <li><p><a href="#method-state"><code>particle_deterministic$state()</code></a></p></li>
 <li><p><a href="#method-history"><code>particle_deterministic$history()</code></a></p></li>
 <li><p><a href="#method-restart_state"><code>particle_deterministic$restart_state()</code></a></p></li>
@@ -148,10 +148,7 @@ is a <code>list</code> of observed data corresponding to the current
 time's row in the <code>data</code> object provided here in the
 constructor.  <code>pars</code> is any additional parameters passed
 through to the comparison function (via the <code>pars</code>
-argument to <code>$run</code>). Alternatively, <code>compare</code> can be <code>NULL</code>
-if your model provides a built-in compile compare function
-(if <code>model$public_methods$has_compare()</code> is <code>TRUE</code>), which may
-be faster.</p></dd>
+argument to <code>$run</code>).</p></dd>
 
 
 <dt><code>index</code></dt>
@@ -250,14 +247,15 @@ larger than -Inf will cause an error.</p></dd>
 (<code>-Inf</code> if the model is impossible)</p>
 </div>
 
-</div><p></p><hr><a id="method-run_many"></a><div class="section">
-<h3 id="method-run-many-">Method <code>run_many()</code><a class="anchor" aria-label="anchor" href="#method-run-many-"></a></h3>
-<p>Run the deterministic particle filter on several
-parameter sets simultaneously. This acts as a wrapper around
-<code>$run()</code>, though runs will be in parallel if the object was created
-with <code>n_threads</code> greater than 1.</p><div class="section">
+</div><p></p><hr><a id="method-run_begin"></a><div class="section">
+<h3 id="method-run-begin-">Method <code>run_begin()</code><a class="anchor" aria-label="anchor" href="#method-run-begin-"></a></h3>
+<p>Begin a deterministic run. This is part of the
+"advanced" interface; typically you will want to use <code>$run()</code>
+which provides a user-facing wrapper around
+this function. Once created with <code>$run_begin()</code>, you should take
+as many steps as needed with <code>$step()</code>.</p><div class="section">
 <h4 id="usage-2">Usage<a class="anchor" aria-label="anchor" href="#usage-2"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">particle_deterministic</span><span class="op">$</span><span class="fu">run_many</span><span class="op">(</span>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">particle_deterministic</span><span class="op">$</span><span class="fu">run_begin</span><span class="op">(</span>
   <span class="va">pars</span>,
   save_history <span class="op">=</span> <span class="cn">FALSE</span>,
   save_restart <span class="op">=</span> <span class="cn">NULL</span>,
@@ -268,18 +266,18 @@ with <code>n_threads</code> greater than 1.</p><div class="section">
 <div class="section">
 <h4 id="arguments-2">Arguments<a class="anchor" aria-label="anchor" href="#arguments-2"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>pars</code></dt>
-<dd><p>A list of parameter sets, each element of which would
-be suitable to pass to <code>$run()</code></p></dd>
+<dd><p>A list representing parameters. See <code>$run_many()</code>
+for details (and <em>not</em> <code>$run()</code>)</p></dd>
 
 
 <dt><code>save_history</code></dt>
 <dd><p>Logical, indicating if the history of all
-particles should be saved.</p></dd>
+particles should be saved. See <code>$run()</code> for details.</p></dd>
 
 
 <dt><code>save_restart</code></dt>
-<dd><p>An integer vector of time points to save
-restart infomation for. Not currently supported.</p></dd>
+<dd><p>Times to save restart state at. See <code>$run()</code> for
+details.</p></dd>
 
 
 <dt><code>min_log_likelihood</code></dt>
@@ -292,8 +290,8 @@ larger than -Inf will cause an error.</p></dd>
 </div>
 <div class="section">
 <h4 id="returns-1">Returns<a class="anchor" aria-label="anchor" href="#returns-1"></a></h4>
-<p>A numeric vector of values representing the log-likelihood
-(<code>-Inf</code> if the model is impossible), one per parameter set</p>
+<p>An object of class <code>particle_deterministic_state</code>, with methods
+<code>step</code> and <code>end</code>. This interface is still subject to change.</p>
 </div>
 
 </div><p></p><hr><a id="method-state"></a><div class="section">
