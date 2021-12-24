@@ -28,7 +28,8 @@ particle_filter_state_nested <- R6::R6Class(
     compare = NULL,
     gpu = NULL,
     save_restart_step = NULL,
-    save_restart = NULL
+    save_restart = NULL,
+    min_log_likelihood = NULL # not really supported?
   ),
 
   public = list(
@@ -79,7 +80,8 @@ particle_filter_state_nested <- R6::R6Class(
     ##' @param save_restart Vector of steps to save restart at
     initialize = function(pars, generator, model, data, data_split, steps,
                           n_particles, n_threads, initial, index, compare,
-                          gpu_config, seed, save_history, save_restart) {
+                          gpu_config, seed, min_log_likelihood,
+                          save_history, save_restart) {
       ## NOTE: this will generate a warning when updating docs but
       ## that's ok; see https://github.com/r-lib/roxygen2/issues/1067
       if (length(pars) < length(unique(data$population))) {
@@ -87,12 +89,15 @@ particle_filter_state_nested <- R6::R6Class(
                      'data$population', %d",
                      length(unique(data$population))))
       }
+      if (min_log_likelihood > -Inf) {
+        stop("min_log_likelihood not supported")
+      }
 
       if (is.null(model)) {
         model <- generator$new(pars = pars, step = steps[[1L]],
-                               n_particles = n_particles,
-                               n_threads = n_threads, seed = seed,
-                               gpu_config = gpu_config, pars_multi = TRUE)
+                               n_particles = n_particles, n_threads = n_threads,
+                               seed = seed, gpu_config = gpu_config,
+                               pars_multi = TRUE) # this is the sole difference
         if (is.null(compare)) {
           model$set_index(integer(0))
           model$set_data(data_split)
@@ -101,33 +106,39 @@ particle_filter_state_nested <- R6::R6Class(
         model$update_state(pars = pars, step = steps[[1L]])
       }
 
-      set_nested_model_state(model, initial, pars, n_particles)
+      ## The first line replaces the simpler
+      ## > initial_data <- initial(model$info(), n_particles, pars)
+      ## but is fairly compatible
+      if (!is.null(initial)) {
+        initial_data <- nested_model_initial(model, initial, pars, n_particles)
+        model$update_state(state = initial_data)
+      }
 
       index_data <- if (is.null(index)) NULL else lapply(model$info(), index)
 
+      ## This check is new
       nok <- !all(vlapply(index_data[-1], identical, index_data[[1]]))
       if (nok) {
         stop("index must be identical across populations")
       }
+      index_data <- index_data[[1]]
 
-      if (!is.null(compare) && !is.null(index_data[[1]]$run)) {
-        run <- index_data[[1]]$run
-        model$set_index(run)
+      if (!is.null(compare) && !is.null(index_data$run)) {
+        model$set_index(index_data$run)
       }
 
       if (save_history) {
         len <- nrow(steps) + 1L
-        index_state <- index_data[[1]]$state
-        state <- model$state(index_state)
+        state <- model$state(index_data$state)
         history_value <- array(NA_real_, c(dim(state), len))
-        history_value[, , , 1] <- state
+        history_value[, , , 1] <- state # 3d->4d
         history_order <- array(seq_len(n_particles),
                                c(n_particles, nlayer(state), len))
 
         self$history <- list(
           value = history_value,
           order = history_order,
-          index = index_state)
+          index = index_data$state)
       } else {
         self$history <- NULL
       }
@@ -137,7 +148,7 @@ particle_filter_state_nested <- R6::R6Class(
         self$restart_state <- array(NA_real_,
                                     c(model$n_state(),
                                       n_particles,
-                                      length(pars),
+                                      length(pars), # new
                                       length(save_restart)))
       } else {
         self$restart_state <- NULL
@@ -149,13 +160,13 @@ particle_filter_state_nested <- R6::R6Class(
       private$data <- data
       private$data_split <- data_split
       private$steps <- steps
-      private$n_steps <- nrow(steps)
       private$n_particles <- n_particles
       private$n_threads <- n_threads
       private$initial <- initial
       private$index <- index
       private$compare <- compare
       private$gpu <- !is.null(gpu_config)
+      private$min_log_likelihood <- min_log_likelihood
       private$save_restart_step <- save_restart_step
       private$save_restart <- save_restart
 
@@ -168,10 +179,11 @@ particle_filter_state_nested <- R6::R6Class(
     ##' a convenience function around `$step()` which provides the correct
     ##' value of `step_index`
     run = function() {
+      ## This is identical to pfs
       if (is.null(private$compare)) {
         particle_filter_compiled(self, private)
       } else {
-        self$step(private$n_steps)
+        self$step(nrow(private$steps))
       }
     },
 
@@ -187,20 +199,8 @@ particle_filter_state_nested <- R6::R6Class(
     ##' the end of the data.
     step = function(step_index) {
       steps <- private$steps
-      n_steps <- private$n_steps
       curr <- self$current_step_index
-      if (curr >= n_steps) {
-        stop("Particle filter has reached the end of the data")
-      }
-      if (step_index > n_steps) {
-        stop(sprintf("step_index %d is beyond the length of the data (max %d)",
-                     step_index, n_steps))
-      }
-      if (step_index <= curr) {
-        stop(sprintf(
-          "Particle filter has already run step index %d (to model step %d)",
-          step_index, steps[step_index, 2]))
-      }
+      check_step(curr, step_index, private$steps, "Particle filter")
 
       model <- self$model
       compare <- private$compare
@@ -228,14 +228,18 @@ particle_filter_state_nested <- R6::R6Class(
       log_likelihood <- self$log_likelihood
       n_particles <- private$n_particles
 
+      min_log_likelihood <- private$min_log_likelihood # ignored
+
       for (t in seq(curr + 1L, step_index)) {
         step_end <- steps[t, 2L]
         state <- model$run(step_end)
 
         if (save_history) {
-          history_value[, , , t + 1L] <- model$state(save_history_index)
+          ## TODO: extra index
+          history_value[, , , t + 1L] <- model$state(save_history_index) #index
         }
 
+        ## TODO: extra loop, over layers
         log_weights <- lapply(
           seq_len(nlayer(state)),
           function(i) {
@@ -249,16 +253,22 @@ particle_filter_state_nested <- R6::R6Class(
           log_weights <- vapply(log_weights, identity,
                                 numeric(length(log_weights[[1]])))
         }
+        ## TODO: up to above can be combined into helper
 
         if (is.null(log_weights)) {
           if (save_history) {
-            history_order[, , t + 1L] <- seq_len(n_particles)
+            history_order[, , t + 1L] <- seq_len(n_particles) # INDEX
           }
           log_likelihood_step <- NA_real_
         } else {
           weights <- apply(log_weights, 2, scale_log_weights)
           log_likelihood_step <- vnapply(weights, "[[", "average")
           log_likelihood <- log_likelihood + log_likelihood_step
+          ## TODO: handling of min_log_likelihood here would depend in
+          ## if we're treating it as the combined or separate
+          ## likelihoods; that is actually easy to pass in as a vector
+          ## or a scalar here really.
+          ##
           ## FIXME - IS THIS CORRECT? ALL VS ANY
           if (any(log_likelihood == -Inf)) {
             break
@@ -269,18 +279,19 @@ particle_filter_state_nested <- R6::R6Class(
           model$reorder(kappa)
 
           if (save_history) {
-            history_order[, , t + 1L] <- kappa
+            history_order[, , t + 1L] <- kappa # index
           }
         }
 
         if (save_restart) {
           i_restart <- match(step_end, save_restart_step)
           if (!is.na(i_restart)) {
-            restart_state[, , , i_restart] <- model$state()
+            restart_state[, , , i_restart] <- model$state() # index
           }
         }
       }
 
+      ## Identical below here
       self$log_likelihood_step <- log_likelihood_step
       self$log_likelihood <- log_likelihood
       self$current_step_index <- step_index
@@ -307,15 +318,19 @@ particle_filter_state_nested <- R6::R6Class(
     ##'
     ##' @param pars New model parameters
     fork_smc2 = function(pars) {
+      ## Identical except for the generator; that might go away?
       stopifnot(!private$gpu) # this won't work
       gpu_config <- NULL
+      model <- NULL
       seed <- self$model$rng_state()
       save_history <- !is.null(self$history)
+
+      ## Different generator used (pfsn not pfs)
       ret <- particle_filter_state_nested$new(
-        pars, private$generator, NULL, private$data, private$data_split,
+        pars, private$generator, model, private$data, private$data_split,
         private$steps, private$n_particles, private$n_threads,
         private$initial, private$index, private$compare, gpu_config,
-        seed, save_history, private$save_restart)
+        seed, private$min_log_likelihood, save_history, private$save_restart)
 
       ## Run it up to the same point
       ret$step(self$current_step_index)
@@ -329,11 +344,7 @@ particle_filter_state_nested <- R6::R6Class(
   ))
 
 
-set_nested_model_state <- function(model, initial, pars, n_particles) {
-  if (is.null(initial)) {
-    return()
-  }
-
+nested_model_initial <- function(model, initial, pars, n_particles) {
   state <- Map(initial, model$info(), rep(n_particles, length(pars)), pars)
   if (all(vlapply(state, is.null))) {
     return()
@@ -354,5 +365,6 @@ set_nested_model_state <- function(model, initial, pars, n_particles) {
   } else {
     state_array <- list_to_array(state)
   }
-  model$update_state(state = state_array)
+
+  state_array
 }

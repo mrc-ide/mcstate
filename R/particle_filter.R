@@ -66,7 +66,7 @@ particle_filter <- R6::R6Class(
     data = NULL,
     data_split = NULL,
     steps = NULL,
-    nested = FALSE,
+    nested = FALSE, # TODO: make r.o. public, or add accessor
     ## Functions used for initial conditions, data comparisons and indices
     index = NULL,
     initial = NULL,
@@ -312,19 +312,16 @@ particle_filter <- R6::R6Class(
                          save_restart = NULL, min_log_likelihood = NULL) {
       min_log_likelihood <- min_log_likelihood %||% -Inf
       if (private$nested) {
-        particle_filter_state_nested$new(
-          pars, self$model, private$last_model, private$data,
-          private$data_split, private$steps, self$n_particles,
-          private$n_threads, private$initial, private$index, private$compare,
-          private$gpu_config, private$seed, save_history, save_restart)
+        cls <- particle_filter_state_nested
       } else {
-        particle_filter_state$new(
-          pars, self$model, private$last_model, private$data,
-          private$data_split, private$steps, self$n_particles,
-          private$n_threads, private$initial, private$index, private$compare,
-          private$gpu_config, private$seed, min_log_likelihood,
-          save_history, save_restart)
+        cls <- particle_filter_state
       }
+      cls$new(
+        pars, self$model, private$last_model, private$data,
+        private$data_split, private$steps, self$n_particles,
+        private$n_threads, private$initial, private$index, private$compare,
+        private$gpu_config, private$seed, min_log_likelihood,
+        save_history, save_restart)
     },
 
     ##' @description Extract the current model state, optionally filtering.
