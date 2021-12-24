@@ -190,26 +190,6 @@ test_that("initial passes args as expected", {
 })
 
 
-test_that("initial passes args as expected, for multipar case", {
-  dat <- example_sir()
-  initial <- mockery::mock(c(1000, 10, 0, 0, 0), cycle = TRUE)
-  p <- particle_deterministic$new(dat$data, dat$model, dat$compare,
-                                  index = dat$index, initial = initial)
-  pars <- list(list(beta = 0.21, gamma = 0.11),
-               list(beta = 0.22, gamma = 0.12),
-               list(beta = 0.23, gamma = 0.13))
-  ll <- p$run_many(pars)
-  info <- lapply(pars, function(p) dat$model$new(p, 0, 1)$info())
-  mockery::expect_called(initial, 3L)
-  expect_equal(mockery::mock_args(initial)[[1L]],
-               list(info[[1L]], 1L, pars[[1L]]))
-  expect_equal(mockery::mock_args(initial)[[2L]],
-               list(info[[2L]], 1L, pars[[2L]]))
-  expect_equal(mockery::mock_args(initial)[[3L]],
-               list(info[[3L]], 1L, pars[[3L]]))
-})
-
-
 test_that("Can reference by name in compare", {
   dat <- example_sir()
   p1 <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
@@ -249,31 +229,6 @@ test_that("Can reference by name in compare", {
 
   expect_equal(h1, unname(h2))
   expect_equal(dimnames(h2), list(c("S", "I", "R"), NULL, NULL))
-})
-
-
-test_that("initial passes args as expected, for multipar case", {
-  ## As normal, but we require the exp_noise parameter
-  compare <- function(state, observed, pars = NULL) {
-    if (is.na(observed$incidence)) {
-      return(NULL)
-    }
-    exp_noise <- pars$exp_noise
-    incidence_modelled <- state[1L, , drop = TRUE]
-    incidence_observed <- observed$incidence
-    lambda <- incidence_modelled +
-      rexp(n = length(incidence_modelled), rate = exp_noise)
-    dpois(x = incidence_observed, lambda = lambda, log = TRUE)
-  }
-
-  dat <- example_sir()
-  p <- particle_deterministic$new(dat$data, dat$model, compare,
-                                  index = dat$index, initial = dat$initial)
-  pars <- list(list(exp_noise = Inf),
-               list(exp_noise = 1e6))
-  ll <- p$run_many(pars)
-  expect_equal(ll[[1]], ll[[2]], tolerance = 1e-5)
-  expect_false(identical(ll[[1]], ll[[2]]))
 })
 
 
@@ -321,4 +276,31 @@ test_that("Cannot use previous initial condition approach", {
   p <- particle_deterministic$new(dat$data, dat$model, dat$compare,
                                   index = dat$index, initial = initial)
   expect_error(p$run(), "Setting 'step' from initial no longer supported")
+})
+
+
+test_that("Can partially run a deterministic particle and resume", {
+  dat <- example_sir()
+  pars <- dat$pars$model(dat$pars$initial())
+
+  set.seed(1)
+  p1 <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
+  ll1 <- p1$run(pars, save_history = TRUE)
+
+  set.seed(1)
+  p2 <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
+  s2 <- p2$run_begin(list(pars), save_history = TRUE)
+  ll2 <- s2$run()
+  expect_identical(ll2, ll1)
+  expect_identical(s2$history$value, p1$history())
+
+  set.seed(1)
+  p3 <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
+  s3 <- p3$run_begin(list(pars), save_history = TRUE)
+  ll3_1 <- s3$step(50)
+  ll3_2 <- s3$step(100)
+  ## To get these to be identical we must loop over the data in the
+  ## other order (by pars-within-time, then time)
+  expect_equal(ll3_2, ll1, tolerance = 1e-11)
+  expect_equal(s3$history$value, p1$history(), tolerance = 1e-11)
 })

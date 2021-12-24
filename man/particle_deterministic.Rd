@@ -21,7 +21,7 @@ re-bound)}
 \itemize{
 \item \href{#method-new}{\code{particle_deterministic$new()}}
 \item \href{#method-run}{\code{particle_deterministic$run()}}
-\item \href{#method-run_many}{\code{particle_deterministic$run_many()}}
+\item \href{#method-run_begin}{\code{particle_deterministic$run_begin()}}
 \item \href{#method-state}{\code{particle_deterministic$state()}}
 \item \href{#method-history}{\code{particle_deterministic$history()}}
 \item \href{#method-restart_state}{\code{particle_deterministic$restart_state()}}
@@ -67,10 +67,7 @@ is a \code{list} of observed data corresponding to the current
 time's row in the \code{data} object provided here in the
 constructor.  \code{pars} is any additional parameters passed
 through to the comparison function (via the \code{pars}
-argument to \verb{$run}). Alternatively, \code{compare} can be \code{NULL}
-if your model provides a built-in compile compare function
-(if \code{model$public_methods$has_compare()} is \code{TRUE}), which may
-be faster.}
+argument to \verb{$run}).}
 
 \item{\code{index}}{An index function. This is used to compute the
 "interesting" indexes of your model. It must be a function of
@@ -157,15 +154,16 @@ A single numeric value representing the log-likelihood
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-run_many"></a>}}
-\if{latex}{\out{\hypertarget{method-run_many}{}}}
-\subsection{Method \code{run_many()}}{
-Run the deterministic particle filter on several
-parameter sets simultaneously. This acts as a wrapper around
-\verb{$run()}, though runs will be in parallel if the object was created
-with \code{n_threads} greater than 1.
+\if{html}{\out{<a id="method-run_begin"></a>}}
+\if{latex}{\out{\hypertarget{method-run_begin}{}}}
+\subsection{Method \code{run_begin()}}{
+Begin a deterministic run. This is part of the
+"advanced" interface; typically you will want to use \verb{$run()}
+which provides a user-facing wrapper around
+this function. Once created with \verb{$run_begin()}, you should take
+as many steps as needed with \verb{$step()}.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_deterministic$run_many(
+\if{html}{\out{<div class="r">}}\preformatted{particle_deterministic$run_begin(
   pars,
   save_history = FALSE,
   save_restart = NULL,
@@ -176,14 +174,14 @@ with \code{n_threads} greater than 1.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{pars}}{A list of parameter sets, each element of which would
-be suitable to pass to \verb{$run()}}
+\item{\code{pars}}{A list representing parameters. See \verb{$run_many()}
+for details (and \emph{not} \verb{$run()})}
 
 \item{\code{save_history}}{Logical, indicating if the history of all
-particles should be saved.}
+particles should be saved. See \verb{$run()} for details.}
 
-\item{\code{save_restart}}{An integer vector of time points to save
-restart infomation for. Not currently supported.}
+\item{\code{save_restart}}{Times to save restart state at. See \verb{$run()} for
+details.}
 
 \item{\code{min_log_likelihood}}{Not currently supported, exists to match
 the inteface with \link{particle_filter}. Providing a value
@@ -192,8 +190,8 @@ larger than -Inf will cause an error.}
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A numeric vector of values representing the log-likelihood
-(\code{-Inf} if the model is impossible), one per parameter set
+An object of class \code{particle_deterministic_state}, with methods
+\code{step} and \code{end}. This interface is still subject to change.
 }
 }
 \if{html}{\out{<hr>}}

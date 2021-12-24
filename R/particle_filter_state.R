@@ -20,7 +20,6 @@ particle_filter_state <- R6::R6Class(
     data = NULL,
     data_split = NULL,
     steps = NULL,
-    n_steps = NULL,
     n_particles = NULL,
     n_threads = NULL,
     initial = NULL,
@@ -59,8 +58,24 @@ particle_filter_state <- R6::R6Class(
     current_step_index = 0L,
 
     ##' @description Initialise the particle filter state. Ordinarily
-    ##' this should not be called by users, and so arguments are not
+    ##' this should not be called by users, and so arguments are barely
     ##' documented.
+    ##' @param pars Parameters for a single phase
+    ##' @param generator A dust generator object
+    ##' @param model If the generator has previously been initialised
+    ##' @param data A [mcstate::particle_filter_data] data object
+    ##' @param data_split The same data as `data` but split by step
+    ##' @param steps A matrix of step beginning and ends
+    ##' @param n_particles Number of particles to use
+    ##' @param n_threads The number of threads to use
+    ##' @param initial Initial condition function (or `NULL`)
+    ##' @param index Index function (or `NULL`)
+    ##' @param compare Compare function
+    ##' @param gpu_config GPU configuration, passed to `generator`
+    ##' @param seed Initial RNG seed
+    ##' @param min_log_likelihood Early termination control
+    ##' @param save_history Logical, indicating if we should save history
+    ##' @param save_restart Vector of steps to save restart at
     initialize = function(pars, generator, model, data, data_split, steps,
                           n_particles, n_threads, initial, index, compare,
                           gpu_config, seed, min_log_likelihood,
@@ -122,7 +137,6 @@ particle_filter_state <- R6::R6Class(
       private$data <- data
       private$data_split <- data_split
       private$steps <- steps
-      private$n_steps <- nrow(steps)
       private$n_particles <- n_particles
       private$n_threads <- n_threads
       private$initial <- initial
@@ -146,7 +160,7 @@ particle_filter_state <- R6::R6Class(
         ## TODO: add min_log_likelihood support here, needs work in dust?
         particle_filter_compiled(self, private)
       } else {
-        self$step(private$n_steps)
+        self$step(nrow(private$steps))
       }
     },
 
@@ -165,20 +179,8 @@ particle_filter_state <- R6::R6Class(
     ##' likelihood, due to this step, rather than the full likelihood so far.
     step = function(step_index, partial = FALSE) {
       steps <- private$steps
-      n_steps <- private$n_steps
       curr <- self$current_step_index
-      if (curr >= n_steps) {
-        stop("Particle filter has reached the end of the data")
-      }
-      if (step_index > n_steps) {
-        stop(sprintf("step_index %d is beyond the length of the data (max %d)",
-                     step_index, n_steps))
-      }
-      if (step_index <= curr) {
-        stop(sprintf(
-          "Particle filter has already run step index %d (to model step %d)",
-          step_index, steps[step_index, 2]))
-      }
+      check_step(curr, step_index, private$steps, "Particle filter")
 
       model <- self$model
       compare <- private$compare
@@ -362,11 +364,29 @@ particle_filter_compiled <- function(self, private) {
 
   self$log_likelihood_step <- NA_real_
   self$log_likelihood <- res$log_likelihood
-  self$current_step_index <- private$n_steps
+  self$current_step_index <- nrow(private$steps)
   if (save_history) {
     self$history <- list(value = res$trajectories,
                          index = save_history_index)
   }
   self$restart_state <- res$snapshots
   res$log_likelihood
+}
+
+
+## Used for both the normal and deterministic particle filter
+check_step <- function(curr, step_index, steps, name) {
+  n_steps <- nrow(steps)
+  if (curr >= n_steps) {
+    stop(sprintf("%s has reached the end of the data", name))
+  }
+  if (step_index > n_steps) {
+    stop(sprintf("step_index %d is beyond the length of the data (max %d)",
+                 step_index, n_steps))
+  }
+  if (step_index <= curr) {
+    stop(sprintf(
+      "%s has already run step index %d (to model step %d)",
+      name, step_index, steps[step_index, 2]))
+  }
 }

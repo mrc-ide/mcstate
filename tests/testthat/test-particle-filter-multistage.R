@@ -183,13 +183,6 @@ test_that("Can transform state in the model", {
 test_that("Can transform state size", {
   dat <- example_variable()
 
-  ## There's going to be some work here to update this so that it's
-  ## easy to work with.  Possibly we just set a blank epoch at the
-  ## beginning - that's not terrible and is at least symmetrical.
-  ##
-  ## There's some pretty major work in pmcmc to get this sorted though
-  ## as we need to generate all of this out of the mcmc parameters,
-  ## and that's its own challenge.
   pars_base <- list(len = 10, sd = 1)
   epochs <- list(
     multistage_epoch(10,

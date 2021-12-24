@@ -53,7 +53,7 @@ last call to \verb{$step()}.}
 \if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 Initialise the particle filter state. Ordinarily
-this should not be called by users, and so arguments are not
+this should not be called by users, and so arguments are barely
 documented.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{particle_filter_state_nested$new(
@@ -75,6 +75,43 @@ documented.
 )}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{pars}}{Parameters for a single phase}
+
+\item{\code{generator}}{A dust generator object}
+
+\item{\code{model}}{If the generator has previously been initialised}
+
+\item{\code{data}}{A \link{particle_filter_data} data object}
+
+\item{\code{data_split}}{The same data as \code{data} but split by step}
+
+\item{\code{steps}}{A matrix of step beginning and ends}
+
+\item{\code{n_particles}}{Number of particles to use}
+
+\item{\code{n_threads}}{The number of threads to use}
+
+\item{\code{initial}}{Initial condition function (or \code{NULL})}
+
+\item{\code{index}}{Index function (or \code{NULL})}
+
+\item{\code{compare}}{Compare function}
+
+\item{\code{gpu_config}}{GPU configuration, passed to \code{generator}}
+
+\item{\code{seed}}{Initial RNG seed}
+
+\item{\code{save_history}}{Logical, indicating if we should save history}
+
+\item{\code{save_restart}}{Vector of steps to save restart at}
+
+\item{\code{min_log_likelihood}}{Early termination control}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-run"></a>}}
