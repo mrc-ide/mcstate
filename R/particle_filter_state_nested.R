@@ -29,7 +29,7 @@ particle_filter_state_nested <- R6::R6Class(
     gpu = NULL,
     save_restart_step = NULL,
     save_restart = NULL,
-    min_log_likelihood = NULL # not really supported?
+    min_log_likelihood = NULL
   ),
 
   public = list(
@@ -82,6 +82,9 @@ particle_filter_state_nested <- R6::R6Class(
                           n_particles, n_threads, initial, index, compare,
                           gpu_config, seed, min_log_likelihood,
                           save_history, save_restart) {
+      ## These checks must exist differently for the two versions (and
+      ## for the deterministic version)
+
       ## NOTE: this will generate a warning when updating docs but
       ## that's ok; see https://github.com/r-lib/roxygen2/issues/1067
       if (length(pars) < length(unique(data$population))) {
@@ -89,15 +92,13 @@ particle_filter_state_nested <- R6::R6Class(
                      'data$population', %d",
                      length(unique(data$population))))
       }
-      if (min_log_likelihood > -Inf) {
-        stop("min_log_likelihood not supported")
-      }
 
       if (is.null(model)) {
+        pars_multi <- TRUE # DIFFERENCE
         model <- generator$new(pars = pars, step = steps[[1L]],
                                n_particles = n_particles, n_threads = n_threads,
                                seed = seed, gpu_config = gpu_config,
-                               pars_multi = TRUE) # this is the sole difference
+                               pars_multi = pars_multi)
         if (is.null(compare)) {
           model$set_index(integer(0))
           model$set_data(data_split)
@@ -106,23 +107,12 @@ particle_filter_state_nested <- R6::R6Class(
         model$update_state(pars = pars, step = steps[[1L]])
       }
 
-      ## The first line replaces the simpler
-      ## > initial_data <- initial(model$info(), n_particles, pars)
-      ## but is fairly compatible
       if (!is.null(initial)) {
-        initial_data <- nested_model_initial(model, initial, pars, n_particles)
+        initial_data <- pfsn_initial(model, initial, pars, n_particles)
         model$update_state(state = initial_data)
       }
 
-      index_data <- if (is.null(index)) NULL else lapply(model$info(), index)
-
-      ## This check is new
-      nok <- !all(vlapply(index_data[-1], identical, index_data[[1]]))
-      if (nok) {
-        stop("index must be identical across populations")
-      }
-      index_data <- index_data[[1]]
-
+      index_data <- pfsn_index(model, index)
       if (!is.null(compare) && !is.null(index_data$run)) {
         model$set_index(index_data$run)
       }
@@ -131,10 +121,9 @@ particle_filter_state_nested <- R6::R6Class(
         len <- nrow(steps) + 1L
         state <- model$state(index_data$state)
         history_value <- array(NA_real_, c(dim(state), len))
-        history_value[, , , 1] <- state # 3d->4d
+        array_last_dimension(history_value, 1) <- state
         history_order <- array(seq_len(n_particles),
-                               c(n_particles, nlayer(state), len))
-
+                               c(model$shape(), len))
         self$history <- list(
           value = history_value,
           order = history_order,
@@ -147,8 +136,7 @@ particle_filter_state_nested <- R6::R6Class(
       if (length(save_restart_step) > 0) {
         self$restart_state <- array(NA_real_,
                                     c(model$n_state(),
-                                      n_particles,
-                                      length(pars), # new
+                                      model$shape(),
                                       length(save_restart)))
       } else {
         self$restart_state <- NULL
@@ -179,7 +167,6 @@ particle_filter_state_nested <- R6::R6Class(
     ##' a convenience function around `$step()` which provides the correct
     ##' value of `step_index`
     run = function() {
-      ## This is identical to pfs
       if (is.null(private$compare)) {
         particle_filter_compiled(self, private)
       } else {
@@ -228,65 +215,45 @@ particle_filter_state_nested <- R6::R6Class(
       log_likelihood <- self$log_likelihood
       n_particles <- private$n_particles
 
-      min_log_likelihood <- private$min_log_likelihood # ignored
+      min_log_likelihood <- private$min_log_likelihood
 
       for (t in seq(curr + 1L, step_index)) {
         step_end <- steps[t, 2L]
         state <- model$run(step_end)
 
         if (save_history) {
-          ## TODO: extra index
-          history_value[, , , t + 1L] <- model$state(save_history_index) #index
+          array_last_dimension(history_value, t + 1L) <-
+            model$state(save_history_index)
         }
 
-        ## TODO: extra loop, over layers
-        log_weights <- lapply(
-          seq_len(nlayer(state)),
-          function(i) {
-            compare(array_drop(state[, , i, drop = FALSE], 3),
-                    data_split[[t]][[i]], pars[[i]])
-          })
-
-        if (all(lengths(log_weights) == 0)) {
-          log_weights <- NULL
-        } else {
-          log_weights <- vapply(log_weights, identity,
-                                numeric(length(log_weights[[1]])))
-        }
-        ## TODO: up to above can be combined into helper
+        log_weights <- pfsn_compare(state, compare, data_split[[t]], pars)
 
         if (is.null(log_weights)) {
           if (save_history) {
-            history_order[, , t + 1L] <- seq_len(n_particles) # INDEX
+            array_last_dimension(history_order, t + 1L) <- seq_len(n_particles)
           }
           log_likelihood_step <- NA_real_
         } else {
-          weights <- apply(log_weights, 2, scale_log_weights)
-          log_likelihood_step <- vnapply(weights, "[[", "average")
+          tmp <- pfsn_weights(log_weights)
+          log_likelihood_step <- tmp$log_likelihood
+
           log_likelihood <- log_likelihood + log_likelihood_step
-          ## TODO: handling of min_log_likelihood here would depend in
-          ## if we're treating it as the combined or separate
-          ## likelihoods; that is actually easy to pass in as a vector
-          ## or a scalar here really.
-          ##
-          ## FIXME - IS THIS CORRECT? ALL VS ANY
-          if (any(log_likelihood == -Inf)) {
+          if (pfs_early_exit(log_likelihood, min_log_likelihood)) {
+            log_likelihood <- -Inf
             break
           }
 
-          kappa <- vapply(weights, function(x) particle_resample(x$weights),
-                          numeric(length(weights[[1]]$weights)))
+          kappa <- tmp$kappa
           model$reorder(kappa)
-
           if (save_history) {
-            history_order[, , t + 1L] <- kappa # index
+            array_last_dimension(history_order, t + 1L) <- kappa
           }
         }
 
         if (save_restart) {
           i_restart <- match(step_end, save_restart_step)
           if (!is.na(i_restart)) {
-            restart_state[, , , i_restart] <- model$state() # index
+            array_last_dimension(restart_state, i_restart) <- model$state()
           }
         }
       }
@@ -344,7 +311,7 @@ particle_filter_state_nested <- R6::R6Class(
   ))
 
 
-nested_model_initial <- function(model, initial, pars, n_particles) {
+pfsn_initial <- function(model, initial, pars, n_particles) {
   state <- Map(initial, model$info(), rep(n_particles, length(pars)), pars)
   if (all(vlapply(state, is.null))) {
     return()
@@ -367,4 +334,60 @@ nested_model_initial <- function(model, initial, pars, n_particles) {
   }
 
   state_array
+}
+
+
+pfsn_index <- function(model, index) {
+  if (is.null(index)) {
+    return(NULL)
+  }
+  index_data <- lapply(model$info(), index)
+
+  nok <- !all(vlapply(index_data[-1], identical, index_data[[1]]))
+  if (nok) {
+    stop("index must be identical across populations")
+  }
+
+  index_data[[1]]
+}
+
+
+## Can split and merge below here to come up with something better
+## really.  All the wrangling here should come through so that compare
+## does the entire thing through from comparison to weights,
+## likelihood, but not kappa
+pfsn_compare <- function(state, compare, data, pars) {
+  log_weights <- lapply(seq_len(nlayer(state)), function(i)
+    compare(array_drop(state[, , i, drop = FALSE], 3), data[[i]], pars[[i]]))
+
+  if (all(lengths(log_weights) == 0)) {
+    return(NULL)
+  }
+  vapply(log_weights, identity, numeric(length(log_weights[[1]])))
+}
+
+
+pfsn_weights <- function(log_weights) {
+  n <- ncol(log_weights)
+  weights <- lapply(seq_len(n), function(i)
+    scale_log_weights(log_weights[, i]))
+  log_likelihood <- vnapply(weights, "[[", "average")
+
+  if (all(log_likelihood > -Inf)) {
+    kappa <- vapply(weights, function(x) particle_resample(x$weights),
+                    numeric(nrow(log_weights)))
+  } else {
+    ## No reordering
+    kappa <- array(seq_len(nrow(log_weights)), dim(log_weights))
+  }
+
+  list(log_likelihood = log_likelihood, kappa = kappa)
+}
+
+
+pfsn_early_exit <- function(log_likelihood, min_log_likelihood) {
+  scalar <- length(min_log_likelihood) == 1
+  log_likelihood == -Inf ||
+    ( scalar && sum(log_likelihood) < min_log_likelihood) ||
+    (!scalar && all(log_likelihood < min_log_likelihood))
 }

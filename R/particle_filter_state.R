@@ -83,9 +83,11 @@ particle_filter_state <- R6::R6Class(
       ## NOTE: this will generate a warning when updating docs but
       ## that's ok; see https://github.com/r-lib/roxygen2/issues/1067
       if (is.null(model)) {
+        pars_multi <- FALSE
         model <- generator$new(pars = pars, step = steps[[1L]],
                                n_particles = n_particles, n_threads = n_threads,
-                               seed = seed, gpu_config = gpu_config)
+                               seed = seed, gpu_config = gpu_config,
+                               pars_multi = pars_multi)
         if (is.null(compare)) {
           model$set_index(integer(0))
           model$set_data(data_split)
@@ -95,14 +97,11 @@ particle_filter_state <- R6::R6Class(
       }
 
       if (!is.null(initial)) {
-        initial_data <- initial(model$info(), n_particles, pars)
-        if (is.list(initial_data)) {
-          stop("Setting 'step' from initial no longer supported")
-        }
+        initial_data <- pfs_initial(model, initial, pars, n_particles)
         model$update_state(state = initial_data)
       }
 
-      index_data <- if (is.null(index)) NULL else index(model$info())
+      index_data <- pfs_index(model, index)
       if (!is.null(compare) && !is.null(index_data$run)) {
         model$set_index(index_data$run)
       }
@@ -111,8 +110,9 @@ particle_filter_state <- R6::R6Class(
         len <- nrow(steps) + 1L
         state <- model$state(index_data$state)
         history_value <- array(NA_real_, c(dim(state), len))
-        history_value[, , 1] <- state
-        history_order <- matrix(seq_len(n_particles), n_particles, len)
+        array_last_dimension(history_value, 1) <- state
+        history_order <- array(seq_len(n_particles),
+                               c(model$shape(), len))
         self$history <- list(
           value = history_value,
           order = history_order,
@@ -125,7 +125,7 @@ particle_filter_state <- R6::R6Class(
       if (length(save_restart_step) > 0) {
         self$restart_state <- array(NA_real_,
                                     c(model$n_state(),
-                                      n_particles,
+                                      model$shape(),
                                       length(save_restart)))
       } else {
         self$restart_state <- NULL
@@ -157,7 +157,6 @@ particle_filter_state <- R6::R6Class(
     ##' value of `step_index`
     run = function() {
       if (is.null(private$compare)) {
-        ## TODO: add min_log_likelihood support here, needs work in dust?
         particle_filter_compiled(self, private)
       } else {
         self$step(nrow(private$steps))
@@ -215,38 +214,38 @@ particle_filter_state <- R6::R6Class(
         state <- model$run(step_end)
 
         if (save_history) {
-          history_value[, , t + 1L] <- model$state(save_history_index)
+          array_last_dimension(history_value, t + 1L) <-
+            model$state(save_history_index)
         }
 
-        log_weights <- compare(state, data_split[[t]], pars)
+        log_weights <- pfs_compare(state, compare, data_split[[t]], pars)
 
         if (is.null(log_weights)) {
           if (save_history) {
-            history_order[, t + 1L] <- seq_len(n_particles)
+            array_last_dimension(history_order, t + 1L) <- seq_len(n_particles)
           }
           log_likelihood_step <- NA_real_
         } else {
-          weights <- scale_log_weights(log_weights)
-          log_likelihood_step <- weights$average
+          tmp <- pfs_weights(log_weights)
+          log_likelihood_step <- tmp$log_likelihood
+
           log_likelihood <- log_likelihood + log_likelihood_step
-          if (log_likelihood < min_log_likelihood) {
+          if (pfs_early_exit(log_likelihood, min_log_likelihood)) {
             log_likelihood <- -Inf
-          }
-          if (log_likelihood == -Inf) {
             break
           }
 
-          kappa <- particle_resample(weights$weights)
+          kappa <- tmp$kappa
           model$reorder(kappa)
           if (save_history) {
-            history_order[, t + 1L] <- kappa
+            array_last_dimension(history_order, t + 1L) <- kappa
           }
         }
 
         if (save_restart) {
           i_restart <- match(step_end, save_restart_step)
           if (!is.na(i_restart)) {
-            restart_state[, , i_restart] <- model$state()
+            array_last_dimension(restart_state, i_restart) <- model$state()
           }
         }
       }
@@ -389,4 +388,43 @@ check_step <- function(curr, step_index, steps, name) {
       "%s has already run step index %d (to model step %d)",
       name, step_index, steps[step_index, 2]))
   }
+}
+
+
+pfs_initial <- function(model, initial, pars, n_particles) {
+  initial_data <- initial(model$info(), n_particles, pars)
+  if (is.list(initial_data)) {
+    stop("Setting 'step' from initial no longer supported")
+  }
+  initial_data
+}
+
+
+pfs_index <- function(model, index) {
+  if (is.null(index)) {
+    return(NULL)
+  }
+  index(model$info())
+}
+
+
+pfs_compare <- function(state, compare, data, pars) {
+  compare(state, data, pars)
+}
+
+
+pfs_weights <- function(log_weights) {
+  weights <- scale_log_weights(log_weights)
+  log_likelihood <- weights$average
+  if (log_likelihood > -Inf) {
+    kappa <- particle_resample(weights$weights)
+  } else {
+    kappa <- seq_along(weights)
+  }
+  list(log_likelihood = log_likelihood, kappa = kappa)
+}
+
+
+pfs_early_exit <- function(log_likelihood, min_log_likelihood) {
+  log_likelihood == -Inf || log_likelihood < min_log_likelihood
 }
