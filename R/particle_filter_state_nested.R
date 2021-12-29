@@ -81,19 +81,19 @@ particle_filter_state_nested <- R6::R6Class(
                           n_particles, n_threads, initial, index, compare,
                           gpu_config, seed, min_log_likelihood,
                           save_history, save_restart) {
-      ## These checks must exist differently for the two versions (and
-      ## for the deterministic version)
+      pars_multi <- inherits(data, "particle_filter_data_nested")
 
-      ## NOTE: this will generate a warning when updating docs but
-      ## that's ok; see https://github.com/r-lib/roxygen2/issues/1067
-      if (length(pars) < length(unique(data$population))) {
-        stop(sprintf("'pars' must be at least the length of
-                     'data$population', %d",
-                     length(unique(data$population))))
+      if (pars_multi) {
+        if (!is.null(names(pars))) {
+          stop("Expected an unnamed list of parameters")
+        }
+        if (length(pars) != attr(data, "n_populations")) {
+          stop(sprintf("'pars' must have length %d (following data$%s)",
+                       attr(data, "n_populations"), attr(data, "population")))
+        }
       }
 
       if (is.null(model)) {
-        pars_multi <- TRUE # DIFFERENCE
         model <- generator$new(pars = pars, step = steps[[1L]],
                                n_particles = n_particles, n_threads = n_threads,
                                seed = seed, gpu_config = gpu_config,
@@ -116,13 +116,15 @@ particle_filter_state_nested <- R6::R6Class(
         model$set_index(index_data$run)
       }
 
+      ## The model shape is [n_particles, <any multi-par structure>]
+      shape <- model$shape()
+
       if (save_history) {
         len <- nrow(steps) + 1L
         state <- model$state(index_data$state)
         history_value <- array(NA_real_, c(dim(state), len))
         array_last_dimension(history_value, 1) <- state
-        history_order <- array(seq_len(n_particles),
-                               c(model$shape(), len))
+        history_order <- array(seq_len(n_particles), c(shape, len))
         self$history <- list(
           value = history_value,
           order = history_order,
@@ -133,10 +135,8 @@ particle_filter_state_nested <- R6::R6Class(
 
       save_restart_step <- check_save_restart(save_restart, data)
       if (length(save_restart_step) > 0) {
-        self$restart_state <- array(NA_real_,
-                                    c(model$n_state(),
-                                      model$shape(),
-                                      length(save_restart)))
+        self$restart_state <-
+          array(NA_real_, c(model$n_state(), shape, length(save_restart)))
       } else {
         self$restart_state <- NULL
       }
@@ -159,7 +159,7 @@ particle_filter_state_nested <- R6::R6Class(
 
       ## Variable (see also history)
       self$model <- model
-      self$log_likelihood <- rep(0.0, length(pars))
+      self$log_likelihood <- rep(0, prod(shape[-1]))
     },
 
     ##' @description Run the particle filter to the end of the data. This is
@@ -257,7 +257,6 @@ particle_filter_state_nested <- R6::R6Class(
         }
       }
 
-      ## Identical below here
       self$log_likelihood_step <- log_likelihood_step
       self$log_likelihood <- log_likelihood
       self$current_step_index <- step_index
@@ -270,6 +269,7 @@ particle_filter_state_nested <- R6::R6Class(
         self$restart_state <- restart_state
       }
 
+      ## Partial not implemented, but follows directly
       log_likelihood
     },
 

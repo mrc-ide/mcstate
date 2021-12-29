@@ -196,17 +196,17 @@ particle_filter <- R6::R6Class(
       self$nested <- inherits(data, "particle_filter_data_nested")
 
       if (self$nested) {
+        population <- attr(data, "population")
         if (is.null(compare)) {
           private$data_split <- dust::dust_data(private$data, "step_end",
-                                                multi = "population")
+                                                multi = population)
         } else {
-          private$data_split <- groupeddf_to_list_of_lists(data, "population")
+          private$data_split <- groupeddf_to_list_of_lists(data, population)
         }
         private$steps <- unname(
           as.matrix(data[
-            data$population == levels(data$population)[[1]],
-            c("step_start", "step_end")
-          ])
+            data$population == levels(data[[population]])[[1]],
+            c("step_start", "step_end")])
         )
       } else {
         if (is.null(compare)) {

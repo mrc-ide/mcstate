@@ -904,7 +904,9 @@ test_that("particle filter state nested - errors", {
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index)
 
-  expect_error(p$run(pars[1]), "the length")
+  expect_error(p$run(pars[1]),
+               "'pars' must have length 2 (following data$population)",
+               fixed = TRUE)
 })
 
 test_that("can't change initial step via initial in nested filter", {

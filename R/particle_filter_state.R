@@ -80,10 +80,9 @@ particle_filter_state <- R6::R6Class(
                           n_particles, n_threads, initial, index, compare,
                           gpu_config, seed, min_log_likelihood,
                           save_history, save_restart) {
-      ## NOTE: this will generate a warning when updating docs but
-      ## that's ok; see https://github.com/r-lib/roxygen2/issues/1067
+      pars_multi <- inherits(data, "particle_filter_data_nested")
+
       if (is.null(model)) {
-        pars_multi <- FALSE
         model <- generator$new(pars = pars, step = steps[[1L]],
                                n_particles = n_particles, n_threads = n_threads,
                                seed = seed, gpu_config = gpu_config,
@@ -106,13 +105,15 @@ particle_filter_state <- R6::R6Class(
         model$set_index(index_data$run)
       }
 
+      ## The model shape is [n_particles, <any multi-par structure>]
+      shape <- model$shape()
+
       if (save_history) {
         len <- nrow(steps) + 1L
         state <- model$state(index_data$state)
         history_value <- array(NA_real_, c(dim(state), len))
         array_last_dimension(history_value, 1) <- state
-        history_order <- array(seq_len(n_particles),
-                               c(model$shape(), len))
+        history_order <- array(seq_len(n_particles), c(shape, len))
         self$history <- list(
           value = history_value,
           order = history_order,
@@ -123,10 +124,8 @@ particle_filter_state <- R6::R6Class(
 
       save_restart_step <- check_save_restart(save_restart, data)
       if (length(save_restart_step) > 0) {
-        self$restart_state <- array(NA_real_,
-                                    c(model$n_state(),
-                                      model$shape(),
-                                      length(save_restart)))
+        self$restart_state <-
+          array(NA_real_, c(model$n_state(), shape, length(save_restart)))
       } else {
         self$restart_state <- NULL
       }
@@ -149,7 +148,7 @@ particle_filter_state <- R6::R6Class(
 
       ## Variable (see also history)
       self$model <- model
-      self$log_likelihood <- 0.0
+      self$log_likelihood <- rep(0, prod(shape[-1]))
     },
 
     ##' @description Run the particle filter to the end of the data. This is
