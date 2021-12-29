@@ -70,6 +70,7 @@ documented.
   compare,
   gpu_config,
   seed,
+  min_log_likelihood,
   save_history,
   save_restart
 )}\if{html}{\out{</div>}}
@@ -104,11 +105,11 @@ documented.
 
 \item{\code{seed}}{Initial RNG seed}
 
+\item{\code{min_log_likelihood}}{Early termination control}
+
 \item{\code{save_history}}{Logical, indicating if we should save history}
 
 \item{\code{save_restart}}{Vector of steps to save restart at}
-
-\item{\code{min_log_likelihood}}{Early termination control}
 }
 \if{html}{\out{</div>}}
 }

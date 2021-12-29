@@ -66,7 +66,6 @@ particle_filter <- R6::R6Class(
     data = NULL,
     data_split = NULL,
     steps = NULL,
-    nested = FALSE, # TODO: make r.o. public, or add accessor
     ## Functions used for initial conditions, data comparisons and indices
     index = NULL,
     initial = NULL,
@@ -89,6 +88,13 @@ particle_filter <- R6::R6Class(
 
     ##' @field n_particles Number of particles used (read only)
     n_particles = NULL,
+
+    ##' @field nested Logical, indicating if this is a nested
+    ##' (multipopulation) particle filter (read only).  If `TRUE`, then
+    ##' each call to `run` returns a vector of log-likelihoods,
+    ##' one per population.  Triggered by the `data` argument to
+    ##' the constructor.
+    nested = NULL,
 
     ##' @description Create the particle filter
     ##'
@@ -187,11 +193,9 @@ particle_filter <- R6::R6Class(
       self$model <- model
       private$data <- data
 
-      if (inherits(data, "particle_filter_data_nested")) {
-        private$nested <- TRUE
-      }
+      self$nested <- inherits(data, "particle_filter_data_nested")
 
-      if (private$nested) {
+      if (self$nested) {
         if (is.null(compare)) {
           private$data_split <- dust::dust_data(private$data, "step_end",
                                                 multi = "population")
@@ -240,6 +244,7 @@ particle_filter <- R6::R6Class(
 
       lockBinding("model", self)
       lockBinding("n_particles", self)
+      lockBinding("nested", self)
     },
 
     ##' @description Run the particle filter
@@ -311,7 +316,7 @@ particle_filter <- R6::R6Class(
     run_begin = function(pars = list(), save_history = FALSE,
                          save_restart = NULL, min_log_likelihood = NULL) {
       min_log_likelihood <- min_log_likelihood %||% -Inf
-      if (private$nested) {
+      if (self$nested) {
         cls <- particle_filter_state_nested
       } else {
         cls <- particle_filter_state

@@ -20,7 +20,6 @@ particle_filter_state_nested <- R6::R6Class(
     data = NULL,
     data_split = NULL,
     steps = NULL,
-    n_steps = NULL,
     n_particles = NULL,
     n_threads = NULL,
     initial = NULL,

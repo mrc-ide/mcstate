@@ -67,6 +67,12 @@ matpoints(data_raw$day, t(true_history[1:3, , -1]), pch = 19,
 re-bound)}
 
 \item{\code{n_particles}}{Number of particles used (read only)}
+
+\item{\code{nested}}{Logical, indicating if this is a nested
+(multipopulation) particle filter (read only).  If \code{TRUE}, then
+each call to \code{run} returns a vector of log-likelihoods,
+one per population.  Triggered by the \code{data} argument to
+the constructor.}
 }
 \if{html}{\out{</div>}}
 }
