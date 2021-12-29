@@ -463,6 +463,9 @@ particle_filter <- R6::R6Class(
 
 ##' @importFrom stats runif
 particle_resample <- function(weights) {
+  if (is.matrix(weights)) {
+    return(apply(weights, 2, particle_resample))
+  }
   n <- length(weights)
   u <- runif(1, 0, 1 / n) + seq(0, by = 1 / n, length.out = n)
   cum_weights <- cumsum(weights / sum(weights))

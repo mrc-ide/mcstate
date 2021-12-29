@@ -225,24 +225,23 @@ particle_filter_state_nested <- R6::R6Class(
             model$state(save_history_index)
         }
 
-        log_weights <- pfsn_compare(state, compare, data_split[[t]], pars)
+        weights <- pfsn_compare(state, compare, data_split[[t]], pars)
 
-        if (is.null(log_weights)) {
+        if (is.null(weights)) {
           if (save_history) {
             array_last_dimension(history_order, t + 1L) <- seq_len(n_particles)
           }
           log_likelihood_step <- NA_real_
         } else {
-          tmp <- pfsn_weights(log_weights)
-          log_likelihood_step <- tmp$log_likelihood
-
+          log_likelihood_step <- weights$average
           log_likelihood <- log_likelihood + log_likelihood_step
-          if (pfs_early_exit(log_likelihood, min_log_likelihood)) {
+
+          if (pfsn_early_exit(log_likelihood, min_log_likelihood)) {
             log_likelihood <- -Inf
             break
           }
 
-          kappa <- tmp$kappa
+          kappa <- particle_resample(weights$weights)
           model$reorder(kappa)
           if (save_history) {
             array_last_dimension(history_order, t + 1L) <- kappa
@@ -358,35 +357,19 @@ pfsn_index <- function(model, index) {
 pfsn_compare <- function(state, compare, data, pars) {
   log_weights <- lapply(seq_len(nlayer(state)), function(i)
     compare(array_drop(state[, , i, drop = FALSE], 3), data[[i]], pars[[i]]))
-
   if (all(lengths(log_weights) == 0)) {
     return(NULL)
   }
-  vapply(log_weights, identity, numeric(length(log_weights[[1]])))
-}
 
-
-pfsn_weights <- function(log_weights) {
-  n <- ncol(log_weights)
-  weights <- lapply(seq_len(n), function(i)
-    scale_log_weights(log_weights[, i]))
-  log_likelihood <- vnapply(weights, "[[", "average")
-
-  if (all(log_likelihood > -Inf)) {
-    kappa <- vapply(weights, function(x) particle_resample(x$weights),
-                    numeric(nrow(log_weights)))
-  } else {
-    ## No reordering
-    kappa <- array(seq_len(nrow(log_weights)), dim(log_weights))
-  }
-
-  list(log_likelihood = log_likelihood, kappa = kappa)
+  weights <- lapply(log_weights, scale_log_weights)
+  list(average = vnapply(weights, "[[", "average"),
+       weights = vapply(weights, function(x) x$weights, numeric(ncol(state))))
 }
 
 
 pfsn_early_exit <- function(log_likelihood, min_log_likelihood) {
   scalar <- length(min_log_likelihood) == 1
-  log_likelihood == -Inf ||
+  any(log_likelihood == -Inf) ||
     ( scalar && sum(log_likelihood) < min_log_likelihood) ||
     (!scalar && all(log_likelihood < min_log_likelihood))
 }

@@ -217,24 +217,23 @@ particle_filter_state <- R6::R6Class(
             model$state(save_history_index)
         }
 
-        log_weights <- pfs_compare(state, compare, data_split[[t]], pars)
+        weights <- pfs_compare(state, compare, data_split[[t]], pars)
 
-        if (is.null(log_weights)) {
+        if (is.null(weights)) {
           if (save_history) {
             array_last_dimension(history_order, t + 1L) <- seq_len(n_particles)
           }
           log_likelihood_step <- NA_real_
         } else {
-          tmp <- pfs_weights(log_weights)
-          log_likelihood_step <- tmp$log_likelihood
-
+          log_likelihood_step <- weights$average
           log_likelihood <- log_likelihood + log_likelihood_step
+
           if (pfs_early_exit(log_likelihood, min_log_likelihood)) {
             log_likelihood <- -Inf
             break
           }
 
-          kappa <- tmp$kappa
+          kappa <- particle_resample(weights$weights)
           model$reorder(kappa)
           if (save_history) {
             array_last_dimension(history_order, t + 1L) <- kappa
@@ -408,19 +407,11 @@ pfs_index <- function(model, index) {
 
 
 pfs_compare <- function(state, compare, data, pars) {
-  compare(state, data, pars)
-}
-
-
-pfs_weights <- function(log_weights) {
-  weights <- scale_log_weights(log_weights)
-  log_likelihood <- weights$average
-  if (log_likelihood > -Inf) {
-    kappa <- particle_resample(weights$weights)
-  } else {
-    kappa <- seq_along(weights)
+  log_weights <- compare(state, data, pars)
+  if (is.null(log_weights)) {
+    return(log_weights)
   }
-  list(log_likelihood = log_likelihood, kappa = kappa)
+  scale_log_weights(log_weights)
 }
 
 
