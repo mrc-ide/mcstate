@@ -29,7 +29,31 @@ particle_filter_state <- R6::R6Class(
     save_restart_step = NULL,
     save_restart = NULL,
     min_log_likelihood = NULL,
-    support = NULL
+    support = NULL,
+
+    run_compiled = function() {
+      history <- self$history
+      save_history <- !is.null(history)
+      save_history_index <- self$history$index
+
+      model <- self$model
+      if (save_history) {
+        model$set_index(save_history_index)
+        on.exit(model$set_index(integer(0)))
+      }
+
+      res <- model$filter(save_history, private$save_restart_step)
+
+      self$log_likelihood_step <- NA_real_
+      self$log_likelihood <- res$log_likelihood
+      self$current_step_index <- nrow(private$steps)
+      if (save_history) {
+        self$history <- list(value = res$trajectories,
+                             index = save_history_index)
+      }
+      self$restart_state <- res$snapshots
+      res$log_likelihood
+    }
   ),
 
   public = list(
@@ -170,7 +194,7 @@ particle_filter_state <- R6::R6Class(
     ##' value of `step_index`
     run = function() {
       if (is.null(private$compare)) {
-        particle_filter_compiled(self, private)
+        private$run_compiled()
       } else {
         self$step(nrow(private$steps))
       }
@@ -243,7 +267,7 @@ particle_filter_state <- R6::R6Class(
           log_likelihood_step <- weights$average
           log_likelihood <- log_likelihood + log_likelihood_step
 
-          if (support$early_exit(log_likelihood, min_log_likelihood)) {
+          if (particle_filter_early_exit(log_likelihood, min_log_likelihood)) {
             log_likelihood <- -Inf
             break
           }
@@ -359,33 +383,6 @@ particle_filter_state <- R6::R6Class(
   ))
 
 
-## This is used by both the nested and non-nested particle filter, and
-## outsources all the work to dust.
-particle_filter_compiled <- function(self, private) {
-  history <- self$history
-  save_history <- !is.null(history)
-  save_history_index <- self$history$index
-
-  model <- self$model
-  if (save_history) {
-    model$set_index(save_history_index)
-    on.exit(model$set_index(integer(0)))
-  }
-
-  res <- model$filter(save_history, private$save_restart_step)
-
-  self$log_likelihood_step <- NA_real_
-  self$log_likelihood <- res$log_likelihood
-  self$current_step_index <- nrow(private$steps)
-  if (save_history) {
-    self$history <- list(value = res$trajectories,
-                         index = save_history_index)
-  }
-  self$restart_state <- res$snapshots
-  res$log_likelihood
-}
-
-
 ## Used for both the normal and deterministic particle filter
 check_step <- function(curr, step_index, steps, name) {
   n_steps <- nrow(steps)
@@ -404,16 +401,73 @@ check_step <- function(curr, step_index, steps, name) {
 }
 
 
-pfs_initial <- function(model, initial, pars, n_particles) {
-  initial_data <- initial(model$info(), n_particles, pars)
-  if (is.list(initial_data)) {
-    stop("Setting 'step' from initial no longer supported")
+## This helper pulls together small pieces of bookkeeping that differ
+## strongly depending on if the particle filter is a
+## nested/multiparameter filter or not.
+particle_filter_state_support <- function(nested) {
+  if (nested) {
+    list(initial = pfs_initial_nested,
+         index = pfs_index_nested,
+         compare = pfs_compare_nested)
+  } else {
+    list(initial = pfs_initial_simple,
+         index = pfs_index_simple,
+         compare = pfs_compare_simple)
   }
-  initial_data
 }
 
 
-pfs_index <- function(model, index) {
+particle_filter_early_exit <- function(log_likelihood, min_log_likelihood) {
+  if (any(log_likelihood == -Inf)) {
+    return(TRUE)
+  }
+  if (length(log_likelihood) == 1) {
+    log_likelihood < min_log_likelihood
+  } else if (length(min_log_likelihood) == 1) {
+    sum(log_likelihood) < min_log_likelihood
+  } else {
+    all(log_likelihood < min_log_likelihood)
+  }
+}
+
+
+## These functions are either "simple" or "nested"
+pfs_initial_simple <- function(model, initial, pars, n_particles) {
+  state <- initial(model$info(), n_particles, pars)
+  if (is.list(state)) {
+    stop("Setting 'step' from initial no longer supported")
+  }
+  state
+}
+
+
+pfs_initial_nested <- function(model, initial, pars, n_particles) {
+  state <- Map(initial, model$info(), rep(n_particles, length(pars)), pars)
+  if (all(vlapply(state, is.null))) {
+    return()
+  }
+
+  if (any(vlapply(state, is.list))) {
+    stop("Setting 'step' from initial no longer supported")
+  }
+
+  len <- lengths(state)
+  if (length(unique(len)) != 1) {
+    stop(sprintf("initial() produced unequal state lengths %s",
+                 str_collapse(len)))
+  }
+
+  if (is.null(dim(state[[1]]))) {
+    state_array <- matrix(unlist(state, FALSE, FALSE), ncol = length(pars))
+  } else {
+    state_array <- list_to_array(state)
+  }
+
+  state_array
+}
+
+
+pfs_index_simple <- function(model, index) {
   if (is.null(index)) {
     return(NULL)
   }
@@ -421,7 +475,22 @@ pfs_index <- function(model, index) {
 }
 
 
-pfs_compare <- function(state, compare, data, pars) {
+pfs_index_nested <- function(model, index) {
+  if (is.null(index)) {
+    return(NULL)
+  }
+  index_data <- lapply(model$info(), index)
+
+  nok <- !all(vlapply(index_data[-1], identical, index_data[[1]]))
+  if (nok) {
+    stop("index must be identical across populations")
+  }
+
+  index_data[[1]]
+}
+
+
+pfs_compare_simple <- function(state, compare, data, pars) {
   log_weights <- compare(state, data, pars)
   if (is.null(log_weights)) {
     return(log_weights)
@@ -430,21 +499,14 @@ pfs_compare <- function(state, compare, data, pars) {
 }
 
 
-pfs_early_exit <- function(log_likelihood, min_log_likelihood) {
-  log_likelihood == -Inf || log_likelihood < min_log_likelihood
-}
-
-
-particle_filter_state_support <- function(pars_multi) {
-  if (pars_multi) {
-    list(initial = pfsn_initial,
-         index = pfsn_index,
-         compare = pfsn_compare,
-         early_exit = pfsn_early_exit)
-  } else {
-    list(initial = pfs_initial,
-         index = pfs_index,
-         compare = pfs_compare,
-         early_exit = pfs_early_exit)
+pfs_compare_nested <- function(state, compare, data, pars) {
+  log_weights <- lapply(seq_len(nlayer(state)), function(i)
+    compare(array_drop(state[, , i, drop = FALSE], 3), data[[i]], pars[[i]]))
+  if (all(lengths(log_weights) == 0)) {
+    return(NULL)
   }
+
+  weights <- lapply(log_weights, scale_log_weights)
+  list(average = vnapply(weights, "[[", "average"),
+       weights = vapply(weights, function(x) x$weights, numeric(ncol(state))))
 }

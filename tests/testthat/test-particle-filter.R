@@ -1202,22 +1202,11 @@ test_that("Can run a gpu model by passing gpu_config through", {
 
   filter_c <- p_c$run_begin()
   filter_g <- p_g$run_begin()
+
   expect_false(r6_private(filter_c)$gpu)
   expect_true(r6_private(filter_g)$gpu)
-
-  target_c <- mockery::mock()
-  target_g <- mockery::mock()
-  mockery::stub(filter_c$run, "particle_filter_compiled", target_c)
-  mockery::stub(filter_g$run, "particle_filter_compiled", target_g)
-  filter_c$run()
-  filter_g$run()
-  mockery::expect_called(target_c, 1L)
-  mockery::expect_called(target_g, 1L)
-
-  m_c <- mockery::mock_args(target_c)[[1]][[1]]$model
-  m_g <- mockery::mock_args(target_g)[[1]][[1]]$model
-  expect_false(m_c$uses_gpu(TRUE))
-  expect_true(m_g$uses_gpu(TRUE))
+  expect_false(filter_c$model$uses_gpu(TRUE))
+  expect_true(filter_g$model$uses_gpu(TRUE))
 })
 
 
