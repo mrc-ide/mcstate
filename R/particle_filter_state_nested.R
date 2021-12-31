@@ -28,7 +28,8 @@ particle_filter_state_nested <- R6::R6Class(
     gpu = NULL,
     save_restart_step = NULL,
     save_restart = NULL,
-    min_log_likelihood = NULL
+    min_log_likelihood = NULL,
+    support = NULL
   ),
 
   public = list(
@@ -82,6 +83,7 @@ particle_filter_state_nested <- R6::R6Class(
                           gpu_config, seed, min_log_likelihood,
                           save_history, save_restart) {
       pars_multi <- inherits(data, "particle_filter_data_nested")
+      support <- particle_filter_state_support(pars_multi)
 
       if (pars_multi) {
         if (!is.null(names(pars))) {
@@ -107,11 +109,11 @@ particle_filter_state_nested <- R6::R6Class(
       }
 
       if (!is.null(initial)) {
-        initial_data <- pfsn_initial(model, initial, pars, n_particles)
+        initial_data <- support$initial(model, initial, pars, n_particles)
         model$update_state(state = initial_data)
       }
 
-      index_data <- pfsn_index(model, index)
+      index_data <- support$index(model, index)
       if (!is.null(compare) && !is.null(index_data$run)) {
         model$set_index(index_data$run)
       }
@@ -156,6 +158,7 @@ particle_filter_state_nested <- R6::R6Class(
       private$min_log_likelihood <- min_log_likelihood
       private$save_restart_step <- save_restart_step
       private$save_restart <- save_restart
+      private$support <- support
 
       ## Variable (see also history)
       self$model <- model
@@ -215,6 +218,7 @@ particle_filter_state_nested <- R6::R6Class(
       n_particles <- private$n_particles
 
       min_log_likelihood <- private$min_log_likelihood
+      support <- private$support
 
       for (t in seq(curr + 1L, step_index)) {
         step_end <- steps[t, 2L]
@@ -225,7 +229,7 @@ particle_filter_state_nested <- R6::R6Class(
             model$state(save_history_index)
         }
 
-        weights <- pfsn_compare(state, compare, data_split[[t]], pars)
+        weights <- support$compare(state, compare, data_split[[t]], pars)
 
         if (is.null(weights)) {
           if (save_history) {
@@ -236,7 +240,7 @@ particle_filter_state_nested <- R6::R6Class(
           log_likelihood_step <- weights$average
           log_likelihood <- log_likelihood + log_likelihood_step
 
-          if (pfsn_early_exit(log_likelihood, min_log_likelihood)) {
+          if (support$early_exit(log_likelihood, min_log_likelihood)) {
             log_likelihood <- -Inf
             break
           }
@@ -367,9 +371,14 @@ pfsn_compare <- function(state, compare, data, pars) {
 }
 
 
+## This can be used safely for the single parameter case too I think
 pfsn_early_exit <- function(log_likelihood, min_log_likelihood) {
-  scalar <- length(min_log_likelihood) == 1
-  any(log_likelihood == -Inf) ||
-    ( scalar && sum(log_likelihood) < min_log_likelihood) ||
-    (!scalar && all(log_likelihood < min_log_likelihood))
+  if (any(log_likelihood == -Inf)) {
+    return(TRUE)
+  }
+  if (length(min_log_likelihood) == 1) {
+    sum(log_likelihood) < min_log_likelihood
+  } else {
+    all(log_likelihood < min_log_likelihood)
+  }
 }
