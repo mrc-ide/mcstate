@@ -316,12 +316,7 @@ particle_filter <- R6::R6Class(
     run_begin = function(pars = list(), save_history = FALSE,
                          save_restart = NULL, min_log_likelihood = NULL) {
       min_log_likelihood <- min_log_likelihood %||% -Inf
-      if (self$nested) {
-        cls <- particle_filter_state_nested
-      } else {
-        cls <- particle_filter_state
-      }
-      cls$new(
+      particle_filter_state$new(
         pars, self$model, private$last_model, private$data,
         private$data_split, private$steps, self$n_particles,
         private$n_threads, private$initial, private$index, private$compare,

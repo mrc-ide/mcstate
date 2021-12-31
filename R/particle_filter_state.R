@@ -43,7 +43,8 @@ particle_filter_state <- R6::R6Class(
 
     ##' @field restart_state Full model state at a series of points in
     ##'   time, if the model was created with non-`NULL` `save_restart`.
-    ##'   This is a 3d array as described in [mcstate::particle_filter]
+    ##'   This is a 3d (or greater) array as described in
+    ##'   [mcstate::particle_filter]
     restart_state = NULL,
 
     ##' @field log_likelihood The log-likelihood so far. This starts at
@@ -83,6 +84,16 @@ particle_filter_state <- R6::R6Class(
                           save_history, save_restart) {
       pars_multi <- inherits(data, "particle_filter_data_nested")
       support <- particle_filter_state_support(pars_multi)
+
+      if (pars_multi) {
+        if (!is.null(names(pars))) {
+          stop("Expected an unnamed list of parameters")
+        }
+        if (length(pars) != attr(data, "n_populations")) {
+          stop(sprintf("'pars' must have length %d (following data$%s)",
+                       attr(data, "n_populations"), attr(data, "population")))
+        }
+      }
 
       if (is.null(model)) {
         model <- generator$new(pars = pars, step = steps[[1L]],

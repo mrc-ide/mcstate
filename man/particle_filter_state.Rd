@@ -25,7 +25,8 @@ them, but don't).
 
 \item{\code{restart_state}}{Full model state at a series of points in
 time, if the model was created with non-\code{NULL} \code{save_restart}.
-This is a 3d array as described in \link{particle_filter}}
+This is a 3d (or greater) array as described in
+\link{particle_filter}}
 
 \item{\code{log_likelihood}}{The log-likelihood so far. This starts at
 0 when initialised and accumulates value for each step taken.}
