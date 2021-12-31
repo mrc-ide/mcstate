@@ -137,9 +137,13 @@ particle_filter_state <- R6::R6Class(
         model$update_state(state = initial_data)
       }
 
-      index_data <- support$index(model, index)
-      if (!is.null(compare) && !is.null(index_data$run)) {
-        model$set_index(index_data$run)
+      if (is.null(index)) {
+        index_data <- NULL
+      } else {
+        index_data <- support$index(model, index)
+        if (!is.null(compare) && !is.null(index_data$run)) {
+          model$set_index(index_data$run)
+        }
       }
 
       ## The model shape is [n_particles, <any multi-par structure>]
@@ -468,17 +472,11 @@ pfs_initial_nested <- function(model, initial, pars, n_particles) {
 
 
 pfs_index_simple <- function(model, index) {
-  if (is.null(index)) {
-    return(NULL)
-  }
   index(model$info())
 }
 
 
 pfs_index_nested <- function(model, index) {
-  if (is.null(index)) {
-    return(NULL)
-  }
   index_data <- lapply(model$info(), index)
 
   nok <- !all(vlapply(index_data[-1], identical, index_data[[1]]))
