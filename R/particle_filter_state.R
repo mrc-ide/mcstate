@@ -268,7 +268,7 @@ particle_filter_state <- R6::R6Class(
           log_likelihood <- log_likelihood + log_likelihood_step
 
           if (particle_filter_early_exit(log_likelihood, min_log_likelihood)) {
-            log_likelihood <- -Inf
+            log_likelihood[] <- -Inf
             break
           }
 

@@ -238,7 +238,11 @@ from the filter. This is primarily intended for use with
 will certainly be rejected. Only suitable for use where
 log-likelihood increments (with the \code{compare} function) are always
 negative. This is the case if you use a normalised discrete
-distribution, but not necessarily otherwise.}
+distribution, but not necessarily otherwise. If using a nested
+filter this can be a single number (in which case the exit is
+when the sum of log-likelihoods drops below this threshhold) or
+a vector of numbers the same length as \code{pars} (in which case exit
+occurs when all numbers drop below this threshhold).}
 }
 \if{html}{\out{</div>}}
 }

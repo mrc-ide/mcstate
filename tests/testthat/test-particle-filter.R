@@ -1227,3 +1227,49 @@ test_that("Can terminate a filter early", {
   expect_true(-Inf %in% ll2)
   expect_true(min(ll2[is.finite(ll2)]) >= min_ll)
 })
+
+
+test_that("nested particle filter requires unnamed parameters", {
+  dat <- example_sir_shared()
+  p <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
+                           index = dat$index)
+  pars <- list(a = list(beta = 0.2, gamma = 0.1),
+               b = list(beta = 0.3, gamma = 0.1))
+  expect_error(
+    p$run(pars),
+    "Expected an unnamed list of parameters")
+})
+
+
+test_that("Can do early exit for nested filter", {
+  dat <- example_sir_shared()
+  n_particles <- 42
+  pars <- list(list(beta = 0.2, gamma = 0.1),
+               list(beta = 0.3, gamma = 0.1))
+
+  ## Same setup as before
+  set.seed(1)
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  ll1 <- replicate(10, p1$run(pars))
+
+  set.seed(1)
+  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  min_ll <- mean(colSums(ll1))
+  ll2 <- replicate(10, p2$run(pars, min_log_likelihood = min_ll))
+  expect_true(-Inf %in% ll2)
+  expect_true(min(ll2[is.finite(ll2)]) >= min_ll)
+
+  set.seed(1)
+  p3 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  min_ll <- ll1[, which.min(abs(colSums(ll1) - mean(colSums(ll1))))]
+  ll3 <- replicate(10, p3$run(pars, min_log_likelihood = min_ll))
+
+  i <- apply(ll3 > -Inf, 2, any)
+  expect_true(!all(i))
+  expect_true(all(ll3[, !i] == -Inf))
+  expect_true(all(apply(ll3[, i] >= min_ll, 2, any)))
+  expect_false(all(apply(ll3[, i] >= min_ll, 2, all)))
+})

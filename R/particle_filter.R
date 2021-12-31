@@ -278,7 +278,11 @@ particle_filter <- R6::R6Class(
     ##' will certainly be rejected. Only suitable for use where
     ##' log-likelihood increments (with the `compare` function) are always
     ##' negative. This is the case if you use a normalised discrete
-    ##' distribution, but not necessarily otherwise.
+    ##' distribution, but not necessarily otherwise. If using a nested
+    ##' filter this can be a single number (in which case the exit is
+    ##' when the sum of log-likelihoods drops below this threshhold) or
+    ##' a vector of numbers the same length as `pars` (in which case exit
+    ##' occurs when all numbers drop below this threshhold).
     ##'
     ##' @return A single numeric value representing the log-likelihood
     ##' (`-Inf` if the model is impossible)
