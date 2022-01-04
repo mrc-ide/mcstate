@@ -1083,7 +1083,8 @@ test_that("error on different population indices", {
     list(beta = 0.3, gamma = 0.1)
   )
   set.seed(1)
-  expect_error(p$run(pars, save_history = TRUE), "index must be")
+  expect_error(p$run(pars, save_history = TRUE),
+               "index must be identical across populations")
 })
 
 test_that("initialise with complex state - nested", {

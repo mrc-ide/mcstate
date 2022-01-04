@@ -45,3 +45,18 @@ test_that("Confirm nested particle deterministic is correct", {
     array_drop(p3$restart_state()[, , 2, , drop = FALSE], 3),
     p2$restart_state())
 })
+
+
+test_that("error on different population indices", {
+  dat <- example_sir_shared()
+  index <- function(info) {
+    list(run = info$pars$beta * 10)
+  }
+  p <- particle_deterministic$new(dat$data, dat$model, dat$compare,
+                                  index = index)
+  pars <- list(
+    list(beta = 0.2, gamma = 0.1),
+    list(beta = 0.3, gamma = 0.1))
+  expect_error(p$run(pars, save_history = TRUE),
+               "index must be identical across populations")
+})
