@@ -33,167 +33,117 @@ test_that("varied parameter reps", {
     function(x) 1)
 })
 
+
 test_that("recycle", {
   expect_error(pmcmc_varied_parameter("p1", letters[1:3], 1:2),
                "Invalid length")
 })
 
-test_that("clean_parameters - error on empty and wrong type", {
-  skip("rewrite")
-  expect_error(clean_parameters(list()), "At least one")
-  expect_error(clean_parameters(list("a")), "Expected all")
+
+test_that("construct parameters - error on empty and wrong type", {
+  expect_error(
+    pmcmc_parameters_nested$new(list()),
+    "At least one parameter is required")
+  expect_error(
+    pmcmc_parameters_nested$new(list(TRUE)),
+    paste("Elements of 'parameters' must be in",
+          "'{pmcmc_parameter, pmcmc_varied_parameter}'"),
+    fixed = TRUE)
 })
 
-test_that("clean_parameters - error on missing proposal", {
-  skip("rewrite")
-  expect_error(clean_parameters(
-    list(pmcmc_varied_parameter("a", "a", 2),
-         pmcmc_varied_parameter("a", "a", 3)), NULL, NULL),
-    "'proposal_varied'")
-  expect_error(clean_parameters(
-    list(pmcmc_parameter("a", 2),
-         pmcmc_parameter("a", 3)), NULL, NULL),
-    "'proposal_fixed'")
+
+test_that("construct parameters - error on missing proposal", {
+  pars_varied <- list(pmcmc_varied_parameter("a", "x", 2),
+                      pmcmc_varied_parameter("b", "x", 3))
+  pars_fixed <- list(pmcmc_parameter("c", 2),
+                     pmcmc_parameter("d", 3))
+  expect_error(
+    pmcmc_parameters_nested$new(pars_varied),
+    "'proposal_varied' not supplied for varied parameters")
+  expect_error(
+    pmcmc_parameters_nested$new(pars_fixed, populations = "x"),
+    "'proposal_fixed' not supplied for fixed parameters")
 })
 
-test_that("clean_parameters - error on duplicates", {
-  skip("rewrite")
-  expect_error(clean_parameters(
-    list(pmcmc_varied_parameter("a", "a", 2),
-         pmcmc_varied_parameter("a", "a", 3)), diag(2), diag(2)),
-    "Duplicate")
-  expect_error(clean_parameters(
-    list(pmcmc_varied_parameter("a", "a", 2),
-         pmcmc_parameter("a", 3)), diag(2), diag(2)),
-    "Duplicate")
+
+test_that("construct parameters - error on duplicates", {
+  pars_varied <- list(pmcmc_varied_parameter("a", "a", 2),
+                      pmcmc_varied_parameter("a", "a", 3))
+  pars_fixed <- list(pmcmc_parameter("a", 2),
+                     pmcmc_parameter("a", 3))
+
+  expect_error(
+    pmcmc_parameters_nested$new(pars_varied, diag(2)),
+    "Duplicate parameter names: 'a'")
+  expect_error(
+    pmcmc_parameters_nested$new(pars_fixed, NULL, diag(2)),
+    "Duplicate parameter names: 'a'")
 })
 
-test_that("clean_parameters - error on wrong names", {
-  skip("rewrite")
-  expect_error(clean_parameters(
-    list(a = pmcmc_varied_parameter("a", "a", 2),
-         c = pmcmc_parameter("b", 3)), diag(2), diag(2)),
-    "Fixed parameters are named")
-  expect_error(clean_parameters(
+
+test_that("construct parameters - error on wrong names", {
+  expect_error(
+    pmcmc_parameters_nested$new(
+      list(a = pmcmc_varied_parameter("a", "a", 2),
+           c = pmcmc_parameter("b", 3)), diag(1), diag(1)),
+    "Fixed parameters are named, but the names do not match parameters")
+  expect_error(pmcmc_parameters_nested$new(
     list(c = pmcmc_varied_parameter("a", "a", 2),
-         b = pmcmc_parameter("b", 3)), diag(2), diag(2)),
-    "Varied parameters are named")
-  expect_error(clean_parameters(
+         b = pmcmc_parameter("b", 3)), diag(1), diag(1)),
+    "Varied parameters are named, but the names do not match parameters")
+  expect_error(pmcmc_parameters_nested$new(
     list(pmcmc_varied_parameter("a", c("p1", "p2"), 2),
          pmcmc_varied_parameter("b", c("p2", "p1"), 2),
-         pmcmc_parameter("c", 3)), diag(2), diag(2)),
-    "Populations and ordering")
-  expect_error(clean_parameters(
+         pmcmc_parameter("c", 3)), diag(2), diag(1)),
+    "Populations and ordering of varied parameters must be identical")
+  expect_error(pmcmc_parameters_nested$new(
     list(pmcmc_varied_parameter("a", c("p1", "p2"), 2),
          pmcmc_varied_parameter("b", c("p2"), 2),
-         pmcmc_parameter("c", 3)), diag(2), diag(2)),
-    "Populations and ordering")
+         pmcmc_parameter("c", 3)), diag(2), diag(1)),
+    "Populations and ordering of varied parameters must be identical")
 })
 
-test_that("clean_parameters - silent", {
-  skip("rewrite")
-  p <- clean_parameters(
-    list(a = pmcmc_varied_parameter("a", c("p1", "p2"), 2),
-         b = pmcmc_parameter("b", 3),
-         c = pmcmc_parameter("c", 3),
-         d = pmcmc_varied_parameter("d", c("p1", "p2"), 2)),
-    diag(2), diag(2))
-  expect_equal(p$names,
-               list(fixed = c("b", "c"), varied = c("a", "d"),
-                    original = letters[1:4]))
-})
-
-test_that("clean_parameters - silent without fixed/varied", {
-  skip("rewrite")
-  expect_equal(clean_parameters(
-    list(a = pmcmc_varied_parameter("a", c("p1", "p2"), 2),
-         b = pmcmc_varied_parameter("b", c("p1", "p2"), 2)),
-    diag(2), NULL)$fixed_parameters, NULL)
-  expect_equal(clean_parameters(
-    list(a = pmcmc_parameter("a", 2),
-         b = pmcmc_parameter("b", 2)), NULL, diag(1))$varied_parameters, NULL)
-})
 
 test_that("clean proposals - error on wrong names", {
-  skip("rewrite")
-  params <- list(fixed = letters[1:2], varied = letters[3:4])
-  pops <- letters[5:6]
+  pars <- list(
+    pmcmc_varied_parameter("a", c("x", "y"), 1:2),
+    pmcmc_varied_parameter("b", c("x", "y"), 3:4),
+    pmcmc_parameter("c", 5),
+    pmcmc_parameter("d", 6))
 
+  proposal_varied <- array(
+    diag(2), c(2, 2, 2),
+    dimnames = list(c("a", "b"), c("c", "d"), c("x", "y")))
   expect_error(
-    clean_proposals(array(diag(2), c(2, 2, 2),
-                          dimnames = list(letters[1:2], letters[3:4],
-                                          letters[5:6])),
-                    diag(2), pops, params),
-    "proposal_varied")
+    pmcmc_parameters_nested$new(pars, proposal_varied, diag(2)),
+    "Expected names of dimension 2 of 'proposal_varied' to match parameters")
 
+  proposal_fixed <- matrix(diag(2), 2,
+                           dimnames = list(c("a", "b"), c("c", "d")))
   expect_error(
-    clean_proposals(
-      array(diag(2), c(2, 2, 2)),
-      matrix(diag(2), 2, 2, dimnames = list(letters[5:6], letters[5:6])),
-      pops, params),
-    "proposal_fixed")
-
-  expect_error(
-    clean_proposals(array(diag(2), c(2, 2, 2),
-                          dimnames = list(NULL, NULL, letters[3:4])),
-                    diag(2), pops, params),
-    "Expected 3rd")
+    pmcmc_parameters_nested$new(pars, diag(2), proposal_fixed),
+    "Expected names of dimension 1 of 'proposal_fixed' to match parameters")
 })
+
 
 test_that("clean proposals - error on misspecified array", {
-  skip("rewrite")
-  params <- list(fixed = letters[1:2], varied = letters[3:4])
-  pops <- letters[5:6]
+  pars <- list(
+    pmcmc_varied_parameter("a", c("x", "y"), 1:2),
+    pmcmc_varied_parameter("b", c("x", "y"), 3:4),
+    pmcmc_parameter("c", 5),
+    pmcmc_parameter("d", 6))
 
   expect_error(
-    clean_proposals(array(diag(2), c(1, 2, 2),
-                          dimnames = list(NULL, NULL, letters[3:4])),
-                    diag(2), pops, params),
-    "Expected proposal")
+    pmcmc_parameters_nested$new(pars, diag(3), diag(2)),
+    "Expected 'proposal_varied' to be array with dimensions 2 x 2")
+  expect_error(
+    pmcmc_parameters_nested$new(pars, array(1, c(2, 2, 3)), diag(2)),
+    "Expected 'proposal_varied' to be array with dimensions 2 x 2 x 2")
+  expect_error(
+    pmcmc_parameters_nested$new(pars, diag(2), diag(3)),
+    "Expected 'proposal_fixed' to be array with dimensions 2 x 2")
 })
 
-test_that("clean proposals - silent", {
-  skip("rewrite")
-  params <- list(fixed = letters[1:2], varied = letters[3:4])
-  pops <- letters[5:6]
-
-  expect_equal(
-    clean_proposals(diag(2), diag(2), pops, params)$
-      varied,
-    array(diag(2), dim = c(2, 2, 2),
-          dimnames = list(letters[3:4], letters[3:4], letters[5:6])))
-
-  expect_equal(
-    clean_proposals(diag(2), diag(2), pops, params)$
-      fixed,
-    matrix(diag(2), 2, 2, dimnames = list(letters[1:2], letters[1:2])))
-})
-
-test_that("clean proposals - silent edge cases", {
-  skip("rewrite")
-  params <- list(fixed = letters[1:2], varied = letters[3:4])
-  pops <- letters[5:6]
-
-  # 1 varied 1 fixed
-  expect_equal(
-    clean_proposals(diag(1), diag(1), pops, list(fixed = "a", varied = "b"))$
-      varied,
-    array(diag(1), dim = c(1, 1, 2),
-          dimnames = list("b", "b", pops)))
-
-  # 1 varied 0 fixed 1 pop
-  expect_equal(
-    clean_proposals(diag(1), NULL, "c", list(varied = "b"))$
-      varied,
-    array(diag(1), dim = c(1, 1, 1),
-          dimnames = list("b", "b", "c")))
-
-  # 0 varied 1 fixed
-  expect_equal(
-    clean_proposals(NULL, diag(1), NULL, list(fixed = "b"))$
-      fixed,
-    matrix(diag(1), dimnames = list("b", "b")))
-})
 
 test_that("construct pmcmc_parameters_nested; contruction and basic use", {
   parameters <- list(a = pmcmc_varied_parameter("a", c("p1", "p2"), 1:2),
@@ -404,26 +354,22 @@ test_that("pmcmc_parameters_nested propose - fixed only", {
 
 
 test_that("pmcmc_parameters_nested fix errors", {
-  skip("rewrite")
   parameters <- list(
     b = pmcmc_parameter("b", 1, prior = dexp))
   proposal_varied <- NULL
   proposal_fixed <- diag(1)
   p <- pmcmc_parameters_nested$new(parameters, NULL, proposal_fixed,
-                                   populations = letters[1:2])
-  expect_error(p$fix(matrix(1)), "should have rownames")
-  expect_error(p$fix(matrix(1, nrow = 2, dimnames = list(letters[1:2], "a"))),
-               "Fixed parameters")
-  expect_error(p$fix(matrix(1, nrow = 2, dimnames = list(letters[1:2], "b"))),
-               "Cannot fix")
-
-  parameters <- list(
-    pmcmc_parameter("a", 1, prior = dexp),
-    pmcmc_parameter("b", 1, prior = dexp))
-  p <- pmcmc_parameters_nested$new(parameters, NULL, diag(2),
-                                   populations = letters[1:2])
-  expect_error(p$fix(matrix(1, nrow = 2, dimnames = list(c("c", "b"), "a"))),
-               "Rownames of")
+                                   populations = c("x", "y"))
+  expect_error(
+    p$fix(matrix(1)),
+    "colnames of 'fixed' must be identical to '$populations()'",
+    fixed = TRUE)
+  expect_error(
+    p$fix(matrix(1, ncol = 2, dimnames = list("x", c("x", "y")))),
+    "Fixed parameters not found in model: 'x'")
+  expect_error(
+    p$fix(matrix(1, 1, 2, dimnames = list("b", c("x", "y")))),
+    "Cannot fix all parameters")
 })
 
 

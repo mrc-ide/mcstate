@@ -393,7 +393,7 @@ ppn_validate_parameters_varied <- function(parameters) {
   nms <- vcapply(parameters, function(x) x[[1]]$name[1], USE.NAMES = FALSE)
 
   if (!is.null(names(parameters)) && !identical(nms, names(parameters))) {
-    stop("Fixed parameters are named, but the names do not match parameters")
+    stop("Varied parameters are named, but the names do not match parameters")
   }
   names(parameters) <- nms
 
@@ -446,7 +446,9 @@ ppn_validate_proposals <- function(parameters, proposal_varied,
     }
     proposal_varied <- assert_dimnames(
       proposal_varied,
-      list(names(parameters$varied), names(parameters$varied), populations))
+      list(parameters = names(parameters$varied),
+           parameters = names(parameters$varied),
+           populations = populations))
   }
 
   if (is.null(parameters$fixed)) {
@@ -462,7 +464,8 @@ ppn_validate_proposals <- function(parameters, proposal_varied,
     assert_dimensions(proposal_fixed, c(len_fixed, len_fixed))
     proposal_fixed <- assert_dimnames(
       proposal_fixed,
-      list(names(parameters$fixed), names(parameters$fixed)))
+      list(parameters = names(parameters$fixed),
+           parameters = names(parameters$fixed)))
   }
 
   list(fixed = proposal_fixed, varied = proposal_varied)

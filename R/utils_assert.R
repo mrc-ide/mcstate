@@ -131,10 +131,11 @@ assert_dimnames <- function(x, expected, name = deparse(substitute(x))) {
                        i, name))
         } else {
           nms <- names(expected)
+          values <- paste(squote(expected[[i]]), collapse = ", ")
           if (is.null(nms) || !nzchar(nms[[i]])) {
-            target <- paste(squote(expected[[i]]), collapse = ", ")
+            target <- values
           } else {
-            target <- nms[[i]]
+            target <- sprintf("%s (%s)", nms[[i]], values)
           }
           stop(sprintf("Expected names of dimension %d of '%s' to match %s",
                        i, name, target))
