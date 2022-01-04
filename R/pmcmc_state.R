@@ -53,8 +53,6 @@ pmcmc_state <- R6::R6Class(
     },
 
     update_mcmc_history = function() {
-      if (private$nested) browser()
-
       private$history_pars$add(private$curr_pars)
       private$history_probabilities$add(
         c(private$curr_lprior, private$curr_llik, private$curr_lpost))
@@ -178,7 +176,8 @@ pmcmc_state <- R6::R6Class(
 
       ## This bit is different, otherwise looking similar enough for
       ## dependency injection to work?
-      run_alternate_step <- alternate(private$run_fixed, private$run_varied,
+      run_alternate_step <- alternate(private$update_fixed,
+                                      private$update_varied,
                                       control$nested_step_ratio)
 
       for (i in steps) {
@@ -246,19 +245,23 @@ pmcmc_state <- R6::R6Class(
       mcstate_pmcmc(pars, probabilities, state, trajectories, restart, predict)
     },
 
+    ## TODO: this might be a good place to invert the structure of the
+    ## generated parameters; we currently do so that each row is each
+    ## pop, not each col
     finish_nested = function() {
       browser()
-      ## param x pop x step
-      pars_array <- list_to_array(private$history_pars$get())
-      pars_array <- aperm(pars_array, c(2, 1, 3))
-      dimnames(pars_array)[c(2, 1)] <- dimnames(private$curr_pars)
+      ## pop x pop x step
+      pars <- array_from_list(private$history_pars$get(), c(2, 1, 3))
+      dimnames(pars)[2:1] <- dimnames(private$curr_pars)
 
       ## var x pop x step
-      probabilities <- list_to_array(private$history_probabilities$get())
-      probabilities <- aperm(probabilities, c(2, 1, 3))
-      dimnames(probabilities)[1:2] <- list(c("log_prior", "log_likelihood",
-                                             "log_posterior"),
-                                           rownames(private$curr_pars))
+      ## TODO: push this into the save
+      tmp <- lapply(private$history_probabilities$get(), matrix,
+                    ncol = 3, byrow = TRUE)
+      probabilities <- array_from_list(tmp, c(2, 1, 3))
+      dimnames(probabilities)[2:1] <-
+        list(c("log_prior", "log_likelihood", "log_posterior"),
+             rownames(private$curr_pars))
 
       predict <- state <- restart <- trajectories <- NULL
 
