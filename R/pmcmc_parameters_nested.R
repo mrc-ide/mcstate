@@ -281,9 +281,7 @@ pmcmc_parameters_nested <- R6::R6Class(
     ##' @param theta a parameter matrix with rows in the same order as
     ##' `$names()` and columns in the same order as `$populations()`.
     model = function(theta) {
-      theta <- self$validate(theta)
-      unname(lapply(seq_along(self$populations()), function(i)
-        private$transform[[i]](theta[, i])))
+      nested_transform(self$validate(theta), private$transform)
     },
 
     ##' @description Set some parameters to fixed values. Use this to
@@ -516,4 +514,10 @@ ppn_validate_fix <- function(fixed, populations, names_fixed, names_varied) {
   }
 
   fixed
+}
+
+
+nested_transform <- function(theta, transform) {
+  unname(lapply(seq_along(transform), function(i)
+    transform[[i]](theta[, i])))
 }

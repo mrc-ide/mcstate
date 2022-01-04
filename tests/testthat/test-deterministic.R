@@ -92,7 +92,7 @@ test_that("Particle index control in filter is very limited", {
   p$run(list(), save_history = TRUE, save_restart = 50)
 
   expect_equal(dim(p$history()), c(3, 1, 101))
-  expect_equal(dim(p$history(1)), c(3, 101))
+  expect_equal(dim(p$history(1)), c(3, 1, 101))
   expect_error(
     dim(p$history(integer(0))),
     "Invalid value for 'index_particle' may only be 1 (or NULL)",
@@ -159,7 +159,7 @@ test_that("extract history from deterministic filter", {
   p$run(save_history = TRUE)
   h <- p$history()
   expect_equal(dim(h), c(3, 1, 101)) # state, particles, time
-  expect_equal(p$history(1L), array_drop(h, 2))
+  expect_equal(p$history(1L), h)
 })
 
 

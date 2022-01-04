@@ -81,11 +81,9 @@ pmcmc_predict <- function(object, steps, prepend_trajectories = FALSE,
 
 pmcmc_predict_nested <- function(object, state, index, model, n_threads,
                                  steps, prepend_trajectories, seed) {
-
-  pars <- apply(object$pars, 3, function(x)
-    set_names(object$predict$transform(t(x)), colnames(object$pars)))
+  pars <- apply(object$pars, 3, nested_transform, object$predict$transform)
   pars <- unlist(pars, FALSE)
-  dim(pars) <- c(nlayer(object$pars), ncol(object$pars))
+  dim(pars) <- c(ncol(object$pars), nlayer(object$pars))
 
   index <- object$predict$index
   model <- object$predict$filter$model
@@ -94,7 +92,7 @@ pmcmc_predict_nested <- function(object, state, index, model, n_threads,
   mod <- model$new(pars, steps[[1]], NULL, n_threads = n_threads,
                    seed = seed, pars_multi = TRUE)
 
-  mod$update_state(state = aperm(state, c(1, 3, 2)))
+  mod$update_state(state = state)
   mod$set_index(index)
   y <- mod$simulate(steps)
 

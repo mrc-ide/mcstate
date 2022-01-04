@@ -206,11 +206,11 @@ pmcmc_remote <- R6::R6Class(
     ## here is too slow. We might want to make this async, but it will
     ## really complicate the above!
     finish = function(filename) {
-      self$session$run(function(method, filename) {
+      self$session$run(function(filename) {
         results <- .GlobalEnv$obj$finish()
         results$predict$filter <- results$predict$filter$seed
         suppressWarnings(saveRDS(results, filename))
-      }, list(method, filename))
+      }, list(filename))
 
       list(index = self$index, data = filename)
     }

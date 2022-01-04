@@ -382,9 +382,9 @@ test_that("discarding burnin drops beginnings of nested chain", {
   expect_identical(res$pars, results$pars[, , i])
   expect_identical(res$probabilities, results$probabilities[, , i])
   expect_identical(res$state, results$state[, , i])
-  expect_identical(res$trajectories$state, results$trajectories$state[, i, , ])
+  expect_identical(res$trajectories$state, results$trajectories$state[, , i, ])
   expect_identical(res$restart$state,
-                   results$restart$state[, i, , , drop = FALSE])
+                   results$restart$state[, , i, , drop = FALSE])
 })
 
 test_that("can sample from a nested mcmc", {
@@ -463,14 +463,14 @@ test_that("can combine chains for nested model", {
   expect_equal(dim(res$pars), c(n_par, n_pop, n_mcmc3))
   expect_equal(dim(res$probabilities), c(3, n_pop, n_mcmc3))
   expect_equal(dim(res$state), c(n_state, n_pop, n_mcmc3))
-  expect_equal(dim(res$trajectories$state), c(n_index, n_mcmc3, n_pop, n_time))
-  expect_equal(dim(res$restart$state), c(n_state, n_mcmc3, n_pop, n_restart))
+  expect_equal(dim(res$trajectories$state), c(n_index, n_pop, n_mcmc3, n_time))
+  expect_equal(dim(res$restart$state), c(n_state, n_pop, n_mcmc3, n_restart))
 
   i <- seq_len(n_mcmc) + n_mcmc
   expect_equal(res$pars[, , i], results2$pars)
   expect_equal(res$probabilities[, , i], results2$probabilities)
   expect_equal(res$state[, , i], results2$state)
-  expect_equal(res$trajectories$state[, i, , ], results2$trajectories$state)
-  expect_equal(res$restart$state[, i, , , drop = FALSE],
+  expect_equal(res$trajectories$state[, , i, ], results2$trajectories$state)
+  expect_equal(res$restart$state[, , i, , drop = FALSE],
                results2$restart$state)
 })
