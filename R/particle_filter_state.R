@@ -450,7 +450,8 @@ particle_filter_update_state <- function(transform, model_old, model_new) {
   } else {
     state_old <- model_old$state()
     state_new <- lapply(seq_len(n_pars), function(i)
-      transform(state_old[, , i], info_old[[i]], info_new[[i]]))
+      transform(array_drop(state_old[, , i, drop = FALSE], 3),
+                info_old[[i]], info_new[[i]]))
     state <- vapply(state_new, identity, state_new[[1]])
   }
 
