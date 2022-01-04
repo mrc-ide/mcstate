@@ -108,3 +108,39 @@ assert_list_of <- function(x, class, name = deparse(substitute(x))) {
   }
   invisible(x)
 }
+
+
+assert_dimensions <- function(x, expected, name = deparse(substitute(x))) {
+  dim_x <- dim(x)
+  if (length(dim_x) != length(expected) || !all(dim_x == expected)) {
+    stop(sprintf(
+      "Expected '%s' to be array with dimensions %s",
+      name, paste(expected, collapse = " x ")))
+  }
+  invisible(x)
+}
+
+
+assert_dimnames <- function(x, expected, name = deparse(substitite(x))) {
+  dn_x <- dimnames(x)
+  if (!is.null(dn_x) && !identical(dn_x, expected)) {
+    for (i in seq_along(expected)) {
+      if (!identical(dn_x[[i]], expected[[i]])) {
+        stop(sprintf("Expected names of dimension %d of %d to match...",
+                     i, name))
+      }
+    }
+  }
+  dimnames(x) <- expected
+  invisible(x)
+}
+
+
+match_value <- function(arg, choices, name = deparse(substitute(arg))) {
+  assert_scalar_character(arg)
+  if (!(arg %in% choices)) {
+    stop(sprintf("'%s' must be one of %s",
+                 name, paste(squote(choices), collapse = ", ")))
+  }
+  arg
+}

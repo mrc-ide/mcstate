@@ -72,3 +72,11 @@ test_that("assert_list_of", {
   expect_error(assert_list_of("a"), "must be")
   expect_equal(assert_list_of(list("a"), "character"), list("a"))
 })
+
+
+test_that("match_value", {
+  expect_equal(match_value("aaa", c("aaa", "bbb", "ccc")), "aaa")
+  expect_error(
+    match_value("abc", c("aaa", "bbb", "ccc")),
+    "'.+' must be one of 'aaa', 'bbb', 'ccc'")
+})
