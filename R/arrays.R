@@ -266,3 +266,24 @@ array_first_dimension <- function(x, i, drop = FALSE) {
     stop("Unexpected rank")
   }
 }
+
+
+## This will be slower than above.
+array_nth_dimension <- function(x, k, i, drop = FALSE) {
+  rank <- length(dim(x))
+  if (rank == 2) {
+    expr <- quote(x[, , drop = FALSE])
+  } else if (rank == 3) {
+    expr <- quote(x[, , , drop = FALSE])
+  } else if (rank == 4) {
+    expr <- quote(x[, , , , drop = FALSE])
+  } else {
+    stop("Unexpected rank")
+  }
+  if (k < 1 || k > rank) {
+    stop(sprintf("'k' must be in [1, %d]", rank))
+  }
+
+  expr[[k + 2]] <- quote(i)
+  eval(expr)
+}

@@ -215,3 +215,27 @@ test_that("Can fetch the first dimension of array", {
     array_first_dimension(m1, 2),
     "Unexpected rank")
 })
+
+
+test_that("Can get an arbitrary dimension of an array", {
+  m2 <- matrix(1:15, 3, 5)
+  expect_equal(array_nth_dimension(m2, 2, 2), m2[, 2, drop = FALSE])
+  expect_equal(array_nth_dimension(m2, 2, 2:3), m2[, 2:3, drop = FALSE])
+
+  m3 <- array(0, c(3, 5, 7))
+  expect_equal(array_nth_dimension(m3, 2, 2), m3[, 2, , drop = FALSE])
+  expect_equal(array_nth_dimension(m3, 2, 2:3), m3[, 2:3, , drop = FALSE])
+
+  m4 <- array(0, c(3, 5, 7, 11))
+  expect_equal(array_nth_dimension(m4, 2, 2), m4[, 2, , , drop = FALSE])
+  expect_equal(array_nth_dimension(m4, 2, 2:3), m4[, 2:3, , , drop = FALSE])
+
+  m1 <- 1:5
+  expect_error(
+    array_nth_dimension(m1, 2, 2),
+    "Unexpected rank")
+  expect_error(
+    array_nth_dimension(m2, 3, 2),
+    "'k' must be in [1, 2]",
+    fixed = TRUE)
+})
