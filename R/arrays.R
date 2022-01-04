@@ -238,3 +238,17 @@ array_flatten <- function(x, i) {
   }
   x
 }
+
+
+array_last_dimension <- function(x, i, drop = FALSE) {
+  rank <- length(dim(x))
+  if (rank == 2) {
+    x[, i, drop = drop]
+  } else if (rank == 3) {
+    x[, , i, drop = drop]
+  } else if (rank == 4) {
+    x[, , , i, drop = drop]
+  } else {
+    stop("Unexpected rank")
+  }
+}

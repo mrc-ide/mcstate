@@ -350,12 +350,14 @@ particle_filter_state <- R6::R6Class(
       info_old <- self$model$info()
       info_new <- ret$model$info()
 
-      pars_multi <- inherits(data, "particle_filter_data_nested")
-      if (pars_multi) {
-        stop("WRITEME")
+      if (self$model$n_pars() == 0) {
+        state <- transform_state(self$model$state(), info_old, info_new)
+      } else {
+        state_old <- self$model$state()
+        state_new <- lapply(seq_len(self$model$n_pars()), function(i)
+          transform_state(state_old[, , i], info_old[[i]], info_new[[i]]))
+        state <- vapply(state_new, identity, state_new[[1]])
       }
-
-      state <- transform_state(self$model$state(), info_old, info_new)
       step <- self$model$step()
 
       ret$model$update_state(state = state, step = step)
