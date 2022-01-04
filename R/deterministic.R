@@ -246,15 +246,17 @@ particle_deterministic <- R6::R6Class(
       if (is.null(private$last_model)) {
         stop("Model has not yet been run")
       }
-      if (is.null(private$last_history)) {
+      state <- private$last_history$value
+      if (is.null(state)) {
         stop("Can't get history as model was run with save_history = FALSE")
       }
-      if (is.null(index_particle)) {
-        private$last_history$value
-      } else {
-        array_drop(
-          private$last_history$value[, index_particle, , drop = FALSE], 2L)
+      if (!is.null(index_particle)) {
+        if (length(index_particle) != 1 || index_particle != 1) {
+          stop("Invalid value for 'index_particle' may only be 1 (or NULL)")
+        }
+        state <- array_drop(state, 2)
       }
+      state
     },
 
     ##' @description
@@ -279,26 +281,18 @@ particle_deterministic <- R6::R6Class(
     ##' interface.
     restart_state = function(index_particle = NULL) {
       if (is.null(private$last_model)) {
-        ## uncovered
         stop("Model has not yet been run")
       }
-      restart_state <- private$last_restart_state
-      if (is.null(restart_state)) {
+      state <- private$last_restart_state
+      if (is.null(state)) {
         stop("Can't get history as model was run with save_restart = NULL")
       }
       if (!is.null(index_particle)) {
-        ## uncovered
-        ## NOTE: anything other than 1 here will go poorly; we might
-        ## replace with rep(1, length(restart_state)) or at least
-        ## validate?
-        ##
-        ## TODO: nested deterministic filter is not supported so this
-        ## is always TRUE; see stochastic filter for the logic when
-        ## this is enabled.
-        stopifnot(length(dim(restart_state)) == 3)
-        restart_state <- restart_state[, index_particle, , drop = FALSE]
+        if (length(index_particle) != 1 || index_particle != 1) {
+          stop("Invalid value for 'index_particle' may only be 1 (or NULL)")
+        }
       }
-      restart_state
+      state
     },
 
     ##' @description
