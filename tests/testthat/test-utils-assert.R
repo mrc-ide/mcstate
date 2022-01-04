@@ -80,3 +80,27 @@ test_that("match_value", {
     match_value("abc", c("aaa", "bbb", "ccc")),
     "'.+' must be one of 'aaa', 'bbb', 'ccc'")
 })
+
+
+test_that("check dimension names", {
+  n1 <- c("a", "b")
+  n2 <- c("c", "d", "e")
+  n3 <- c("f", "g", "h", "i")
+  arr <- array(1:(2 * 3 * 4), c(2, 3, 4), list(n1, n2, n3))
+  expect_silent(assert_dimnames(arr, list(n1, n2, n3)))
+  expect_error(
+    assert_dimnames(arr, list(n1, c("x", "y", "z"), n3)),
+    "Expected names of dimension 2 of 'arr' to match 'x', 'y', 'z'")
+  expect_error(
+    assert_dimnames(arr, list(A = n1, B = c("x", "y", "z"), C = n3)),
+    "Expected names of dimension 2 of 'arr' to match B ('x', 'y', 'z')",
+    fixed = TRUE)
+  expect_error(
+    assert_dimnames(arr, list(n1, NULL, n3)),
+    "Expected names of dimension 2 of 'arr' to be empty")
+  arr2 <- arr
+  dimnames(arr2) <- list(n1, NULL, n3)
+  expect_equal(assert_dimnames(arr2, list(n1, n2, n3)), arr)
+  dimnames(arr2) <- list(n1, NULL, n3)
+  expect_equal(assert_dimnames(arr2, list(n1, NULL, n3)), arr2)
+})

@@ -66,6 +66,44 @@ test_that("construct parameters - error on missing proposal", {
 })
 
 
+test_that("construct parameters - error on unwanted proposal", {
+  pars_varied <- list(pmcmc_varied_parameter("a", "x", 2),
+                      pmcmc_varied_parameter("b", "x", 3))
+  pars_fixed <- list(pmcmc_parameter("c", 2),
+                     pmcmc_parameter("d", 3))
+  expect_error(
+    pmcmc_parameters_nested$new(pars_varied, diag(2), diag(2)),
+    "'proposal_fixed' supplied, but no fixed parameters")
+  expect_error(
+    pmcmc_parameters_nested$new(pars_fixed, diag(2), diag(2), "x"),
+    "'proposal_varied' supplied, but no varied parameters")
+})
+
+
+test_that("require explicit populations if no varied parameters", {
+  pars_fixed <- list(pmcmc_parameter("c", 2),
+                     pmcmc_parameter("d", 3))
+  expect_error(
+    pmcmc_parameters_nested$new(pars_fixed, NULL, diag(2)),
+    paste("Either varied parameters must be included in 'parameters' or",
+          "'populations' must be non-NULL"))
+  p <- pmcmc_parameters_nested$new(pars_fixed, NULL, diag(2), c("x", "y"))
+  expect_equal(p$populations(), c("x", "y"))
+})
+
+
+test_that("if explicit population provided, must match varied", {
+  pars <- list(
+    pmcmc_varied_parameter("a", "x", 2),
+    pmcmc_varied_parameter("b", "x", 3),
+    pmcmc_parameter("c", 2),
+    pmcmc_parameter("d", 3))
+  expect_error(
+    pmcmc_parameters_nested$new(pars, diag(2), diag(2), "y"),
+    "'population' does not match varied parameters")
+})
+
+
 test_that("construct parameters - error on duplicates", {
   pars_varied <- list(pmcmc_varied_parameter("a", "a", 2),
                       pmcmc_varied_parameter("a", "a", 3))
@@ -458,4 +496,38 @@ test_that("can fix all fixed parameters", {
 
   expect_identical(fix_p$model(fix_p$initial()),
                    list(list(a = 1, b = 3)))
+})
+
+
+test_that("Prevent use of variable fixed parameters", {
+  pars <- list(
+    pmcmc_varied_parameter("a", c("x", "y"), 1:2),
+    pmcmc_varied_parameter("b", c("x", "y"), 3:4),
+    pmcmc_parameter("c", 5),
+    pmcmc_parameter("d", 6))
+  p <- pmcmc_parameters_nested$new(pars, diag(2), diag(2))
+  expect_error(
+    p$validate(matrix(1:8, 4, 2)),
+    "Fixed parameters are not everywhere fixed")
+})
+
+
+test_that("Control over transform", {
+  pars <- list(
+    pmcmc_varied_parameter("a", c("x", "y"), 1:2),
+    pmcmc_varied_parameter("b", c("x", "y"), 3:4),
+    pmcmc_parameter("c", 5),
+    pmcmc_parameter("d", 6))
+  p <- pmcmc_parameters_nested$new(pars, diag(2), diag(2), transform = as.list)
+  expect_equal(r6_private(p)$transform, list(x = as.list, y = as.list))
+
+  transform <- list(x = function(...) NULL, y = function(...) list())
+  p <- pmcmc_parameters_nested$new(pars, diag(2), diag(2),
+                                   transform = transform)
+  expect_equal(r6_private(p)$transform, transform)
+
+  expect_error(
+    pmcmc_parameters_nested$new(pars, diag(2), diag(2),
+                                transform = unname(transform)),
+    "If 'transform' is a list, its names must be the populations")
 })

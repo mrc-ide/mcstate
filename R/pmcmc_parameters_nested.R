@@ -132,21 +132,10 @@ pmcmc_parameters_nested <- R6::R6Class(
     ##'
     ##' @param theta a parameter matrix
     validate = function(theta) {
-      expected <- list(self$names(), self$populations())
-      if (!is.matrix(theta)) {
-        stop("Expected a matrix for 'theta'")
-      }
-      if (!identical(dim(theta), lengths(expected))) {
-        stop(sprintf(
-          "Expected a matrix with %d rows and %d columns for 'theta'",
-          length(expected[[1]]), length(expected[[2]])))
-      }
-      if (is.null(dimnames(theta))) {
-        dimnames(theta) <- expected
-      } else if (!identical(dimnames(theta), expected)) {
-        ## Could be more forgiving here (e.g., one null)
-        stop("Unexpected dimension names for 'theta'")
-      }
+      expected <- list(parameters = self$names(),
+                       populations = self$populations())
+      assert_dimensions(theta, lengths(expected, FALSE))
+      theta <- assert_dimnames(theta, expected)
 
       i <- self$names("fixed")
       if (!all(theta[i, ] == theta[i, 1])) {
