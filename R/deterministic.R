@@ -109,10 +109,6 @@ particle_deterministic <- R6::R6Class(
       }
       assert_is(data, "particle_filter_data")
 
-      if (inherits(data, "particle_filter_data_nested")) {
-        stop("nested mode not yet supported")
-      }
-
       private$generator <- model
       private$data <- data
 

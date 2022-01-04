@@ -135,12 +135,6 @@ test_that("Validate inputs to the deterministic filter", {
     particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index,
                                initial = 1),
     "'initial' must be function if not NULL")
-  data_nested <- structure(dat$data,
-                           class = c("particle_filter_data",
-                                     "particle_filter_data_nested"))
-  expect_error(
-    particle_deterministic$new(data_nested, dat$model, dat$compare, dat$index),
-    "nested mode not yet supported")
 })
 
 

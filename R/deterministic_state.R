@@ -330,24 +330,33 @@ pds_index_process <- function(data) {
 
 
 pds_compare_simple <- function(state, compare, data, pars) {
-  ll <- numeric(length(data))
-  for (i in seq_along(ll)) {
+  n_data <- length(data)
+  ll <- numeric(n_data)
+  for (i in seq_len(n_data)) {
+    data_i <- data[[i]]
     state_i <- array_drop(state[, 1L, i, drop = FALSE], 3L)
-    ll[i] <- compare(state_i, data[[i]], pars)
+    ll[i] <- compare(state_i, data_i, pars)
   }
   sum(ll)
 }
 
 
-pdf_compare_nested <- function(state, compare, data, pars) {
+pds_compare_nested <- function(state, compare, data, pars) {
+  ## At this point, I really have no strong idea what is going on with
+  ## the data!
   n_pars <- length(pars)
   n_data <- length(data)
-  ll <- array(0, c(n_pars, n_data))
-  for (i in seq_len(n_pars)) {
-    for (j in seq_len(n_data)) {
-      state_ij <- array_drop(state[, 1L, i, j, drop = FALSE], 3L)
-      ll[i, j] <- compare(state_ij, data[[j]], pars[[i]])
+  ll <- array(0, c(n_data, n_pars))
+  for (i in seq_len(n_data)) {
+    data_i <- data[[i]]
+    state_i <- array_drop(state[, 1L, , i, drop = FALSE], 4)
+    for (j in seq_len(n_pars)) {
+      ## Drop dimension 3 (parameter) and 4 (time) to leave 1 (state)
+      ## and 2 (particle) for compatibility with the particle filter
+      ## comparison functions.
+      state_ij <- array_drop(state[, 1L, j, i, drop = FALSE], c(3, 4))
+      ll[i, j] <- compare(state_ij, data_i[[j]], pars[[j]])
     }
   }
-  ll
+  colSums(ll)
 }
