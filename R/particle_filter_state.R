@@ -224,6 +224,7 @@ particle_filter_state <- R6::R6Class(
 
       model <- self$model
       compare <- private$compare
+      nested <- inherits(private$data, "particle_filter_data_nested")
 
       ## This needs a little work in dust:
       ## https://github.com/mrc-ide/dust/issues/177
@@ -256,17 +257,28 @@ particle_filter_state <- R6::R6Class(
         state <- model$run(step_end)
 
         if (save_history) {
-          array_last_dimension(history_value, t + 1L) <-
-            model$state(save_history_index)
+          ## NOTE: There are two places here (and for the order below)
+          ## where we assign trajectories, and we have to do this
+          ## without using `array_last_dimension<-`, otherwise there's
+          ## a big performance regression due to excessive GC (we make
+          ## a copy into the function call, I suspect?)
+          ##
+          ## An alternative approach here would be to store the
+          ## history as a flat array (or access it as such), then
+          ## compute what the index would be.  If we know the product
+          ## of the first dimensions, this is pretty easy really.
+          if (nested) {
+            history_value[, , , t + 1L] <- model$state(save_history_index)
+          } else {
+            history_value[, , t + 1L] <- model$state(save_history_index)
+          }
         }
 
         weights <- support$compare(state, compare, data_split[[t]], pars)
 
         if (is.null(weights)) {
-          if (save_history) {
-            array_last_dimension(history_order, t + 1L) <- seq_len(n_particles)
-          }
           log_likelihood_step <- NA_real_
+          kappa <- seq_len(n_particles)
         } else {
           log_likelihood_step <- weights$average
           log_likelihood <- log_likelihood + log_likelihood_step
@@ -278,8 +290,13 @@ particle_filter_state <- R6::R6Class(
 
           kappa <- particle_resample(weights$weights)
           model$reorder(kappa)
-          if (save_history) {
-            array_last_dimension(history_order, t + 1L) <- kappa
+        }
+
+        if (save_history) {
+          if (nested) {
+            history_order[, , t + 1L] <- kappa
+          } else {
+            history_order[, t + 1L] <- kappa
           }
         }
 
