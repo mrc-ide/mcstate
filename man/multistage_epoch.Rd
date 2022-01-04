@@ -27,11 +27,12 @@ and these imply a different model state size.  In this case you
 \emph{must} provide \code{transform_state} to fill in new model state,
 move things around, or delete model state depending on how the
 state has changed.  This function will be passed three
-arguments: (1) the current model state, (2) the model used to
-run up to this point, (3) the new model that was created with
-\code{pars} which will be run from this point.  It is expected that
-the results of \verb{$pars()} and \verb{$info()} from these model objects
-will be useful for updating the model state.}
+arguments: (1) the current model state, (2) the result of the
+\verb{$info()} method from the model used to this point, (3) the
+result of the \verb{$info()} method for the new model that was
+created with \code{pars} which will be run from this point.  Future
+versions of this interface may allow passing the parameters in
+too.}
 }
 \description{
 Describe an epoch within a \link{multistage_parameters} object

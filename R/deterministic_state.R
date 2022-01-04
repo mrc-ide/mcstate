@@ -250,7 +250,10 @@ particle_deterministic_state <- R6::R6Class(
         private$steps, private$n_threads, initial, private$index,
         private$compare, save_history, private$save_restart)
 
-      state <- transform_state(self$model$state(), self$model, ret$model)
+      info_old <- self$model$info()
+      info_new <- ret$model$info()
+
+      state <- transform_state(self$model$state(), info_old, info_new)
       step <- self$model$step()
 
       ret$model$update_state(state = state, step = step)

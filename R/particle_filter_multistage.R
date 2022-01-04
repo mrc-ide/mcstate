@@ -72,11 +72,12 @@ multistage_parameters <- function(pars, epochs) {
 ##'   *must* provide `transform_state` to fill in new model state,
 ##'   move things around, or delete model state depending on how the
 ##'   state has changed.  This function will be passed three
-##'   arguments: (1) the current model state, (2) the model used to
-##'   run up to this point, (3) the new model that was created with
-##'   `pars` which will be run from this point.  It is expected that
-##'   the results of `$pars()` and `$info()` from these model objects
-##'   will be useful for updating the model state.
+##'   arguments: (1) the current model state, (2) the result of the
+##'   `$info()` method from the model used to this point, (3) the
+##'   result of the `$info()` method for the new model that was
+##'   created with `pars` which will be run from this point.  Future
+##'   versions of this interface may allow passing the parameters in
+##'   too.
 ##'
 ##' @export
 multistage_epoch <- function(start, pars = NULL, transform_state = NULL) {

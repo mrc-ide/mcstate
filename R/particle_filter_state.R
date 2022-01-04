@@ -347,7 +347,15 @@ particle_filter_state <- R6::R6Class(
         initial, private$index, private$compare, gpu_config,
         seed, private$min_log_likelihood, save_history, private$save_restart)
 
-      state <- transform_state(self$model$state(), self$model, ret$model)
+      info_old <- self$model$info()
+      info_new <- ret$model$info()
+
+      pars_multi <- inherits(data, "particle_filter_data_nested")
+      if (pars_multi) {
+        stop("WRITEME")
+      }
+
+      state <- transform_state(self$model$state(), info_old, info_new)
       step <- self$model$step()
 
       ret$model$update_state(state = state, step = step)
