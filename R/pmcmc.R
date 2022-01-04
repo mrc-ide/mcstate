@@ -28,10 +28,8 @@
 ##'   `n_chains` columns to use a different starting point for each
 ##'   chain.
 ##'
-##' @param control A [mcstate::pmcmc_control] object which will set
-##'   parameters. This will become the primary way of specifying
-##'   options very soon and it is an error if you use both `control`
-##'   and any of the parameters above aside from `pars` and `filter`.
+##' @param control A [mcstate::pmcmc_control] object which will
+##'   control how the MCMC runs, including the number of steps etc.
 ##'
 ##' @return A `mcstate_pmcmc` object containing `pars`
 ##'   (sampled parameters) and `probabilities` (log prior, log
@@ -143,29 +141,6 @@ pmcmc_chains_run <- function(chain_id, inputs, path = NULL) {
 }
 
 
-pmcmc_single_chain <- function(pars, initial, filter, control, seed = NULL) {
-  if (!is.null(seed)) {
-    ## This will be triggered where control$use_parallel_seed is TRUE
-    set.seed(seed$r)
-    filter <- particle_filter_from_inputs(filter$inputs(), seed$dust)
-  }
-  obj <- pmcmc_state$new(pars, initial, filter, control)
-  obj$run()
-  obj$finish()
-}
-
-pmcmc_single_chain_nested <- function(pars, initial, filter, control,
-                                      seed = NULL) {
-  if (!is.null(seed)) {
-    set.seed(seed$r)
-    filter <- particle_filter_from_inputs(filter$inputs(), seed$dust)
-  }
-  obj <- pmcmc_state$new(pars, initial, filter, control)
-  obj$run_nested()
-  obj$finish_nested()
-}
-
-
 pmcmc_multiple_series <- function(pars, initial, filter, control) {
   if (control$use_parallel_seed) {
     seed <- make_seeds(control$n_chains, filter$inputs()$seed, filter$model)
@@ -182,7 +157,7 @@ pmcmc_multiple_series <- function(pars, initial, filter, control) {
     samples[[i]] <- pmcmc_run_chain(i, pars, initial, filter, control, seed)
   }
 
-  if (length(samples) == 1) {
+  if (control$n_chains == 1) {
     samples[[1L]]
   } else {
     pmcmc_combine(samples = samples)
@@ -197,13 +172,23 @@ pmcmc_run_chain <- function(chain_id, pars, initial, filter, control, seed) {
   if (!is.null(control$n_threads_total)) {
     filter$set_n_threads(control$n_threads_total)
   }
-  if (inherits(pars, "pmcmc_parameters_nested")) {
-    pmcmc_single_chain_nested(pars, initial[, , chain_id], filter,
-                              control, seed[[chain_id]])
-  } else {
-    pmcmc_single_chain(pars, initial[, chain_id], filter, control,
-                       seed[[chain_id]])
+
+  initial <- array_drop(
+    array_last_dimension(initial, chain_id), length(dim(initial)))
+  seed <- seed[[chain_id]]
+
+  if (!is.null(seed)) {
+    ## TODO: this feels pretty weird; can we just add a
+    ## "set_rng_state" method for the filter?
+    ##
+    ## This will be triggered where control$use_parallel_seed is TRUE
+    set.seed(seed$r)
+    filter <- particle_filter_from_inputs(filter$inputs(), seed$dust)
   }
+
+  obj <- pmcmc_state$new(pars, initial, filter, control)
+  obj$run()
+  obj$finish()
 }
 
 

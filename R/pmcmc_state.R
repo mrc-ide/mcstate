@@ -7,6 +7,8 @@ pmcmc_state <- R6::R6Class(
     control = NULL,
     deterministic = NULL,
 
+    nested = NULL,
+
     history_pars = NULL,
     history_probabilities = NULL,
     history_state = NULL,
@@ -24,50 +26,57 @@ pmcmc_state <- R6::R6Class(
 
     tick = NULL,
 
-    update_history = function() {
+    update_particle_history = function() {
       if (private$deterministic) {
-        if (private$control$save_trajectories) {
-          private$curr_trajectories <- private$filter$history(1L)
-        }
-        if (private$control$save_state) {
-          private$curr_state <- private$filter$state()
-        }
-        if (length(private$control$save_restart) > 0) {
-          private$curr_restart <- private$filter$restart_state()
-          dim(private$curr_restart) <- dim(private$curr_restart)[-2L]
-        }
+        i <- 1L
       } else {
         i <- sample.int(private$filter$n_particles, 1)
-        if (private$control$save_trajectories) {
-          private$curr_trajectories <-
-            sample_trajectory(private$filter$history(i))
-        }
-        if (private$control$save_state) {
-          private$curr_state <- private$filter$state()[, i, drop = TRUE]
-        }
-        if (length(private$control$save_restart) > 0) {
-          private$curr_restart <- private$filter$restart_state(i)
-          dim(private$curr_restart) <- dim(private$curr_restart)[-2L]
-        }
+      }
+
+      if (private$control$save_trajectories) {
+        private$curr_trajectories <- private$filter$history(i)
+      }
+      if (private$control$save_state) {
+        private$curr_state <-
+          array_drop(array_nth_dimension(private$filter$state(), 2, i), 2)
+      }
+      if (length(private$control$save_restart) > 0) {
+        ## TODO: Can do this better by dropping within restart_state,
+        ## which makes much more sense and is currently a bit weird.
+        private$curr_restart <- array_drop(private$filter$restart_state(i), 2)
       }
     },
 
-    update_history_nested = function() {
-      i <- sample.int(private$filter$n_particles, 1)
-      if (private$control$save_trajectories) {
-        # state x population x time
-        private$curr_trajectories <-
-          sample_trajectory_nested(private$filter$history(i))
+    update_mcmc_history = function() {
+      control <- private$control
+
+      private$history_pars$add(private$curr_pars)
+
+      private$history_probabilities$add(
+        matrix(c(private$curr_lprior, private$curr_llik, private$curr_lpost),
+               ncol = 3, byrow = TRUE))
+
+      if (control$save_trajectories) {
+        private$history_trajectories$add(private$curr_trajectories)
       }
-      if (private$control$save_state) {
-        # state x population
-        private$curr_state <- private$filter$state()[, i, , drop = TRUE]
+      if (control$save_state) {
+        private$history_state$add(private$curr_state)
       }
-      if (length(private$control$save_restart) > 0) {
-        # state x population x time
-        private$curr_restart <- private$filter$restart_state(i)
-        dim(private$curr_restart) <- dim(private$curr_restart)[-2L]
+      if (length(control$save_restart) > 0) {
+        private$history_restart$add(private$curr_restart)
       }
+    },
+
+    ## Computing the acceptance thresold, where u is a random uniform
+    ## draw:
+    ##
+    ## => u < exp(prop_llik + prop_lprior - curr_lpost)
+    ## => curr_lpost - prop_lprior + log(u) < prop_llik
+    min_log_likelihood = function(prop_lprior, u) {
+      if (!private$control$filter_early_exit) {
+        return(-Inf)
+      }
+      private$curr_lpost - prop_lprior + log(u)
     },
 
     run_filter = function(p, min_log_likelihood = -Inf) {
@@ -96,7 +105,7 @@ pmcmc_state <- R6::R6Class(
           private$curr_lprior <- prop_lprior
           private$curr_llik <- prop_llik
           private$curr_lpost <- prop_lpost
-          private$update_history_nested()
+          private$update_particle_history()
         }
       }
     },
@@ -115,71 +124,16 @@ pmcmc_state <- R6::R6Class(
           private$curr_lprior[which] <- prop_lprior[which]
           private$curr_llik[which] <- prop_llik[which]
           private$curr_lpost[which] <- prop_lpost[which]
-          private$update_history_nested()
+          private$update_particle_history()
         }
       }
-    }
-  ),
-
-  public = list(
-    initialize = function(pars, initial, filter, control) {
-      private$filter <- filter
-      private$pars <- pars
-      private$control <- control
-      private$deterministic <- inherits(filter, "particle_deterministic")
-
-      private$history_pars <- history_collector(control$n_steps)
-      private$history_probabilities <- history_collector(control$n_steps)
-      private$history_state <- history_collector(control$n_steps)
-      private$history_restart <- history_collector(control$n_steps)
-      private$history_trajectories <- history_collector(control$n_steps)
-
-      private$curr_step <- 0L
-      private$curr_pars <- initial
-      private$curr_lprior <- private$pars$prior(private$curr_pars)
-
-      private$tick <- pmcmc_progress(control$n_steps, control$progress)
-
-      private$history_pars$add(private$curr_pars)
-      if (inherits(pars, "pmcmc_parameters_nested")) {
-        private$curr_llik <- private$run_filter_nested(private$curr_pars)
-        private$curr_lpost <- private$curr_lprior + private$curr_llik
-        private$history_probabilities$add(
-          matrix(c(private$curr_lprior, private$curr_llik, private$curr_lpost),
-                 ncol = 3, byrow = TRUE))
-        private$update_history_nested()
-      } else {
-        private$curr_llik <- private$run_filter(private$curr_pars)
-        private$curr_lpost <- private$curr_lprior + private$curr_llik
-        private$history_probabilities$add(c(private$curr_lprior,
-                                            private$curr_llik,
-                                            private$curr_lpost))
-        private$update_history()
-      }
-
-      ## Initial version of the history
-
-      if (private$control$save_trajectories) {
-        private$history_trajectories$add(private$curr_trajectories)
-      }
-      if (private$control$save_state) {
-        private$history_state$add(private$curr_state)
-      }
-      if (length(private$control$save_restart) > 0) {
-        private$history_restart$add(private$curr_restart)
-      }
     },
 
-    set_n_threads = function(n_threads) {
-      private$filter$set_n_threads(n_threads)
-    },
-
-    run = function() {
-      to <- min(private$curr_step + private$control$n_steps_each,
-                private$control$n_steps)
+    run_simple = function() {
+      control <- private$control
+      to <- min(private$curr_step + control$n_steps_each, control$n_steps)
       steps <- seq(from = private$curr_step + 1L,
                    length.out = to - private$curr_step)
-      control <- private$control
 
       for (i in steps) {
         private$tick()
@@ -187,24 +141,14 @@ pmcmc_state <- R6::R6Class(
         if (rerun(i, control$rerun_every, control$rerun_random)) {
           private$curr_llik <- private$run_filter(private$curr_pars)
           private$curr_lpost <- private$curr_lprior + private$curr_llik
-          private$update_history()
+          private$update_particle_history()
         }
 
         prop_pars <- private$pars$propose(private$curr_pars)
         prop_lprior <- private$pars$prior(prop_pars)
 
-        ## Computing the acceptance thresold, where u is a random uniform
-        ## draw:
-        ##
-        ## => u < exp(prop_llik + prop_lprior - curr_lpost)
-        ## => curr_lpost - prop_lprior + log(u) < prop_llik
-        ##
         u <- runif(1)
-        if (control$filter_early_exit) {
-          min_llik <- private$curr_lpost - prop_lprior + log(u)
-        } else {
-          min_llik <- -Inf
-        }
+        min_llik <- private$min_log_likelihood(prop_lprior, u)
 
         prop_llik <- private$run_filter(prop_pars, min_llik)
         prop_lpost <- prop_lprior + prop_llik
@@ -215,24 +159,14 @@ pmcmc_state <- R6::R6Class(
           private$curr_lprior <- prop_lprior
           private$curr_llik <- prop_llik
           private$curr_lpost <- prop_lpost
-          private$update_history()
+          private$update_particle_history()
         }
 
-        private$history_pars$add(private$curr_pars)
-        private$history_probabilities$add(
-          c(private$curr_lprior, private$curr_llik, private$curr_lpost))
-
-        if (control$save_trajectories) {
-          private$history_trajectories$add(private$curr_trajectories)
-        }
-        if (control$save_state) {
-          private$history_state$add(private$curr_state)
-        }
-        if (length(control$save_restart) > 0) {
-          private$history_restart$add(private$curr_restart)
-        }
+        private$update_mcmc_history()
       }
+
       private$curr_step <- to
+
       list(step = to, finished = to == control$n_steps)
     },
 
@@ -251,7 +185,7 @@ pmcmc_state <- R6::R6Class(
         if (rerun(i, control$rerun_every, control$rerun_random)) {
           private$curr_llik <- private$run_filter_nested(private$curr_pars)
           private$curr_lpost <- private$curr_lprior + private$curr_llik
-          private$update_history_nested()
+          private$update_particle_history()
         }
 
         run_alternate_step(i)
@@ -276,7 +210,7 @@ pmcmc_state <- R6::R6Class(
       list(step = to, finished = to == control$n_steps)
     },
 
-    finish = function() {
+    finish_simple = function() {
       pars_matrix <- set_colnames(list_to_matrix(private$history_pars$get()),
                                   names(private$curr_pars))
       probabilities <- set_colnames(
@@ -380,6 +314,77 @@ pmcmc_state <- R6::R6Class(
       mcstate_pmcmc(pars_array, probabilities, state, trajectories, restart,
                     predict)
     }
+  ),
+
+  public = list(
+    initialize = function(pars, initial, filter, control) {
+      private$filter <- filter
+      private$pars <- pars
+      private$control <- control
+      private$nested <- inherits(pars, "pmcmc_parameters_nested")
+      private$deterministic <- inherits(filter, "particle_deterministic")
+
+      private$history_pars <- history_collector(control$n_steps)
+      private$history_probabilities <- history_collector(control$n_steps)
+      private$history_state <- history_collector(control$n_steps)
+      private$history_restart <- history_collector(control$n_steps)
+      private$history_trajectories <- history_collector(control$n_steps)
+
+      private$curr_step <- 0L
+      private$curr_pars <- initial
+      private$curr_lprior <- private$pars$prior(private$curr_pars)
+
+      private$tick <- pmcmc_progress(control$n_steps, control$progress)
+
+      private$history_pars$add(private$curr_pars)
+      if (inherits(pars, "pmcmc_parameters_nested")) {
+        private$curr_llik <- private$run_filter_nested(private$curr_pars)
+        private$curr_lpost <- private$curr_lprior + private$curr_llik
+        private$history_probabilities$add(
+          matrix(c(private$curr_lprior, private$curr_llik, private$curr_lpost),
+                 ncol = 3, byrow = TRUE))
+        private$update_particle_history()
+      } else {
+        private$curr_llik <- private$run_filter(private$curr_pars)
+        private$curr_lpost <- private$curr_lprior + private$curr_llik
+        private$history_probabilities$add(c(private$curr_lprior,
+                                            private$curr_llik,
+                                            private$curr_lpost))
+        private$update_particle_history()
+      }
+
+      ## Initial version of the history
+
+      if (private$control$save_trajectories) {
+        private$history_trajectories$add(private$curr_trajectories)
+      }
+      if (private$control$save_state) {
+        private$history_state$add(private$curr_state)
+      }
+      if (length(private$control$save_restart) > 0) {
+        private$history_restart$add(private$curr_restart)
+      }
+    },
+
+    set_n_threads = function(n_threads) {
+      private$filter$set_n_threads(n_threads)
+    },
+
+    run = function() {
+      if (private$nested) {
+        private$run_nested()
+      } else {
+        private$run_simple()
+      }
+    },
+
+    finish = function() {
+      if (private$nested) {
+        private$finish_nested()
+      } else {
+        private$finish_simple()
+      }
+    }
   ))
 
 
@@ -392,6 +397,7 @@ sample_trajectory <- function(history, index) {
   }
   ret
 }
+
 
 ## A utility function for sampling a trajectory and safely dropping
 ## the dimensionality even if there is only one state vector
