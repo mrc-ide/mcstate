@@ -254,6 +254,7 @@ particle_deterministic <- R6::R6Class(
         if (length(index_particle) != 1 || index_particle != 1) {
           stop("Invalid value for 'index_particle' may only be 1 (or NULL)")
         }
+        ## TODO: this is inconsistent with the main filter I believe.
         state <- array_drop(state, 2)
       }
       state

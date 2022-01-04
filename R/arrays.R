@@ -287,3 +287,26 @@ array_nth_dimension <- function(x, k, i, drop = FALSE) {
   expr[[k + 2]] <- quote(i)
   eval(expr)
 }
+
+
+## Generalise list to array
+array_from_list <- function(data, order) {
+  rank <- length(order)
+  stopifnot(setequal(order, seq_len(rank)))
+  vec <- unlist(data, FALSE, FALSE)
+
+  if (rank == 2) {
+    if (order[[1]] == 1L) {
+      return(matrix(vec, ncol = length(data)))
+    } else {
+      return(matrix(vec, nrow = length(data), byrow = TRUE))
+    }
+  }
+
+  dimensions <- c(dim(data[[1]]), length(data))
+  arr <- array(vec, dimensions)
+  if (!all(diff(order) == 1)) {
+    arr <- aperm(arr, order)
+  }
+  arr
+}
