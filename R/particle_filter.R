@@ -289,6 +289,10 @@ particle_filter <- R6::R6Class(
     run = function(pars = list(), save_history = FALSE, save_restart = NULL,
                    min_log_likelihood = NULL) {
       assert_scalar_logical(save_history)
+      if (self$nested) {
+        n_populations <- attr(private$data, "n_populations")
+        pars <- particle_filter_pars_nested(pars, n_populations)
+      }
       if (inherits(pars, "multistage_parameters")) {
         filter_run_multistage(self, private, pars, save_history, save_restart,
                               min_log_likelihood)
@@ -736,4 +740,62 @@ filter_run_multistage <- function(self, private, pars,
   }
 
   obj$log_likelihood
+}
+
+
+## There are several bits of cleanup that need to happen for the
+## parameters in nested case:
+##
+## * validate we have an unnamed list of the correct length
+## * if multistage, then invert the nesting to convert from a list of
+##   multistage parameter objects into a multistage parameter of lists
+particle_filter_pars_nested <- function(pars, expected_length) {
+  if (!is.null(names(pars))) {
+    stop("Expected an unnamed list of parameters for 'pars'")
+  }
+  if (length(pars) != expected_length) {
+    stop(sprintf("'pars' must have length %d", expected_length))
+  }
+
+  is_multistage <- vlapply(pars, inherits, "multistage_parameters")
+  if (!any(is_multistage)) {
+    return(pars)
+  }
+  if (any(!is_multistage)) {
+    stop("'pars' must be either all multistage or all non-multistage")
+  }
+
+  ret <- pars[[1L]]
+  if (length(pars) > 1 && any(lengths(pars) != length(ret))) {
+    stop(sprintf(
+      "Incompatible numbers of stages in pars: found %s stages",
+      paste(sort(unique(lengths(pars))), collapse = ", ")))
+  }
+
+  for (i in seq_along(ret)) {
+    if (i > 1 && length(pars) > 1) {
+      err_start <- vlapply(pars[-1], function(x)
+        x[[i]]$start != ret[[i]]$start)
+      if (any(err_start)) {
+        stop(sprintf("Incompatible 'start' time at phase %d", i))
+      }
+      err_transform <- vlapply(pars[-1], function(x)
+        !identical(x[[i]]$transform_state, ret[[i]]$transform_state))
+      if (any(err_transform)) {
+        stop(sprintf("Incompatible 'transform_state' at phase %d", i))
+      }
+    }
+
+    p <- lapply(pars, function(x) x[[i]]$pars)
+    is_null <- vlapply(p, is.null)
+    err_pars <- is_null[-1] != is_null[[1]]
+    if (any(err_pars)) {
+      stop(sprintf("Incompatible 'pars' at phase %d", i))
+    }
+    if (!all(is_null)) {
+      ret[[i]]$pars <- p
+    }
+  }
+
+  ret
 }

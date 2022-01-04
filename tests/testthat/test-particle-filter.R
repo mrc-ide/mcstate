@@ -905,7 +905,7 @@ test_that("particle filter state nested - errors", {
                            index = dat$index)
 
   expect_error(p$run(pars[1]),
-               "'pars' must have length 2 (following data$population)",
+               "'pars' must have length 2",
                fixed = TRUE)
 })
 
@@ -1272,4 +1272,75 @@ test_that("Can do early exit for nested filter", {
   expect_true(all(ll3[, !i] == -Inf))
   expect_true(all(apply(ll3[, i] >= min_ll, 2, any)))
   expect_false(all(apply(ll3[, i] >= min_ll, 2, all)))
+})
+
+
+test_that("Confirm nested filter is correct", {
+  ## To show this works, we'll run the filters separately.  This will
+  ## be a useful result when adding multistage parameters.
+
+  ## This example is a bit fiddly to get exact equivalence - we need
+  ## to manually step the filter to get uses of R's RNG to be correct.
+  ## This would go away if we updated to use the same strategy as the
+  ## the compiled filter and use a dust RNG here, stepping off the end
+  ## of the last rng state.  That requires some additional work though
+  ## to keep the state in sync.
+  ##
+  ## The other bit of fiddle is replacing the stochastic noise in
+  ## compare with deterministic epsilon to avoid -Inf likelihoods in
+  ## dpois
+  dat <- example_sir_shared()
+  n_particles <- 42
+
+  ## The usual compare, but add a fixed amount of noise
+  compare <- function(state, observed, pars = NULL) {
+    if (is.na(observed$incidence)) {
+      return(NULL)
+    }
+    incidence_modelled <- state[1, , drop = TRUE]
+    incidence_observed <- observed$incidence
+    lambda <- incidence_modelled + 1e-7
+    dpois(x = incidence_observed, lambda = lambda, log = TRUE)
+  }
+
+  pars <- list(list(beta = 0.2, gamma = 0.1),
+               list(beta = 0.3, gamma = 0.1))
+
+  seed <- dust::dust_rng_pointer$new(1, n_particles * 2)$state()
+  seed1 <- seed[seq_len(length(seed) / 2)]
+  seed2 <- seed[-seq_len(length(seed) / 2)]
+
+  data1 <- particle_filter_data(dat$data_raw[dat$data_raw$populations == "a", ],
+                                time = "day", rate = 4)
+  data2 <- particle_filter_data(dat$data_raw[dat$data_raw$populations == "b", ],
+                                time = "day", rate = 4)
+
+  set.seed(1)
+  p1 <- particle_filter$new(data1, dat$model, n_particles, compare,
+                            index = dat$index, seed = seed1)
+  p2 <- particle_filter$new(data2, dat$model, n_particles, compare,
+                            index = dat$index, seed = seed2)
+
+  s1 <- p1$run_begin(pars[[1]], save_history = TRUE)
+  s2 <- p2$run_begin(pars[[2]], save_history = TRUE)
+  for (i in seq_len(nrow(data1))) {
+    s1$step(i)
+    s2$step(i)
+  }
+
+  set.seed(1)
+  p3 <- particle_filter$new(dat$data, dat$model, n_particles, compare,
+                            index = dat$index, seed = seed)
+  s3 <- p3$run_begin(pars, save_history = TRUE)
+  for (i in seq_len(nrow(data1))) {
+    s3$step(i)
+  }
+
+  expect_identical(c(s1$log_likelihood, s2$log_likelihood),
+                   s3$log_likelihood)
+  expect_identical(s3$history$value[, , 1, ], s1$history$value)
+  expect_identical(s3$history$value[, , 2, ], s2$history$value)
+  expect_identical(s3$history$order[, 1, ], s1$history$order)
+  expect_identical(s3$history$order[, 2, ], s2$history$order)
+  expect_identical(s3$history$index, s1$history$index)
 })

@@ -109,16 +109,6 @@ particle_filter_state <- R6::R6Class(
       pars_multi <- inherits(data, "particle_filter_data_nested")
       support <- particle_filter_state_support(pars_multi)
 
-      if (pars_multi) {
-        if (!is.null(names(pars))) {
-          stop("Expected an unnamed list of parameters")
-        }
-        if (length(pars) != attr(data, "n_populations")) {
-          stop(sprintf("'pars' must have length %d (following data$%s)",
-                       attr(data, "n_populations"), attr(data, "population")))
-        }
-      }
-
       if (is.null(model)) {
         model <- generator$new(pars = pars, step = steps[[1L]],
                                n_particles = n_particles, n_threads = n_threads,
