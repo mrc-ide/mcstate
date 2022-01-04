@@ -29,7 +29,8 @@ particle_deterministic_state <- R6::R6Class(
     compare = NULL,
     save_history = NULL,
     save_restart_step = NULL,
-    save_restart = NULL
+    save_restart = NULL,
+    support = NULL
   ),
 
   public = list(
@@ -73,49 +74,54 @@ particle_deterministic_state <- R6::R6Class(
     initialize = function(pars, generator, model, data, data_split, steps,
                           n_threads, initial, index, compare,
                           save_history, save_restart) {
+      pars_multi <- inherits(data, "particle_filter_data_nested")
+      support <- particle_deterministic_state_support(pars_multi)
+
+      ## This adds an extra dimension (vs using NULL), which is not
+      ## amazing, but it does simplify logic in a few places and keeps
+      ## this behaving more similarly to the particle filter.
       n_particles <- 1L
       if (is.null(model)) {
         model <- generator$new(pars = pars, step = steps[[1]],
                                n_particles = n_particles, n_threads = n_threads,
-                               seed = NULL, deterministic = TRUE)
+                               seed = NULL, deterministic = TRUE,
+                               pars_multi = pars_multi)
       } else {
         model$update_state(pars = pars, step = steps[[1]])
       }
 
       if (!is.null(initial)) {
-        initial_data <- initial(model$info(), n_particles, pars)
-        if (is.list(initial_data)) {
-          stop("Setting 'step' from initial no longer supported")
-        }
+        initial_data <- support$initial(model, initial, pars, n_particles)
         model$update_state(state = initial_data)
       }
 
       if (is.null(index)) {
         index_data <- NULL
       } else {
-        ## NOTE: this assumes that all parameterisation result in the
-        ## same shape, which is assumed generally.
-        index_data <- deterministic_index(index(model$info()))
+        index_data <- support$index(model, index)
         model$set_index(index_data$index)
       }
+
+      ## The model shape is [n_particles, <any multi-par structure>]
+      shape <- model$shape()
 
       if (save_history) {
         len <- nrow(steps) + 1L
         state <- model$state(index_data$predict)
         history_value <- array(NA_real_, c(dim(state), len))
-        history_value[, , 1] <- state
+        array_last_dimension(history_value, 1) <- state
         rownames(history_value) <- names(index_data$predict)
         self$history <- list(
           value = history_value,
           index = index_data$predict)
+      } else {
+        self$history <- NULL
       }
 
       save_restart_step <- check_save_restart(save_restart, data)
       if (length(save_restart_step) > 0) {
-        self$restart_state <- array(NA_real_,
-                                    c(model$n_state(),
-                                      n_particles,
-                                      length(save_restart)))
+        self$restart_state <-
+          array(NA_real_, c(model$n_state(), shape, length(save_restart)))
       } else {
         self$restart_state <- NULL
       }
@@ -134,10 +140,11 @@ particle_deterministic_state <- R6::R6Class(
       private$save_history <- save_history
       private$save_restart_step <- save_restart_step
       private$save_restart <- save_restart
+      private$support <- support
 
       ## Variable (see also history)
       self$model <- model
-      self$log_likelihood <- 0.0
+      self$log_likelihood <- rep(0, prod(shape[-1]))
     },
 
     ##' @description Run the deterministic particle to the end of the data.
@@ -173,6 +180,8 @@ particle_deterministic_state <- R6::R6Class(
       idx <- (curr + 1):step_index
       step_end <- private$steps[idx, 2]
 
+      support <- private$support
+
       if (save_restart) {
         phases <- deterministic_steps_restart(
           private$save_restart_step, step_end)
@@ -181,7 +190,7 @@ particle_deterministic_state <- R6::R6Class(
           phase <- phases[[i]]
           y[[i]] <- model$simulate(phase$step_end)
           if (!is.na(phase$restart)) {
-            restart_state[, , phase$restart] <- model$state()
+            array_last_dimension(restart_state, phase$restart) <- model$state()
           }
         }
         self$restart_state <- restart_state
@@ -193,8 +202,10 @@ particle_deterministic_state <- R6::R6Class(
 
       if (is.null(index)) {
         y_compare <- y
+        y_history <- y
       } else {
-        y_compare <- y[index$run, , , drop = FALSE]
+        y_compare <- array_first_dimension(y, index$run)
+        y_history <- array_first_dimension(y, index$state)
         rownames(y_compare) <- names(index$run)
       }
 
@@ -209,15 +220,12 @@ particle_deterministic_state <- R6::R6Class(
       ## sets at once if we do not have parameters involved in the
       ## observation function too.
       log_likelihood <- self$log_likelihood +
-        deterministic_likelihood(y_compare, private$compare,
-                                 private$pars, private$data_split[idx])
+        support$compare(y_compare, private$compare, private$data_split[idx],
+                        private$pars)
 
       if (save_history) {
-        if (!is.null(index)) {
-          y <- y[index$state, , , drop = FALSE]
-        }
         ## We need to offset by 1 to allow for the initial conditions
-        self$history$value[, , idx + 1L] <- y
+        array_last_dimension(self$history$value, idx + 1L) <- y_history
       } else {
         self$history <- NULL
       }
@@ -250,29 +258,14 @@ particle_deterministic_state <- R6::R6Class(
         private$steps, private$n_threads, initial, private$index,
         private$compare, save_history, private$save_restart)
 
-      info_old <- self$model$info()
-      info_new <- ret$model$info()
+      particle_filter_update_state(transform_state, self$model, ret$model)
 
-      state <- transform_state(self$model$state(), info_old, info_new)
-      step <- self$model$step()
-
-      ret$model$update_state(state = state, step = step)
       ret$current_step_index <- self$current_step_index
       ret$log_likelihood <- self$log_likelihood
 
       ret
     }
   ))
-
-
-deterministic_likelihood <- function(y, compare, pars, data) {
-  ll <- numeric(length(data))
-  for (i in seq_along(ll)) {
-    y_i <- array_drop(y[, 1L, i, drop = FALSE], 3L)
-    ll[i] <- compare(y_i, data[[i]], pars)
-  }
-  sum(ll)
-}
 
 
 deterministic_steps_restart <- function(save_restart_step, step_end) {
@@ -297,10 +290,64 @@ deterministic_steps_restart <- function(save_restart_step, step_end) {
 }
 
 
-deterministic_index <- function(index) {
-  index_all <- union(index$run, index$state)
+particle_deterministic_state_support <- function(nested) {
+  if (nested) {
+    list(initial = pfs_initial_nested,
+         index = pds_index_nested,
+         compare = pds_compare_nested)
+  } else {
+    list(initial = pfs_initial_simple,
+         index = pds_index_simple,
+         compare = pds_compare_simple)
+  }
+}
+
+
+pds_index_simple <- function(model, index) {
+  pds_index_process(index(model$info()))
+}
+
+
+pds_index_nested <- function(model, index) {
+  index_data <- lapply(model$info(), index)
+
+  nok <- !all(vlapply(index_data[-1], identical, index_data[[1]]))
+  if (nok) {
+    stop("index must be identical across populations")
+  }
+
+  pds_index_process(index_data[[1]])
+}
+
+
+pds_index_process <- function(data) {
+  index_all <- union(data$run, data$state)
   list(index = index_all,
-       run = set_names(match(index$run, index_all), names(index$run)),
-       state = set_names(match(index$state, index_all), names(index$state)),
-       predict = index$state)
+       run = set_names(match(data$run, index_all), names(data$run)),
+       state = set_names(match(data$state, index_all), names(data$state)),
+       predict = data$state)
+}
+
+
+pds_compare_simple <- function(state, compare, data, pars) {
+  ll <- numeric(length(data))
+  for (i in seq_along(ll)) {
+    state_i <- array_drop(state[, 1L, i, drop = FALSE], 3L)
+    ll[i] <- compare(state_i, data[[i]], pars)
+  }
+  sum(ll)
+}
+
+
+pdf_compare_nested <- function(state, compare, data, pars) {
+  n_pars <- length(pars)
+  n_data <- length(data)
+  ll <- array(0, c(n_pars, n_data))
+  for (i in seq_len(n_pars)) {
+    for (j in seq_len(n_data)) {
+      state_ij <- array_drop(state[, 1L, i, j, drop = FALSE], 3L)
+      ll[i, j] <- compare(state_ij, data[[j]], pars[[i]])
+    }
+  }
+  ll
 }

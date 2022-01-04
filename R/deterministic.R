@@ -30,6 +30,13 @@ particle_deterministic <- R6::R6Class(
     ##' re-bound)
     model = NULL,
 
+    ##' @field nested Logical, indicating if this is a nested
+    ##' (multipopulation) deterministic particle (read only).  If `TRUE`, then
+    ##' each call to `run` returns a vector of log-likelihoods,
+    ##' one per population.  Triggered by the `data` argument to
+    ##' the constructor.
+    nested = NULL,
+
     ##' @description Create the particle filter
     ##'
     ##' @param data The data set to be used for the particle filter,
@@ -108,8 +115,23 @@ particle_deterministic <- R6::R6Class(
 
       private$generator <- model
       private$data <- data
-      private$data_split <- df_to_list_of_lists(data)
-      private$steps <- unname(as.matrix(data[c("step_start", "step_end")]))
+
+      self$nested <- inherits(data, "particle_filter_data_nested")
+
+      if (self$nested) {
+        population <- attr(data, "population")
+        private$data_split <- groupeddf_to_list_of_lists(data, population)
+        private$steps <- unname(
+          as.matrix(data[
+            data$population == levels(data[[population]])[[1]],
+            c("step_start", "step_end")]))
+      } else {
+        private$data_split <- df_to_list_of_lists(data)
+        private$steps <- unname(as.matrix(data[c("step_start", "step_end")]))
+      }
+
+      ## NOTE: unlike the particle filter, there is no support for
+      ## using a compiled compare function here.
       private$compare <- assert_function(compare)
       if (!is.null(index)) {
         private$index <- assert_function(index)
@@ -121,6 +143,7 @@ particle_deterministic <- R6::R6Class(
 
       self$model <- model
       lockBinding("model", self)
+      lockBinding("nested", self)
     },
 
     ##' @description Run the deterministic particle filter
@@ -150,6 +173,11 @@ particle_deterministic <- R6::R6Class(
     ##' (`-Inf` if the model is impossible)
     run = function(pars = list(), save_history = FALSE, save_restart = NULL,
                    min_log_likelihood = -Inf) {
+      assert_scalar_logical(save_history)
+      if (self$nested) {
+        n_populations <- attr(private$data, "n_populations")
+        pars <- particle_filter_pars_nested(pars, n_populations)
+      }
       if (inherits(pars, "multistage_parameters")) {
         filter_run_multistage(self, private, pars, save_history, save_restart,
                               min_log_likelihood)
