@@ -13,6 +13,12 @@ particle deterministically.
 \describe{
 \item{\code{model}}{The dust model generator being simulated (cannot be
 re-bound)}
+
+\item{\code{nested}}{Logical, indicating if this is a nested
+(multipopulation) deterministic particle (read only).  If \code{TRUE}, then
+each call to \code{run} returns a vector of log-likelihoods,
+one per population.  Triggered by the \code{data} argument to
+the constructor.}
 }
 \if{html}{\out{</div>}}
 }
