@@ -256,12 +256,13 @@ pmcmc_check_initial_nested <- function(initial, pars, n_chains) {
   }
   if (is_3d_array(initial)) {
     assert_dimensions(initial, c(n_pars, n_pops, n_chains))
-    initial <- assert_dimnames(initial, list(nms, pops, NULL))
+    initial <- assert_dimnames(
+      initial, list(parameters = nms, populations = pops, NULL))
   } else {
     assert_is(initial, "matrix")
     assert_dimensions(initial, c(n_pars, n_pops))
-    assert_dimnames(initial, list(nms, pops))
-    initial <- array(initial, c(n_pops, n_pars, n_chains),
+    assert_dimnames(initial, list(parameters = nms, populations = pops))
+    initial <- array(initial, c(n_pars, n_pops, n_chains),
                      dimnames = list(nms, pops, NULL))
   }
 

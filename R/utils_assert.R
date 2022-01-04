@@ -121,17 +121,28 @@ assert_dimensions <- function(x, expected, name = deparse(substitute(x))) {
 }
 
 
-assert_dimnames <- function(x, expected, name = deparse(substitite(x))) {
+assert_dimnames <- function(x, expected, name = deparse(substitute(x))) {
   dn_x <- dimnames(x)
   if (!is.null(dn_x) && !identical(dn_x, expected)) {
     for (i in seq_along(expected)) {
-      if (!identical(dn_x[[i]], expected[[i]])) {
-        stop(sprintf("Expected names of dimension %d of %d to match...",
-                     i, name))
+      if (!is.null(dn_x[[i]]) && !identical(dn_x[[i]], expected[[i]])) {
+        if (is.null(expected[[i]])) {
+          stop(sprintf("Expected names of dimension %d of '%s' to be empty",
+                       i, name))
+        } else {
+          nms <- names(expected)
+          if (is.null(nms) || !nzchar(nms[[i]])) {
+            target <- paste(squote(expected[[i]]), collapse = ", ")
+          } else {
+            target <- nms[[i]]
+          }
+          stop(sprintf("Expected names of dimension %d of '%s' to match %s",
+                       i, name, target))
+        }
       }
     }
   }
-  dimnames(x) <- expected
+  dimnames(x) <- unname(expected)
   invisible(x)
 }
 

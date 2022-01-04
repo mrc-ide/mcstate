@@ -151,7 +151,7 @@ pmcmc_state <- R6::R6Class(
 
       accept <- u < exp(prop_lpost - private$curr_lpost)
       if (any(accept)) {
-        private$curr_pars[accept, ] <- prop_pars[accept, ]
+        private$curr_pars[, accept] <- prop_pars[, accept]
         private$curr_lprior[accept] <- prop_lprior[accept]
         private$curr_llik[accept] <- prop_llik[accept]
         private$curr_lpost[accept] <- prop_lpost[accept]
