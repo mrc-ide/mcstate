@@ -115,7 +115,6 @@ pmcmc_filter_nested <- function(object, i) {
 ##'
 ##' @export
 pmcmc_combine <- function(..., samples = list(...)) {
-
   assert_list_of(samples, "mcstate_pmcmc")
 
   iteration <- lapply(samples, "[[", "iteration")
@@ -214,20 +213,20 @@ combine_state <- function(x) {
   }
 
   dx <- lapply(x, function(el) dim(el$state))
-  n <- vnapply(dx, "[[", 2)
   d <- dx[[1L]]
-  d[[2L]] <- sum(n)
+  rank <- length(d)
+  n <- vnapply(dx, "[[", rank - 1)
+  d[[rank - 1]] <- sum(n)
 
+  offset <- c(0, cumsum(n))
   state <- array(0, d)
-  start <- 0L
   for (i in seq_along(x)) {
-    j <- seq_len(n[[i]]) + start
-    if (length(d) == 4) {
-      state[, j, , ] <- x[[i]]$state
-    } else {
+    j <- seq_len(n[[i]]) + offset[[i]]
+    if (rank == 3) {
       state[, j, ] <- x[[i]]$state
+    } else {
+      state[, , j, ] <- x[[i]]$state
     }
-    start <- start + n[[i]]
   }
   rownames(state) <- rownames(x[[1L]]$state)
 

@@ -163,6 +163,12 @@ test_that("pmcmc nested multivariate gaussian", {
   })
 })
 
+
+## We've ended up ~8% slower here for some of the abstraction.  It
+## will be worth chasing these up later, but once the model moves more
+## into the main code we'll be faster.  Using the compiled particle
+## filter would also be much faster I think (though we currently lose
+## the early exit).
 test_that("pmcmc nested sir - 1 chain", {
   dat <- example_sir_shared()
   p <- particle_filter$new(dat$data, dat$model, 100, dat$compare,
@@ -223,27 +229,17 @@ test_that("pmcmc nested sir - 2 chains", {
   res3 <- pmcmc(pars, p2, control = control2)
   expect_s3_class(res3, "mcstate_pmcmc")
   expect_equal(res3$chain, rep(1:3, each = 51))
-  expect_equal(dim(res3$trajectories$state), c(3, 153, 2, 101))
+  expect_equal(dim(res3$trajectories$state), c(3, 2, 153, 101))
 
   expect_equal(res1$pars, res3$pars[, , 1:51])
   expect_equal(res1$state, res3$state[, , 1:51])
-  expect_equal(res1$restart$state, res3$restart$state[, 1:51, , ])
-  expect_equal(res1$trajectories$state, res3$trajectories$state[, 1:51, , ])
-})
-
-test_that("sample_trajectory_nested single state", {
-  expect_equal(sample_trajectory_nested(array(1, c(1, 1, 1, 1))),
-               array(1, c(1, 1, 1)))
+  expect_equal(res1$restart$state, res3$restart$state[, , 1:51, ])
+  expect_equal(res1$trajectories$state, res3$trajectories$state[, , 1:51, ])
 })
 
 
 test_that("return names on nested pmcmc output", {
   dat <- example_sir_shared()
-  p1 <- particle_filter$new(dat$data, dat$model, 100, dat$compare,
-                            dat$index, seed = 1L)
-
-  proposal_fixed <- matrix(0.00026)
-  proposal_varied <- matrix(0.00057)
 
   pars <- pmcmc_parameters_nested$new(
     list(pmcmc_varied_parameter("beta", letters[1:2], c(0.2, 0.3),
@@ -251,16 +247,15 @@ test_that("return names on nested pmcmc output", {
                                 prior = function(p) log(1e-10)),
          pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
                          prior = function(p) log(1e-10))),
-    proposal_fixed = proposal_fixed, proposal_varied = proposal_varied)
-
-  control1 <- pmcmc_control(50, save_state = FALSE, n_chains = 1)
+    proposal_fixed = matrix(0.00026),
+    proposal_varied = matrix(0.00057))
 
   n_particles <- 10
-  index2 <- function(info) list(run = 4L, state = c(a = 1, b = 2, c = 3))
+  index2 <- function(info) list(run = 5L, state = c(a = 1, b = 2, c = 3))
   p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index)
+                            index = dat$index, seed = 1)
   p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = index2)
+                            index = index2, seed = 1)
 
   control <- pmcmc_control(5, save_state = TRUE, save_trajectories = TRUE)
 
@@ -271,15 +266,13 @@ test_that("return names on nested pmcmc output", {
 
   expect_null(rownames(results1$trajectories$state))
   expect_equal(rownames(results2$trajectories$state), c("a", "b", "c"))
+  expect_equal(unname(results1$trajectories$state),
+               unname(results2$trajectories$state))
 })
-
 
 
 test_that("run nested pmcmc with the particle filter and retain history", {
   dat <- example_sir_shared()
-
-  proposal_fixed <- matrix(0.00026)
-  proposal_varied <- matrix(0.00057)
 
   pars <- pmcmc_parameters_nested$new(
     list(pmcmc_varied_parameter("beta", letters[1:2], c(0.2, 0.3),
@@ -287,14 +280,15 @@ test_that("run nested pmcmc with the particle filter and retain history", {
                                 prior = function(p) log(1e-10)),
          pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
                          prior = function(p) log(1e-10))),
-    proposal_fixed = proposal_fixed, proposal_varied = proposal_varied)
+    proposal_fixed = matrix(0.00026),
+    proposal_varied = matrix(0.00057))
 
 
   n_particles <- 100
   p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index)
+                            index = dat$index, seed = 1L)
   p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index)
+                            index = dat$index, seed = 1L)
 
   control1 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE)
   control2 <- pmcmc_control(30, save_trajectories = FALSE, save_state = FALSE)
@@ -327,11 +321,11 @@ test_that("run nested pmcmc with the particle filter and retain history", {
                c("log_prior", "log_likelihood", "log_posterior"))
 
   ## History, if returned, has the correct shape
-  expect_equal(dim(results1$state), c(5, 2, 31)) # state, mcmc
+  expect_equal(dim(results1$state), c(5, 2, 31)) # state, pop, mcmc
 
   ## Trajectories, if returned, have the same shape
   expect_s3_class(results1$trajectories, "mcstate_trajectories")
-  expect_equal(dim(results1$trajectories$state), c(3, 31, 2, 101))
+  expect_equal(dim(results1$trajectories$state), c(3, 2, 31, 101))
   expect_equal(results1$trajectories$step, seq(0, 400, by = 4))
   expect_equal(results1$trajectories$rate, 4)
 
@@ -346,32 +340,28 @@ test_that("nested_step_ratio works", {
   dat <- example_sir_shared()
   p <- particle_filter$new(dat$data, dat$model, 10, dat$compare,
                            dat$index)
-  proposal_fixed <- matrix(0.00026)
-  proposal_varied <- matrix(0.00057)
-
   pars <- pmcmc_parameters_nested$new(
     list(pmcmc_varied_parameter("beta", letters[1:2], c(0.2, 0.3),
                                 min = 0, max = 1,
                                 prior = function(p) log(1e-10)),
          pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
                          prior = function(p) log(1e-10))),
-    proposal_fixed = proposal_fixed, proposal_varied = proposal_varied)
+    proposal_fixed = matrix(0.00026),
+    proposal_varied = matrix(0.00057))
 
+  ## Here, we never update beta, which is varied
   control <- pmcmc_control(30, nested_step_ratio = 30)
   res1 <- pmcmc(pars, p, control = control)
-  expect_equal(as.numeric(res1$pars[1, , ]), rep(c(0.2, 0.3), 31))
-  expect_false(identical(as.numeric(res1$pars[2, , ]), rep(0.1, 62)))
+  expect_equal(as.numeric(res1$pars["beta", , ]), rep(c(0.2, 0.3), 31))
+  expect_equal(res1$pars["gamma", "a", ], res1$pars["gamma", "b", ])
+  expect_false(all(res1$pars["gamma", "a", ] == 0.1))
 
+  ## Here, we never update gamma, which is fixed
   control <- pmcmc_control(30, nested_step_ratio = 1 / 30)
   res2 <- pmcmc(pars, p, control = control)
-  expect_equal(as.numeric(res2$pars[2, , ]), rep(0.1, 62))
-  expect_false(identical(as.numeric(res2$pars[1, , ]), rep(c(0.2, 0.3), 31)))
-
-  control <- pmcmc_control(30, nested_step_ratio = 1 / 2)
-  expect_is(pmcmc(pars, p, control = control), "mcstate_pmcmc")
-
-  control <- pmcmc_control(30, nested_step_ratio = 2)
-  expect_is(pmcmc(pars, p, control = control), "mcstate_pmcmc")
+  expect_equal(res2$pars["gamma", , ],
+               matrix(0.1, 2, 31, dimnames = list(c("a", "b"), NULL)))
+  expect_false(all(res2$pars["beta", , ] == c(0.2, 0.3)))
 })
 
 
@@ -381,8 +371,6 @@ test_that("can run split chains with nested model", {
                             dat$index, seed = 1L)
   p2 <- particle_filter$new(dat$data, dat$model, 10, dat$compare,
                             dat$index, seed = 1L)
-  proposal_fixed <- matrix(0.00026)
-  proposal_varied <- matrix(0.00057)
 
   pars <- pmcmc_parameters_nested$new(
     list(pmcmc_varied_parameter("beta", letters[1:2], c(0.2, 0.3),
@@ -390,7 +378,8 @@ test_that("can run split chains with nested model", {
                                 prior = function(p) log(1e-10)),
          pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
                          prior = function(p) log(1e-10))),
-    proposal_fixed = proposal_fixed, proposal_varied = proposal_varied)
+    proposal_fixed = matrix(0.00026),
+    proposal_varied = matrix(0.00057))
 
   control <- pmcmc_control(10, n_chains = 2, use_parallel_seed = TRUE)
   res1 <- pmcmc(pars, p1, control = control)
@@ -399,6 +388,5 @@ test_that("can run split chains with nested model", {
   samples <- lapply(seq_len(control$n_chains), pmcmc_chains_run, inputs)
   res2 <- pmcmc_combine(samples = samples)
 
-  v <- c("chain", "iteration", "pars", "probabilities", "trajectories")
-  expect_equal(res1[v], res2[v])
+  expect_equal(res1, res2)
 })

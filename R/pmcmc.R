@@ -255,52 +255,21 @@ pmcmc_check_initial_nested <- function(initial, pars, n_chains) {
     initial <- pars$initial()
   }
   if (is_3d_array(initial)) {
-    if (nlayer(initial) != n_chains) {
-      stop(sprintf("Expected an array with %d layers for 'initial'", n_chains))
-    }
-    if (ncol(initial) != n_pars) {
-      stop(sprintf("Expected an array with %d columns for 'initial'", n_pars))
-    }
-    if (nrow(initial) != n_pops) {
-      stop(sprintf("Expected an array with %d rows for 'initial'", n_pops))
-    }
-    if (!is.null(rownames(initial)) && !identical(rownames(initial), pops)) {
-      stop("If 'initial' has rownames, they must match pars$populations()")
-    }
-    if (!is.null(colnames(initial)) && !identical(colnames(initial), nms)) {
-      stop("If 'initial' has colnames, they must match pars$names()")
-    }
-
-    dimnames(initial) <- list(pops, nms, NULL)
-
-    ok <- apply(initial, 3, function(p) all(is.finite(pars$prior(p))))
-    if (any(!ok)) {
-      stop(sprintf(
-        "Starting point does not have finite prior probability (%s)",
-        paste(which(!ok), collapse = ", ")))
-    }
+    assert_dimensions(initial, c(n_pars, n_pops, n_chains))
+    initial <- assert_dimnames(initial, list(nms, pops, NULL))
   } else {
-    if (NCOL(initial) != n_pars) {
-      stop(sprintf("Expected a matrix with %d columns for 'initial'", n_pars))
-    }
-    if (NROW(initial) != n_pops) {
-      stop(sprintf("Expected a matrix with %d rows for 'initial'", n_pops))
-    }
-    if (!is.null(rownames(initial)) && !identical(rownames(initial), pops)) {
-      stop("If 'initial' has rownames, they must match pars$populations()")
-    }
-    if (!is.null(colnames(initial)) && !identical(colnames(initial), nms)) {
-      stop("If 'initial' has colnames, they must match pars$names()")
-    }
-
-    dimnames(initial) <- list(pops, nms)
-
-    if (any(!is.finite(pars$prior(initial)))) {
-      stop("Starting point does not have finite prior probability")
-    }
-
+    assert_is(initial, "matrix")
+    assert_dimensions(initial, c(n_pars, n_pops))
+    assert_dimnames(initial, list(nms, pops))
     initial <- array(initial, c(n_pops, n_pars, n_chains),
-                     dimnames = list(pops, nms, NULL))
+                     dimnames = list(nms, pops, NULL))
+  }
+
+  ok <- apply(initial, 3, function(p) all(is.finite(pars$prior(p))))
+  if (any(!ok)) {
+    stop(sprintf(
+      "Starting point does not have finite prior probability (chain %s)",
+      paste(which(!ok), collapse = ", ")))
   }
 
   initial
