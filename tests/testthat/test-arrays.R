@@ -239,3 +239,21 @@ test_that("Can get an arbitrary dimension of an array", {
     "'k' must be in [1, 2]",
     fixed = TRUE)
 })
+
+
+test_that("Array from list", {
+  expect_equal(
+    array_from_list(list(1:2, 3:4, 5:6), 1:2),
+    array(1:6, c(2, 3)))
+  expect_equal(
+    array_from_list(list(1:2, 3:4, 5:6), 2:1),
+    aperm(array(1:6, c(2, 3)), 2:1))
+
+  d <- list(matrix(1:12, 4, 3), matrix(13:24, 4, 3))
+  expect_equal(array_from_list(d), array(1:24, c(4, 3, 2)))
+  expect_equal(array_from_list(d, 3:1),
+               aperm(array(1:24, c(4, 3, 2)), 3:1))
+
+  expect_null(array_from_list(list()), NULL)
+  expect_null(array_from_list(list(numeric(0), numeric(0))), NULL)
+})

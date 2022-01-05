@@ -211,17 +211,12 @@ pmcmc_state <- R6::R6Class(
     ## generated parameters; we currently do so that each row is each
     ## pop, not each col
     finish_nested = function() {
-      ## TODO: curr_pars is clearly incorrect because we never update
-      ## but the probabilities have changed, as have the state variables
-
       ## var x pop x step
-      pars <- array_from_list(private$history_pars$get(), c(1, 2, 3))
+      pars <- array_from_list(private$history_pars$get())
       dimnames(pars)[1:2] <- dimnames(private$curr_pars)
 
       ## var x pop x step
-      ## TODO: push this into the save
-      ## private$history_probabilties$get()
-      probabilities <- list_to_array(private$history_probabilities$get())
+      probabilities <- array_from_list(private$history_probabilities$get())
       dimnames(probabilities)[1:2] <-
         list(c("log_prior", "log_likelihood", "log_posterior"), colnames(pars))
 
@@ -240,7 +235,7 @@ pmcmc_state <- R6::R6Class(
 
       if (private$control$save_state) {
         # [state x pop x step]
-        state <- list_to_array(private$history_state$get())
+        state <- array_from_list(private$history_state$get())
         colnames(state) <- colnames(private$curr_pars)
       }
 

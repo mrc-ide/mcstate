@@ -289,24 +289,32 @@ array_nth_dimension <- function(x, k, i, drop = FALSE) {
 }
 
 
-## Generalise list to array
-array_from_list <- function(data, order) {
-  rank <- length(order)
-  stopifnot(setequal(order, seq_len(rank)))
-  vec <- unlist(data, FALSE, FALSE)
+array_from_list <- function(data, order = NULL) {
+  len <- lengths(data)
+  if (all(len == 0)) {
+    return(NULL)
+  }
 
+  dimensions <- c(dim(data[[1]]) %||% length(data[[1]]), length(data))
+  rank <- length(dimensions)
+
+  stopifnot(
+    length(unique(len)) == 1,
+    is.null(order) || setequal(order, seq_len(rank)))
+
+  vec <- unlist(data, FALSE, FALSE)
   if (rank == 2) {
-    if (order[[1]] == 1L) {
+    if (is.null(order) || order[[1]] == 1L) {
       return(matrix(vec, ncol = length(data)))
     } else {
       return(matrix(vec, nrow = length(data), byrow = TRUE))
     }
   }
 
-  dimensions <- c(dim(data[[1]]), length(data))
   arr <- array(vec, dimensions)
-  if (!all(diff(order) == 1)) {
+  if (!is.null(order)) {
     arr <- aperm(arr, order)
   }
+
   arr
 }
