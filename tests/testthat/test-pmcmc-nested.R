@@ -170,6 +170,28 @@ test_that("pmcmc nested multivariate gaussian", {
 })
 
 
+test_that("nestedness must agree", {
+  dat <- example_sir()
+  p <- particle_filter$new(dat$data, dat$model, 100, dat$compare,
+                           dat$index)
+  proposal_fixed <- matrix(0.00026)
+  proposal_varied <- matrix(0.00057)
+
+  pars <- pmcmc_parameters_nested$new(
+    list(pmcmc_varied_parameter("beta", letters[1:2], c(0.2, 0.3),
+                                min = 0, max = 1,
+                                prior = function(p) log(1e-10)),
+         pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
+                         prior = function(p) log(1e-10))),
+    proposal_fixed = proposal_fixed, proposal_varied = proposal_varied)
+
+  control <- pmcmc_control(5)
+  expect_error(
+    pmcmc(pars, p, control = control),
+    "'pars' and 'filter' disagree on nestedness")
+})
+
+
 ## We've ended up ~8% slower here for some of the abstraction.  It
 ## will be worth chasing these up later, but once the model moves more
 ## into the main code we'll be faster.  Using the compiled particle

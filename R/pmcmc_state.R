@@ -262,6 +262,10 @@ pmcmc_state <- R6::R6Class(
       private$nested <- inherits(pars, "pmcmc_parameters_nested")
       private$deterministic <- inherits(filter, "particle_deterministic")
 
+      if (private$nested != filter$nested) {
+        stop("'pars' and 'filter' disagree on nestedness")
+      }
+
       private$tick <- pmcmc_progress(control$n_steps, control$progress)
 
       private$curr_step <- 0L
