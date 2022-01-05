@@ -74,7 +74,9 @@ pmcmc_filter <- function(object, i) {
 }
 
 
-## TODO: these could be combined with array utilities
+## These could be combined with array utilities, but I think that
+## would make it less easier to follow as they're fairly
+## straightforward this way.
 pmcmc_filter_nested <- function(object, i) {
   object$pars <- object$pars[, , i, drop = FALSE]
   object$probabilities <- object$probabilities[, , i, drop = FALSE]

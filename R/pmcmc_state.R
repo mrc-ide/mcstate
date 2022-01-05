@@ -9,7 +9,6 @@ pmcmc_state <- R6::R6Class(
 
     nested = NULL,
 
-    ## TODO: group together in a list?
     history_pars = NULL,
     history_probabilities = NULL,
     history_state = NULL,
@@ -35,10 +34,6 @@ pmcmc_state <- R6::R6Class(
         i <- sample.int(private$filter$n_particles, 1)
       }
 
-      ## TODO: there's some inconsistency throughout how we are
-      ## accessing history; we should look into if it is expected that
-      ## this will be dropped or not.
-
       if (private$control$save_trajectories) {
         private$curr_trajectories <- array_drop(private$filter$history(i), 2)
       }
@@ -47,8 +42,6 @@ pmcmc_state <- R6::R6Class(
           array_drop(array_nth_dimension(private$filter$state(), 2, i), 2)
       }
       if (length(private$control$save_restart) > 0) {
-        ## TODO: Can do this better by dropping within restart_state,
-        ## which makes much more sense and is currently a bit weird.
         private$curr_restart <- array_drop(private$filter$restart_state(i), 2)
       }
     },
@@ -207,9 +200,6 @@ pmcmc_state <- R6::R6Class(
       mcstate_pmcmc(pars, probabilities, state, trajectories, restart, predict)
     },
 
-    ## TODO: this might be a good place to invert the structure of the
-    ## generated parameters; we currently do so that each row is each
-    ## pop, not each col
     finish_nested = function() {
       ## var x pop x step
       pars <- array_from_list(private$history_pars$get())

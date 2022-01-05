@@ -178,7 +178,7 @@ pmcmc_run_chain <- function(chain_id, pars, initial, filter, control, seed) {
   seed <- seed[[chain_id]]
 
   if (!is.null(seed)) {
-    ## TODO: this feels pretty weird; can we just add a
+    ## TODO (#174): this feels pretty weird; can we just add a
     ## "set_rng_state" method for the filter?
     ##
     ## This will be triggered where control$use_parallel_seed is TRUE
@@ -199,10 +199,10 @@ pmcmc_multiple_parallel <- function(pars, initial, filter, control) {
 }
 
 
-## TODO: This does not check that the parameters are in range, or that
-## they are appropriately discrete. We should add that in too at some
-## point, though this overlaps with some outstanding validation in the
-## smc2 branch.
+## TODO (#175): This does not check that the parameters are in range,
+## or that they are appropriately discrete. We should add that in too
+## at some point, though this overlaps with some outstanding
+## validation in the smc2 branch.
 pmcmc_check_initial <- function(initial, pars, n_chains) {
   nms <- pars$names()
   n_pars <- length(nms)
@@ -241,7 +241,7 @@ pmcmc_check_initial <- function(initial, pars, n_chains) {
   initial
 }
 
-## TODO: This does not check that the parameters are in range, or that
+## TODO (#175): This does not check that the parameters are in range, or that
 ## they are appropriately discrete. We should add that in too at some
 ## point, though this overlaps with some outstanding validation in the
 ## smc2 branch.

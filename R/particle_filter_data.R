@@ -113,8 +113,8 @@ particle_filter_data <- function(data, time, rate, initial_time = NULL,
   ret
 }
 
-## TODO: this needs simplification and general tidying, all a bit
-## complicated still throughout here.
+## TODO (#171): this needs simplification and general tidying, all a
+## bit complicated still throughout here.
 particle_filter_data_nested <- function(data, time, rate, initial_time,
                                         population, allow_unequal_times) {
   # catch invalid user call
@@ -156,8 +156,8 @@ particle_filter_data_nested <- function(data, time, rate, initial_time,
 
   data <- do.call(rbind, split_data)
 
-  ## TODO: this is not ideal because 'population' is then silently
-  ## unavailable (a bit like step is, but worse).
+  ## TODO (#171): this is not ideal because 'population' is then
+  ## silently unavailable (a bit like step is, but worse).
   ret <- data.frame(time_start = t$time_start,
                     time_end = t$time_end,
                     step_start = t$time_start * rate,
@@ -169,7 +169,7 @@ particle_filter_data_nested <- function(data, time, rate, initial_time,
   names(ret)[1:2] <- paste0(time, c("_start", "_end"))
   attr(ret, "rate") <- rate
   attr(ret, "time") <- time
-  ## TODO: these will become flexible soon, but this at least
+  ## TODO (#171): these will become flexible soon, but this at least
   ## establishes the contract for things that use the output of this
   ## function.
   attr(ret, "population") <- "population"
