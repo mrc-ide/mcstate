@@ -48,12 +48,7 @@ pmcmc <- function(pars, filter, initial = NULL, control = NULL) {
   assert_is(pars, c("pmcmc_parameters", "pmcmc_parameters_nested"))
   assert_is(filter, c("particle_filter", "particle_deterministic"))
   assert_is(control, "pmcmc_control")
-
-  if (inherits(pars, "pmcmc_parameters_nested")) {
-    initial <- pmcmc_check_initial_nested(initial, pars, control$n_chains)
-  } else {
-    initial <- pmcmc_check_initial(initial, pars, control$n_chains)
-  }
+  initial <- pmcmc_check_initial(initial, pars, control$n_chains)
 
   if (control$n_workers == 1) {
     pmcmc_multiple_series(pars, initial, filter, control)
@@ -95,11 +90,7 @@ pmcmc_chains_prepare <- function(pars, filter, initial = NULL, control = NULL) {
     stop("'use_parallel_seed' must be TRUE")
   }
 
-  if (inherits(pars, "pmcmc_parameters_nested")) {
-    initial <- pmcmc_check_initial_nested(initial, pars, control$n_chains)
-  } else {
-    initial <- pmcmc_check_initial(initial, pars, control$n_chains)
-  }
+  initial <- pmcmc_check_initial(initial, pars, control$n_chains)
 
   seed <- make_seeds(control$n_chains, filter$inputs()$seed, filter$model)
 
@@ -199,11 +190,20 @@ pmcmc_multiple_parallel <- function(pars, initial, filter, control) {
 }
 
 
+pmcmc_check_initial <- function(initial, pars, n_chains) {
+  if (inherits(pars, "pmcmc_parameters_nested")) {
+    initial <- pmcmc_check_initial_nested(initial, pars, n_chains)
+  } else {
+    initial <- pmcmc_check_initial_simple(initial, pars, n_chains)
+  }
+}
+
+
 ## TODO (#175): This does not check that the parameters are in range,
 ## or that they are appropriately discrete. We should add that in too
 ## at some point, though this overlaps with some outstanding
 ## validation in the smc2 branch.
-pmcmc_check_initial <- function(initial, pars, n_chains) {
+pmcmc_check_initial_simple <- function(initial, pars, n_chains) {
   nms <- pars$names()
   n_pars <- length(nms)
   if (is.null(initial)) {
