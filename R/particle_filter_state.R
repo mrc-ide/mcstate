@@ -347,20 +347,8 @@ particle_filter_state <- R6::R6Class(
         initial, private$index, private$compare, gpu_config,
         seed, private$min_log_likelihood, save_history, private$save_restart)
 
-      info_old <- self$model$info()
-      info_new <- ret$model$info()
+      particle_filter_update_state(transform_state, self$model, ret$model)
 
-      if (self$model$n_pars() == 0) {
-        state <- transform_state(self$model$state(), info_old, info_new)
-      } else {
-        state_old <- self$model$state()
-        state_new <- lapply(seq_len(self$model$n_pars()), function(i)
-          transform_state(state_old[, , i], info_old[[i]], info_new[[i]]))
-        state <- vapply(state_new, identity, state_new[[1]])
-      }
-      step <- self$model$step()
-
-      ret$model$update_state(state = state, step = step)
       ret$current_step_index <- self$current_step_index
       ret$log_likelihood <- self$log_likelihood
       ret$log_likelihood_step <- self$log_likelihood_step
@@ -449,6 +437,26 @@ particle_filter_early_exit <- function(log_likelihood, min_log_likelihood) {
   } else {
     all(log_likelihood < min_log_likelihood)
   }
+}
+
+
+particle_filter_update_state <- function(transform, model_old, model_new) {
+  info_old <- model_old$info()
+  info_new <- model_new$info()
+  n_pars <- model_old$n_pars()
+
+  if (n_pars == 0) {
+    state <- transform(model_old$state(), info_old, info_new)
+  } else {
+    state_old <- model_old$state()
+    state_new <- lapply(seq_len(n_pars), function(i)
+      transform(array_drop(state_old[, , i, drop = FALSE], 3),
+                info_old[[i]], info_new[[i]]))
+    state <- vapply(state_new, identity, state_new[[1]])
+  }
+
+  step <- model_old$step()
+  model_new$update_state(state = state, step = step)
 }
 
 
