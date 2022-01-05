@@ -680,9 +680,9 @@ test_that("Can run pmcmc with early exit enabled", {
   control1 <- pmcmc_control(30)
   control2 <- pmcmc_control(30, filter_early_exit = TRUE)
   set.seed(1)
-  system.time(res1 <- pmcmc(dat$pars, p1, control = control1))
+  res1 <- pmcmc(dat$pars, p1, control = control1)
   set.seed(1)
-  system.time(res2 <- pmcmc(dat$pars, p2, control = control2))
+  res2 <- pmcmc(dat$pars, p2, control = control2)
 
   ## Really hard to test this, the final parameters turn out to be
   ## identical to 300 steps at least, which is surprising. However,

@@ -393,21 +393,29 @@ test_that("pmcmc_parameters_nested propose - fixed only", {
 
 test_that("pmcmc_parameters_nested fix errors", {
   parameters <- list(
+    a = pmcmc_parameter("a", 1, prior = dexp),
     b = pmcmc_parameter("b", 1, prior = dexp))
-  proposal_varied <- NULL
-  proposal_fixed <- diag(1)
-  p <- pmcmc_parameters_nested$new(parameters, NULL, proposal_fixed,
-                                   populations = c("x", "y"))
+  p <- pmcmc_parameters_nested$new(parameters, NULL, diag(2), c("x", "y"))
   expect_error(
     p$fix(matrix(1)),
     "colnames of 'fixed' must be identical to '$populations()'",
     fixed = TRUE)
   expect_error(
+    p$fix(matrix(1, ncol = 2, dimnames = list(NULL, c("x", "y")))),
+    "'fixed' must have rownames (parameters)",
+    fixed = TRUE)
+  expect_error(
     p$fix(matrix(1, ncol = 2, dimnames = list("x", c("x", "y")))),
     "Fixed parameters not found in model: 'x'")
   expect_error(
-    p$fix(matrix(1, 1, 2, dimnames = list("b", c("x", "y")))),
+    p$fix(matrix(1, 2, 2, dimnames = list(c("b", "b"), c("x", "y")))),
+    "Duplicate fixed parameters")
+  expect_error(
+    p$fix(matrix(1, 2, 2, dimnames = list(c("a", "b"), c("x", "y")))),
     "Cannot fix all parameters")
+  expect_error(
+    p$fix(matrix(1:2, 1, 2, dimnames = list("b", c("x", "y")))),
+    "Fixed fixed parameters are not everywhere fixed")
 })
 
 

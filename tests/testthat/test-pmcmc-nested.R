@@ -396,3 +396,34 @@ test_that("can run split chains with nested model", {
 
   expect_equal(res1, res2)
 })
+
+
+test_that("Can do early exit with nested model", {
+  dat <- example_sir_shared()
+  n_particles <- 5
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            dat$index, seed = 1L)
+  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            dat$index, seed = 1L)
+
+  pars <- pmcmc_parameters_nested$new(
+    list(pmcmc_varied_parameter("beta", letters[1:2], c(0.2, 0.3),
+                                min = 0, max = 1,
+                                prior = function(p) log(1e-10)),
+         pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
+                         prior = function(p) log(1e-10))),
+    proposal_fixed = matrix(0.00026),
+    proposal_varied = matrix(0.00057))
+
+  control1 <- pmcmc_control(30, filter_early_exit = FALSE)
+  control2 <- pmcmc_control(30, filter_early_exit = TRUE)
+
+  set.seed(1)
+  res1 <- pmcmc(pars, p1, control = control1)
+  set.seed(1)
+  res2 <- pmcmc(pars, p2, control = control2)
+
+  ## See similar test in test-pmcmc.R; we need to come up with a
+  ## better test of this really.
+  expect_false(identical(p2$inputs()$seed, p1$inputs()$seed))
+})
