@@ -72,11 +72,12 @@ multistage_parameters <- function(pars, epochs) {
 ##'   *must* provide `transform_state` to fill in new model state,
 ##'   move things around, or delete model state depending on how the
 ##'   state has changed.  This function will be passed three
-##'   arguments: (1) the current model state, (2) the model used to
-##'   run up to this point, (3) the new model that was created with
-##'   `pars` which will be run from this point.  It is expected that
-##'   the results of `$pars()` and `$info()` from these model objects
-##'   will be useful for updating the model state.
+##'   arguments: (1) the current model state, (2) the result of the
+##'   `$info()` method from the model used to this point, (3) the
+##'   result of the `$info()` method for the new model that was
+##'   created with `pars` which will be run from this point.  Future
+##'   versions of this interface may allow passing the parameters in
+##'   too.
 ##'
 ##' @export
 multistage_epoch <- function(start, pars = NULL, transform_state = NULL) {
@@ -101,6 +102,13 @@ transform_state_identity <- function(x, ...) {
 
 
 filter_check_times <- function(pars, data, save_restart) {
+  ## TODO: having to do this is pretty ugly, but we need both step and
+  ## time below here.  Probably a little earlier processing would
+  ## remove the need to do this.
+  if (inherits(data, "particle_filter_data_nested")) {
+    population <- data[[attr(data, "population")]]
+    data <- data[population == population[[1]], ]
+  }
   ## There's an awkward bit of bookkeeping here; we need to find out
   ## when each phase *ends*, as that is the index that we do the
   ## switch at.
@@ -182,12 +190,20 @@ join_histories <- function(history, stages) {
   end <- step_index + 1L
   start <- c(1L, end[-length(end)] + 1L)
 
+  rank <- length(dim(value))
+
   for (i in seq_along(history)) {
     j <- match(names(history[[i]]$index), nms)
     k <- seq(start[[i]], end[[i]])
-    value[j, , k] <- history[[i]]$value[, , k]
+    value_i <- array_last_dimension(history[[i]]$value, k)
+    if (rank == 3) {
+      value[j, , k] <- value_i
+    } else {
+      value[j, , , k] <- value_i
+    }
     if (has_order) {
-      order[, k] <- history[[i]]$order[, k]
+      order_i <- array_last_dimension(history[[i]]$order, k)
+      array_last_dimension(order, k) <- order_i
     }
   }
 
@@ -209,7 +225,7 @@ join_histories <- function(history, stages) {
 ## differ in the size of their first dimension.
 join_restart_state <- function(restart, stages) {
   state <- lapply(seq_along(stages), function(i)
-    restart[[i]][, , stages[[i]]$restart_index, drop = FALSE])
+    array_last_dimension(restart[[i]], stages[[i]]$restart_index))
   state <- state[lengths(state) > 0]
 
   n <- viapply(state, nrow)

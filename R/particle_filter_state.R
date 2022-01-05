@@ -109,16 +109,6 @@ particle_filter_state <- R6::R6Class(
       pars_multi <- inherits(data, "particle_filter_data_nested")
       support <- particle_filter_state_support(pars_multi)
 
-      if (pars_multi) {
-        if (!is.null(names(pars))) {
-          stop("Expected an unnamed list of parameters")
-        }
-        if (length(pars) != attr(data, "n_populations")) {
-          stop(sprintf("'pars' must have length %d (following data$%s)",
-                       attr(data, "n_populations"), attr(data, "population")))
-        }
-      }
-
       if (is.null(model)) {
         model <- generator$new(pars = pars, step = steps[[1L]],
                                n_particles = n_particles, n_threads = n_threads,
@@ -357,7 +347,17 @@ particle_filter_state <- R6::R6Class(
         initial, private$index, private$compare, gpu_config,
         seed, private$min_log_likelihood, save_history, private$save_restart)
 
-      state <- transform_state(self$model$state(), self$model, ret$model)
+      info_old <- self$model$info()
+      info_new <- ret$model$info()
+
+      if (self$model$n_pars() == 0) {
+        state <- transform_state(self$model$state(), info_old, info_new)
+      } else {
+        state_old <- self$model$state()
+        state_new <- lapply(seq_len(self$model$n_pars()), function(i)
+          transform_state(state_old[, , i], info_old[[i]], info_new[[i]]))
+        state <- vapply(state_new, identity, state_new[[1]])
+      }
       step <- self$model$step()
 
       ret$model$update_state(state = state, step = step)

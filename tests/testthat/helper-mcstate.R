@@ -449,9 +449,9 @@ example_variable <- function() {
     list(run = 1L, state = i)
   }
 
-  transform_state <- function(y, model_old, model_new) {
-    n_old <- model_old$pars()$len
-    n_new <- model_new$pars()$len
+  transform_state <- function(y, info_old, info_new) {
+    n_old <- info_old$len
+    n_new <- info_new$len
     if (n_new > n_old) {
       y <- rbind(y, matrix(0, n_new - n_old, ncol(y)))
     } else {
