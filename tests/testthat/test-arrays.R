@@ -14,6 +14,21 @@ test_that("array_bind", {
 })
 
 
+
+test_that("array_bind on other dimensions", {
+  m2 <- random_array(c(10, 5))
+  expect_identical(array_bind(m2[1:4, ], m2[5:10, ], dimension = 1), m2)
+
+  m3 <- random_array(c(5, 7, 9))
+  expect_identical(array_bind(m3[1:2, , ], m3[3:5, , ], dimension = 1), m3)
+  expect_identical(array_bind(m3[, 1:3, ], m3[, 4:7, ], dimension = 2), m3)
+  expect_identical(array_bind(m3[, , 1:4], m3[, , 5:9], dimension = 3), m3)
+
+  m4 <- random_array(c(5, 7, 3, 10))
+  expect_identical(array_bind(m4[1:2, , , ], m4[3:5, , , ], dimension = 1), m4)
+})
+
+
 test_that("preserve dimension names on merge", {
   drop_last_names <- function(m) {
     dn <- dimnames(m)
@@ -46,6 +61,10 @@ test_that("Can't merge incompatible arrays", {
   expect_error(
     array_bind(m4[, , , 1:4], m4[-1, , , 1:4], m4[-1, -1, -1, 5:10]),
     "array 2 (dimension 1), array 3 (dimension 1, 2, 3)",
+    fixed = TRUE)
+  expect_error(
+    array_bind(m4[1:3, , , ], m4[1:3, , , -1], dimension = 1),
+    "array 2 (dimension 4)",
     fixed = TRUE)
   expect_error(
     array_bind(m4[, , , 1:4], random_array(c(5, 7, 10))),
