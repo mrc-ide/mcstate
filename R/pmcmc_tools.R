@@ -66,47 +66,21 @@ pmcmc_filter <- function(object, i) {
   }
   object$iteration <- object$iteration[i]
 
-  if (is_3d_array(object$pars)) {
-    pmcmc_filter_nested(object, i)
-  } else {
-    pmcmc_filter_simple(object, i)
-  }
-}
-
-
-## These could be combined with array utilities, but I think that
-## would make it less easier to follow as they're fairly
-## straightforward this way.
-pmcmc_filter_nested <- function(object, i) {
-  object$pars <- object$pars[i, , , drop = FALSE]
-  object$probabilities <- object$probabilities[i, , , drop = FALSE]
+  object$pars <- array_first_dimension(object$pars, i)
+  object$probabilities <- array_first_dimension(object$probabilities, i)
   if (!is.null(object$state)) {
-    object$state <- object$state[, , i, drop = FALSE]
+    object$state <- array_last_dimension(object$state, i)
   }
   if (!is.null(object$trajectories)) {
+    k <- length(dim(object$restart$state)) - 1
     object$trajectories$state <-
-      object$trajectories$state[, , i, , drop = FALSE]
+      array_nth_dimension(object$trajectories$state, k, i)
   }
   if (!is.null(object$restart)) {
-    object$restart$state <- object$restart$state[, , i, , drop = FALSE]
+    k <- length(dim(object$restart$state)) - 1
+    object$restart$state <- array_nth_dimension(object$restart$state, k, i)
   }
-  object
-}
 
-
-pmcmc_filter_simple <- function(object, i) {
-  object$pars <- object$pars[i, , drop = FALSE]
-  object$probabilities <- object$probabilities[i, , drop = FALSE]
-  if (!is.null(object$state)) {
-    object$state <- object$state[, i, drop = FALSE]
-  }
-  if (!is.null(object$trajectories)) {
-    object$trajectories$state <-
-      object$trajectories$state[, i, , drop = FALSE]
-  }
-  if (!is.null(object$restart)) {
-    object$restart$state <- object$restart$state[, i, , drop = FALSE]
-  }
   object
 }
 
