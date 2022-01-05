@@ -66,7 +66,6 @@ particle_filter <- R6::R6Class(
     data = NULL,
     data_split = NULL,
     steps = NULL,
-    nested = FALSE,
     ## Functions used for initial conditions, data comparisons and indices
     index = NULL,
     initial = NULL,
@@ -89,6 +88,13 @@ particle_filter <- R6::R6Class(
 
     ##' @field n_particles Number of particles used (read only)
     n_particles = NULL,
+
+    ##' @field nested Logical, indicating if this is a nested
+    ##' (multipopulation) particle filter (read only).  If `TRUE`, then
+    ##' each call to `run` returns a vector of log-likelihoods,
+    ##' one per population.  Triggered by the `data` argument to
+    ##' the constructor.
+    nested = NULL,
 
     ##' @description Create the particle filter
     ##'
@@ -187,22 +193,20 @@ particle_filter <- R6::R6Class(
       self$model <- model
       private$data <- data
 
-      if (inherits(data, "particle_filter_data_nested")) {
-        private$nested <- TRUE
-      }
+      self$nested <- inherits(data, "particle_filter_data_nested")
 
-      if (private$nested) {
+      if (self$nested) {
+        population <- attr(data, "population")
         if (is.null(compare)) {
           private$data_split <- dust::dust_data(private$data, "step_end",
-                                                multi = "population")
+                                                multi = population)
         } else {
-          private$data_split <- groupeddf_to_list_of_lists(data, "population")
+          private$data_split <- groupeddf_to_list_of_lists(data, population)
         }
         private$steps <- unname(
           as.matrix(data[
-            data$population == levels(data$population)[[1]],
-            c("step_start", "step_end")
-          ])
+            data$population == levels(data[[population]])[[1]],
+            c("step_start", "step_end")])
         )
       } else {
         if (is.null(compare)) {
@@ -240,6 +244,7 @@ particle_filter <- R6::R6Class(
 
       lockBinding("model", self)
       lockBinding("n_particles", self)
+      lockBinding("nested", self)
     },
 
     ##' @description Run the particle filter
@@ -273,7 +278,11 @@ particle_filter <- R6::R6Class(
     ##' will certainly be rejected. Only suitable for use where
     ##' log-likelihood increments (with the `compare` function) are always
     ##' negative. This is the case if you use a normalised discrete
-    ##' distribution, but not necessarily otherwise.
+    ##' distribution, but not necessarily otherwise. If using a nested
+    ##' filter this can be a single number (in which case the exit is
+    ##' when the sum of log-likelihoods drops below this threshhold) or
+    ##' a vector of numbers the same length as `pars` (in which case exit
+    ##' occurs when all numbers drop below this threshhold).
     ##'
     ##' @return A single numeric value representing the log-likelihood
     ##' (`-Inf` if the model is impossible)
@@ -311,20 +320,12 @@ particle_filter <- R6::R6Class(
     run_begin = function(pars = list(), save_history = FALSE,
                          save_restart = NULL, min_log_likelihood = NULL) {
       min_log_likelihood <- min_log_likelihood %||% -Inf
-      if (private$nested) {
-        particle_filter_state_nested$new(
-          pars, self$model, private$last_model, private$data,
-          private$data_split, private$steps, self$n_particles,
-          private$n_threads, private$initial, private$index, private$compare,
-          private$gpu_config, private$seed, save_history, save_restart)
-      } else {
-        particle_filter_state$new(
-          pars, self$model, private$last_model, private$data,
-          private$data_split, private$steps, self$n_particles,
-          private$n_threads, private$initial, private$index, private$compare,
-          private$gpu_config, private$seed, min_log_likelihood,
-          save_history, save_restart)
-      }
+      particle_filter_state$new(
+        pars, self$model, private$last_model, private$data,
+        private$data_split, private$steps, self$n_particles,
+        private$n_threads, private$initial, private$index, private$compare,
+        private$gpu_config, private$seed, min_log_likelihood,
+        save_history, save_restart)
     },
 
     ##' @description Extract the current model state, optionally filtering.
@@ -461,6 +462,9 @@ particle_filter <- R6::R6Class(
 
 ##' @importFrom stats runif
 particle_resample <- function(weights) {
+  if (is.matrix(weights)) {
+    return(apply(weights, 2, particle_resample))
+  }
   n <- length(weights)
   u <- runif(1, 0, 1 / n) + seq(0, by = 1 / n, length.out = n)
   cum_weights <- cumsum(weights / sum(weights))

@@ -223,3 +223,18 @@ array_flatten <- function(x, i) {
   dim(x) <- dx_new
   x
 }
+
+
+`array_last_dimension<-` <- function(x, i, value) { # nolint
+  rank <- length(dim(x))
+  if (rank == 2) {
+    x[, i] <- value
+  } else if (rank == 3) {
+    x[, , i] <- value
+  } else if (rank == 4) {
+    x[, , , i] <- value
+  } else {
+    stop("Unexpected rank")
+  }
+  x
+}

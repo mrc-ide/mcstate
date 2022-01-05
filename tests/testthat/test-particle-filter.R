@@ -904,7 +904,9 @@ test_that("particle filter state nested - errors", {
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index)
 
-  expect_error(p$run(pars[1]), "the length")
+  expect_error(p$run(pars[1]),
+               "'pars' must have length 2 (following data$population)",
+               fixed = TRUE)
 })
 
 test_that("can't change initial step via initial in nested filter", {
@@ -1200,22 +1202,11 @@ test_that("Can run a gpu model by passing gpu_config through", {
 
   filter_c <- p_c$run_begin()
   filter_g <- p_g$run_begin()
+
   expect_false(r6_private(filter_c)$gpu)
   expect_true(r6_private(filter_g)$gpu)
-
-  target_c <- mockery::mock()
-  target_g <- mockery::mock()
-  mockery::stub(filter_c$run, "particle_filter_compiled", target_c)
-  mockery::stub(filter_g$run, "particle_filter_compiled", target_g)
-  filter_c$run()
-  filter_g$run()
-  mockery::expect_called(target_c, 1L)
-  mockery::expect_called(target_g, 1L)
-
-  m_c <- mockery::mock_args(target_c)[[1]][[1]]$model
-  m_g <- mockery::mock_args(target_g)[[1]][[1]]$model
-  expect_false(m_c$uses_gpu(TRUE))
-  expect_true(m_g$uses_gpu(TRUE))
+  expect_false(filter_c$model$uses_gpu(TRUE))
+  expect_true(filter_g$model$uses_gpu(TRUE))
 })
 
 
@@ -1235,4 +1226,50 @@ test_that("Can terminate a filter early", {
   ll2 <- replicate(10, p2$run(min_log_likelihood = min_ll))
   expect_true(-Inf %in% ll2)
   expect_true(min(ll2[is.finite(ll2)]) >= min_ll)
+})
+
+
+test_that("nested particle filter requires unnamed parameters", {
+  dat <- example_sir_shared()
+  p <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
+                           index = dat$index)
+  pars <- list(a = list(beta = 0.2, gamma = 0.1),
+               b = list(beta = 0.3, gamma = 0.1))
+  expect_error(
+    p$run(pars),
+    "Expected an unnamed list of parameters")
+})
+
+
+test_that("Can do early exit for nested filter", {
+  dat <- example_sir_shared()
+  n_particles <- 42
+  pars <- list(list(beta = 0.2, gamma = 0.1),
+               list(beta = 0.3, gamma = 0.1))
+
+  ## Same setup as before
+  set.seed(1)
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  ll1 <- replicate(10, p1$run(pars))
+
+  set.seed(1)
+  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  min_ll <- mean(colSums(ll1))
+  ll2 <- replicate(10, p2$run(pars, min_log_likelihood = min_ll))
+  expect_true(-Inf %in% ll2)
+  expect_true(min(ll2[is.finite(ll2)]) >= min_ll)
+
+  set.seed(1)
+  p3 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  min_ll <- ll1[, which.min(abs(colSums(ll1) - mean(colSums(ll1))))]
+  ll3 <- replicate(10, p3$run(pars, min_log_likelihood = min_ll))
+
+  i <- apply(ll3 > -Inf, 2, any)
+  expect_true(!all(i))
+  expect_true(all(ll3[, !i] == -Inf))
+  expect_true(all(apply(ll3[, i] >= min_ll, 2, any)))
+  expect_false(all(apply(ll3[, i] >= min_ll, 2, all)))
 })

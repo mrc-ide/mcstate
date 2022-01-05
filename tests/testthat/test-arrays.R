@@ -164,3 +164,27 @@ test_that("Prevent impossible flattening", {
   expect_error(array_flatten(x, c(2, 2, 3)),
                "All values of 'i' must be consecutive integers")
 })
+
+
+
+test_that("Can assign into last dimension of array", {
+  m2 <- matrix(0, 3, 5)
+  array_last_dimension(m2, 2) <- 1:3
+  expect_equal(m2[, 2], 1:3)
+  expect_true(all(m2[, -2] == 0))
+
+  m3 <- array(0, c(3, 5, 7))
+  array_last_dimension(m3, 2) <- 1:15
+  expect_equal(m3[, , 2], matrix(1:15, 3, 5))
+  expect_true(all(m3[, , -2] == 0))
+
+  m4 <- array(0, c(3, 5, 7, 11))
+  array_last_dimension(m4, 2) <- 1:(3 * 5 * 7)
+  expect_equal(m4[, , , 2], array(1:(3 * 5 * 7), c(3, 5, 7)))
+  expect_true(all(m4[, , , -2] == 0))
+
+  m1 <- 1:5
+  expect_error(
+    array_last_dimension(m1, 2) <- 2,
+    "Unexpected rank")
+})
