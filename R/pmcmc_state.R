@@ -46,26 +46,25 @@ pmcmc_state <- R6::R6Class(
       }
     },
 
-    update_mcmc_history = function() {
-      private$history_pars$add(private$curr_pars)
+    update_mcmc_history = function(i) {
+      private$history_pars$add(i, private$curr_pars)
 
       if (private$nested) {
-        private$history_probabilities$add(
-          rbind(private$curr_lprior, private$curr_llik, private$curr_lpost,
-                deparse.level = 0))
+        p <- rbind(private$curr_lprior, private$curr_llik, private$curr_lpost,
+                   deparse.level = 0)
       } else {
-        private$history_probabilities$add(
-          c(private$curr_lprior, private$curr_llik, private$curr_lpost))
+        p <- c(private$curr_lprior, private$curr_llik, private$curr_lpost)
       }
+      private$history_probabilities$add(i, p)
 
       if (!is.null(private$history_trajectories)) {
-        private$history_trajectories$add(private$curr_trajectories)
+        private$history_trajectories$add(i, private$curr_trajectories)
       }
       if (!is.null(private$history_state)) {
-        private$history_state$add(private$curr_state)
+        private$history_state$add(i, private$curr_state)
       }
       if (!is.null(private$history_restart)) {
-        private$history_restart$add(private$curr_restart)
+        private$history_restart$add(i, private$curr_restart)
       }
     },
 
@@ -296,19 +295,19 @@ pmcmc_state <- R6::R6Class(
       }
 
       if (!private$nested) {
-        update <- private$update_simple
+        update <- update_single(private$update_simple)
       } else if (length(pars$names("fixed")) == 0) {
-        update <- private$update_varied
+        update <- update_single(private$update_varied)
       } else if (length(pars$names("varied")) == 0) {
-        update <- private$update_fixed
+        update <- update_single(private$update_fixed)
       } else {
-        update <- alternate(private$update_fixed,
-                            private$update_varied,
-                            private$control$nested_step_ratio)
+        update <- update_alternate(private$update_fixed,
+                                   private$update_varied,
+                                   private$control$nested_step_ratio)
       }
       private$update <- update
 
-      private$update_mcmc_history()
+      private$update_mcmc_history(0L)
     },
 
     set_n_threads = function(n_threads) {
@@ -320,19 +319,19 @@ pmcmc_state <- R6::R6Class(
       to <- min(private$curr_step + control$n_steps_each, control$n_steps)
       steps <- seq(from = private$curr_step + 1L,
                    length.out = to - private$curr_step)
+      rerun <- make_rerun(control$rerun_every, control$rerun_random)
 
       for (i in steps) {
         private$tick()
 
-        if (rerun(i, control$rerun_every, control$rerun_random)) {
+        if (rerun(i)) {
           private$curr_llik <- private$run_filter(private$curr_pars)
           private$curr_lpost <- private$curr_lprior + private$curr_llik
           private$update_particle_history()
         }
 
-        ## It might make sense to pass through the step index here too?
-        private$update()
-        private$update_mcmc_history()
+        private$update(i)
+        private$update_mcmc_history(i)
       }
 
       private$curr_step <- to
@@ -352,10 +351,8 @@ pmcmc_state <- R6::R6Class(
 
 history_collector <- function(n) {
   data <- vector("list", n + 1L)
-  i <- 0L
-  add <- function(value) {
-    i <<- i + 1L
-    data[[i]] <<- value
+  add <- function(i, value) {
+    data[[i + 1L]] <<- value
   }
 
   get <- function() {
@@ -363,17 +360,20 @@ history_collector <- function(n) {
   }
 
   list(add = add, get = get)
-
 }
 
-alternate <- function(f, g, ratio) {
-  if (ratio < 1) {
-    return(alternate(g, f, 1 / ratio))
-  }
-  i <- 0L
 
-  function() {
-    i <<- i + 1L
+update_single <- function(f) {
+  function(i) f()
+}
+
+
+update_alternate <- function(f, g, ratio) {
+  if (ratio < 1) {
+    return(update_alternate(g, f, 1 / ratio))
+  }
+
+  function(i) {
     if (i %% (ratio + 1) == 0) {
       g()
     } else {
@@ -383,12 +383,12 @@ alternate <- function(f, g, ratio) {
 }
 
 
-rerun <- function(i, every, random) {
+make_rerun <- function(every, random) {
   if (!is.finite(every)) {
-    FALSE
+    function(i) FALSE
   } else if (random) {
-    runif(1) < 1 / every
+    function(i) runif(1) < 1 / every
   } else {
-    i %% every == 0
+    function(i) i %% every == 0
   }
 }
