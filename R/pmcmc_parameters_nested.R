@@ -114,6 +114,10 @@ pmcmc_parameters_nested <- R6::R6Class(
     },
 
     ##' @description Return the names of the parameters
+    ##'
+    ##' @param type One of "both" (the default, all parameters),
+    ##'   "fixed" (parameters that are shared across populations) or
+    ##'   "varied" (parameters that vary over populations).
     names = function(type = "both") {
       type <- match_value(type, c("both", "fixed", "varied"))
       names(private$parameters[[type]])
