@@ -49,8 +49,7 @@ pmcmc_parameters_nested <- R6::R6Class(
     proposal_kernel = NULL,
     transform = NULL,
     inner = NULL,
-    ## TODO: rename
-    pops = NULL
+    population_names = NULL
   ),
 
   public = list(
@@ -107,7 +106,7 @@ pmcmc_parameters_nested <- R6::R6Class(
       }
 
       private$parameters <- parameters
-      private$pops <- populations
+      private$population_names <- populations
       private$proposal_kernel <- proposal_kernel
       private$inner <- inner
       private$transform <- transform
@@ -125,7 +124,7 @@ pmcmc_parameters_nested <- R6::R6Class(
 
     ##' @description Return the names of the populations
     populations = function() {
-      private$pops
+      private$population_names
     },
 
     ##' @description Validate a parameter matrix.  This method
