@@ -78,8 +78,8 @@ pmcmc_filter <- function(object, i) {
 ## would make it less easier to follow as they're fairly
 ## straightforward this way.
 pmcmc_filter_nested <- function(object, i) {
-  object$pars <- object$pars[, , i, drop = FALSE]
-  object$probabilities <- object$probabilities[, , i, drop = FALSE]
+  object$pars <- object$pars[i, , , drop = FALSE]
+  object$probabilities <- object$probabilities[i, , , drop = FALSE]
   if (!is.null(object$state)) {
     object$state <- object$state[, , i, drop = FALSE]
   }
@@ -126,6 +126,8 @@ pmcmc_filter_simple <- function(object, i) {
 pmcmc_combine <- function(..., samples = list(...)) {
   assert_list_of(samples, "mcstate_pmcmc")
 
+  pars <- lapply(samples, "[[", "pars")
+  probabilities <- lapply(samples, "[[", "probabilities")
   iteration <- lapply(samples, "[[", "iteration")
   state <- lapply(samples, "[[", "state")
   trajectories <- lapply(samples, "[[", "trajectories")
@@ -135,28 +137,14 @@ pmcmc_combine <- function(..., samples = list(...)) {
 
   iteration <- unlist(iteration, FALSE, FALSE)
 
-  if (is_3d_array(samples[[1]]$pars)) {
-    chain <- rep(seq_along(samples), each = nlayer(samples[[1]]$pars))
-    pars <- array_bind(arrays = lapply(samples, "[[", "pars"))
-    dimnames(pars)[1:2] <- dimnames(samples[[1]]$pars)[1:2]
-    probabilities <- array_bind(arrays = lapply(samples, "[[",
-                                                "probabilities"))
+  chain <- rep(seq_along(samples), each = nrow(samples[[1]]$pars))
+  pars <- array_bind(arrays = pars, dimension = 1)
+  probabilities <- array_bind(arrays = probabilities, dimension = 1)
 
-    if (is.null(state[[1]])) {
-      state <- NULL
-    } else {
-      state <- array_bind(arrays = state)
-    }
+  if (is.null(state[[1]])) {
+    state <- NULL
   } else {
-    chain <- rep(seq_along(samples), each = nrow(samples[[1]]$pars))
-    pars <- do.call(rbind, lapply(samples, "[[", "pars"))
-    probabilities <- do.call(rbind, lapply(samples, "[[", "probabilities"))
-
-    if (is.null(state[[1]])) {
-      state <- NULL
-    } else {
-      state <- do.call(cbind, lapply(samples, "[[", "state"))
-    }
+    state <- array_bind(arrays = state)
   }
 
   if (is.null(trajectories[[1]])) {
@@ -221,25 +209,10 @@ combine_state <- function(x) {
     stop(sprintf("%s data is inconsistent", deparse(substitute(x))))
   }
 
-  dx <- lapply(x, function(el) dim(el$state))
-  d <- dx[[1L]]
-  rank <- length(d)
-  n <- vnapply(dx, "[[", rank - 1)
-  d[[rank - 1]] <- sum(n)
+  state <- lapply(x, "[[", "state")
+  state <- array_bind(arrays = state, dimension = length(dim(state[[1]])) - 1)
 
-  offset <- c(0, cumsum(n))
-  state <- array(0, d)
-  for (i in seq_along(x)) {
-    j <- seq_len(n[[i]]) + offset[[i]]
-    if (rank == 3) {
-      state[, j, ] <- x[[i]]$state
-    } else {
-      state[, , j, ] <- x[[i]]$state
-    }
-  }
-  rownames(state) <- rownames(x[[1L]]$state)
-
-  ret <- x[[1L]]
+  ret <- x[[1]]
   ret$state <- state
   ret
 }

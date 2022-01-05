@@ -152,7 +152,22 @@ pmcmc_state <- R6::R6Class(
       }
     },
 
+    ## This is small helper to tidy away some ugly bits that do need
+    ## tidying properly later.
+    finish_predict = function() {
+      ## TODO: tidy up private access here; check what uses this?
+      ##
+      ## Do we *definitely* need step and rate here?
+      data <- private$filter$inputs()$data
+      list(transform = r6_private(private$pars)$transform,
+           index = r6_private(private$filter)$last_history$index,
+           step = last(data$step_end),
+           rate = attr(data, "rate", exact = TRUE),
+           filter = private$filter$inputs())
+    },
+
     finish_simple = function() {
+      ## sample x par
       pars <- array_from_list(private$history_pars$get(), 2:1)
       colnames(pars) <- names(private$curr_pars)
 
@@ -163,23 +178,16 @@ pmcmc_state <- R6::R6Class(
       predict <- state <- restart <- trajectories <- NULL
 
       if (private$control$save_state || private$control$save_trajectories) {
-        ## TODO: tidy up private access here; check what uses this?
-        ##
-        ## Do we *definitely* need step and rate here?
-        data <- private$filter$inputs()$data
-        predict <- list(transform = r6_private(private$pars)$transform,
-                        index = r6_private(private$filter)$last_history$index,
-                        step = last(data$step_end),
-                        rate = attr(data, "rate", exact = TRUE),
-                        filter = private$filter$inputs())
+        predict <- private$finish_predict()
       }
 
       if (private$control$save_state) {
-        state <- array_from_list(private$history_state$get(), 1:2)
+        ## state x sample
+        state <- array_from_list(private$history_state$get())
       }
 
       if (length(private$control$save_restart) > 0) {
-        ## [state x mcmc_sample x save point]
+        ## [state x sample x time] (from [state x time] x sample)
         restart_state <-
           array_from_list(private$history_restart$get(), c(1, 3, 2))
         restart <- list(time = private$control$save_restart,
@@ -194,43 +202,40 @@ pmcmc_state <- R6::R6Class(
         data <- private$filter$inputs()$data
         step <- c(data$step_start[[1]], data$step_end)
         trajectories <- mcstate_trajectories(step, predict$rate,
-                                             trajectories_state, FALSE)
+                                             trajectories_state,
+                                             predicted = FALSE)
       }
 
       mcstate_pmcmc(pars, probabilities, state, trajectories, restart, predict)
     },
 
     finish_nested = function() {
-      ## var x pop x step
-      pars <- array_from_list(private$history_pars$get())
-      dimnames(pars)[1:2] <- dimnames(private$curr_pars)
+      populations <- private$pars$populations()
 
-      ## var x pop x step
-      probabilities <- array_from_list(private$history_probabilities$get())
-      dimnames(probabilities)[1:2] <-
-        list(c("log_prior", "log_likelihood", "log_posterior"), colnames(pars))
+      ## sample x par x pop
+      pars <- array_from_list(private$history_pars$get(), c(3, 1, 2))
+      dimnames(pars)[2:3] <- dimnames(private$curr_pars)
+
+      ## sample x par x pop
+      probabilities <- array_from_list(private$history_probabilities$get(),
+                                       c(3, 1, 2))
+      dimnames(probabilities)[2:3] <-
+        list(c("log_prior", "log_likelihood", "log_posterior"), populations)
 
       predict <- state <- restart <- trajectories <- NULL
 
-      ## TODO: this needs sorting out more generally; what do we use
-      ## from here and why can't we get this more nicely?
       if (private$control$save_state || private$control$save_trajectories) {
-        data <- private$filter$inputs()$data
-        predict <- list(transform = r6_private(private$pars)$transform,
-                        index = r6_private(private$filter)$last_history$index,
-                        step = last(data$step_end),
-                        rate = attr(data, "rate", exact = TRUE),
-                        filter = private$filter$inputs())
+        predict <- private$finish_predict()
       }
 
       if (private$control$save_state) {
-        # [state x pop x step]
+        # [state x pop x sample]
         state <- array_from_list(private$history_state$get())
-        colnames(state) <- colnames(private$curr_pars)
+        colnames(state) <- populations
       }
 
       if (length(private$control$save_restart) > 0) {
-        ## [state x pop x step x time] (from [state x pop x time] x step)
+        ## [state x pop x sample x time] (from [state x pop x time] x sample)
         restart_state <-
           array_from_list(private$history_restart$get(), c(1, 2, 4, 3))
         restart <- list(time = private$control$save_restart,
@@ -238,15 +243,17 @@ pmcmc_state <- R6::R6Class(
       }
 
       if (private$control$save_trajectories) {
-        ## [state x pop x step x time] (from [state x pop x time] x step)
+        ## [state x pop x sample x time] (from [state x pop x time] x sample)
         trajectories_state <-
           array_from_list(private$history_trajectories$get(), c(1, 2, 4, 3))
         rownames(trajectories_state) <- names(predict$index)
+        colnames(trajectories_state) <- populations
         data <- private$filter$inputs()$data
         data <- data[data$population == levels(data$population)[1], ]
         step <- c(data$step_start[[1]], data$step_end)
         trajectories <- mcstate_trajectories(step, predict$rate,
-                                             trajectories_state, FALSE)
+                                             trajectories_state,
+                                             predicted = FALSE)
       }
 
       mcstate_pmcmc(pars, probabilities, state, trajectories, restart,

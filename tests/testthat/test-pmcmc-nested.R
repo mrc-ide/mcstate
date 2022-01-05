@@ -95,11 +95,11 @@ test_that("pmcmc nested Uniform on unit square - fixed only", {
   testthat::try_again(5, {
     res <- pmcmc(dat$pars, dat$filter, control = control)
     expect_s3_class(res, "mcstate_pmcmc")
-    expect_true(all(acceptance_rate(t(res$pars[, "p1", ])) == 1))
-    expect_true(all(acceptance_rate(t(res$pars[, "p2", ])) == 1))
-    expect_true(all(acceptance_rate(t(res$pars[, "p3", ])) == 1))
-    expect_true(abs(mean(res$pars["a", , ]) - 0.5) < 0.05)
-    expect_true(abs(mean(res$pars["b", , ]) - 0.5) < 0.05)
+    expect_true(all(acceptance_rate(res$pars[, , "p1"]) == 1))
+    expect_true(all(acceptance_rate(res$pars[, , "p2"]) == 1))
+    expect_true(all(acceptance_rate(res$pars[, , "p3"]) == 1))
+    expect_true(abs(mean(res$pars[, "a", ]) - 0.5) < 0.05)
+    expect_true(abs(mean(res$pars[, "b", ]) - 0.5) < 0.05)
   })
 })
 
@@ -112,11 +112,11 @@ test_that("pmcmc nested Uniform on unit square - varied only", {
   testthat::try_again(5, {
     res <- pmcmc(dat$pars, dat$filter, control = control)
     expect_s3_class(res, "mcstate_pmcmc")
-    expect_true(all(acceptance_rate(t(res$pars[, "p1", ])) == 1))
-    expect_true(all(acceptance_rate(t(res$pars[, "p2", ])) == 1))
-    expect_true(all(acceptance_rate(t(res$pars[, "p3", ])) == 1))
-    expect_true(abs(mean(res$pars["c", , ]) - 0.5) < 0.05)
-    expect_true(abs(mean(res$pars["d", , ]) - 0.5) < 0.05)
+    expect_true(all(acceptance_rate(res$pars[, , "p1"]) == 1))
+    expect_true(all(acceptance_rate(res$pars[, , "p2"]) == 1))
+    expect_true(all(acceptance_rate(res$pars[, , "p3"]) == 1))
+    expect_true(abs(mean(res$pars[, "c", ]) - 0.5) < 0.05)
+    expect_true(abs(mean(res$pars[, "d", ]) - 0.5) < 0.05)
   })
 })
 
@@ -129,13 +129,13 @@ test_that("pmcmc nested Uniform on unit square", {
   testthat::try_again(5, {
     res <- pmcmc(dat$pars, dat$filter, control = control)
     expect_s3_class(res, "mcstate_pmcmc")
-    expect_true(all(acceptance_rate(t(res$pars[, "p1", ])) == 0.5))
-    expect_true(all(acceptance_rate(t(res$pars[, "p2", ])) == 0.5))
-    expect_true(all(acceptance_rate(t(res$pars[, "p3", ])) == 0.5))
-    expect_true(abs(mean(res$pars["a", , ]) - 0.5) < 0.05)
-    expect_true(abs(mean(res$pars["b", , ]) - 0.5) < 0.05)
-    expect_true(abs(mean(res$pars["c", , ]) - 0.5) < 0.05)
-    expect_true(abs(mean(res$pars["d", , ]) - 0.5) < 0.05)
+    expect_true(all(acceptance_rate(res$pars[, , "p1"]) == 0.5))
+    expect_true(all(acceptance_rate(res$pars[, , "p2"]) == 0.5))
+    expect_true(all(acceptance_rate(res$pars[, , "p3"]) == 0.5))
+    expect_true(abs(mean(res$pars[, "a", ]) - 0.5) < 0.05)
+    expect_true(abs(mean(res$pars[, "b", ]) - 0.5) < 0.05)
+    expect_true(abs(mean(res$pars[, "c", ]) - 0.5) < 0.05)
+    expect_true(abs(mean(res$pars[, "d", ]) - 0.5) < 0.05)
   })
 })
 
@@ -151,21 +151,21 @@ test_that("pmcmc nested multivariate gaussian", {
     i <- seq(1, 500, by = 20)
     expect_s3_class(res, "mcstate_pmcmc")
     ks_test <- function(x, y) suppressWarnings(ks.test(x, y))
-    expect_gt(ks_test(res$pars["a", 1, i], "pnorm")$p.value, 0.05)
-    expect_gt(ks_test(res$pars["a", 2, i], "pnorm")$p.value, 0.05)
-    expect_gt(ks_test(res$pars["a", 3, i], "pnorm")$p.value, 0.05)
-    expect_gt(ks_test(res$pars["b", 1, i], "pnorm")$p.value, 0.05)
-    expect_gt(ks_test(res$pars["b", 2, i], "pnorm")$p.value, 0.05)
-    expect_gt(ks_test(res$pars["b", 3, i], "pnorm")$p.value, 0.05)
-    expect_gt(ks_test(res$pars["c", 1, i], "pnorm")$p.value, 0.05)
-    expect_gt(ks_test(res$pars["c", 2, i], "pnorm")$p.value, 0.05)
-    expect_gt(ks_test(res$pars["c", 3, i], "pnorm")$p.value, 0.05)
-    expect_gt(ks_test(res$pars["d", 1, i], "pnorm")$p.value, 0.05)
-    expect_gt(ks_test(res$pars["d", 2, i], "pnorm")$p.value, 0.05)
-    expect_gt(ks_test(res$pars["d", 3, i], "pnorm")$p.value, 0.05)
-    expect_lt(abs(cov(res$pars[, 1, ])[1, 2]), 0.1)
-    expect_lt(abs(cov(res$pars[, 2, ])[1, 2]), 0.1)
-    expect_lt(abs(cov(res$pars[, 3, ])[1, 2]), 0.1)
+    expect_gt(ks_test(res$pars[i, "a", 1], "pnorm")$p.value, 0.05)
+    expect_gt(ks_test(res$pars[i, "a", 2], "pnorm")$p.value, 0.05)
+    expect_gt(ks_test(res$pars[i, "a", 3], "pnorm")$p.value, 0.05)
+    expect_gt(ks_test(res$pars[i, "b", 1], "pnorm")$p.value, 0.05)
+    expect_gt(ks_test(res$pars[i, "b", 2], "pnorm")$p.value, 0.05)
+    expect_gt(ks_test(res$pars[i, "b", 3], "pnorm")$p.value, 0.05)
+    expect_gt(ks_test(res$pars[i, "c", 1], "pnorm")$p.value, 0.05)
+    expect_gt(ks_test(res$pars[i, "c", 2], "pnorm")$p.value, 0.05)
+    expect_gt(ks_test(res$pars[i, "c", 3], "pnorm")$p.value, 0.05)
+    expect_gt(ks_test(res$pars[i, "d", 1], "pnorm")$p.value, 0.05)
+    expect_gt(ks_test(res$pars[i, "d", 2], "pnorm")$p.value, 0.05)
+    expect_gt(ks_test(res$pars[i, "d", 3], "pnorm")$p.value, 0.05)
+    expect_lt(abs(cov(res$pars[, , 1])[1, 2]), 0.1)
+    expect_lt(abs(cov(res$pars[, , 2])[1, 2]), 0.1)
+    expect_lt(abs(cov(res$pars[, , 3])[1, 2]), 0.1)
   })
 })
 
@@ -221,6 +221,8 @@ test_that("pmcmc nested sir - 1 chain", {
   set.seed(1)
   res2 <- pmcmc(pars, p, control = control)
   expect_equal(res1, res2)
+
+  expect_equal(res1$pars[1, , ], pars$initial())
 })
 
 
@@ -257,9 +259,10 @@ test_that("pmcmc nested sir - 2 chains", {
   res3 <- pmcmc(pars, p2, control = control2)
   expect_s3_class(res3, "mcstate_pmcmc")
   expect_equal(res3$chain, rep(1:3, each = 51))
+  expect_equal(res3$iteration, rep(0:50, 3))
   expect_equal(dim(res3$trajectories$state), c(3, 2, 153, 101))
 
-  expect_equal(res1$pars, res3$pars[, , 1:51])
+  expect_equal(res1$pars, res3$pars[1:51, , ])
   expect_equal(res1$state, res3$state[, , 1:51])
   expect_equal(res1$restart$state, res3$restart$state[, , 1:51, ])
   expect_equal(res1$trajectories$state, res3$trajectories$state[, , 1:51, ])
@@ -340,13 +343,14 @@ test_that("run nested pmcmc with the particle filter and retain history", {
   expect_equal(results1$probabilities, results2$probabilities)
 
   ## Parameters and probabilities have the expected shape
-  expect_equal(dim(results1$pars), c(2, 2, 31))
-  expect_equal(rownames(results1$pars), c("beta", "gamma"))
-  expect_equal(colnames(results1$pars), c("a", "b"))
+  expect_equal(dim(results1$pars), c(31, 2, 2))
+  expect_equal(dimnames(results1$pars),
+               list(NULL, c("beta", "gamma"), c("a", "b")))
 
-  expect_equal(dim(results1$probabilities), c(3, 2, 31))
-  expect_equal(rownames(results1$probabilities),
-               c("log_prior", "log_likelihood", "log_posterior"))
+  expect_equal(dim(results1$probabilities), c(31, 3, 2))
+  expect_equal(
+    dimnames(results1$probabilities),
+    list(NULL, c("log_prior", "log_likelihood", "log_posterior"), c("a", "b")))
 
   ## History, if returned, has the correct shape
   expect_equal(dim(results1$state), c(5, 2, 31)) # state, pop, mcmc
@@ -380,16 +384,16 @@ test_that("nested_step_ratio works", {
   ## Here, we never update beta, which is varied
   control <- pmcmc_control(30, nested_step_ratio = 30)
   res1 <- pmcmc(pars, p, control = control)
-  expect_equal(as.numeric(res1$pars["beta", , ]), rep(c(0.2, 0.3), 31))
-  expect_equal(res1$pars["gamma", "a", ], res1$pars["gamma", "b", ])
-  expect_false(all(res1$pars["gamma", "a", ] == 0.1))
+  expect_equal(as.numeric(res1$pars[, "beta", ]), rep(c(0.2, 0.3), each = 31))
+  expect_equal(res1$pars[, "gamma", "a"], res1$pars[, "gamma", "b"])
+  expect_false(all(res1$pars[, "gamma", "a"] == 0.1))
 
   ## Here, we never update gamma, which is fixed
   control <- pmcmc_control(30, nested_step_ratio = 1 / 30)
   res2 <- pmcmc(pars, p, control = control)
-  expect_equal(res2$pars["gamma", , ],
-               matrix(0.1, 2, 31, dimnames = list(c("a", "b"), NULL)))
-  expect_false(all(res2$pars["beta", , ] == c(0.2, 0.3)))
+  expect_equal(res2$pars[, "gamma", ],
+               matrix(0.1, 31, 2, dimnames = list(NULL, c("a", "b"))))
+  expect_false(all(res2$pars[, "beta", ] == rep(c(0.2, 0.3), each = 31)))
 })
 
 
