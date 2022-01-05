@@ -55,35 +55,12 @@ pmcmc_predict <- function(object, steps, prepend_trajectories = FALSE,
   n_threads <- n_threads %||% object$predict$filter$n_threads
 
   if (is_3d_array(state)) {
-    res <- pmcmc_predict_nested(object, state, index, model, n_threads,
-                                steps, prepend_trajectories, seed)
+    pars <- apply(object$pars, 1, nested_transform, object$predict$transform)
+    pars <- unlist(pars, FALSE)
+    dim(pars) <- dim(object$pars)[c(3, 1)]
   } else {
     pars <- apply(object$pars, 1, object$predict$transform)
-
-    mod <- model$new(pars, steps[[1]], NULL, n_threads = n_threads,
-                     seed = seed, pars_multi = TRUE)
-
-    mod$update_state(state = state)
-    if (!is.null(index)) {
-      mod$set_index(index)
-    }
-    y <- mod$simulate(steps)
-
-    res <- mcstate_trajectories(steps, object$predict$rate, y, TRUE)
-
-    if (prepend_trajectories) {
-      res <- bind_mcstate_trajectories(object$trajectories, res)
-    }
   }
-
-  res
-}
-
-pmcmc_predict_nested <- function(object, state, index, model, n_threads,
-                                 steps, prepend_trajectories, seed) {
-  pars <- apply(object$pars, 1, nested_transform, object$predict$transform)
-  pars <- unlist(pars, FALSE)
-  dim(pars) <- dim(object$pars)[c(3, 1)]
 
   index <- object$predict$index
   model <- object$predict$filter$model
@@ -93,13 +70,15 @@ pmcmc_predict_nested <- function(object, state, index, model, n_threads,
                    seed = seed, pars_multi = TRUE)
 
   mod$update_state(state = state)
-  mod$set_index(index)
+  if (!is.null(index)) {
+    mod$set_index(index)
+  }
   y <- mod$simulate(steps)
 
   res <- mcstate_trajectories(steps, object$predict$rate, y, TRUE)
 
   if (prepend_trajectories) {
-    res <- bind_mcstate_trajectories_nested(object$trajectories, res)
+    res <- bind_mcstate_trajectories(object$trajectories, res)
   }
 
   res
