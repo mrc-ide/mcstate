@@ -114,16 +114,12 @@ particle_deterministic <- R6::R6Class(
 
       self$nested <- inherits(data, "particle_filter_data_nested")
 
+      private$steps <- attr(data, "steps")
       if (self$nested) {
         population <- attr(data, "population")
         private$data_split <- groupeddf_to_list_of_lists(data, population)
-        private$steps <- unname(
-          as.matrix(data[
-            data$population == levels(data[[population]])[[1]],
-            c("step_start", "step_end")]))
       } else {
         private$data_split <- df_to_list_of_lists(data)
-        private$steps <- unname(as.matrix(data[c("step_start", "step_end")]))
       }
 
       ## NOTE: unlike the particle filter, there is no support for

@@ -112,17 +112,14 @@ filter_check_times <- function(pars, data, save_restart) {
   ## There's an awkward bit of bookkeeping here; we need to find out
   ## when each phase *ends*, as that is the index that we do the
   ## switch at.
-  time_variable <- attr(data, "time")
-  time_data_start <- data[[paste0(time_variable, "_start")]]
-  time_data_end   <- data[[paste0(time_variable, "_end")]]
+
+  times <- attr(data, "times")
 
   time_pars <- vnapply(pars[-1], "[[", "start")
   time_pars_start <- c(-Inf, time_pars)
   time_pars_end <- c(time_pars, Inf)
 
-  drop <-
-    time_pars_end <= time_data_start[[1]] |
-    time_pars_start > last(time_data_end)
+  drop <- time_pars_end <= times[1, 1] | time_pars_start > last(times[, 2])
 
   if (any(drop)) {
     pars <- pars[!drop]
@@ -130,9 +127,7 @@ filter_check_times <- function(pars, data, save_restart) {
   }
   index <- which(!drop)
 
-  step_index <- c(
-    match(time_pars, time_data_end),
-    length(time_data_end))
+  step_index <- c(match(time_pars, times[, 2]), nrow(times))
 
   if (any(is.na(step_index))) {
     stop(sprintf("Could not map epoch to filter time: error for stage %s",

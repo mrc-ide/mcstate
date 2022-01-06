@@ -105,7 +105,7 @@ if2 <- function(pars, filter, control) {
 
   data_split <- df_to_list_of_lists(inputs$data)
 
-  steps <- unname(as.matrix(inputs$data[c("step_start", "step_end")]))
+  steps <- attr(inputs$data, "steps")
   n_steps <- nrow(steps)
 
   n_par_sets <- control$n_par_sets
