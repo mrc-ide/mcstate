@@ -3,7 +3,10 @@ mcstate_pmcmc <- function(pars, probabilities, state, trajectories, restart,
 
   iteration <- iteration %||% seq.int(0, length.out = nrow(pars))
 
-  ret <- list(chain = chain,
+  nested <- length(dim(pars)) == 3
+
+  ret <- list(nested = nested,
+              chain = chain,
               iteration = iteration,
               pars = pars,
               probabilities = probabilities,
@@ -18,28 +21,30 @@ mcstate_pmcmc <- function(pars, probabilities, state, trajectories, restart,
 
 ##' @export
 format.mcstate_pmcmc <- function(x, ...) {
+  format_dims <- function(x) {
+    paste(paste(dim(x), collapse = " x "),
+          if (length(dim(x)) == 2) "matrix" else "array")
+  }
+
   if (is.null(x$state)) {
     str_state <- sprintf("  state: (not included)")
   } else {
-    str_state <- sprintf("  state: %d x %d matrix of final states",
-                         nrow(x$state), ncol(x$state))
+    str_state <- sprintf("  state: %s of final states", format_dims(x$state))
   }
   if (is.null(x$trajectories)) {
     str_trajectories <- sprintf("  trajectories: (not included)")
   } else {
-    trajectories <- x$trajectories$state
     str_trajectories <- sprintf(
-      "  trajectories: %d x %d x %d array of particle trajectories",
-      nrow(trajectories), ncol(trajectories), dim(trajectories)[[3]])
+      "  trajectories: %s of particle trajectories",
+      format_dims(x$trajectories$state))
   }
 
   if (is.null(x$restart)) {
     str_restart <- sprintf("  restart: (not included)")
   } else {
-    restart <- x$restart$state
     str_restart <- sprintf(
-      "  restart: %d x %d x %d array of particle restart state",
-      nrow(restart), ncol(restart), dim(restart)[[3]])
+      "  restart: %s of particle restart state",
+      format_dims(x$restart$state))
   }
 
   if (is.null(x$chain)) {
@@ -50,12 +55,24 @@ format.mcstate_pmcmc <- function(x, ...) {
   }
 
   indent <- 4
+  if (isTRUE(x$nested)) { # isTRUE just for compatibility for now
+    populations <- last(dimnames(x$pars))
+    str_populations <- c(
+      sprintf("  nested samples over %d populations:",
+              length(populations)),
+      strwrap(paste(populations, collapse = ", "),
+              indent = indent, exdent = indent))
+  } else {
+    str_populations <- NULL
+  }
+
   c(header,
-    sprintf("  pars: %d x %d matrix of parameters", nrow(x$pars), ncol(x$pars)),
+    str_populations,
+    sprintf("  pars: %s of parameters", format_dims(x$pars)),
     strwrap(paste(colnames(x$pars), collapse = ", "),
             indent = indent, exdent = indent),
-    sprintf("  probabilities: %d x %d matrix of log-probabilities",
-            nrow(x$probabilities), ncol(x$probabilities)),
+    sprintf("  probabilities: %s of log-probabilities",
+            format_dims(x$probabilities)),
     strwrap(paste(colnames(x$probabilities), collapse = ", "),
             indent = indent, exdent = indent),
     str_state,
