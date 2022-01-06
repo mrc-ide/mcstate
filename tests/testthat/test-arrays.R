@@ -14,6 +14,21 @@ test_that("array_bind", {
 })
 
 
+
+test_that("array_bind on other dimensions", {
+  m2 <- random_array(c(10, 5))
+  expect_identical(array_bind(m2[1:4, ], m2[5:10, ], dimension = 1), m2)
+
+  m3 <- random_array(c(5, 7, 9))
+  expect_identical(array_bind(m3[1:2, , ], m3[3:5, , ], dimension = 1), m3)
+  expect_identical(array_bind(m3[, 1:3, ], m3[, 4:7, ], dimension = 2), m3)
+  expect_identical(array_bind(m3[, , 1:4], m3[, , 5:9], dimension = 3), m3)
+
+  m4 <- random_array(c(5, 7, 3, 10))
+  expect_identical(array_bind(m4[1:2, , , ], m4[3:5, , , ], dimension = 1), m4)
+})
+
+
 test_that("preserve dimension names on merge", {
   drop_last_names <- function(m) {
     dn <- dimnames(m)
@@ -46,6 +61,10 @@ test_that("Can't merge incompatible arrays", {
   expect_error(
     array_bind(m4[, , , 1:4], m4[-1, , , 1:4], m4[-1, -1, -1, 5:10]),
     "array 2 (dimension 1), array 3 (dimension 1, 2, 3)",
+    fixed = TRUE)
+  expect_error(
+    array_bind(m4[1:3, , , ], m4[1:3, , , -1], dimension = 1),
+    "array 2 (dimension 4)",
     fixed = TRUE)
   expect_error(
     array_bind(m4[, , , 1:4], random_array(c(5, 7, 10))),
@@ -214,4 +233,46 @@ test_that("Can fetch the first dimension of array", {
   expect_error(
     array_first_dimension(m1, 2),
     "Unexpected rank")
+})
+
+
+test_that("Can get an arbitrary dimension of an array", {
+  m2 <- matrix(1:15, 3, 5)
+  expect_equal(array_nth_dimension(m2, 2, 2), m2[, 2, drop = FALSE])
+  expect_equal(array_nth_dimension(m2, 2, 2:3), m2[, 2:3, drop = FALSE])
+
+  m3 <- array(0, c(3, 5, 7))
+  expect_equal(array_nth_dimension(m3, 2, 2), m3[, 2, , drop = FALSE])
+  expect_equal(array_nth_dimension(m3, 2, 2:3), m3[, 2:3, , drop = FALSE])
+
+  m4 <- array(0, c(3, 5, 7, 11))
+  expect_equal(array_nth_dimension(m4, 2, 2), m4[, 2, , , drop = FALSE])
+  expect_equal(array_nth_dimension(m4, 2, 2:3), m4[, 2:3, , , drop = FALSE])
+
+  m1 <- 1:5
+  expect_error(
+    array_nth_dimension(m1, 2, 2),
+    "Unexpected rank")
+  expect_error(
+    array_nth_dimension(m2, 3, 2),
+    "'k' must be in [1, 2]",
+    fixed = TRUE)
+})
+
+
+test_that("Array from list", {
+  expect_equal(
+    array_from_list(list(1:2, 3:4, 5:6), 1:2),
+    array(1:6, c(2, 3)))
+  expect_equal(
+    array_from_list(list(1:2, 3:4, 5:6), 2:1),
+    aperm(array(1:6, c(2, 3)), 2:1))
+
+  d <- list(matrix(1:12, 4, 3), matrix(13:24, 4, 3))
+  expect_equal(array_from_list(d), array(1:24, c(4, 3, 2)))
+  expect_equal(array_from_list(d, 3:1),
+               aperm(array(1:24, c(4, 3, 2)), 3:1))
+
+  expect_null(array_from_list(list()), NULL)
+  expect_null(array_from_list(list(numeric(0), numeric(0))), NULL)
 })

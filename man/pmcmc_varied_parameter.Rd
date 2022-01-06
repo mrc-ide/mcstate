@@ -52,13 +52,12 @@ when used with \code{\link{pmcmc_parameters_nested}}, which collects
 these together for use with \code{\link[=pmcmc]{pmcmc()}}.
 }
 \examples{
-pmcmc_varied_parameter(
+mcstate::pmcmc_varied_parameter(
   name = "size",
   populations = c("Europe", "America"),
   initial = c(100, 200),
   min = 0,
   max = Inf,
   discrete = TRUE,
-  prior = list(dnorm, dexp)
-)
+  prior = list(dnorm, dexp))
 }

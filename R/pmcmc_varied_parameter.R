@@ -37,35 +37,32 @@
 ##'
 ##' @export
 ##' @examples
-##' pmcmc_varied_parameter(
+##' mcstate::pmcmc_varied_parameter(
 ##'   name = "size",
 ##'   populations = c("Europe", "America"),
 ##'   initial = c(100, 200),
 ##'   min = 0,
 ##'   max = Inf,
 ##'   discrete = TRUE,
-##'   prior = list(dnorm, dexp)
-##' )
+##'   prior = list(dnorm, dexp))
 pmcmc_varied_parameter <- function(name, populations, initial, min = -Inf,
                                    max = Inf, discrete = FALSE, prior = NULL) {
-
   assert_character(populations)
   len <- length(populations)
 
   initial <- recycle(initial, len)
   min <- recycle(min, len)
   max <- recycle(max, len)
-  discrete <- assert_logical(discrete)
+  discrete <- assert_scalar_logical(discrete)
 
   if (is.null(prior)) {
-    prior <- rep(list(function(p) 0), len)
+    prior <- function(p) 0
+  }
+  if (is.function(prior)) {
+    prior <- rep(list(prior), len)
   } else {
-    if (is.function(prior)) {
-      prior <- rep(list(prior), len)
-    } else {
-      assert_is(prior, "list")
-      prior <- recycle(prior, len)
-    }
+    assert_is(prior, "list")
+    prior <- recycle(prior, len)
   }
 
   params <- Map(pmcmc_parameter, name, initial, min, max, discrete, prior)

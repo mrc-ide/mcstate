@@ -47,6 +47,35 @@ test_that("format and print with state", {
 })
 
 
+test_that("format and print nested object", {
+  pars <- array(NA_real_, c(10, 4, 2),
+                dimnames = list(NULL, c("a", "b", "c", "d"), c("x", "y")))
+  probs <- array(NA_real_, c(10, 3, 2),
+                 dimnames = list(NULL, c("n", "o", "p"), c("x", "y")))
+  state <- array(NA_real_, c(4, 2, 10))
+  trajectories <- list(state = array(NA_real_, c(4, 2, 10, 20)))
+  predict <- NULL
+  restart <- list(date = 1, state = array(NA_real_, c(4, 2, 10, 1)))
+
+  x <- mcstate_pmcmc(pars, probs, state, trajectories, restart, predict)
+
+  expected <- c(
+    "<mcstate_pmcmc> (10 samples)",
+    "  nested samples over 2 populations:",
+    "    x, y",
+    "  pars: 10 x 4 x 2 array of parameters",
+    "    a, b, c, d",
+    "  probabilities: 10 x 3 x 2 array of log-probabilities",
+    "    n, o, p",
+    "  state: 4 x 2 x 10 array of final states",
+    "  trajectories: 4 x 2 x 10 x 20 array of particle trajectories",
+    "  restart: 4 x 2 x 10 x 1 array of particle restart state")
+
+  expect_equal(format(x), expected)
+  expect_output(print(x), paste(expected, collapse = "\n"), fixed = TRUE)
+})
+
+
 test_that("print multichain object", {
   x <- pmcmc_combine(samples = example_sir_pmcmc2()$results)
 
@@ -78,17 +107,6 @@ test_that("wrap long variable names nicely", {
   expect_equal(
     x[[4]],
     "    dddddddddddddddddddddddddddddddddddddddd")
-})
-
-
-test_that("can filter trajectories with dropping dimensions", {
-  m <- array(1:20, c(1, 4, 5))
-  expect_equal(
-    sample_trajectory(m, 2),
-    matrix(m[, 2, ], 1, 5))
-  expect_equal(
-    sample_trajectory(m, 2:3),
-    matrix(m[, 2:3, ], 2, 5))
 })
 
 

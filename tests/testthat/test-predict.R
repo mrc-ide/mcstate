@@ -158,11 +158,11 @@ test_that("can run a prediction from a nested mcmc run", {
   expect_equal(y$rate, 4)
   expect_equal(y$predicted, rep(TRUE, length(steps)))
 
-  expect_equal(dim(y$state), c(3, 31, 2, length(steps)))
+  expect_equal(dim(y$state), c(3, 2, 31, length(steps)))
 
   ## Check predictions are reasonable:
-  expect_true(all(diff(t(y$state[1, , 1, ])) <= 0))
-  expect_true(all(diff(t(y$state[3, , 2, ])) >= 0))
+  expect_true(all(diff(t(y$state[1, 1, , ])) <= 0))
+  expect_true(all(diff(t(y$state[3, 2, , ])) >= 0))
 
   expect_silent(pmcmc_predict(results, steps, prepend_trajectories = TRUE))
 })

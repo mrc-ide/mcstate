@@ -21,10 +21,8 @@ either a vector of initial conditions, or a matrix with
 \code{n_chains} columns to use a different starting point for each
 chain.}
 
-\item{control}{A \link{pmcmc_control} object which will set
-parameters. This will become the primary way of specifying
-options very soon and it is an error if you use both \code{control}
-and any of the parameters above aside from \code{pars} and \code{filter}.}
+\item{control}{A \link{pmcmc_control} object which will
+control how the MCMC runs, including the number of steps etc.}
 }
 \value{
 A \code{mcstate_pmcmc} object containing \code{pars}

@@ -12,12 +12,12 @@ Most users only need to construct this object, but see the examples for
 how it can be used.
 }
 \examples{
-#Construct an object with two varied parameters, two fixed parameters,
-#and two populations:
-parameters <- list(pmcmc_varied_parameter("a", c("p1", "p2"), 2),
-                   pmcmc_varied_parameter("b", c("p1", "p2"), 2),
-                   pmcmc_parameter("c", 3),
-                   pmcmc_parameter("d", 4))
+# Construct an object with two varied parameters ('a' and 'b'),
+# two fixed parameters ('c' and 'd') and two populations ('p1' and 'p2')
+parameters <- list(mcstate::pmcmc_varied_parameter("a", c("p1", "p2"), 2),
+                   mcstate::pmcmc_varied_parameter("b", c("p1", "p2"), 2),
+                   mcstate::pmcmc_parameter("c", 3),
+                   mcstate::pmcmc_parameter("d", 4))
 proposal_fixed <- diag(2)
 proposal_varied <- diag(2) + 1
 pars <- mcstate::pmcmc_parameters_nested$new(parameters, proposal_varied,
@@ -29,12 +29,16 @@ p
 
 # Propose a new parameter point
 pars$propose(p, type = "both")
+pars$propose(p, type = "fixed")
+pars$propose(p, type = "varied")
 
 # Information about parameters:
 pars$names()
+pars$names("fixed")
+pars$names("varied")
 pars$summary()
 
-# Compute prior
+# Compute log prior probability, per population
 pars$prior(p)
 
 # Transform data for your model
@@ -46,6 +50,7 @@ pars$model(p)
 \item \href{#method-new}{\code{pmcmc_parameters_nested$new()}}
 \item \href{#method-names}{\code{pmcmc_parameters_nested$names()}}
 \item \href{#method-populations}{\code{pmcmc_parameters_nested$populations()}}
+\item \href{#method-validate}{\code{pmcmc_parameters_nested$validate()}}
 \item \href{#method-summary}{\code{pmcmc_parameters_nested$summary()}}
 \item \href{#method-initial}{\code{pmcmc_parameters_nested$initial()}}
 \item \href{#method-prior}{\code{pmcmc_parameters_nested$prior()}}
@@ -108,9 +113,18 @@ you can do arbitrary transformations here.}
 \subsection{Method \code{names()}}{
 Return the names of the parameters
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters_nested$names()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters_nested$names(type = "both")}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{type}}{One of "both" (the default, all parameters),
+"fixed" (parameters that are shared across populations) or
+"varied" (parameters that vary over populations).}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-populations"></a>}}
@@ -123,30 +137,44 @@ Return the names of the populations
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-summary"></a>}}
-\if{latex}{\out{\hypertarget{method-summary}{}}}
-\subsection{Method \code{summary()}}{
-Return a \code{data.frame} with information about
-parameters (name, min, max, discrete, fixed or varied).
+\if{html}{\out{<a id="method-validate"></a>}}
+\if{latex}{\out{\hypertarget{method-validate}{}}}
+\subsection{Method \code{validate()}}{
+Validate a parameter matrix.  This method
+checks that your matrix has the expected size (rows according
+to parameters, columns to populations) and if named that the
+names are exactly what is expected.  It also verifies that the
+fixed parameters are same across all populations.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters_nested$summary(population = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters_nested$validate(theta)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{population}}{Specifies which population to summarise. If \code{NULL}
-then returns a summary of each population as a list.}
+\item{\code{theta}}{a parameter matrix}
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-summary"></a>}}
+\if{latex}{\out{\hypertarget{method-summary}{}}}
+\subsection{Method \code{summary()}}{
+Return a \code{data.frame} with information about
+parameters (name, min, max, discrete, type (fixed or varied)
+and population)
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters_nested$summary()}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-initial"></a>}}
 \if{latex}{\out{\hypertarget{method-initial}{}}}
 \subsection{Method \code{initial()}}{
 Return the initial parameter values as a named matrix with
-rows corresponding to populations and columns are parameters.
+rows corresponding to parameters and columns to populations.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters_nested$initial()}\if{html}{\out{</div>}}
 }
@@ -179,7 +207,8 @@ This proposes a new parameter matrix given your current
 matrix and the variance-covariance matrices of the proposal
 kernels, discretises any discrete values, and reflects bounded
 parameters until they lie within \code{min}:\code{max}. Returns matrix with rows
-corresponding to populations and columns to parameters.
+corresponding to parameters and columns to populations (i.e.,
+the same orientation as \code{theta}).
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters_nested$propose(theta, type, scale = 1)}\if{html}{\out{</div>}}
 }
@@ -187,8 +216,8 @@ corresponding to populations and columns to parameters.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{theta}}{a parameter matrix with columns in the same order as
-\verb{$names()} and rows in the same order as \verb{$populations()}.}
+\item{\code{theta}}{a parameter matrix with rows in the same order as
+\verb{$names()} and columns in the same order as \verb{$populations()}.}
 
 \item{\code{type}}{specifies which type of parameters should be proposed,
 either fixed parameters only ("fixed"), varied only ("varied"), or
@@ -216,8 +245,8 @@ matrix.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{theta}}{a parameter matrix with columns in the same order as
-\verb{$names()} and rows in the same order as \verb{$populations()}.}
+\item{\code{theta}}{a parameter matrix with rows in the same order as
+\verb{$names()} and columns in the same order as \verb{$populations()}.}
 }
 \if{html}{\out{</div>}}
 }
@@ -227,7 +256,12 @@ matrix.
 \if{latex}{\out{\hypertarget{method-fix}{}}}
 \subsection{Method \code{fix()}}{
 Set some parameters to fixed values. Use this to
-reduce the dimensionality of your system.
+reduce the dimensionality of your system.  Note that this function
+has an unfortunate name collision - we use "fixed" and "varied"
+parameters generally to refer to ones that are fixed across
+populations or which vary among populations.  However, in the
+context of this method "fixed" refers to parameters which will
+be set to a single value and no longer used in inference.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters_nested$fix(fixed)}\if{html}{\out{</div>}}
 }

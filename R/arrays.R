@@ -1,14 +1,17 @@
-##' Bind a number of arrays by their last dimension. This is useful
-##' for binding together the sorts of arrays produced by dust and
-##' mcstate's simulation functions.
+##' Bind a number of arrays, usually by their last dimension. This is
+##' useful for binding together the sorts of arrays produced by dust
+##' and mcstate's simulation functions.
 ##'
-##' @title Bind arrays by last dimension
+##' @title Bind arrays
 ##'
 ##' @param ... Any number of arrays. All dimensions must the the same,
-##'   except for the final one (representing time) which may vary.
+##'   except for the dimension being bound on which may vary.
 ##'
 ##' @param arrays As an alternative to using `...` you can provide a
 ##'   list directly. This is often nicer to program with.
+##'
+##' @param dimension The dimension to bind on; by default `NULL` means
+##'   the last dimension.
 ##'
 ##' @return A single array object
 ##' @export
@@ -24,13 +27,14 @@
 ##' a2 <- array(2, c(2, 3, 4, 1))
 ##' a3 <- array(3, c(2, 3, 4, 3))
 ##' dim(mcstate::array_bind(a1, a2, a3))
-array_bind <- function(..., arrays = list(...)) {
+array_bind <- function(..., arrays = list(...), dimension = NULL) {
   if (length(arrays) == 0) {
     stop("Must provide at least one array")
   }
   if (length(arrays) == 1L) {
     return(arrays[[1L]])
   }
+
   d <- lapply(arrays, dim)
   r <- lengths(d)
   err <- r != r[[1]]
@@ -40,29 +44,53 @@ array_bind <- function(..., arrays = list(...)) {
                  r[[1]], detail))
   }
   r <- r[[1]]
+  if (is.null(dimension)) {
+    dimension <- r
+  }
+
   d <- matrix(unlist(d), r)
 
-  d_shared <- d[-r, , drop = FALSE]
+  d_shared <- d[-dimension, , drop = FALSE]
   d_diff <- d_shared - d_shared[, 1] != 0
   if (any(d_diff)) {
     err <- which(d_diff, TRUE)
-    err <- vcapply(split(unname(err[, 1]), err[, 2]), paste, collapse = ", ")
+    err_dim <- unname(seq_len(r)[-dimension][err[, 1]])
+    err_arr <- err[, 2]
+    err <- vcapply(split(err_dim, err_arr), paste, collapse = ", ")
     detail <- paste(sprintf("array %s (dimension %s)", names(err), unname(err)),
                     collapse = ", ")
     stop(paste("Incompatible dimension arrays:", detail))
   }
 
-  dn <- dimnames(arrays[[1L]])
-  if (!is.null(dn)) {
-    dn_last <- lapply(arrays, function(x) dimnames(x)[[r]])
-    if (all(lengths(dn_last) > 0)) {
-      dn[[r]] <- unlist(dn_last)
-    } else {
-      dn[r] <- list(NULL)
+  n <- d[dimension, ]
+  d <- d[, 1]
+  d[[dimension]] <- sum(n)
+
+  if (dimension == r) {
+    ret <- array(unlist(arrays), d)
+  } else {
+    offset <- c(0, cumsum(n))
+    ret <- array(arrays[[1]][[1]] * NA, d)
+    idx <- array(seq_along(ret), d)
+    for (i in seq_along(arrays)) {
+      j <- seq_len(n[[i]]) + offset[[i]]
+      k <- c(array_nth_dimension(idx, dimension, j))
+      ret[k] <- c(arrays[[i]])
     }
   }
 
-  array(unlist(arrays), c(d[-r, 1], sum(d[r, ])), dimnames = dn)
+  dn <- dimnames(arrays[[1]])
+  if (!is.null(dn)) {
+    dn_this <- lapply(arrays, function(x) dimnames(x)[[dimension]])
+    if (all(lengths(dn_this) > 0)) {
+      dn[[dimension]] <- unlist(dn_this)
+    } else {
+      dn[dimension] <- list(NULL)
+    }
+    dimnames(ret) <- dn
+  }
+
+  ret
 }
 
 
@@ -265,4 +293,56 @@ array_first_dimension <- function(x, i, drop = FALSE) {
   } else {
     stop("Unexpected rank")
   }
+}
+
+
+## This will be slower than above.
+array_nth_dimension <- function(x, k, i, drop = FALSE) {
+  rank <- length(dim(x))
+  if (rank == 2) {
+    expr <- quote(x[, , drop = FALSE])
+  } else if (rank == 3) {
+    expr <- quote(x[, , , drop = FALSE])
+  } else if (rank == 4) {
+    expr <- quote(x[, , , , drop = FALSE])
+  } else {
+    stop("Unexpected rank")
+  }
+  if (k < 1 || k > rank) {
+    stop(sprintf("'k' must be in [1, %d]", rank))
+  }
+
+  expr[[k + 2]] <- quote(i)
+  eval(expr)
+}
+
+
+array_from_list <- function(data, order = NULL) {
+  len <- lengths(data)
+  if (all(len == 0)) {
+    return(NULL)
+  }
+
+  dimensions <- c(dim(data[[1]]) %||% length(data[[1]]), length(data))
+  rank <- length(dimensions)
+
+  stopifnot(
+    length(unique(len)) == 1,
+    is.null(order) || setequal(order, seq_len(rank)))
+
+  vec <- unlist(data, FALSE, FALSE)
+  if (rank == 2) {
+    if (is.null(order) || order[[1]] == 1L) {
+      return(matrix(vec, ncol = length(data)))
+    } else {
+      return(matrix(vec, nrow = length(data), byrow = TRUE))
+    }
+  }
+
+  arr <- array(vec, dimensions)
+  if (!is.null(order)) {
+    arr <- aperm(arr, order)
+  }
+
+  arr
 }

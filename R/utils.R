@@ -67,33 +67,6 @@ rmvnorm_generator <- function(vcv) {
 }
 
 
-list_to_matrix <- function(data) {
-  len <- lengths(data)
-  stopifnot(all(len == len[[1]]))
-  len <- len[[1L]]
-  matrix(unlist(data, FALSE, FALSE), length(data), len, byrow = TRUE)
-}
-
-
-list_to_array <- function(data) {
-  if (!is.null(unlist(data))) {
-    len <- lengths(data)
-    which <- len > 0
-    len <- len[which]
-    stopifnot(length(unique(len)) == 1)
-
-    data <- data[which]
-    array(unlist(data, FALSE, FALSE), c(dim(data[[1L]]), length(data)))
-  }
-}
-
-
-set_colnames <- function(m, nms) {
-  colnames(m) <- nms
-  m
-}
-
-
 last <- function(x) {
   x[[length(x)]]
 }

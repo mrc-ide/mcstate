@@ -343,7 +343,7 @@ particle_filter <- R6::R6Class(
       if (is.null(private$last_state)) {
         stop("Model has not yet been run")
       }
-      ## TODO: should get an option to take a single trajectory
+      ## TODO (#173): should get an option to take a single trajectory
       private$last_state(index_state)
     },
 

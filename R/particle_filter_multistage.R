@@ -102,9 +102,9 @@ transform_state_identity <- function(x, ...) {
 
 
 filter_check_times <- function(pars, data, save_restart) {
-  ## TODO: having to do this is pretty ugly, but we need both step and
-  ## time below here.  Probably a little earlier processing would
-  ## remove the need to do this.
+  ## TODO (#171): having to do this is pretty ugly, but we need both
+  ## step and time below here.  Probably a little earlier processing
+  ## would remove the need to do this.
   if (inherits(data, "particle_filter_data_nested")) {
     population <- data[[attr(data, "population")]]
     data <- data[population == population[[1]], ]
@@ -174,8 +174,8 @@ join_histories <- function(history, stages) {
 
   nms <- unique(unlist(lapply(history, function(x) names(x$index))))
 
-  ## TODO: The only use of history_index later is for names. We should
-  ## refactor that to make it history_names
+  ## TODO (#172): The only use of history$index later is for names. We
+  ## should refactor that to make it history_names
 
   ## This is not present for deterministic models!
   has_order <- !is.null(history[[1]]$order)

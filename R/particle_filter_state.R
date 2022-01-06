@@ -486,13 +486,7 @@ pfs_initial_nested <- function(model, initial, pars, n_particles) {
                  str_collapse(len)))
   }
 
-  if (is.null(dim(state[[1]]))) {
-    state_array <- matrix(unlist(state, FALSE, FALSE), ncol = length(pars))
-  } else {
-    state_array <- list_to_array(state)
-  }
-
-  state_array
+  array_from_list(state)
 }
 
 

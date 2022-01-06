@@ -66,38 +66,21 @@ pmcmc_filter <- function(object, i) {
   }
   object$iteration <- object$iteration[i]
 
-  if (is_3d_array(object$pars)) {
-    pmcmc_filter_nested(object, i)
-  } else {
-    object$pars <- object$pars[i, , drop = FALSE]
-    object$probabilities <- object$probabilities[i, , drop = FALSE]
-    if (!is.null(object$state)) {
-      object$state <- object$state[, i, drop = FALSE]
-    }
-    if (!is.null(object$trajectories)) {
-      object$trajectories$state <-
-        object$trajectories$state[, i, , drop = FALSE]
-    }
-    if (!is.null(object$restart)) {
-      object$restart$state <- object$restart$state[, i, , drop = FALSE]
-    }
-    object
-  }
-}
-
-pmcmc_filter_nested <- function(object, i) {
-  object$pars <- object$pars[, , i, drop = FALSE]
-  object$probabilities <- object$probabilities[, , i, drop = FALSE]
+  object$pars <- array_first_dimension(object$pars, i)
+  object$probabilities <- array_first_dimension(object$probabilities, i)
   if (!is.null(object$state)) {
-    object$state <- object$state[, , i, drop = FALSE]
+    object$state <- array_last_dimension(object$state, i)
   }
   if (!is.null(object$trajectories)) {
+    k <- length(dim(object$trajectories$state)) - 1
     object$trajectories$state <-
-      object$trajectories$state[, i, , , drop = FALSE]
+      array_nth_dimension(object$trajectories$state, k, i)
   }
   if (!is.null(object$restart)) {
-    object$restart$state <- object$restart$state[, i, , , drop = FALSE]
+    k <- length(dim(object$restart$state)) - 1
+    object$restart$state <- array_nth_dimension(object$restart$state, k, i)
   }
+
   object
 }
 
@@ -115,9 +98,10 @@ pmcmc_filter_nested <- function(object, i) {
 ##'
 ##' @export
 pmcmc_combine <- function(..., samples = list(...)) {
-
   assert_list_of(samples, "mcstate_pmcmc")
 
+  pars <- lapply(samples, "[[", "pars")
+  probabilities <- lapply(samples, "[[", "probabilities")
   iteration <- lapply(samples, "[[", "iteration")
   state <- lapply(samples, "[[", "state")
   trajectories <- lapply(samples, "[[", "trajectories")
@@ -127,28 +111,14 @@ pmcmc_combine <- function(..., samples = list(...)) {
 
   iteration <- unlist(iteration, FALSE, FALSE)
 
-  if (is_3d_array(samples[[1]]$pars)) {
-    chain <- rep(seq_along(samples), each = nlayer(samples[[1]]$pars))
-    pars <- array_bind(arrays = lapply(samples, "[[", "pars"))
-    dimnames(pars)[1:2] <- dimnames(samples[[1]]$pars)[1:2]
-    probabilities <- array_bind(arrays = lapply(samples, "[[",
-                                                "probabilities"))
+  chain <- rep(seq_along(samples), each = nrow(samples[[1]]$pars))
+  pars <- array_bind(arrays = pars, dimension = 1)
+  probabilities <- array_bind(arrays = probabilities, dimension = 1)
 
-    if (is.null(state[[1]])) {
-      state <- NULL
-    } else {
-      state <- array_bind(arrays = state)
-    }
+  if (is.null(state[[1]])) {
+    state <- NULL
   } else {
-    chain <- rep(seq_along(samples), each = nrow(samples[[1]]$pars))
-    pars <- do.call(rbind, lapply(samples, "[[", "pars"))
-    probabilities <- do.call(rbind, lapply(samples, "[[", "probabilities"))
-
-    if (is.null(state[[1]])) {
-      state <- NULL
-    } else {
-      state <- do.call(cbind, lapply(samples, "[[", "state"))
-    }
+    state <- array_bind(arrays = state)
   }
 
   if (is.null(trajectories[[1]])) {
@@ -213,25 +183,10 @@ combine_state <- function(x) {
     stop(sprintf("%s data is inconsistent", deparse(substitute(x))))
   }
 
-  dx <- lapply(x, function(el) dim(el$state))
-  n <- vnapply(dx, "[[", 2)
-  d <- dx[[1L]]
-  d[[2L]] <- sum(n)
+  state <- lapply(x, "[[", "state")
+  state <- array_bind(arrays = state, dimension = length(dim(state[[1]])) - 1)
 
-  state <- array(0, d)
-  start <- 0L
-  for (i in seq_along(x)) {
-    j <- seq_len(n[[i]]) + start
-    if (length(d) == 4) {
-      state[, j, , ] <- x[[i]]$state
-    } else {
-      state[, j, ] <- x[[i]]$state
-    }
-    start <- start + n[[i]]
-  }
-  rownames(state) <- rownames(x[[1L]]$state)
-
-  ret <- x[[1L]]
+  ret <- x[[1]]
   ret$state <- state
   ret
 }
