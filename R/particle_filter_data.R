@@ -74,8 +74,9 @@ particle_filter_data <- function(data, time, rate, initial_time = NULL,
     type <- "particle_filter_data_nested"
     assert_scalar_character(population)
     if (!(population %in% names(data))) {
-      stop(sprintf("Did not find column '%s', representing population, in
-                   data", population))
+      stop(sprintf(
+        "Did not find column '%s', representing population, in data",
+        population))
      }
     if (!is.factor(data[[population]])) {
       stop(sprintf("Column '%s' must be a factor", population))
