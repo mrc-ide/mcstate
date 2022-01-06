@@ -109,7 +109,14 @@ particle_deterministic <- R6::R6Class(
       }
       assert_is(data, "particle_filter_data")
 
-      private$generator <- model
+      ## NOTE: unlike the particle filter, there is no support for
+      ## using a compiled compare function here
+      assert_function(compare)
+
+      ## NOTE: unlike the particle filter, there is no support for GPU
+      ## here (probably never will be)
+
+      self$model <- model
       private$data <- data
 
       self$nested <- inherits(data, "particle_filter_data_nested")
@@ -117,18 +124,12 @@ particle_deterministic <- R6::R6Class(
       private$steps <- attr(data, "steps")
       private$data_split <- particle_filter_data_split(data, is.null(compare))
 
-      ## NOTE: unlike the particle filter, there is no support for
-      ## using a compiled compare function here.
-      private$compare <- assert_function(compare)
-      if (!is.null(index)) {
-        private$index <- assert_function(index)
-      }
-      if (!is.null(initial)) {
-        private$initial <- assert_function(initial)
-      }
+      private$compare <- compare
+      private$index <- index
+      private$initial <- initial
+
       private$n_threads <- n_threads
 
-      self$model <- model
       lockBinding("model", self)
       lockBinding("nested", self)
     },
@@ -291,7 +292,7 @@ particle_deterministic <- R6::R6Class(
     ##' constructor and are the same as the input arguments.
     inputs = function() {
       list(data = private$data,
-           model = private$generator,
+           model = self$generator,
            index = private$index,
            initial = private$initial,
            compare = private$compare,

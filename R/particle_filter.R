@@ -190,16 +190,12 @@ particle_filter <- R6::R6Class(
       }
       assert_is(data, "particle_filter_data")
 
-      self$model <- model
-      private$data <- data
-
-      self$nested <- inherits(data, "particle_filter_data_nested")
-
-      private$steps <- attr(data, "steps")
-      private$data_split <- particle_filter_data_split(data, is.null(compare))
-
-      if (is.null(compare) && !model$public_methods$has_compare()) {
-        stop("Your model does not have a built-in 'compare' function")
+      if (is.null(compare)) {
+        if (!model$public_methods$has_compare()) {
+          stop("Your model does not have a built-in 'compare' function")
+        }
+      } else {
+        assert_function(compare)
       }
 
       if (!is.null(gpu_config)) {
@@ -208,6 +204,14 @@ particle_filter <- R6::R6Class(
                      "GPU support"))
         }
       }
+
+      self$model <- model
+      private$data <- data
+
+      self$nested <- inherits(data, "particle_filter_data_nested")
+
+      private$steps <- attr(data, "steps")
+      private$data_split <- particle_filter_data_split(data, is.null(compare))
 
       private$compare <- compare
       private$gpu_config <- gpu_config
@@ -299,6 +303,7 @@ particle_filter <- R6::R6Class(
     ##' `step` and `end`. This interface is still subject to change.
     run_begin = function(pars = list(), save_history = FALSE,
                          save_restart = NULL, min_log_likelihood = NULL) {
+      assert_scalar_logical(save_history)
       min_log_likelihood <- min_log_likelihood %||% -Inf
       particle_filter_state$new(
         pars, self$model, private$last_model, private$data,
