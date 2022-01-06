@@ -72,7 +72,7 @@ pmcmc_filter <- function(object, i) {
     object$state <- array_last_dimension(object$state, i)
   }
   if (!is.null(object$trajectories)) {
-    k <- length(dim(object$restart$state)) - 1
+    k <- length(dim(object$trajectories$state)) - 1
     object$trajectories$state <-
       array_nth_dimension(object$trajectories$state, k, i)
   }
