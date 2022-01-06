@@ -11,7 +11,7 @@ test_that("particle filter data validates time", {
     "Did not find column 'time', representing time, in data")
   expect_error(
     particle_filter_data(d + 0.5, "t", 10),
-    "'data[[time]]' must be an integer",
+    "'data$t' must be an integer",
     fixed = TRUE)
   expect_error(
     particle_filter_data(d - 1, "t", 10),
@@ -38,7 +38,7 @@ test_that("particle filter data validates initial_time", {
     "'initial_time' must be non-negative")
   expect_error(
     particle_filter_data(d, "t", 2, 2),
-    "'initial_time' must be less than 0")
+    "'initial_time' must be <= 0")
   expect_error(
     particle_filter_data(d, "t", 2, 0.5),
     "'initial_time' must be an integer")
@@ -56,6 +56,14 @@ test_that("particle filter data creates data", {
   expect_equal(res$step_start, 0:10 * 10)
   expect_equal(res$step_end, 1:11 * 10)
   expect_equal(res$data, d$data)
+  expect_equal(attr(res, "rate"), 10)
+  expect_equal(attr(res, "time"), "day")
+  expect_equal(attr(res, "times"), cbind(0:10, 1:11, deparse.level = 0))
+  expect_equal(attr(res, "steps"), attr(res, "times") * 10)
+  expect_s3_class(
+    res,
+    c("particle_filter_data_single", "particle_filter_data", "data.frame"),
+    exact = TRUE)
 })
 
 
