@@ -1,3 +1,9 @@
+# mcstate 0.8.0
+
+* Rework the "nested" support; this now returns output in a different dimension order.  Primarily this is an internal refactoring.
+* Allow use of multistage parameters with deterministic models, and with nested parameters.
+* Transform functions for multistage parameters now take `info` and not `model` as an argument, more in keeping with other functions.
+
 # mcstate 0.7.3
 
 * Allow multistage parameters to work with the "deterministic" particle
