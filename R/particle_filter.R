@@ -541,16 +541,6 @@ check_save_restart <- function(save_restart, data) {
                  attr(data, "time"), paste(err, collapse = ", ")))
   }
 
-  nm <- attr(data, "time")
-  ## Note that this works in the nested model because `match` only returns
-  ## the first match and `step_end` is identical across populations.
-  i <- match(save_restart, data[[paste0(nm, "_end")]])
-  err <- is.na(i)
-  if (any(err)) {
-    stop(sprintf("'save_restart' contains times not in '%s': %s",
-                 nm, paste(save_restart[err], collapse = ", ")))
-  }
-
   data$step_end[i]
 }
 
