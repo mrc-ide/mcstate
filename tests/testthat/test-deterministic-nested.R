@@ -60,3 +60,30 @@ test_that("error on different population indices", {
   expect_error(p$run(pars, save_history = TRUE),
                "index must be identical across populations")
 })
+
+
+test_that("Can run an mcmc on a nested model", {
+  dat <- example_sir_shared()
+
+  p <- particle_deterministic$new(dat$data, dat$model, dat$compare,
+                                  dat$index)
+
+  control <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE,
+                           save_restart = 20, rerun_every = 10)
+  pars <- pmcmc_parameters_nested$new(
+    list(pmcmc_varied_parameter("beta", letters[1:2], c(0.2, 0.3),
+                                min = 0, max = 1,
+                                prior = function(p) log(1e-10)),
+         pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
+                         prior = function(p) log(1e-10))),
+    proposal_fixed = matrix(0.00026),
+    proposal_varied = matrix(0.00057))
+
+  ## Extremely basic, just test we run for now
+  res <- pmcmc(pars, p, control = control)
+  expect_equal(dim(res$pars), c(31, 2, 2))
+  expect_equal(dim(res$probabilities), c(31, 3, 2))
+  expect_equal(dim(res$state), c(5, 2, 31))
+  expect_equal(dim(res$trajectories$state), c(3, 2, 31, 101))
+  expect_equal(dim(res$restart$state), c(5, 2, 31, 1))
+})
