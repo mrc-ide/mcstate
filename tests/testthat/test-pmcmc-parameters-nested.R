@@ -173,13 +173,13 @@ test_that("clean proposals - error on misspecified array", {
 
   expect_error(
     pmcmc_parameters_nested$new(pars, diag(3), diag(2)),
-    "Expected 'proposal_varied' to be array with dimensions 2 x 2")
+    "Expected 'proposal_varied' to be a matrix with dimensions 2 x 2")
   expect_error(
     pmcmc_parameters_nested$new(pars, array(1, c(2, 2, 3)), diag(2)),
-    "Expected 'proposal_varied' to be array with dimensions 2 x 2 x 2")
+    "Expected 'proposal_varied' to be an array with dimensions 2 x 2 x 2")
   expect_error(
     pmcmc_parameters_nested$new(pars, diag(2), diag(3)),
-    "Expected 'proposal_fixed' to be array with dimensions 2 x 2")
+    "Expected 'proposal_fixed' to be a matrix with dimensions 2 x 2")
 })
 
 

@@ -29,13 +29,13 @@ test_that("pmcmc_check_initial_nested - error array initial", {
   dat <- example_uniform_shared()
   expect_error(
     pmcmc_check_initial_nested(array(dim = c(4, 3, 1)), dat$pars, 2),
-    "Expected 'initial' to be array with dimensions 4 x 3 x 2")
+    "Expected 'initial' to be an array with dimensions 4 x 3 x 2")
   expect_error(
     pmcmc_check_initial_nested(array(dim = c(5, 3, 2)), dat$pars, 2),
-    "Expected 'initial' to be array with dimensions 4 x 3 x 2")
+    "Expected 'initial' to be an array with dimensions 4 x 3 x 2")
   expect_error(
     pmcmc_check_initial_nested(array(dim = c(4, 2, 2)), dat$pars, 2),
-    "Expected 'initial' to be array with dimensions 4 x 3 x 2")
+    "Expected 'initial' to be an array with dimensions 4 x 3 x 2")
 
   expect_error(
     pmcmc_check_initial_nested(
@@ -65,10 +65,10 @@ test_that("pmcmc_check_initial_nested - error matrix initial", {
   dat <- example_uniform_shared()
   expect_error(
     pmcmc_check_initial_nested(matrix(0, 5, 3), dat$pars, 2),
-    "Expected 'initial' to be array with dimensions 4 x 3")
+    "Expected 'initial' to be a matrix with dimensions 4 x 3")
   expect_error(
     pmcmc_check_initial_nested(matrix(0, 4, 2), dat$pars, 2),
-    "Expected 'initial' to be array with dimensions 4 x 3")
+    "Expected 'initial' to be a matrix with dimensions 4 x 3")
 
   expect_error(
     pmcmc_check_initial_nested(

@@ -177,7 +177,7 @@ layernames <- function(x) {
   if (is.null(value)) {
     nms[3L] <- list(NULL)
   } else {
-    nms[[3L]] <-  assert_scalar_character(value)
+    nms[[3L]] <- assert_scalar_character(value)
   }
 
   dimnames(x) <- nms

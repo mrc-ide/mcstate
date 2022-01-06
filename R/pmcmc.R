@@ -210,34 +210,22 @@ pmcmc_check_initial_simple <- function(initial, pars, n_chains) {
     initial <- pars$initial()
   }
   if (is.matrix(initial)) {
-    if (nrow(initial) != n_pars) {
-      stop(sprintf("Expected a matrix with %d rows for 'initial'", n_pars))
-    }
-    if (ncol(initial) != n_chains) {
-      stop(sprintf("Expected a matrix with %d columns for 'initial'", n_chains))
-    }
-    if (!is.null(rownames(initial)) && !identical(rownames(initial), nms)) {
-      stop("If 'initial' has rownames, they must match pars$names()")
-    }
-    ok <- apply(initial, 2, function(p) is.finite(pars$prior(p)))
-    if (any(!ok)) {
-      stop(sprintf(
-        "Starting point does not have finite prior probability (%s)",
-        paste(which(!ok), collapse = ", ")))
-    }
+    assert_dimensions(initial, c(n_pars, n_chains))
+    initial <- assert_dimnames(initial, list(parameters = nms, NULL))
   } else {
-    if (length(initial) != n_pars) {
-      stop(sprintf("Expected a vector of length %d for 'initial'", n_pars))
-    }
-    if (!is.null(names(initial)) && !identical(names(initial), nms)) {
-      stop("If 'initial' has names, they must match pars$names()")
-    }
-    if (!is.finite(pars$prior(initial))) {
-      stop("Starting point does not have finite prior probability")
-    }
-    initial <- matrix(initial, n_pars, n_chains)
+    assert_dimensions(initial, n_pars)
+    assert_dimnames(initial, list(parameters = nms))
+    initial <- array(initial, c(n_pars, n_chains),
+                     dimnames = list(nms, NULL))
   }
-  dimnames(initial) <- list(nms, NULL)
+
+  ok <- apply(initial, 2, function(p) is.finite(pars$prior(p)))
+  if (any(!ok)) {
+    stop(sprintf(
+      "Starting point does not have finite prior probability (chain %s)",
+      paste(which(!ok), collapse = ", ")))
+  }
+
   initial
 }
 
