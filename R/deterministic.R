@@ -10,7 +10,6 @@ particle_deterministic <- R6::R6Class(
   cloneable = FALSE,
 
   private = list(
-    generator = NULL,
     data = NULL,
     data_split = NULL,
     steps = NULL,
@@ -109,35 +108,27 @@ particle_deterministic <- R6::R6Class(
       }
       assert_is(data, "particle_filter_data")
 
-      private$generator <- model
+      ## NOTE: unlike the particle filter, there is no support for
+      ## using a compiled compare function here
+      assert_function(compare)
+
+      ## NOTE: unlike the particle filter, there is no support for GPU
+      ## here (probably never will be)
+
+      self$model <- model
       private$data <- data
 
       self$nested <- inherits(data, "particle_filter_data_nested")
 
-      if (self$nested) {
-        population <- attr(data, "population")
-        private$data_split <- groupeddf_to_list_of_lists(data, population)
-        private$steps <- unname(
-          as.matrix(data[
-            data$population == levels(data[[population]])[[1]],
-            c("step_start", "step_end")]))
-      } else {
-        private$data_split <- df_to_list_of_lists(data)
-        private$steps <- unname(as.matrix(data[c("step_start", "step_end")]))
-      }
+      private$steps <- attr(data, "steps")
+      private$data_split <- particle_filter_data_split(data, is.null(compare))
 
-      ## NOTE: unlike the particle filter, there is no support for
-      ## using a compiled compare function here.
-      private$compare <- assert_function(compare)
-      if (!is.null(index)) {
-        private$index <- assert_function(index)
-      }
-      if (!is.null(initial)) {
-        private$initial <- assert_function(initial)
-      }
+      private$compare <- compare
+      private$index <- index
+      private$initial <- initial
+
       private$n_threads <- n_threads
 
-      self$model <- model
       lockBinding("model", self)
       lockBinding("nested", self)
     },
@@ -171,7 +162,7 @@ particle_deterministic <- R6::R6Class(
                    min_log_likelihood = -Inf) {
       assert_scalar_logical(save_history)
       if (self$nested) {
-        n_populations <- attr(private$data, "n_populations")
+        n_populations <- length(attr(private$data, "populations"))
         pars <- particle_filter_pars_nested(pars, n_populations)
       }
       if (inherits(pars, "multistage_parameters")) {
@@ -300,7 +291,7 @@ particle_deterministic <- R6::R6Class(
     ##' constructor and are the same as the input arguments.
     inputs = function() {
       list(data = private$data,
-           model = private$generator,
+           model = self$model,
            index = private$index,
            initial = private$initial,
            compare = private$compare,

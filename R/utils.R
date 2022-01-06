@@ -72,20 +72,6 @@ last <- function(x) {
 }
 
 
-df_to_list_of_lists <- function(x) {
-  lapply(unname(split(x, seq_len(nrow(x)))), as.list)
-}
-
-groupeddf_to_list_of_lists <- function(x, group) {
-  ## largely copied from dust::dust_data
-  rows <- lapply(seq_len(nrow(x)), function(i) as.list(x[i, ]))
-  group <- x[[group]]
-  rows_grouped <- unname(split(rows, group))
-  lapply(seq_len(nrow(x) / length(unique(group))),
-         function(i) lapply(rows_grouped, "[[", i))
-}
-
-
 all_or_none <- function(x) {
   all(x) || !any(x)
 }
@@ -177,7 +163,7 @@ layernames <- function(x) {
   if (is.null(value)) {
     nms[3L] <- list(NULL)
   } else {
-    nms[[3L]] <-  assert_scalar_character(value)
+    nms[[3L]] <- assert_scalar_character(value)
   }
 
   dimnames(x) <- nms

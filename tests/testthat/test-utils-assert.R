@@ -104,3 +104,22 @@ test_that("check dimension names", {
   dimnames(arr2) <- list(n1, NULL, n3)
   expect_equal(assert_dimnames(arr2, list(n1, NULL, n3)), arr2)
 })
+
+
+test_that("check vector names", {
+  nms <- c("a", "b")
+  x <- set_names(1:2, nms)
+  expect_silent(assert_dimnames(x, list(nms)))
+  expect_error(
+    assert_dimnames(x, list(c("x", "y"))),
+    "Expected names of 'x' to match 'x', 'y'")
+  expect_error(
+    assert_dimnames(x, list(X = c("x", "y"))),
+    "Expected names of 'x' to match X ('x', 'y')",
+    fixed = TRUE)
+  expect_error(
+    assert_dimnames(x, list(NULL)),
+    "Expected 'x' to have no names")
+  expect_equal(assert_dimnames(unname(x), list(nms)), x)
+  expect_equal(assert_dimnames(unname(x), list(NULL)), unname(x))
+})

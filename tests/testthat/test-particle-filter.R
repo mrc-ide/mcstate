@@ -839,6 +839,7 @@ test_that("Can extract state from the model - nested", {
   expect_equal(p$restart_state(c(10, 3, 3, 6)), s[, c(10, 3, 3, 6), , ])
 })
 
+
 test_that("use compiled compare function - nested", {
   dat <- example_sir_shared()
   n_particles <- 42

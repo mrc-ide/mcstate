@@ -1,9 +1,8 @@
-##' Prepare data for use with the [`particle_filter`].  This
-##' function is not required to use the particle filter but it helps
-##' arrange data and be explicit about the off-by-one errors that can
-##' occur.  It takes as input your data to compare against a model,
-##' including some measure of "time".  We need to convert this time
-##' into model steps.
+##' Prepare data for use with the [`particle_filter`].  This function
+##' is required to use the particle filter as helps arrange data and
+##' be explicit about the off-by-one errors that can occur.  It takes
+##' as input your data to compare against a model, including some
+##' measure of "time".  We need to convert this time into model steps.
 ##'
 ##' We require that the time variable increments in unit steps; this
 ##' may be relaxed in future to even steps, or possibly irregular
@@ -34,11 +33,6 @@
 ##' @param population Optionally, the name of a column within `data` that
 ##'   represents different populations. Must be a factor.
 ##'
-##' @param allow_unequal_times If `population` is not NULL and time-points are
-##'   not equal between populations, then `TRUE` will cause the code to
-##'   error, otherwise FALSE (default) will add equal time-points to all
-##'   populations and fill missing data with NAs.
-##'
 ##' @return If `population` is NULL, a data.frame with new columns
 ##'   `step_start` and `step_end` (required by [`particle_filter`]),
 ##'   along side all previous data except for the time variable, which
@@ -61,155 +55,135 @@
 ##'                 population = factor(rep(letters[1:2], each = 16)))
 ##' mcstate::particle_filter_data(d, "day", 4, 0, "population")
 particle_filter_data <- function(data, time, rate, initial_time = NULL,
-                                 population = NULL,
-                                 allow_unequal_times = FALSE) {
-
+                                 population = NULL) {
   assert_is(data, "data.frame")
+
+  assert_scalar_character(time)
   if (!(time %in% names(data))) {
     stop(sprintf("Did not find column '%s', representing time, in data",
                  time))
   }
 
-  if (!is.null(population)) {
-    if (!(population %in% names(data))) {
-      stop(sprintf("Did not find column '%s', representing population, in
-                   data", population))
-    }
-    return(particle_filter_data_nested(data, time, rate, initial_time,
-                                       population, allow_unequal_times))
-  }
-
-
-  t <- assert_integer(data[[time]])
-  if (!all(diff(t) == 1)) {
-    ## It's possible that we can make this work ok for irregular time
-    ## units, but we make this assumption below when working out the
-    ## start and end step (i.e., that we assume that the data
-    stop("Expected each time difference to be one unit")
-  }
-  if (t[[1L]] < 1) {
-    stop(sprintf(
-      "The first time must be at least 1 (but was given %d)", t[[1L]]))
-  }
-
-  if (nrow(data) < 2) {
-    stop("Expected at least two time windows")
-  }
-
   rate <- assert_scalar_positive_integer(rate)
-  t <- clean_pf_times(t, initial_time, data)
 
-  ret <- data.frame(time_start = t$time_start,
-                    time_end = t$time_end,
-                    step_start = t$time_start * rate,
-                    step_end = t$time_end * rate,
-                    data[names(data) != time])
-  names(ret)[1:2] <- paste0(time, c("_start", "_end"))
-  attr(ret, "rate") <- rate
-  attr(ret, "time") <- time
-  class(ret) <- c("particle_filter_data_single", "particle_filter_data",
-                  "data.frame")
-
-  ret
-}
-
-## TODO (#171): this needs simplification and general tidying, all a
-## bit complicated still throughout here.
-particle_filter_data_nested <- function(data, time, rate, initial_time,
-                                        population, allow_unequal_times) {
-  # catch invalid user call
   if (is.null(population)) {
-    stop("'population' must be non-NULL")
-  }
+    type <- "particle_filter_data_single"
+    populations <- NULL
+    time_end <- data[[time]]
+  } else {
+    type <- "particle_filter_data_nested"
+    assert_scalar_character(population)
+    if (!(population %in% names(data))) {
+      stop(sprintf(
+        "Did not find column '%s', representing population, in data",
+        population))
+     }
+    if (!is.factor(data[[population]])) {
+      stop(sprintf("Column '%s' must be a factor", population))
+    }
+    populations <- levels(data[[population]])
 
-  if (!is.factor(data[[population]])) {
-    stop(sprintf("Column '%s' must be a factor", population))
-  }
-
-  groups <- unique(data[[population]])
-
-  assert_logical(allow_unequal_times)
-
-  split_data <- split(data[names(data) != population], data[[population]])
-  vars <- names(data)[!(names(data) %in% c(time, population))]
-
-  nr <- viapply(split_data, nrow)
-  if (length(unique(nr)) > 1) {
-    if (allow_unequal_times) {
-      ## assumed quicker handling one matrix then re-splitting than lapply
-      times <- as.integer(sort(unique(unlist(lapply(split_data, "[[", time)))))
-      split_data <- lapply(split_data, function(x) {
-        df <- data.frame(matrix(ncol = ncol(x) - 1, nrow = length(times)))
-        colnames(df) <- colnames(x)[-ncol(x)]
-        df[[time]] <- times
-        df[match(x[[time]], times), vars] <- as.matrix(x[, vars])
-        df
-      })
-    } else {
+    data <- data[order(data[[population]], data[[time]]), ]
+    time_split <- split(data[[time]], data[[population]])
+    if (length(unique(time_split)) != 1) {
       stop("Unequal time between populations")
     }
+    time_end <- time_split[[1]]
   }
 
-  rate <- assert_scalar_positive_integer(rate)
-  ## times now equal so select first arbitrarily
-  t <- clean_pf_times(split_data[[1]][[time]], initial_time, data)
-
-  data <- do.call(rbind, split_data)
-
-  ## TODO (#171): this is not ideal because 'population' is then
-  ## silently unavailable (a bit like step is, but worse).
-  ret <- data.frame(time_start = t$time_start,
-                    time_end = t$time_end,
-                    step_start = t$time_start * rate,
-                    step_end = t$time_end * rate,
-                    population = rep(groups, each = length(t$time_start)),
-                    data[vars],
-                    stringsAsFactors = FALSE)
-  rownames(ret) <- NULL
-  names(ret)[1:2] <- paste0(time, c("_start", "_end"))
-  attr(ret, "rate") <- rate
-  attr(ret, "time") <- time
-  ## TODO (#171): these will become flexible soon, but this at least
-  ## establishes the contract for things that use the output of this
-  ## function.
-  attr(ret, "population") <- "population"
-  attr(ret, "n_populations") <- nlevels(ret$population)
-  class(ret) <- c("particle_filter_data_nested", "particle_filter_data",
-                  "data.frame")
-  ret
-}
-
-clean_pf_times <- function(times, initial_time, data) {
-  t <- assert_integer(times)
-
-  if (!all(diff(t) == 1)) {
+  assert_integer(time_end, name = sprintf('data$%s', time))
+  if (!all(diff(time_end) == 1)) {
     ## It's possible that we can make this work ok for irregular time
     ## units, but we make this assumption below when working out the
     ## start and end step (i.e., that we assume that the data
     stop("Expected each time difference to be one unit")
   }
-  if (t[[1L]] < 1) {
-    stop(sprintf(
-      "The first time must be at least 1 (but was given %d)", t[[1L]]))
-  }
 
-  if (nrow(data) < 2) {
+  if (length(time_end) < 2) {
     stop("Expected at least two time windows")
   }
 
-  time_end <- t
-  time_start <- t - 1L
+  ## NOTE: test is against 1 because we'll start at 1 - 1 = 0
+  if (time_end[[1L]] < 1) {
+    stop(sprintf("The first time must be at least 1 (but was given %d)",
+                 time_end[[1L]]))
+  }
+
+  time_start <- time_end - 1L
   if (!is.null(initial_time)) {
     initial_time <- assert_integer(initial_time)
     if (initial_time < 0) {
       stop("'initial_time' must be non-negative")
     }
     if (initial_time > time_start[[1L]]) {
-      stop(sprintf(
-        "'initial_time' must be less than %d", time_start[[1L]]))
+      stop(sprintf("'initial_time' must be <= %d", time_start[[1L]]))
     }
     time_start[[1L]] <- initial_time
   }
 
-  list(time_start = time_start, time_end = time_end)
+  times <- cbind(time_start, time_end, deparse.level = 0)
+  steps <- times * rate
+
+  ret <- data.frame(time_start = time_start,
+                    time_end = time_end,
+                    step_start = time_start * rate,
+                    step_end = time_end * rate,
+                    data[names(data) != time],
+                    stringsAsFactors = FALSE, check.names = FALSE)
+
+  names(ret)[1:2] <- paste0(time, c("_start", "_end"))
+  attr(ret, "rate") <- rate
+  attr(ret, "time") <- time
+  attr(ret, "times") <- times
+  attr(ret, "steps") <- steps
+  attr(ret, "population") <- population
+  attr(ret, "populations") <- populations
+  class(ret) <- c(type, "particle_filter_data", "data.frame")
+
+  ret
+}
+
+
+particle_filter_data_split <- function(data, compiled_compare) {
+  population <- attr(data, "population")
+
+  ## Drop off lots of attributes that are just annoying after the data
+  ## has been split:
+  attr(data, "rate") <- NULL
+  attr(data, "time") <- NULL
+  attr(data, "times") <- NULL
+  attr(data, "steps") <- NULL
+  attr(data, "population") <- NULL
+  attr(data, "populations") <- NULL
+  class(data) <- "data.frame"
+
+  if (compiled_compare) {
+    dust::dust_data(data, "step_end", population)
+  } else if (is.null(population)) {
+    lapply(unname(split(data, seq_len(nrow(data)))), as.list)
+  } else {
+    ## largely copied from dust::dust_data
+    rows <- lapply(seq_len(nrow(data)), function(i) as.list(data[i, ]))
+    rows_grouped <- unname(split(rows, data[[population]]))
+    lapply(seq_len(nrow(data) / nlevels(data[[population]])),
+           function(i) lapply(rows_grouped, "[[", i))
+  }
+}
+
+
+##' @export
+`[.particle_filter_data` <- function(x, i, j, ...) { # nolint
+  ret <- NextMethod("[")
+  ## It's hard to detect this based on 'i' and 'j' but we can detect
+  ## the effect of subsetting fairly efficiently:
+  if (!identical(x$step_start, ret$step_start)) {
+    ## TODO (#180): Stricter checks to come on the subset.
+    k <- seq_len(nrow(x))[i]
+    if (!is.null(attr(x, "population"))) {
+      k <- k[k <= nrow(attr(x, "steps"))]
+    }
+    attr(ret, "steps") <- attr(x, "steps")[k, , drop = FALSE]
+    attr(ret, "times") <- attr(x, "times")[k, , drop = FALSE]
+  }
+  ret
 }

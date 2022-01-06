@@ -190,40 +190,12 @@ particle_filter <- R6::R6Class(
       }
       assert_is(data, "particle_filter_data")
 
-      self$model <- model
-      private$data <- data
-
-      self$nested <- inherits(data, "particle_filter_data_nested")
-
-      if (self$nested) {
-        population <- attr(data, "population")
-        if (is.null(compare)) {
-          private$data_split <- dust::dust_data(private$data, "step_end",
-                                                multi = population)
-        } else {
-          private$data_split <- groupeddf_to_list_of_lists(data, population)
+      if (is.null(compare)) {
+        if (!model$public_methods$has_compare()) {
+          stop("Your model does not have a built-in 'compare' function")
         }
-        private$steps <- unname(
-          as.matrix(data[
-            data$population == levels(data[[population]])[[1]],
-            c("step_start", "step_end")])
-        )
       } else {
-        if (is.null(compare)) {
-          private$data_split <- dust::dust_data(private$data, "step_end")
-        } else {
-          ## NOTE: it might be tidiest if we always used
-          ## dust::dust_data, really, but that changes our comparison
-          ## function a little or otherwise requires logic near to where
-          ## the comparison function is used (many times) rather than
-          ## once here.
-          private$data_split <- df_to_list_of_lists(data)
-        }
-        private$steps <- unname(as.matrix(data[c("step_start", "step_end")]))
-      }
-
-      if (is.null(compare) && !model$public_methods$has_compare()) {
-        stop("Your model does not have a built-in 'compare' function")
+        assert_function(compare)
       }
 
       if (!is.null(gpu_config)) {
@@ -232,6 +204,14 @@ particle_filter <- R6::R6Class(
                      "GPU support"))
         }
       }
+
+      self$model <- model
+      private$data <- data
+
+      self$nested <- inherits(data, "particle_filter_data_nested")
+
+      private$steps <- attr(data, "steps")
+      private$data_split <- particle_filter_data_split(data, is.null(compare))
 
       private$compare <- compare
       private$gpu_config <- gpu_config
@@ -290,7 +270,7 @@ particle_filter <- R6::R6Class(
                    min_log_likelihood = NULL) {
       assert_scalar_logical(save_history)
       if (self$nested) {
-        n_populations <- attr(private$data, "n_populations")
+        n_populations <- length(attr(private$data, "populations"))
         pars <- particle_filter_pars_nested(pars, n_populations)
       }
       if (inherits(pars, "multistage_parameters")) {
@@ -323,6 +303,7 @@ particle_filter <- R6::R6Class(
     ##' `step` and `end`. This interface is still subject to change.
     run_begin = function(pars = list(), save_history = FALSE,
                          save_restart = NULL, min_log_likelihood = NULL) {
+      assert_scalar_logical(save_history)
       min_log_likelihood <- min_log_likelihood %||% -Inf
       particle_filter_state$new(
         pars, self$model, private$last_model, private$data,
@@ -552,14 +533,13 @@ check_save_restart <- function(save_restart, data) {
   }
   assert_strictly_increasing(save_restart)
   assert_is(data, "particle_filter_data")
-  nm <- attr(data, "time")
-  ## Note that this works in the nested model because `match` only returns
-  ## the first match and `step_end` is identical across populations.
-  i <- match(save_restart, data[[paste0(nm, "_end")]])
-  err <- is.na(i)
-  if (any(err)) {
+
+  time_end <- attr(data, "times")[, 2]
+  i <- match(save_restart, time_end)
+  if (anyNA(i)) {
     stop(sprintf("'save_restart' contains times not in '%s': %s",
-                 nm, paste(save_restart[err], collapse = ", ")))
+                 attr(data, "time"),
+                 paste(save_restart[is.na(i)], collapse = ", ")))
   }
 
   data$step_end[i]
@@ -749,12 +729,12 @@ filter_run_multistage <- function(self, private, pars,
 ## * validate we have an unnamed list of the correct length
 ## * if multistage, then invert the nesting to convert from a list of
 ##   multistage parameter objects into a multistage parameter of lists
-particle_filter_pars_nested <- function(pars, expected_length) {
+particle_filter_pars_nested <- function(pars, n_populations) {
   if (!is.null(names(pars))) {
     stop("Expected an unnamed list of parameters for 'pars'")
   }
-  if (length(pars) != expected_length) {
-    stop(sprintf("'pars' must have length %d", expected_length))
+  if (length(pars) != n_populations) {
+    stop(sprintf("'pars' must have length %d", n_populations))
   }
 
   is_multistage <- vlapply(pars, inherits, "multistage_parameters")
