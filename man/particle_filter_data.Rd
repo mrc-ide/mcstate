@@ -4,14 +4,7 @@
 \alias{particle_filter_data}
 \title{Prepare data for use with particle filter}
 \usage{
-particle_filter_data(
-  data,
-  time,
-  rate,
-  initial_time = NULL,
-  population = NULL,
-  allow_unequal_times = FALSE
-)
+particle_filter_data(data, time, rate, initial_time = NULL, population = NULL)
 }
 \arguments{
 \item{data}{A \code{\link[=data.frame]{data.frame()}} of data}
@@ -32,11 +25,6 @@ column, minus 1 (i.e., \code{data[[time]] - 1}).}
 
 \item{population}{Optionally, the name of a column within \code{data} that
 represents different populations. Must be a factor.}
-
-\item{allow_unequal_times}{If \code{population} is not NULL and time-points are
-not equal between populations, then \code{TRUE} will cause the code to
-error, otherwise FALSE (default) will add equal time-points to all
-populations and fill missing data with NAs.}
 }
 \value{
 If \code{population} is NULL, a data.frame with new columns
@@ -48,12 +36,11 @@ described above where each element represents populations in the order
 specified in the data.
 }
 \description{
-Prepare data for use with the \code{\link{particle_filter}}.  This
-function is not required to use the particle filter but it helps
-arrange data and be explicit about the off-by-one errors that can
-occur.  It takes as input your data to compare against a model,
-including some measure of "time".  We need to convert this time
-into model steps.
+Prepare data for use with the \code{\link{particle_filter}}.  This function
+is required to use the particle filter as helps arrange data and
+be explicit about the off-by-one errors that can occur.  It takes
+as input your data to compare against a model, including some
+measure of "time".  We need to convert this time into model steps.
 }
 \details{
 We require that the time variable increments in unit steps; this

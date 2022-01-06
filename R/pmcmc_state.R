@@ -198,8 +198,8 @@ pmcmc_state <- R6::R6Class(
         trajectories_state <-
           array_from_list(private$history_trajectories$get(), c(1, 3, 2))
         rownames(trajectories_state) <- names(predict$index)
-        data <- private$filter$inputs()$data
-        step <- c(data$step_start[[1]], data$step_end)
+        steps <- attr(private$filter$inputs()$data, "steps")
+        step <- c(steps[[1]], steps[, 2])
         trajectories <- mcstate_trajectories(step, predict$rate,
                                              trajectories_state,
                                              predicted = FALSE)
@@ -247,9 +247,8 @@ pmcmc_state <- R6::R6Class(
           array_from_list(private$history_trajectories$get(), c(1, 2, 4, 3))
         rownames(trajectories_state) <- names(predict$index)
         colnames(trajectories_state) <- populations
-        data <- private$filter$inputs()$data
-        data <- data[data$population == levels(data$population)[1], ]
-        step <- c(data$step_start[[1]], data$step_end)
+        steps <- attr(private$filter$inputs()$data, "steps")
+        step <- c(steps[[1]], steps[, 2])
         trajectories <- mcstate_trajectories(step, predict$rate,
                                              trajectories_state,
                                              predicted = FALSE)

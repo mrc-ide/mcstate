@@ -162,7 +162,7 @@ particle_deterministic <- R6::R6Class(
                    min_log_likelihood = -Inf) {
       assert_scalar_logical(save_history)
       if (self$nested) {
-        n_populations <- attr(private$data, "n_populations")
+        n_populations <- length(attr(private$data, "populations"))
         pars <- particle_filter_pars_nested(pars, n_populations)
       }
       if (inherits(pars, "multistage_parameters")) {

@@ -146,7 +146,18 @@ particle_filter_data <- function(data, time, rate, initial_time = NULL,
 
 particle_filter_data_split <- function(data, compiled_compare) {
   population <- attr(data, "population")
-  if (is.null(compare)) {
+
+  ## Drop off lots of attributes that are just annoying after the data
+  ## has been split:
+  attr(data, "rate") <- NULL
+  attr(data, "time") <- NULL
+  attr(data, "times") <- NULL
+  attr(data, "steps") <- NULL
+  attr(data, "population") <- NULL
+  attr(data, "populations") <- NULL
+  class(data) <- "data.frame"
+
+  if (compiled_compare) {
     dust::dust_data(data, "step_end", population)
   } else if (is.null(population)) {
     lapply(unname(split(data, seq_len(nrow(data)))), as.list)
@@ -157,4 +168,26 @@ particle_filter_data_split <- function(data, compiled_compare) {
     lapply(seq_len(nrow(data) / nlevels(data[[population]])),
            function(i) lapply(rows_grouped, "[[", i))
   }
+}
+
+
+##' @export
+`[.particle_filter_data` <- function(x, i, j, ...) { # nolint
+  ret <- NextMethod("[")
+  ## It's hard to detect this based on 'i' and 'j' but we can detect
+  ## the effect of subsetting fairly efficiently:
+  if (!identical(x$step_start, ret$step_start)) {
+    ## TODO: Here, we need to revalidate everything about the data
+    ## really; we need to check that:
+    ## * all ppopulations have the same steps
+    ## * that the populations have not been reordered
+    ## * that all time increments are the same
+    k <- seq_len(nrow(x))[i]
+    if (!is.null(attr(x, "population"))) {
+      k <- k[k <= nrow(attr(x, "steps"))]
+    }
+    attr(ret, "steps") <- attr(x, "steps")[k, , drop = FALSE]
+    attr(ret, "times") <- attr(x, "times")[k, , drop = FALSE]
+  }
+  ret
 }

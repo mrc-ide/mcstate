@@ -528,7 +528,6 @@ check_save_restart <- function(save_restart, data) {
   }
   assert_strictly_increasing(save_restart)
   assert_is(data, "particle_filter_data")
-  browser()
 
   time_end <- attr(data, "times")[, 2]
   err <- setdiff(save_restart, time_end)
