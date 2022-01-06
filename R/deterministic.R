@@ -10,7 +10,6 @@ particle_deterministic <- R6::R6Class(
   cloneable = FALSE,
 
   private = list(
-    generator = NULL,
     data = NULL,
     data_split = NULL,
     steps = NULL,
@@ -292,7 +291,7 @@ particle_deterministic <- R6::R6Class(
     ##' constructor and are the same as the input arguments.
     inputs = function() {
       list(data = private$data,
-           model = self$generator,
+           model = self$model,
            index = private$index,
            initial = private$initial,
            compare = private$compare,
