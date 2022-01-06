@@ -177,11 +177,7 @@ particle_filter_data_split <- function(data, compiled_compare) {
   ## It's hard to detect this based on 'i' and 'j' but we can detect
   ## the effect of subsetting fairly efficiently:
   if (!identical(x$step_start, ret$step_start)) {
-    ## TODO: Here, we need to revalidate everything about the data
-    ## really; we need to check that:
-    ## * all ppopulations have the same steps
-    ## * that the populations have not been reordered
-    ## * that all time increments are the same
+    ## TODO (#180): Stricter checks to come on the subset.
     k <- seq_len(nrow(x))[i]
     if (!is.null(attr(x, "population"))) {
       k <- k[k <= nrow(attr(x, "steps"))]
