@@ -115,12 +115,7 @@ particle_deterministic <- R6::R6Class(
       self$nested <- inherits(data, "particle_filter_data_nested")
 
       private$steps <- attr(data, "steps")
-      if (self$nested) {
-        population <- attr(data, "population")
-        private$data_split <- groupeddf_to_list_of_lists(data, population)
-      } else {
-        private$data_split <- df_to_list_of_lists(data)
-      }
+      private$data_split <- particle_filter_data_split(data, is.null(compare))
 
       ## NOTE: unlike the particle filter, there is no support for
       ## using a compiled compare function here.

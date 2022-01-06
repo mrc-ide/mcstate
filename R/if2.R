@@ -103,7 +103,8 @@ if2 <- function(pars, filter, control) {
   }
   pars_sd <- unlist(control$pars_sd[name_order])
 
-  data_split <- df_to_list_of_lists(inputs$data)
+  data_split <- particle_filter_data_split(inputs$data,
+                                           compiled_compare = FALSE)
 
   steps <- attr(inputs$data, "steps")
   n_steps <- nrow(steps)

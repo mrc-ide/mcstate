@@ -142,3 +142,19 @@ particle_filter_data <- function(data, time, rate, initial_time = NULL,
 
   ret
 }
+
+
+particle_filter_data_split <- function(data, compiled_compare) {
+  population <- attr(data, "population")
+  if (is.null(compare)) {
+    dust::dust_data(data, "step_end", population)
+  } else if (is.null(population)) {
+    lapply(unname(split(data, seq_len(nrow(data)))), as.list)
+  } else {
+    ## largely copied from dust::dust_data
+    rows <- lapply(seq_len(nrow(data)), function(i) as.list(data[i, ]))
+    rows_grouped <- unname(split(rows, data[[population]]))
+    lapply(seq_len(nrow(data) / nlevels(data[[population]])),
+           function(i) lapply(rows_grouped, "[[", i))
+  }
+}

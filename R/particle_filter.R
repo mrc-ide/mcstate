@@ -196,20 +196,7 @@ particle_filter <- R6::R6Class(
       self$nested <- inherits(data, "particle_filter_data_nested")
 
       private$steps <- attr(data, "steps")
-      population <- attr(data, "population")
-      if (is.null(compare)) {
-        if (self$nested) {
-          private$data_split <- dust::dust_data(data, "step_end", population)
-        } else {
-          private$data_split <- dust::dust_data(private$data, "step_end")
-        }
-      } else {
-        if (self$nested) {
-          private$data_split <- groupeddf_to_list_of_lists(data, population)
-        } else {
-          private$data_split <- df_to_list_of_lists(data)
-        }
-      }
+      private$data_split <- particle_filter_data_split(data, is.null(compare))
 
       if (is.null(compare) && !model$public_methods$has_compare()) {
         stop("Your model does not have a built-in 'compare' function")
