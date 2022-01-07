@@ -19,7 +19,7 @@ particle deterministically."><meta property="og:image" content="/logo.png"><!-- 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.7.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.0</span>
       </span>
     </div>
 
@@ -90,6 +90,14 @@ particle deterministically.</p>
     <p></p><div class="r6-fields"><dl><dt><code>model</code></dt>
 <dd><p>The dust model generator being simulated (cannot be
 re-bound)</p></dd>
+
+
+<dt><code>nested</code></dt>
+<dd><p>Logical, indicating if this is a nested
+(multipopulation) deterministic particle (read only).  If <code>TRUE</code>, then
+each call to <code>run</code> returns a vector of log-likelihoods,
+one per population.  Triggered by the <code>data</code> argument to
+the constructor.</p></dd>
 
 
 </dl><p></p></div>

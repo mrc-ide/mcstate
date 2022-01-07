@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.7.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.0</span>
       </span>
     </div>
 
@@ -107,11 +107,12 @@ and these imply a different model state size.  In this case you
 <em>must</em> provide <code>transform_state</code> to fill in new model state,
 move things around, or delete model state depending on how the
 state has changed.  This function will be passed three
-arguments: (1) the current model state, (2) the model used to
-run up to this point, (3) the new model that was created with
-<code>pars</code> which will be run from this point.  It is expected that
-the results of <code>$pars()</code> and <code>$info()</code> from these model objects
-will be useful for updating the model state.</p></dd>
+arguments: (1) the current model state, (2) the result of the
+<code>$info()</code> method from the model used to this point, (3) the
+result of the <code>$info()</code> method for the new model that was
+created with <code>pars</code> which will be run from this point.  Future
+versions of this interface may allow passing the parameters in
+too.</p></dd>
 </dl></div>
 
   </div>

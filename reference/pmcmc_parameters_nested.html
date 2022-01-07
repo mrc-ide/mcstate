@@ -22,7 +22,7 @@ how it can be used."><meta property="og:image" content="/logo.png"><!-- mathjax 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.7.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.0</span>
       </span>
     </div>
 
@@ -100,6 +100,7 @@ how it can be used.</p>
 <ul><li><p><a href="#method-new"><code>pmcmc_parameters_nested$new()</code></a></p></li>
 <li><p><a href="#method-names"><code>pmcmc_parameters_nested$names()</code></a></p></li>
 <li><p><a href="#method-populations"><code>pmcmc_parameters_nested$populations()</code></a></p></li>
+<li><p><a href="#method-validate"><code>pmcmc_parameters_nested$validate()</code></a></p></li>
 <li><p><a href="#method-summary"><code>pmcmc_parameters_nested$summary()</code></a></p></li>
 <li><p><a href="#method-initial"><code>pmcmc_parameters_nested$initial()</code></a></p></li>
 <li><p><a href="#method-prior"><code>pmcmc_parameters_nested$prior()</code></a></p></li>
@@ -163,9 +164,19 @@ you can do arbitrary transformations here.</p></dd>
 <h3 id="method-names-">Method <code><a href="https://rdrr.io/r/base/names.html" class="external-link">names()</a></code><a class="anchor" aria-label="anchor" href="#method-names-"></a></h3>
 <p>Return the names of the parameters</p><div class="section">
 <h4 id="usage-1">Usage<a class="anchor" aria-label="anchor" href="#usage-1"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters_nested</span><span class="op">$</span><span class="fu">names</span><span class="op">(</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters_nested</span><span class="op">$</span><span class="fu">names</span><span class="op">(</span>type <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></code></pre></div><p></p></div>
 </div>
 
+<div class="section">
+<h4 id="arguments-1">Arguments<a class="anchor" aria-label="anchor" href="#arguments-1"></a></h4>
+<p></p><div class="arguments"><dl><dt><code>type</code></dt>
+<dd><p>One of "both" (the default, all parameters),
+"fixed" (parameters that are shared across populations) or
+"varied" (parameters that vary over populations).</p></dd>
+
+
+</dl><p></p></div>
+</div>
 
 </div><p></p><hr><a id="method-populations"></a><div class="section">
 <h3 id="method-populations-">Method <code>populations()</code><a class="anchor" aria-label="anchor" href="#method-populations-"></a></h3>
@@ -175,29 +186,41 @@ you can do arbitrary transformations here.</p></dd>
 </div>
 
 
-</div><p></p><hr><a id="method-summary"></a><div class="section">
-<h3 id="method-summary-">Method <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code><a class="anchor" aria-label="anchor" href="#method-summary-"></a></h3>
-<p>Return a <code>data.frame</code> with information about
-parameters (name, min, max, discrete, fixed or varied).</p><div class="section">
+</div><p></p><hr><a id="method-validate"></a><div class="section">
+<h3 id="method-validate-">Method <code>validate()</code><a class="anchor" aria-label="anchor" href="#method-validate-"></a></h3>
+<p>Validate a parameter matrix.  This method
+checks that your matrix has the expected size (rows according
+to parameters, columns to populations) and if named that the
+names are exactly what is expected.  It also verifies that the
+fixed parameters are same across all populations.</p><div class="section">
 <h4 id="usage-3">Usage<a class="anchor" aria-label="anchor" href="#usage-3"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters_nested</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span>population <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters_nested</span><span class="op">$</span><span class="fu">validate</span><span class="op">(</span><span class="va">theta</span><span class="op">)</span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="arguments-1">Arguments<a class="anchor" aria-label="anchor" href="#arguments-1"></a></h4>
-<p></p><div class="arguments"><dl><dt><code>population</code></dt>
-<dd><p>Specifies which population to summarise. If <code>NULL</code>
-then returns a summary of each population as a list.</p></dd>
+<h4 id="arguments-2">Arguments<a class="anchor" aria-label="anchor" href="#arguments-2"></a></h4>
+<p></p><div class="arguments"><dl><dt><code>theta</code></dt>
+<dd><p>a parameter matrix</p></dd>
 
 
 </dl><p></p></div>
 </div>
 
+</div><p></p><hr><a id="method-summary"></a><div class="section">
+<h3 id="method-summary-">Method <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code><a class="anchor" aria-label="anchor" href="#method-summary-"></a></h3>
+<p>Return a <code>data.frame</code> with information about
+parameters (name, min, max, discrete, type (fixed or varied)
+and population)</p><div class="section">
+<h4 id="usage-4">Usage<a class="anchor" aria-label="anchor" href="#usage-4"></a></h4>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters_nested</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span><span class="op">)</span></code></pre></div><p></p></div>
+</div>
+
+
 </div><p></p><hr><a id="method-initial"></a><div class="section">
 <h3 id="method-initial-">Method <code>initial()</code><a class="anchor" aria-label="anchor" href="#method-initial-"></a></h3>
 <p>Return the initial parameter values as a named matrix with
-rows corresponding to populations and columns are parameters.</p><div class="section">
-<h4 id="usage-4">Usage<a class="anchor" aria-label="anchor" href="#usage-4"></a></h4>
+rows corresponding to parameters and columns to populations.</p><div class="section">
+<h4 id="usage-5">Usage<a class="anchor" aria-label="anchor" href="#usage-5"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters_nested</span><span class="op">$</span><span class="fu">initial</span><span class="op">(</span><span class="op">)</span></code></pre></div><p></p></div>
 </div>
 
@@ -206,12 +229,12 @@ rows corresponding to populations and columns are parameters.</p><div class="sec
 <h3 id="method-prior-">Method <code>prior()</code><a class="anchor" aria-label="anchor" href="#method-prior-"></a></h3>
 <p>Compute the prior(s) for a parameter matrix. Returns a
 named vector with names corresponding to populations.</p><div class="section">
-<h4 id="usage-5">Usage<a class="anchor" aria-label="anchor" href="#usage-5"></a></h4>
+<h4 id="usage-6">Usage<a class="anchor" aria-label="anchor" href="#usage-6"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters_nested</span><span class="op">$</span><span class="fu">prior</span><span class="op">(</span><span class="va">theta</span><span class="op">)</span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="arguments-2">Arguments<a class="anchor" aria-label="anchor" href="#arguments-2"></a></h4>
+<h4 id="arguments-3">Arguments<a class="anchor" aria-label="anchor" href="#arguments-3"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>theta</code></dt>
 <dd><p>a parameter matrix with columns in the same order as
 <code>$names()</code> and rows in the same order as <code>$populations()</code>.</p></dd>
@@ -226,16 +249,17 @@ named vector with names corresponding to populations.</p><div class="section">
 matrix and the variance-covariance matrices of the proposal
 kernels, discretises any discrete values, and reflects bounded
 parameters until they lie within <code>min</code>:<code>max</code>. Returns matrix with rows
-corresponding to populations and columns to parameters.</p><div class="section">
-<h4 id="usage-6">Usage<a class="anchor" aria-label="anchor" href="#usage-6"></a></h4>
+corresponding to parameters and columns to populations (i.e.,
+the same orientation as <code>theta</code>).</p><div class="section">
+<h4 id="usage-7">Usage<a class="anchor" aria-label="anchor" href="#usage-7"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters_nested</span><span class="op">$</span><span class="fu">propose</span><span class="op">(</span><span class="va">theta</span>, <span class="va">type</span>, scale <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="arguments-3">Arguments<a class="anchor" aria-label="anchor" href="#arguments-3"></a></h4>
+<h4 id="arguments-4">Arguments<a class="anchor" aria-label="anchor" href="#arguments-4"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>theta</code></dt>
-<dd><p>a parameter matrix with columns in the same order as
-<code>$names()</code> and rows in the same order as <code>$populations()</code>.</p></dd>
+<dd><p>a parameter matrix with rows in the same order as
+<code>$names()</code> and columns in the same order as <code>$populations()</code>.</p></dd>
 
 
 <dt><code>type</code></dt>
@@ -259,15 +283,15 @@ applied to the variance covariance matrix.</p></dd>
 <h3 id="method-model-">Method <code>model()</code><a class="anchor" aria-label="anchor" href="#method-model-"></a></h3>
 <p>Apply the model transformation function to a parameter
 matrix.</p><div class="section">
-<h4 id="usage-7">Usage<a class="anchor" aria-label="anchor" href="#usage-7"></a></h4>
+<h4 id="usage-8">Usage<a class="anchor" aria-label="anchor" href="#usage-8"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters_nested</span><span class="op">$</span><span class="fu">model</span><span class="op">(</span><span class="va">theta</span><span class="op">)</span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="arguments-4">Arguments<a class="anchor" aria-label="anchor" href="#arguments-4"></a></h4>
+<h4 id="arguments-5">Arguments<a class="anchor" aria-label="anchor" href="#arguments-5"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>theta</code></dt>
-<dd><p>a parameter matrix with columns in the same order as
-<code>$names()</code> and rows in the same order as <code>$populations()</code>.</p></dd>
+<dd><p>a parameter matrix with rows in the same order as
+<code>$names()</code> and columns in the same order as <code>$populations()</code>.</p></dd>
 
 
 </dl><p></p></div>
@@ -276,13 +300,18 @@ matrix.</p><div class="section">
 </div><p></p><hr><a id="method-fix"></a><div class="section">
 <h3 id="method-fix-">Method <code><a href="https://rdrr.io/r/utils/fix.html" class="external-link">fix()</a></code><a class="anchor" aria-label="anchor" href="#method-fix-"></a></h3>
 <p>Set some parameters to fixed values. Use this to
-reduce the dimensionality of your system.</p><div class="section">
-<h4 id="usage-8">Usage<a class="anchor" aria-label="anchor" href="#usage-8"></a></h4>
+reduce the dimensionality of your system.  Note that this function
+has an unfortunate name collision - we use "fixed" and "varied"
+parameters generally to refer to ones that are fixed across
+populations or which vary among populations.  However, in the
+context of this method "fixed" refers to parameters which will
+be set to a single value and no longer used in inference.</p><div class="section">
+<h4 id="usage-9">Usage<a class="anchor" aria-label="anchor" href="#usage-9"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters_nested</span><span class="op">$</span><span class="fu">fix</span><span class="op">(</span><span class="va">fixed</span><span class="op">)</span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="arguments-5">Arguments<a class="anchor" aria-label="anchor" href="#arguments-5"></a></h4>
+<h4 id="arguments-6">Arguments<a class="anchor" aria-label="anchor" href="#arguments-6"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>fixed</code></dt>
 <dd><p>a named vector of parameters to fix</p></dd>
 
@@ -296,12 +325,12 @@ reduce the dimensionality of your system.</p><div class="section">
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co">#Construct an object with two varied parameters, two fixed parameters,</span></span>
-<span class="r-in"><span class="co">#and two populations:</span></span>
-<span class="r-in"><span class="va">parameters</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="pmcmc_varied_parameter.html">pmcmc_varied_parameter</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"p1"</span>, <span class="st">"p2"</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span>,</span>
-<span class="r-in">                   <span class="fu"><a href="pmcmc_varied_parameter.html">pmcmc_varied_parameter</a></span><span class="op">(</span><span class="st">"b"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"p1"</span>, <span class="st">"p2"</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span>,</span>
-<span class="r-in">                   <span class="fu"><a href="pmcmc_parameter.html">pmcmc_parameter</a></span><span class="op">(</span><span class="st">"c"</span>, <span class="fl">3</span><span class="op">)</span>,</span>
-<span class="r-in">                   <span class="fu"><a href="pmcmc_parameter.html">pmcmc_parameter</a></span><span class="op">(</span><span class="st">"d"</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co"># Construct an object with two varied parameters ('a' and 'b'),</span></span>
+<span class="r-in"><span class="co"># two fixed parameters ('c' and 'd') and two populations ('p1' and 'p2')</span></span>
+<span class="r-in"><span class="va">parameters</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="pmcmc_varied_parameter.html">pmcmc_varied_parameter</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"p1"</span>, <span class="st">"p2"</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span>,</span>
+<span class="r-in">                   <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="pmcmc_varied_parameter.html">pmcmc_varied_parameter</a></span><span class="op">(</span><span class="st">"b"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"p1"</span>, <span class="st">"p2"</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span>,</span>
+<span class="r-in">                   <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="pmcmc_parameter.html">pmcmc_parameter</a></span><span class="op">(</span><span class="st">"c"</span>, <span class="fl">3</span><span class="op">)</span>,</span>
+<span class="r-in">                   <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="pmcmc_parameter.html">pmcmc_parameter</a></span><span class="op">(</span><span class="st">"d"</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span>
 <span class="r-in"><span class="va">proposal_fixed</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span>
 <span class="r-in"><span class="va">proposal_varied</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span></span>
 <span class="r-in"><span class="va">pars</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="va">pmcmc_parameters_nested</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">parameters</span>, <span class="va">proposal_varied</span>,</span>
@@ -310,36 +339,51 @@ reduce the dimensionality of your system.</p><div class="section">
 <span class="r-in"><span class="co"># Initial parameters</span></span>
 <span class="r-in"><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">pars</span><span class="op">$</span><span class="fu">initial</span><span class="op">(</span><span class="op">)</span></span>
 <span class="r-in"><span class="va">p</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    a b c d</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> p1 2 2 3 4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> p2 2 2 3 4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   p1 p2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> a  2  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> b  2  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> c  3  3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> d  4  4</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># Propose a new parameter point</span></span>
 <span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">propose</span><span class="op">(</span><span class="va">p</span>, type <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           a         b        c        d</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> p1 1.462202 3.1571620 4.085036 4.735019</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> p2 3.191420 0.9243176 4.085036 4.735019</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          p1        p2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> a 3.0160069 1.5768464</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> b 0.9848356 0.8862935</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> c 2.8581540 2.8581540</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> d 3.7762063 3.7762063</span>
+<span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">propose</span><span class="op">(</span><span class="va">p</span>, type <span class="op">=</span> <span class="st">"fixed"</span><span class="op">)</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         p1       p2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> a 2.000000 2.000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> b 2.000000 2.000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> c 4.099558 4.099558</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> d 5.210233 5.210233</span>
+<span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">propose</span><span class="op">(</span><span class="va">p</span>, type <span class="op">=</span> <span class="st">"varied"</span><span class="op">)</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         p1       p2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> a 2.901531 1.825804</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> b 1.450049 2.014791</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> c 3.000000 3.000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> d 4.000000 4.000000</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># Information about parameters:</span></span>
 <span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">names</span><span class="op">(</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "a" "b" "c" "d"</span>
+<span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">names</span><span class="op">(</span><span class="st">"fixed"</span><span class="op">)</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "c" "d"</span>
+<span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">names</span><span class="op">(</span><span class="st">"varied"</span><span class="op">)</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "a" "b"</span>
 <span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $p1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   name  min max discrete   type</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    a -Inf Inf    FALSE varied</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    b -Inf Inf    FALSE varied</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3    c -Inf Inf    FALSE  fixed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4    d -Inf Inf    FALSE  fixed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $p2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   name  min max discrete   type</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    a -Inf Inf    FALSE varied</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    b -Inf Inf    FALSE varied</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3    c -Inf Inf    FALSE  fixed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4    d -Inf Inf    FALSE  fixed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   name  min max discrete   type population</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    a -Inf Inf    FALSE varied         p1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    b -Inf Inf    FALSE varied         p1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    c -Inf Inf    FALSE  fixed         p1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    d -Inf Inf    FALSE  fixed         p1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5    a -Inf Inf    FALSE varied         p2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6    b -Inf Inf    FALSE varied         p2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7    c -Inf Inf    FALSE  fixed         p2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8    d -Inf Inf    FALSE  fixed         p2</span>
 <span class="r-in"></span>
-<span class="r-in"><span class="co"># Compute prior</span></span>
+<span class="r-in"><span class="co"># Compute log prior probability, per population</span></span>
 <span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">prior</span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> p1 p2 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  0  0 </span>

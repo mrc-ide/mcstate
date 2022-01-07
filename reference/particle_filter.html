@@ -19,7 +19,7 @@ interface will be implemented later."><meta property="og:image" content="/logo.p
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.7.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.0</span>
       </span>
     </div>
 
@@ -94,6 +94,14 @@ re-bound)</p></dd>
 
 <dt><code>n_particles</code></dt>
 <dd><p>Number of particles used (read only)</p></dd>
+
+
+<dt><code>nested</code></dt>
+<dd><p>Logical, indicating if this is a nested
+(multipopulation) particle filter (read only).  If <code>TRUE</code>, then
+each call to <code>run</code> returns a vector of log-likelihoods,
+one per population.  Triggered by the <code>data</code> argument to
+the constructor.</p></dd>
 
 
 </dl><p></p></div>
@@ -280,7 +288,11 @@ from the filter. This is primarily intended for use with
 will certainly be rejected. Only suitable for use where
 log-likelihood increments (with the <code>compare</code> function) are always
 negative. This is the case if you use a normalised discrete
-distribution, but not necessarily otherwise.</p></dd>
+distribution, but not necessarily otherwise. If using a nested
+filter this can be a single number (in which case the exit is
+when the sum of log-likelihoods drops below this threshhold) or
+a vector of numbers the same length as <code>pars</code> (in which case exit
+occurs when all numbers drop below this threshhold).</p></dd>
 
 
 </dl><p></p></div>
@@ -497,7 +509,7 @@ requested (based on environment variables and OpenMP support).</p></dd>
 <span class="r-in"><span class="co"># Construct the particle_filter object with 100 particles</span></span>
 <span class="r-in"><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">particle_filter</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">data</span>, <span class="va">gen</span>, <span class="fl">100</span>, <span class="va">compare</span><span class="op">)</span></span>
 <span class="r-in"><span class="va">p</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span>save_history <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -16957.57</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -16624.21</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># Our simulated trajectories, with the "real" data superimposed</span></span>
 <span class="r-in"><span class="va">history</span> <span class="op">&lt;-</span> <span class="va">p</span><span class="op">$</span><span class="fu">history</span><span class="op">(</span><span class="op">)</span></span>
