@@ -91,7 +91,7 @@ particle_filter_data <- function(data, time, rate, initial_time = NULL,
     time_end <- time_split[[1]]
   }
 
-  assert_integer(time_end, name = sprintf('data$%s', time))
+  assert_integer(time_end, name = sprintf("data$%s", time))
   if (!all(diff(time_end) == 1)) {
     ## It's possible that we can make this work ok for irregular time
     ## units, but we make this assumption below when working out the
