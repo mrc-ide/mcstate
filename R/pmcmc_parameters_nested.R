@@ -9,12 +9,12 @@
 ##'
 ##' @export
 ##' @examples
-##' #Construct an object with two varied parameters, two fixed parameters,
-##' #and two populations:
-##' parameters <- list(pmcmc_varied_parameter("a", c("p1", "p2"), 2),
-##'                    pmcmc_varied_parameter("b", c("p1", "p2"), 2),
-##'                    pmcmc_parameter("c", 3),
-##'                    pmcmc_parameter("d", 4))
+##' # Construct an object with two varied parameters ('a' and 'b'),
+##' # two fixed parameters ('c' and 'd') and two populations ('p1' and 'p2')
+##' parameters <- list(mcstate::pmcmc_varied_parameter("a", c("p1", "p2"), 2),
+##'                    mcstate::pmcmc_varied_parameter("b", c("p1", "p2"), 2),
+##'                    mcstate::pmcmc_parameter("c", 3),
+##'                    mcstate::pmcmc_parameter("d", 4))
 ##' proposal_fixed <- diag(2)
 ##' proposal_varied <- diag(2) + 1
 ##' pars <- mcstate::pmcmc_parameters_nested$new(parameters, proposal_varied,
@@ -26,12 +26,16 @@
 ##'
 ##' # Propose a new parameter point
 ##' pars$propose(p, type = "both")
+##' pars$propose(p, type = "fixed")
+##' pars$propose(p, type = "varied")
 ##'
 ##' # Information about parameters:
 ##' pars$names()
+##' pars$names("fixed")
+##' pars$names("varied")
 ##' pars$summary()
 ##'
-##' # Compute prior
+##' # Compute log prior probability, per population
 ##' pars$prior(p)
 ##'
 ##' # Transform data for your model
@@ -41,14 +45,11 @@ pmcmc_parameters_nested <- R6::R6Class(
   cloneable = FALSE,
 
   private = list(
-    fixed_parameters = list(),
-    varied_parameters = list(),
+    parameters = NULL,
+    proposal_kernel = NULL,
     transform = NULL,
-    param_names = NULL,
-    pops = NULL,
-    parameters = list(),
-    kernel_varied = NULL,
-    kernel_fixed = NULL
+    inner = NULL,
+    population_names = NULL
   ),
 
   public = list(
@@ -83,133 +84,123 @@ pmcmc_parameters_nested <- R6::R6Class(
     initialize = function(parameters, proposal_varied = NULL,
                           proposal_fixed = NULL, populations = NULL,
                           transform = NULL) {
+      parameters <- ppn_validate_parameters(parameters)
+      populations <- ppn_validate_populations(parameters, populations)
+      proposal_kernel <- ppn_validate_proposals(parameters, proposal_varied,
+                                                proposal_fixed)
+      transform <- ppn_validate_transform(transform, populations)
 
-      # original format required for `fix`
+      inner <- list()
+      if (!is.null(parameters$fixed)) {
+        inner$fixed <-
+          pmcmc_parameters$new(parameters$fixed, proposal_kernel$fixed)
+      }
+
+      if (!is.null(parameters$varied)) {
+        make_p <- function(p) {
+          pmcmc_parameters$new(
+            lapply(parameters$varied, "[[", p),
+            array_drop(proposal_kernel$varied[, , p, drop = FALSE], 3))
+        }
+        inner$varied <- set_names(lapply(populations, make_p), populations)
+      }
+
       private$parameters <- parameters
-
-      parameters <- clean_parameters(parameters,
-                                     proposal_varied, proposal_fixed)
-
-      if (is.null(populations)) {
-        if (is.null(proposal_varied)) {
-          stop("Either varied parameters must be included in 'parameters' or
-          'populations' must be non-NULL")
-        } else {
-          populations <- parameters$pop
-        }
-      }
-
-      private$pops <- populations
-
-      kernels <- clean_proposals(proposal_varied, proposal_fixed,
-                                 populations, parameters$names)
-      private$kernel_varied <- kernels$varied
-      private$kernel_fixed <- kernels$fixed
-
-      private$param_names <- parameters$names
-
-      # create pmcmc_parameters
-      if (!is.null(kernels$fixed)) {
-        private$fixed_parameters <-
-          pmcmc_parameters$new(parameters$fixed, kernels$fixed)
-      }
-
-      if (!is.null(kernels$varied)) {
-        private$varied_parameters <- vector("list", length(populations))
-        names(private$varied_parameters) <- populations
-        for (i in seq_along(populations)) {
-          kernel <- kernels$varied[, , i]
-          # catch for dropping on numeric
-          if (!inherits(kernel, "matrix")) {
-            kernel <- as.matrix(kernel)
-          }
-          private$varied_parameters[[i]] <-
-            pmcmc_parameters$new(
-              lapply(parameters$varied, "[[", populations[[i]]), kernel)
-        }
-      }
-
-      # transform function
-      if (is.null(transform)) {
-        private$transform <- function(x) apply(x, 1, as.list)
-      } else {
-        private$transform <- assert_is(transform, "function")
-      }
-
-      invisible(self)
+      private$population_names <- populations
+      private$proposal_kernel <- proposal_kernel
+      private$inner <- inner
+      private$transform <- transform
     },
 
     ##' @description Return the names of the parameters
-    names = function() {
-      private$param_names$original
+    ##'
+    ##' @param type One of "both" (the default, all parameters),
+    ##'   "fixed" (parameters that are shared across populations) or
+    ##'   "varied" (parameters that vary over populations).
+    names = function(type = "both") {
+      type <- match_value(type, c("both", "fixed", "varied"))
+      names(private$parameters[[type]])
     },
 
     ##' @description Return the names of the populations
     populations = function() {
-      private$pops
+      private$population_names
+    },
+
+    ##' @description Validate a parameter matrix.  This method
+    ##' checks that your matrix has the expected size (rows according
+    ##' to parameters, columns to populations) and if named that the
+    ##' names are exactly what is expected.  It also verifies that the
+    ##' fixed parameters are same across all populations.
+    ##'
+    ##' @param theta a parameter matrix
+    validate = function(theta) {
+      expected <- list(parameters = self$names(),
+                       populations = self$populations())
+      assert_dimensions(theta, lengths(expected, FALSE))
+      theta <- assert_dimnames(theta, expected)
+
+      i <- self$names("fixed")
+      if (!all(theta[i, ] == theta[i, 1])) {
+        stop("Fixed parameters are not everywhere fixed")
+      }
+
+      theta
     },
 
     ##' @description Return a `data.frame` with information about
-    ##' parameters (name, min, max, discrete, fixed or varied).
-    ##'
-    ##' @param population Specifies which population to summarise. If `NULL`
-    ##' then returns a summary of each population as a list.
-    summary = function(population = NULL) {
-      summarise_population <- function(population) {
-        if (!(population %in% self$populations())) {
-          stop(sprintf("Expected 'population' in %s",
-                       str_collapse(self$populations())))
-        }
-        type <- rep("fixed", length(self$names()))
-        type[self$names() %in% private$param_names$varied] <- "varied"
-
-        data_frame(
-          name = self$names(),
-          min = get_inner_params("min", population, private),
-          max = get_inner_params("max", population, private),
-          discrete = get_inner_params("discrete", population, private),
-          type = type
-        )
+    ##' parameters (name, min, max, discrete, type (fixed or varied)
+    ##' and population)
+    summary = function() {
+      populations <- self$populations()
+      fixed <- varied <- NULL
+      if (length(self$names("fixed")) > 0) {
+        fixed <- private$inner$fixed$summary()
+        fixed <- cbind(
+          fixed[rep(seq_len(nrow(fixed)), length(populations)), ],
+          type = "fixed",
+          population = rep(populations, each = nrow(fixed)),
+          stringsAsFactors = FALSE)
       }
 
-      if (is.null(population)) {
-        sum <- lapply(self$populations(), summarise_population)
-        names(sum) <- self$populations()
-        sum
-      } else {
-        summarise_population(population)
+      if (length(self$names("varied")) > 0) {
+        varied <- lapply(private$inner$varied, function(x) x$summary())
+        varied <- cbind(
+          do.call("rbind", varied),
+          type = "varied",
+          population = rep(populations, each = nrow(varied[[1]])),
+          stringsAsFactors = FALSE)
       }
+
+      ret <- rbind(fixed, varied)
+      i <- order(match(ret$population, populations),
+                 match(ret$name, self$names()))
+      ret <- ret[i, ]
+      rownames(ret) <- NULL
+      ret
     },
 
     ##' @description Return the initial parameter values as a named matrix with
-    ##' rows corresponding to populations and columns are parameters.
+    ##' rows corresponding to parameters and columns to populations.
     initial = function() {
-
-      varied_params <- private$param_names$varied
-      fixed_params <- private$param_names$fixed
       pops <- self$populations()
+      nms <- self$names()
+      ret <- matrix(NA_real_, length(nms), length(pops),
+                    dimnames = list(nms, pops))
 
-      if (length(varied_params) > 0) {
-        varied <- matrix(vapply(private$varied_parameters,
-                                function(x) x$initial(),
-                                numeric(length(varied_params))),
-                         ncol = length(pops),
-                         nrow = length(private$param_names$varied),
-                         dimnames = list(varied_params, pops))
-      } else {
-        varied <- NULL
+      nms_varied <- self$names("varied")
+      if (length(nms_varied) > 0) {
+        ret[nms_varied, ] <-
+          vapply(private$inner$varied, function(p) p$initial(),
+                 numeric(length(nms_varied)))
       }
 
-      if (length(fixed_params) > 0) {
-        fixed <- private$fixed_parameters$initial()
-        fixed <- matrix(fixed, length(fixed_params), length(pops),
-                        dimnames = list(fixed_params, pops))
-      } else {
-        fixed <- NULL
+      nms_fixed <- self$names("fixed")
+      if (length(nms_fixed) > 0) {
+        ret[nms_fixed, ] <- private$inner$fixed$initial()
       }
 
-      init <- t(rbind(fixed, varied))
-      init[, match(self$names(), colnames(init)), drop = FALSE]
+      ret
     },
 
     ##' @description Compute the prior(s) for a parameter matrix. Returns a
@@ -218,40 +209,33 @@ pmcmc_parameters_nested <- R6::R6Class(
     ##' @param theta a parameter matrix with columns in the same order as
     ##' `$names()` and rows in the same order as `$populations()`.
     prior = function(theta) {
+      theta <- self$validate(theta)
       pops <- self$populations()
-      priors <- numeric(nrow(theta))
-      names(priors) <- names(priors)
+      ret <- set_names(rep(0, length(pops)), pops)
 
-      if (length(private$fixed_parameters) > 0) {
-        ## as theta is same in all populations for fixed, 1 chosen arbitrarily
-        lp_fix <- private$fixed_parameters$prior(
-          theta[1, private$param_names$fixed])
-        # rep isn't necessary because of built-in sum vectorisation but it
-        #   catches the no-varied case (same as names)
-        lp_fix <- set_names(rep(lp_fix, length(pops)), pops)
-      } else {
-        lp_fix <- 0
+      nms_fixed <- self$names("fixed")
+      if (length(nms_fixed) > 0) {
+        ret <- ret + private$inner$fixed$prior(theta[nms_fixed, 1])
       }
 
-      if (length(private$varied_parameters) > 0) {
-        lp_vary <- vnapply(pops,
-                           function(x) private$varied_parameters[[x]]$prior(
-                             theta[x, private$param_names$varied]))
-      } else {
-        lp_vary <- 0
+      nms_varied <- self$names("varied")
+      if (length(nms_varied) > 0) {
+        ret <- ret + vnapply(pops, function(x)
+          private$inner$varied[[x]]$prior(theta[nms_varied, x]))
       }
 
-      lp_fix + lp_vary
+      ret
     },
 
     ##' @description This proposes a new parameter matrix given your current
     ##' matrix and the variance-covariance matrices of the proposal
     ##' kernels, discretises any discrete values, and reflects bounded
     ##' parameters until they lie within `min`:`max`. Returns matrix with rows
-    ##' corresponding to populations and columns to parameters.
+    ##' corresponding to parameters and columns to populations (i.e.,
+    ##' the same orientation as `theta`).
     ##'
-    ##' @param theta a parameter matrix with columns in the same order as
-    ##' `$names()` and rows in the same order as `$populations()`.
+    ##' @param theta a parameter matrix with rows in the same order as
+    ##' `$names()` and columns in the same order as `$populations()`.
     ##'
     ##' @param type specifies which type of parameters should be proposed,
     ##' either fixed parameters only ("fixed"), varied only ("varied"), or
@@ -263,31 +247,21 @@ pmcmc_parameters_nested <- R6::R6Class(
     ##' points. The parameter is equivalent to a multiplicative factor
     ##' applied to the variance covariance matrix.
     propose = function(theta, type, scale = 1) {
-      stopifnot(type %in% c("both", "varied", "fixed"))
+      theta <- self$validate(theta)
+      type <- match_value(type, c("both", "varied", "fixed"))
 
-      fix_params <- private$param_names$fixed
-      var_params <- private$param_names$varied
-
-      nok <- (type == "fixed" && length(fix_params) == 0) ||
-        (type == "varied" && length(var_params) == 0)
-      if (nok) {
-        stop("Requested proposal that doesn't exist.")
+      nms_fixed <- self$names("fixed")
+      if (type %in% c("fixed", "both") && length(nms_fixed) > 0) {
+        theta[nms_fixed, ] <-
+          private$inner$fixed$propose(theta[nms_fixed, 1], scale)
       }
 
-      # arbitrarily select first population as both same
-      stopifnot(length(unique(theta[, fix_params])) == length(fix_params))
-      if (type %in% c("fixed", "both") && length(fix_params) > 0) {
-        theta[, fix_params] <-
-          matrix(private$fixed_parameters$propose(theta[1, fix_params], scale),
-                 nrow = length(self$populations()),
-                 ncol = length(fix_params), byrow = TRUE)
-      }
-
-      if (type %in% c("varied", "both") && length(var_params) > 0) {
-        theta[, var_params] <-
-          t(vapply(self$populations(), function(x) {
-            private$varied_parameters[[x]]$propose(theta[x, var_params], scale)
-          }, numeric(length(var_params))))
+      nms_varied <- self$names("varied")
+      if (type %in% c("varied", "both") && length(nms_varied) > 0) {
+        theta[nms_varied, ] <-
+          vapply(self$populations(), function(x)
+            private$inner$varied[[x]]$propose(theta[nms_varied, x], scale),
+            numeric(length(nms_varied)))
       }
 
       theta
@@ -296,240 +270,249 @@ pmcmc_parameters_nested <- R6::R6Class(
     ##' @description Apply the model transformation function to a parameter
     ##' matrix.
     ##'
-    ##' @param theta a parameter matrix with columns in the same order as
-    ##' `$names()` and rows in the same order as `$populations()`.
+    ##' @param theta a parameter matrix with rows in the same order as
+    ##' `$names()` and columns in the same order as `$populations()`.
     model = function(theta) {
-      unname(private$transform(theta))
+      nested_transform(self$validate(theta), private$transform)
     },
 
     ##' @description Set some parameters to fixed values. Use this to
-    ##' reduce the dimensionality of your system.
+    ##' reduce the dimensionality of your system.  Note that this function
+    ##' has an unfortunate name collision - we use "fixed" and "varied"
+    ##' parameters generally to refer to ones that are fixed across
+    ##' populations or which vary among populations.  However, in the
+    ##' context of this method "fixed" refers to parameters which will
+    ##' be set to a single value and no longer used in inference.
     ##'
     ##' @param fixed a named vector of parameters to fix
     fix = function(fixed) {
-      assert_is(fixed, "matrix")
-      if (is.null(rownames(fixed)) || is.null(colnames(fixed))) {
-        stop("'fixed' should have rownames (populations) and colnames
-             (parameters)")
-      }
+      populations <- self$populations()
+      fixed <- ppn_validate_fix(fixed, populations,
+                                self$names("fixed"), self$names("varied"))
 
-      param_names <- private$param_names$original
-      pops <- self$populations()
+      i_fixed <- setdiff(self$names("fixed"), rownames(fixed))
+      i_varied <- setdiff(self$names("varied"), rownames(fixed))
+      i_keep <- setdiff(self$names(), rownames(fixed))
 
-      if (any(is.na(match(rownames(fixed), pops)))) {
-        stop("Rownames of 'fixed' should be identical to '$populations'")
-      }
+      parameters <- private$parameters$both[i_keep]
 
-      idx_fixed <- match(colnames(fixed), param_names)
-      if (any(is.na(idx_fixed))) {
-        stop("Fixed parameters not found in model: ",
-             paste(squote(colnames(fixed)[is.na(idx_fixed)]), collapse = ", "))
-      }
-      if (length(idx_fixed) == length(param_names)) {
-        stop("Cannot fix all parameters")
-      }
-      idx_vary <- setdiff(seq_along(param_names), idx_fixed)
-
-      base <- matrix(NA_real_, nrow = length(pops), ncol = length(param_names),
-                     dimnames = list(pops, param_names))
-      base[, idx_fixed] <- fixed
-      base_transform <- private$transform
-
-      idfix_fixed <- match(colnames(fixed), private$param_names$fixed)
-      idfix_varied <- setdiff(seq_along(private$param_names$fixed),
-                              idfix_fixed)
-      idvar_fixed <- match(colnames(fixed), private$param_names$varied)
-      idvar_varied <- setdiff(seq_along(private$param_names$varied),
-                              idvar_fixed)
-      if (length(idfix_varied) > 0) {
-        proposal_fixed <- private$kernel_fixed[idfix_varied,
-                                               idfix_varied,
-                                               drop = FALSE]
+      if (length(i_fixed) > 0) {
+        proposal_fixed <-
+          private$proposal_kernel$fixed[i_fixed, i_fixed, drop = FALSE]
       } else {
         proposal_fixed <- NULL
       }
 
-      if (length(idvar_varied) > 0) {
-        idvars <- match(private$param_names$varied,
-                        private$param_names$original)
-        proposal_varied <- private$kernel_varied
-        proposal_varied <- proposal_varied[idvar_varied, idvar_varied, ,
-                                           drop = FALSE]
+      if (length(i_varied) > 0) {
+        proposal_varied <-
+          private$proposal_kernel$varied[i_varied, i_varied, , drop = FALSE]
       } else {
         proposal_varied <- NULL
       }
 
-      transform <- function(p) {
-        base[, idx_vary] <- p
-        base_transform(base)
+      ## The transform management is hardest; need to provide a *list*
+      ## of functions, one per population.
+      make_transform <- function(pop) {
+        base <- base[, pop, drop = TRUE]
+        base_transform <- private$transform[[pop]]
+        function(p) {
+          base[i_keep] <- p
+          base_transform(base)
+        }
       }
+      base <- matrix(NA_real_, length(self$names()), length(populations),
+                     dimnames = list(self$names(), populations))
+      base[rownames(fixed), ] <- fixed
+      transform <- set_names(lapply(populations, make_transform), populations)
 
-      pmcmc_parameters_nested$new(private$parameters[idx_vary],
+      pmcmc_parameters_nested$new(parameters,
                                   proposal_varied, proposal_fixed,
-                                  self$populations(), transform)
+                                  populations, transform)
     }
   ))
 
 
-clean_parameters <- function(parameters, proposal_varied, proposal_fixed) {
+## There are a great many things that have to align here, so we do
+## them all at once so that it's not too boring.
+ppn_validate_parameters <- function(parameters) {
   assert_is(parameters, "list")
   if (length(parameters) == 0) {
     stop("At least one parameter is required")
   }
 
-  type <- c("pmcmc_parameter", "pmcmc_varied_parameter")
-  ok <- vlapply(parameters, inherits, type)
-  if (!all(ok)) {
-    stop(sprintf(
-      "Expected all elements of '...' to be '%s' objects",
-      str_collapse(type)
-    ))
-  }
+  assert_list_of(parameters, c("pmcmc_parameter", "pmcmc_varied_parameter"))
 
-  varied <- vlapply(parameters, inherits, "pmcmc_varied_parameter")
-  fixed_parameters <- parameters[!varied]
-  varied_parameters <- parameters[varied]
-  # convert empty list to NULL
-  if (!length(fixed_parameters)) {
-    fixed_parameters <- NULL
-  } else {
-    if (is.null(proposal_fixed)) {
-      stop("'proposal_fixed' not supplied for fixed parameters")
-    }
-  }
-  if (!length(varied_parameters)) {
-    varied_parameters <- NULL
-  } else {
-    if (is.null(proposal_varied)) {
-      stop("'proposal_varied' not supplied for fixed parameters")
-    }
-  }
+  is_varied <- vlapply(parameters, inherits, "pmcmc_varied_parameter")
 
-  # check fixed and varied names separately
-  fix_nms <- vcapply(fixed_parameters, "[[", "name", USE.NAMES = FALSE)
+  fixed <- ppn_validate_parameters_fixed(parameters[!is_varied])
+  varied <- ppn_validate_parameters_varied(parameters[is_varied])
 
-  # only need to get the name of the first population as internally asserted
-  var_nms <- vcapply(varied_parameters, function(x) x[[1]]$name[1],
-                     USE.NAMES = FALSE)
-  nms <- c(fix_nms, var_nms)
+  nms <- character(length(parameters))
+  nms[!is_varied] <- names(fixed)
+  nms[is_varied] <- names(varied)
+
   dups <- nms[duplicated(nms)]
   if (length(dups) > 0L) {
     stop("Duplicate parameter names: ",
          paste(squote(unique(dups)), collapse = ", "))
   }
 
-  # store both original ordering and separated fixed/varied for reference
-  orig_nms <- character(length(nms))
-  orig_nms[!varied] <- fix_nms
-  orig_nms[varied] <- var_nms
+  names(parameters) <- nms
 
-  if (!is.null(fixed_parameters)) {
-    if (!is.null(names(fixed_parameters)) &&
-        !identical(fix_nms, names(fixed_parameters))) {
-      stop("Fixed parameters are named, but the names do not match
-      parameters")
-    }
-    names(fixed_parameters) <- fix_nms
-  }
-
-  if (!is.null(varied_parameters)) {
-    if (!is.null(names(varied_parameters)) &&
-        !identical(var_nms, names(varied_parameters))) {
-      stop("Varied parameters are named, but the names do not match
-            parameters.")
-    }
-    names(varied_parameters) <- var_nms
-
-    populations <- names(varied_parameters[[1]])
-    ok <- vlapply(varied_parameters,
-                  function(x) identical(names(x), populations))
-    if (!all(ok)) {
-      stop("Populations and ordering of varied parameters should be
-            identical")
-    }
-  } else {
-    populations <- NULL
-  }
-
-  list(fixed = fixed_parameters, varied = varied_parameters, pop = populations,
-       names = list(fixed = fix_nms, varied = var_nms, original = orig_nms))
+  list(both = parameters, fixed = fixed, varied = varied)
 }
 
 
-clean_proposals <- function(proposal_varied, proposal_fixed, populations,
-                            params) {
+ppn_validate_parameters_fixed <- function(parameters) {
+  if (length(parameters) == 0) {
+    return(NULL)
+  }
+  nms <- vcapply(parameters, "[[", "name", USE.NAMES = FALSE)
+  if (!is.null(names(parameters)) && !identical(nms, names(parameters))) {
+    stop("Fixed parameters are named, but the names do not match parameters")
+  }
+  names(parameters) <- nms
+  parameters
+}
 
-  if (!is.null(proposal_varied)) {
-    len_varied <- length(params$varied)
+
+ppn_validate_parameters_varied <- function(parameters) {
+  if (length(parameters) == 0) {
+    return(NULL)
+  }
+
+  ## only need to get the name of the first population as internally asserted
+  nms <- vcapply(parameters, function(x) x[[1]]$name[1], USE.NAMES = FALSE)
+
+  if (!is.null(names(parameters)) && !identical(nms, names(parameters))) {
+    stop("Varied parameters are named, but the names do not match parameters")
+  }
+  names(parameters) <- nms
+
+  populations <- lapply(parameters, function(x) names(x))
+  ok <- vlapply(populations[-1], function(x) identical(x, populations[[1]]))
+  if (!all(ok)) {
+    stop("Populations and ordering of varied parameters must be identical")
+  }
+
+  parameters
+}
+
+
+ppn_validate_populations <- function(parameters, populations) {
+  if (is.null(populations)) {
+    if (is.null(parameters$varied)) {
+      stop(paste("Either varied parameters must be included in",
+                 "'parameters' or 'populations' must be non-NULL"))
+    }
+    populations <- names(parameters$varied[[1]])
+  } else if (!is.null(parameters$varied)) {
+    if (!identical(names(parameters$varied[[1]]), populations)) {
+      stop("'population' does not match varied parameters")
+    }
+  }
+  populations
+}
+
+
+ppn_validate_proposals <- function(parameters, proposal_varied,
+                                   proposal_fixed) {
+  if (is.null(parameters$varied)) {
+    if (!is.null(proposal_varied)) {
+      stop("'proposal_varied' supplied, but no varied parameters")
+    }
+  } else {
+    if (is.null(proposal_varied)) {
+      stop("'proposal_varied' not supplied for varied parameters")
+    }
+    populations <- names(parameters$varied[[1]])
+    len_varied <- length(parameters$varied)
     len_pop <- length(populations)
-    dim_names_var <- dimnames(proposal_varied)
-
-    assert_is(proposal_varied, c("array", "matrix"))
-
-    if (is.na(dim(proposal_varied)[3])) {
+    if (is.matrix(proposal_varied)) {
+      assert_dimensions(proposal_varied, c(len_varied, len_varied))
       proposal_varied <- array(proposal_varied,
-                               dim = c(dim(proposal_varied), len_pop))
+                               dim = c(len_varied, len_varied, len_pop))
+    } else {
+      assert_is(proposal_varied, "array")
+      assert_dimensions(proposal_varied, c(len_varied, len_varied, len_pop))
     }
-
-    if (!identical(dim(proposal_varied), c(len_varied, len_varied, len_pop))) {
-      stop(sprintf(
-        "Expected proposal array with dimensions %d x %d x %d",
-        len_varied, len_varied, len_pop))
-    }
-
-    if (length(dim_names_var) == 3) {
-      if (!identical(dim_names_var[[3]], populations)) {
-        stop("Expected 3rd dimension names of 'proposal' to match
-        populations")
-      }
-    }
-    dimnames(proposal_varied)[3] <- list(populations)
-
-    if (!is.null(dim_names_var[[1]]) || !is.null(dim_names_var[[2]])) {
-      ok <- identical(dim_names_var[[1]], params$varied) &&
-        identical(dim_names_var[[2]], params$varied)
-      if (!ok) {
-        stop("Expected row and column names of 'proposal_varied' to match
-        varied parameters")
-      }
-    }
-    dimnames(proposal_varied)[1:2] <- list(params$varied, params$varied)
+    proposal_varied <- assert_dimnames(
+      proposal_varied,
+      list(parameters = names(parameters$varied),
+           parameters = names(parameters$varied),
+           populations = populations))
   }
 
-  # minimal checks for fixed proposals as these will be passed to constructors
-  if (!is.null(proposal_fixed)) {
-    dim_names_fix <- dimnames(proposal_fixed)
+  if (is.null(parameters$fixed)) {
+    if (!is.null(proposal_fixed)) {
+      stop("'proposal_fixed' supplied, but no fixed parameters")
+    }
+  } else {
+    if (is.null(proposal_fixed)) {
+      stop("'proposal_fixed' not supplied for fixed parameters")
+    }
+    len_fixed <- length(parameters$fixed)
     assert_is(proposal_fixed, "matrix")
-    if (!is.null(dim_names_fix[[1]]) || !is.null(dim_names_fix[[2]])) {
-      ok <- identical(dim_names_fix[[1]], params$fixed) &&
-        identical(dim_names_fix[[2]], params$fixed)
-      if (!ok) {
-        stop("Expected row and column names of 'proposal_fixed' to match
-        fixed parameters")
-      }
-    }
-    dimnames(proposal_fixed)[1:2] <- list(params$fixed, params$fixed)
+    assert_dimensions(proposal_fixed, c(len_fixed, len_fixed))
+    proposal_fixed <- assert_dimnames(
+      proposal_fixed,
+      list(parameters = names(parameters$fixed),
+           parameters = names(parameters$fixed)))
   }
-
-
 
   list(fixed = proposal_fixed, varied = proposal_varied)
 }
 
-get_inner_params <- function(param, population, private) {
-  if (length(private$fixed_parameters) > 0) {
-    fixed <- r6_private(private$fixed_parameters)[[param]]
-    names(fixed) <- private$param_names$fixed
+
+ppn_validate_transform <- function(transform, populations) {
+  if (is.null(transform)) {
+    transform <- as.list
+  }
+  if (is.function(transform)) {
+    transform <- set_names(rep(list(transform), length(populations)),
+                           populations)
   } else {
-    fixed <- NULL
+    assert_list_of(transform, "function")
+    if (!identical(names(transform), populations)) {
+      stop("If 'transform' is a list, its names must be the populations")
+    }
+  }
+  transform
+}
+
+
+ppn_validate_fix <- function(fixed, populations, names_fixed, names_varied) {
+  assert_is(fixed, "matrix")
+  names_all <- c(names_fixed, names_varied)
+  if (!identical(colnames(fixed), populations)) {
+    stop("colnames of 'fixed' must be identical to '$populations()'")
+  }
+  if (is.null(rownames(fixed))) {
+    stop("'fixed' must have rownames (parameters)")
+  }
+  err <- setdiff(rownames(fixed), names_all)
+  if (length(err) > 0) {
+    stop("Fixed parameters not found in model: ",
+         paste(squote(err), collapse = ", "))
+  }
+  if (anyDuplicated(rownames(fixed))) {
+    stop("Duplicate fixed parameters")
+  }
+  if (nrow(fixed) == length(names_all)) {
+    stop("Cannot fix all parameters")
   }
 
-  if (length(private$varied_parameters) > 0) {
-    varied <- r6_private(private$varied_parameters[[population]])[[param]]
-    names(varied) <- private$param_names$varied
-  } else {
-    varied <- NULL
+  i <- intersect(rownames(fixed), names_fixed)
+  if (!all(fixed[i, ] == fixed[i, 1])) {
+    ## This message is bad and I should feel bad.
+    stop("Fixed fixed parameters are not everywhere fixed")
   }
 
-  unname(c(fixed, varied)[private$param_names$original])
+  fixed
+}
+
+
+nested_transform <- function(theta, transform) {
+  unname(lapply(seq_along(transform), function(i)
+    transform[[i]](theta[, i])))
 }

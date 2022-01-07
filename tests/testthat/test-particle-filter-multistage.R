@@ -473,3 +473,85 @@ test_that("Can run a multistage filter from part way through", {
   expect_length(p, 1)
   expect_equal(p[[1]]$pars$len, 5)
 })
+
+
+
+test_that("Confirm nested filter is correct", {
+  dat <- example_variable()
+
+  ## We need some multipopulation data here:
+  data_raw <- data.frame(time = rep(1:50, 2),
+                         observed = rnorm(100),
+                         population = factor(rep(c("a", "b"), each = 50)))
+  data <- particle_filter_data(data_raw, population = "population",
+                               time = "time", rate = 4)
+  new_filter <- function() {
+    set.seed(1)
+    particle_filter$new(data, dat$model, 42,
+                        compare = dat$compare, index = dat$index,
+                        seed = 1L)
+  }
+
+  ## First show that the likelihood and associated history does not vary
+  ## with the number of states for the simple filter; we need this
+  ## property to hold to do the next tests.
+  filter_10 <- new_filter()
+  p_10 <- list(list(len = 10, sd = 1), list(len = 10, sd = 2))
+  ll_10 <- filter_10$run(p_10, save_history = TRUE)
+  h_10 <- filter_10$history()
+
+  filter_15 <- new_filter()
+  p_15 <- list(list(len = 15, sd = 1), list(len = 15, sd = 2))
+  ll_15 <- filter_15$run(p_15, save_history = TRUE)
+  h_15 <- filter_15$history()
+
+  filter_20 <- new_filter()
+  p_20 <- list(list(len = 20, sd = 1), list(len = 20, sd = 2))
+  ll_20 <- filter_20$run(p_20, save_history = TRUE)
+  h_20 <- filter_20$history()
+
+  expect_identical(ll_10, ll_20)
+  expect_identical(ll_15, ll_20)
+  expect_identical(h_10, h_20[1:5, , , ])
+  expect_identical(h_15, h_20[1:8, , , ])
+
+  ## Now, we can set up some runs where we fiddle with the size of the
+  ## model over time, and we should see that it matches the histories
+  ## above:
+  pars_base1 <- list(len = 10, sd = 1)
+  epochs1 <- list(
+    multistage_epoch(10,
+                 pars = list(len = 20, sd = 1),
+                 transform_state = dat$transform_state),
+    multistage_epoch(25,
+                 pars = list(len = 15, sd = 1),
+                 transform_state = dat$transform_state))
+  pars1 <- multistage_parameters(pars_base1, epochs1)
+
+  pars_base2 <- list(len = 10, sd = 2)
+  epochs2 <- list(
+    multistage_epoch(10,
+                 pars = list(len = 20, sd = 2),
+                 transform_state = dat$transform_state),
+    multistage_epoch(25,
+                 pars = list(len = 15, sd = 2),
+                 transform_state = dat$transform_state))
+  pars2 <- multistage_parameters(pars_base2, epochs2)
+
+  pars <- list(pars1, pars2)
+
+  filter <- new_filter()
+  ll_staged <- filter$run(pars, save_history = TRUE)
+  h_staged <- filter$history()
+  expect_identical(ll_staged, ll_20)
+
+  ## Common states are easy to check:
+  expect_equal(h_staged[1:5, , , ], h_20[1:5, , , ])
+
+  ## The full set requires a bit more work:
+  h_cmp <- h_20
+  h_cmp[6:10, , ,  1:11] <- NA
+  h_cmp[9:10, , , 27:51] <- NA
+  expect_identical(is.na(h_staged), is.na(h_cmp))
+  expect_identical(h_staged, h_cmp)
+})

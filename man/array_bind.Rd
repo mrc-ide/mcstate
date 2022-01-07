@@ -2,24 +2,27 @@
 % Please edit documentation in R/arrays.R
 \name{array_bind}
 \alias{array_bind}
-\title{Bind arrays by last dimension}
+\title{Bind arrays}
 \usage{
-array_bind(..., arrays = list(...))
+array_bind(..., arrays = list(...), dimension = NULL)
 }
 \arguments{
 \item{...}{Any number of arrays. All dimensions must the the same,
-except for the final one (representing time) which may vary.}
+except for the dimension being bound on which may vary.}
 
 \item{arrays}{As an alternative to using \code{...} you can provide a
 list directly. This is often nicer to program with.}
+
+\item{dimension}{The dimension to bind on; by default \code{NULL} means
+the last dimension.}
 }
 \value{
 A single array object
 }
 \description{
-Bind a number of arrays by their last dimension. This is useful
-for binding together the sorts of arrays produced by dust and
-mcstate's simulation functions.
+Bind a number of arrays, usually by their last dimension. This is
+useful for binding together the sorts of arrays produced by dust
+and mcstate's simulation functions.
 }
 \examples{
 # Consider two matricies; this is equivalent to rbind and is

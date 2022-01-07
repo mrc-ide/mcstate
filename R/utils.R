@@ -67,49 +67,8 @@ rmvnorm_generator <- function(vcv) {
 }
 
 
-list_to_matrix <- function(data) {
-  len <- lengths(data)
-  stopifnot(all(len == len[[1]]))
-  len <- len[[1L]]
-  matrix(unlist(data, FALSE, FALSE), length(data), len, byrow = TRUE)
-}
-
-
-list_to_array <- function(data) {
-  if (!is.null(unlist(data))) {
-    len <- lengths(data)
-    which <- len > 0
-    len <- len[which]
-    stopifnot(length(unique(len)) == 1)
-
-    data <- data[which]
-    array(unlist(data, FALSE, FALSE), c(dim(data[[1L]]), length(data)))
-  }
-}
-
-
-set_colnames <- function(m, nms) {
-  colnames(m) <- nms
-  m
-}
-
-
 last <- function(x) {
   x[[length(x)]]
-}
-
-
-df_to_list_of_lists <- function(x) {
-  lapply(unname(split(x, seq_len(nrow(x)))), as.list)
-}
-
-groupeddf_to_list_of_lists <- function(x, group) {
-  ## largely copied from dust::dust_data
-  rows <- lapply(seq_len(nrow(x)), function(i) as.list(x[i, ]))
-  group <- x[[group]]
-  rows_grouped <- unname(split(rows, group))
-  lapply(seq_len(nrow(x) / length(unique(group))),
-         function(i) lapply(rows_grouped, "[[", i))
 }
 
 
@@ -204,7 +163,7 @@ layernames <- function(x) {
   if (is.null(value)) {
     nms[3L] <- list(NULL)
   } else {
-    nms[[3L]] <-  assert_scalar_character(value)
+    nms[[3L]] <- assert_scalar_character(value)
   }
 
   dimnames(x) <- nms

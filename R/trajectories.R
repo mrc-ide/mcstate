@@ -16,22 +16,11 @@ bind_mcstate_trajectories <- function(a, b) {
             dim(a)[1:2] == dim(b)[1:2])
 
   step <- c(a$step, b$step[-1])
-  state <- array_bind(a$state, b$state[, , -1, drop = FALSE])
-  rownames(state) <- rownames(b$state) %||% rownames(a$state)
-  predicted <- c(a$predicted, b$predicted[-1])
-
-  mcstate_trajectories(step, a$rate, state, predicted)
-}
-
-bind_mcstate_trajectories_nested <- function(a, b) {
-  stopifnot(inherits(a, "mcstate_trajectories"),
-            inherits(b, "mcstate_trajectories"),
-            last(a$step) == b$step[[1]],
-            a$rate == b$rate,
-            dim(a)[1:2] == dim(b)[1:2])
-
-  step <- c(a$step, b$step[-1])
-  state <- array_bind(a$state, b$state[, , , -1, drop = FALSE])
+  if (length(dim(b$state)) == 3) {
+    state <- array_bind(a$state, b$state[, , -1, drop = FALSE])
+  } else {
+    state <- array_bind(a$state, b$state[, , , -1, drop = FALSE])
+  }
   rownames(state) <- rownames(b$state) %||% rownames(a$state)
   predicted <- c(a$predicted, b$predicted[-1])
 

@@ -72,7 +72,7 @@ test_that("throw from callr operation", {
   inputs$filter$n_threads <- "one"
   suppressWarnings(saveRDS(inputs, path$input))
 
-  r <- pmcmc_remote$new(path$input, 2, FALSE)
+  r <- pmcmc_remote$new(path$input, 2)
   r$wait_session_ready()
   r$init(1L)
   for (i in 1:20) {
@@ -305,7 +305,7 @@ test_that("throw from callr operation", {
   obj <- pmcmc_orchestrator$new(dat$pars, initial, p0, control)
   path <- r6_private(obj)$path
 
-  r <- pmcmc_remote$new(path$input, 1, FALSE)
+  r <- pmcmc_remote$new(path$input, 1)
   r$wait_session_ready()
   r$init(1L)
   for (i in 1:20) {

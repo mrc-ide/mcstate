@@ -187,6 +187,7 @@ example_uniform <- function(proposal_kernel = NULL) {
   }
   filter <- structure(list(run = target,
                            n_particles = 10,
+                           nested = FALSE,
                            state = function() matrix(1, 2, 10),
                            trajectories = function(i) matrix(1, 2, 10)),
                       class = "particle_filter")
@@ -223,6 +224,7 @@ example_uniform_shared <- function(varied = TRUE, fixed = TRUE,
 
 
   filter <- structure(list(run = target,
+                           nested = TRUE,
                            n_particles = 10),
                       class = "particle_filter")
 
@@ -272,6 +274,7 @@ example_mvnorm <- function() {
 
   filter <- structure(list(run = target,
                            n_particles = 10,
+                           nested = FALSE,
                            state = function() matrix(1, 2, 10),
                            trajectories = function(i) matrix(1, 2, 10)),
                       class = "particle_filter")
@@ -298,6 +301,7 @@ example_mvnorm_shared <- function(varied = TRUE, fixed = TRUE,
     n_par <- 4
   }
   filter <- structure(list(run = target,
+                           nested = TRUE,
                            n_particles = 10),
                       class = "particle_filter")
 
@@ -449,9 +453,9 @@ example_variable <- function() {
     list(run = 1L, state = i)
   }
 
-  transform_state <- function(y, model_old, model_new) {
-    n_old <- model_old$pars()$len
-    n_new <- model_new$pars()$len
+  transform_state <- function(y, info_old, info_new) {
+    n_old <- info_old$len
+    n_new <- info_new$len
     if (n_new > n_old) {
       y <- rbind(y, matrix(0, n_new - n_old, ncol(y)))
     } else {

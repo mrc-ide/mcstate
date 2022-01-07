@@ -85,6 +85,46 @@ test_that("can collect restart from deterministic filter", {
 })
 
 
+test_that("Particle index control in filter is very limited", {
+  dat <- example_sir()
+  set.seed(1)
+  p <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
+  p$run(list(), save_history = TRUE, save_restart = 50)
+
+  expect_equal(dim(p$history()), c(3, 1, 101))
+  expect_equal(dim(p$history(1)), c(3, 1, 101))
+  expect_error(
+    dim(p$history(integer(0))),
+    "Invalid value for 'index_particle' may only be 1 (or NULL)",
+    fixed = TRUE)
+  expect_error(
+    dim(p$history(2)),
+    "Invalid value for 'index_particle' may only be 1 (or NULL)",
+    fixed = TRUE)
+  expect_error(
+    dim(p$history(c(1, 1))),
+    "Invalid value for 'index_particle' may only be 1 (or NULL)",
+    fixed = TRUE)
+
+  ## This follows the behaviour of the particle filter, which is
+  ## pretty weird really.
+  expect_equal(dim(p$restart_state()), c(5, 1, 1))
+  expect_equal(dim(p$restart_state(1)), c(5, 1, 1))
+  expect_error(
+    dim(p$restart_state(integer(0))),
+    "Invalid value for 'index_particle' may only be 1 (or NULL)",
+    fixed = TRUE)
+  expect_error(
+    dim(p$restart_state(2)),
+    "Invalid value for 'index_particle' may only be 1 (or NULL)",
+    fixed = TRUE)
+  expect_error(
+    dim(p$restart_state(c(1, 1))),
+    "Invalid value for 'index_particle' may only be 1 (or NULL)",
+    fixed = TRUE)
+})
+
+
 test_that("can't use min_log_likelihood with deterministic filter", {
   dat <- example_sir()
   p <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
@@ -119,7 +159,7 @@ test_that("extract history from deterministic filter", {
   p$run(save_history = TRUE)
   h <- p$history()
   expect_equal(dim(h), c(3, 1, 101)) # state, particles, time
-  expect_equal(p$history(1L), array_drop(h, 2))
+  expect_equal(p$history(1L), h)
 })
 
 
@@ -135,12 +175,6 @@ test_that("Validate inputs to the deterministic filter", {
     particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index,
                                initial = 1),
     "'initial' must be function if not NULL")
-  data_nested <- structure(dat$data,
-                           class = c("particle_filter_data",
-                                     "particle_filter_data_nested"))
-  expect_error(
-    particle_deterministic$new(data_nested, dat$model, dat$compare, dat$index),
-    "nested mode not yet supported")
 })
 
 

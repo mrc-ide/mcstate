@@ -72,11 +72,12 @@ multistage_parameters <- function(pars, epochs) {
 ##'   *must* provide `transform_state` to fill in new model state,
 ##'   move things around, or delete model state depending on how the
 ##'   state has changed.  This function will be passed three
-##'   arguments: (1) the current model state, (2) the model used to
-##'   run up to this point, (3) the new model that was created with
-##'   `pars` which will be run from this point.  It is expected that
-##'   the results of `$pars()` and `$info()` from these model objects
-##'   will be useful for updating the model state.
+##'   arguments: (1) the current model state, (2) the result of the
+##'   `$info()` method from the model used to this point, (3) the
+##'   result of the `$info()` method for the new model that was
+##'   created with `pars` which will be run from this point.  Future
+##'   versions of this interface may allow passing the parameters in
+##'   too.
 ##'
 ##' @export
 multistage_epoch <- function(start, pars = NULL, transform_state = NULL) {
@@ -101,20 +102,24 @@ transform_state_identity <- function(x, ...) {
 
 
 filter_check_times <- function(pars, data, save_restart) {
+  ## TODO (#171): having to do this is pretty ugly, but we need both
+  ## step and time below here.  Probably a little earlier processing
+  ## would remove the need to do this.
+  if (inherits(data, "particle_filter_data_nested")) {
+    population <- data[[attr(data, "population")]]
+    data <- data[population == population[[1]], ]
+  }
   ## There's an awkward bit of bookkeeping here; we need to find out
   ## when each phase *ends*, as that is the index that we do the
   ## switch at.
-  time_variable <- attr(data, "time")
-  time_data_start <- data[[paste0(time_variable, "_start")]]
-  time_data_end   <- data[[paste0(time_variable, "_end")]]
+
+  times <- attr(data, "times")
 
   time_pars <- vnapply(pars[-1], "[[", "start")
   time_pars_start <- c(-Inf, time_pars)
   time_pars_end <- c(time_pars, Inf)
 
-  drop <-
-    time_pars_end <= time_data_start[[1]] |
-    time_pars_start > last(time_data_end)
+  drop <- time_pars_end <= times[1, 1] | time_pars_start > last(times[, 2])
 
   if (any(drop)) {
     pars <- pars[!drop]
@@ -122,9 +127,7 @@ filter_check_times <- function(pars, data, save_restart) {
   }
   index <- which(!drop)
 
-  step_index <- c(
-    match(time_pars, time_data_end),
-    length(time_data_end))
+  step_index <- c(match(time_pars, times[, 2]), nrow(times))
 
   if (any(is.na(step_index))) {
     stop(sprintf("Could not map epoch to filter time: error for stage %s",
@@ -166,8 +169,8 @@ join_histories <- function(history, stages) {
 
   nms <- unique(unlist(lapply(history, function(x) names(x$index))))
 
-  ## TODO: The only use of history_index later is for names. We should
-  ## refactor that to make it history_names
+  ## TODO (#172): The only use of history$index later is for names. We
+  ## should refactor that to make it history_names
 
   ## This is not present for deterministic models!
   has_order <- !is.null(history[[1]]$order)
@@ -182,12 +185,20 @@ join_histories <- function(history, stages) {
   end <- step_index + 1L
   start <- c(1L, end[-length(end)] + 1L)
 
+  rank <- length(dim(value))
+
   for (i in seq_along(history)) {
     j <- match(names(history[[i]]$index), nms)
     k <- seq(start[[i]], end[[i]])
-    value[j, , k] <- history[[i]]$value[, , k]
+    value_i <- array_last_dimension(history[[i]]$value, k)
+    if (rank == 3) {
+      value[j, , k] <- value_i
+    } else {
+      value[j, , , k] <- value_i
+    }
     if (has_order) {
-      order[, k] <- history[[i]]$order[, k]
+      order_i <- array_last_dimension(history[[i]]$order, k)
+      array_last_dimension(order, k) <- order_i
     }
   }
 
@@ -209,7 +220,7 @@ join_histories <- function(history, stages) {
 ## differ in the size of their first dimension.
 join_restart_state <- function(restart, stages) {
   state <- lapply(seq_along(stages), function(i)
-    restart[[i]][, , stages[[i]]$restart_index, drop = FALSE])
+    array_last_dimension(restart[[i]], stages[[i]]$restart_index))
   state <- state[lengths(state) > 0]
 
   n <- viapply(state, nrow)

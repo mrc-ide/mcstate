@@ -379,18 +379,18 @@ test_that("discarding burnin drops beginnings of nested chain", {
   results <- example_sir_nested_pmcmc()$results[[1]]
   res <- pmcmc_thin(results, 10)
   i <- 11:31
-  expect_identical(res$pars, results$pars[, , i])
-  expect_identical(res$probabilities, results$probabilities[, , i])
+  expect_identical(res$pars, results$pars[i, , ])
+  expect_identical(res$probabilities, results$probabilities[i, , ])
   expect_identical(res$state, results$state[, , i])
-  expect_identical(res$trajectories$state, results$trajectories$state[, i, , ])
+  expect_identical(res$trajectories$state, results$trajectories$state[, , i, ])
   expect_identical(res$restart$state,
-                   results$restart$state[, i, , , drop = FALSE])
+                   results$restart$state[, , i, , drop = FALSE])
 })
 
 test_that("can sample from a nested mcmc", {
   results <- example_sir_nested_pmcmc()$results[[1]]
   sub <- pmcmc_sample(results, 10, burnin = 10)
-  expect_equal(nlayer(sub$pars), 10)
+  expect_equal(nrow(sub$pars), 10)
   expect_true(all(sub$iteration >= 10))
 })
 
@@ -449,9 +449,9 @@ test_that("can combine chains for nested model", {
 
   res <- pmcmc_combine(results1, results2, results3)
 
-  n_mcmc <- nlayer(results1$pars)
-  n_pop <- 2L
-  n_par <- nrow(results1$pars)
+  n_mcmc <- nrow(results1$pars)
+  n_par <- ncol(results1$pars)
+  n_pop <- nlayer(results1$pars)
   n_particles <- nrow(results1$state)
   n_index <- nrow(results1$trajectories$state)
   n_time <- dim(results1$trajectories$state)[[4]]
@@ -460,17 +460,17 @@ test_that("can combine chains for nested model", {
 
   n_mcmc3 <- n_mcmc * 3
 
-  expect_equal(dim(res$pars), c(n_par, n_pop, n_mcmc3))
-  expect_equal(dim(res$probabilities), c(3, n_pop, n_mcmc3))
+  expect_equal(dim(res$pars), c(n_mcmc3, n_par, n_pop))
+  expect_equal(dim(res$probabilities), c(n_mcmc3, 3, n_pop))
   expect_equal(dim(res$state), c(n_state, n_pop, n_mcmc3))
-  expect_equal(dim(res$trajectories$state), c(n_index, n_mcmc3, n_pop, n_time))
-  expect_equal(dim(res$restart$state), c(n_state, n_mcmc3, n_pop, n_restart))
+  expect_equal(dim(res$trajectories$state), c(n_index, n_pop, n_mcmc3, n_time))
+  expect_equal(dim(res$restart$state), c(n_state, n_pop, n_mcmc3, n_restart))
 
   i <- seq_len(n_mcmc) + n_mcmc
-  expect_equal(res$pars[, , i], results2$pars)
-  expect_equal(res$probabilities[, , i], results2$probabilities)
+  expect_equal(res$pars[i, , ], results2$pars)
+  expect_equal(res$probabilities[i, , ], results2$probabilities)
   expect_equal(res$state[, , i], results2$state)
-  expect_equal(res$trajectories$state[, i, , ], results2$trajectories$state)
-  expect_equal(res$restart$state[, i, , , drop = FALSE],
+  expect_equal(res$trajectories$state[, , i, ], results2$trajectories$state)
+  expect_equal(res$restart$state[, , i, , drop = FALSE],
                results2$restart$state)
 })

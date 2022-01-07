@@ -839,6 +839,7 @@ test_that("Can extract state from the model - nested", {
   expect_equal(p$restart_state(c(10, 3, 3, 6)), s[, c(10, 3, 3, 6), , ])
 })
 
+
 test_that("use compiled compare function - nested", {
   dat <- example_sir_shared()
   n_particles <- 42
@@ -904,7 +905,9 @@ test_that("particle filter state nested - errors", {
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index)
 
-  expect_error(p$run(pars[1]), "the length")
+  expect_error(p$run(pars[1]),
+               "'pars' must have length 2",
+               fixed = TRUE)
 })
 
 test_that("can't change initial step via initial in nested filter", {
@@ -1081,7 +1084,8 @@ test_that("error on different population indices", {
     list(beta = 0.3, gamma = 0.1)
   )
   set.seed(1)
-  expect_error(p$run(pars, save_history = TRUE), "index must be")
+  expect_error(p$run(pars, save_history = TRUE),
+               "index must be identical across populations")
 })
 
 test_that("initialise with complex state - nested", {
@@ -1200,22 +1204,11 @@ test_that("Can run a gpu model by passing gpu_config through", {
 
   filter_c <- p_c$run_begin()
   filter_g <- p_g$run_begin()
+
   expect_false(r6_private(filter_c)$gpu)
   expect_true(r6_private(filter_g)$gpu)
-
-  target_c <- mockery::mock()
-  target_g <- mockery::mock()
-  mockery::stub(filter_c$run, "particle_filter_compiled", target_c)
-  mockery::stub(filter_g$run, "particle_filter_compiled", target_g)
-  filter_c$run()
-  filter_g$run()
-  mockery::expect_called(target_c, 1L)
-  mockery::expect_called(target_g, 1L)
-
-  m_c <- mockery::mock_args(target_c)[[1]][[1]]$model
-  m_g <- mockery::mock_args(target_g)[[1]][[1]]$model
-  expect_false(m_c$uses_gpu(TRUE))
-  expect_true(m_g$uses_gpu(TRUE))
+  expect_false(filter_c$model$uses_gpu(TRUE))
+  expect_true(filter_g$model$uses_gpu(TRUE))
 })
 
 
@@ -1235,4 +1228,121 @@ test_that("Can terminate a filter early", {
   ll2 <- replicate(10, p2$run(min_log_likelihood = min_ll))
   expect_true(-Inf %in% ll2)
   expect_true(min(ll2[is.finite(ll2)]) >= min_ll)
+})
+
+
+test_that("nested particle filter requires unnamed parameters", {
+  dat <- example_sir_shared()
+  p <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
+                           index = dat$index)
+  pars <- list(a = list(beta = 0.2, gamma = 0.1),
+               b = list(beta = 0.3, gamma = 0.1))
+  expect_error(
+    p$run(pars),
+    "Expected an unnamed list of parameters")
+})
+
+
+test_that("Can do early exit for nested filter", {
+  dat <- example_sir_shared()
+  n_particles <- 42
+  pars <- list(list(beta = 0.2, gamma = 0.1),
+               list(beta = 0.3, gamma = 0.1))
+
+  ## Same setup as before
+  set.seed(1)
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  ll1 <- replicate(10, p1$run(pars))
+
+  set.seed(1)
+  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  min_ll <- mean(colSums(ll1))
+  ll2 <- replicate(10, p2$run(pars, min_log_likelihood = min_ll))
+  expect_true(-Inf %in% ll2)
+  expect_true(min(ll2[is.finite(ll2)]) >= min_ll)
+
+  set.seed(1)
+  p3 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  min_ll <- ll1[, which.min(abs(colSums(ll1) - mean(colSums(ll1))))]
+  ll3 <- replicate(10, p3$run(pars, min_log_likelihood = min_ll))
+
+  i <- apply(ll3 > -Inf, 2, any)
+  expect_true(!all(i))
+  expect_true(all(ll3[, !i] == -Inf))
+  expect_true(all(apply(ll3[, i] >= min_ll, 2, any)))
+  expect_false(all(apply(ll3[, i] >= min_ll, 2, all)))
+})
+
+
+test_that("Confirm nested filter is correct", {
+  ## To show this works, we'll run the filters separately.  This will
+  ## be a useful result when adding multistage parameters.
+
+  ## This example is a bit fiddly to get exact equivalence - we need
+  ## to manually step the filter to get uses of R's RNG to be correct.
+  ## This would go away if we updated to use the same strategy as the
+  ## the compiled filter and use a dust RNG here, stepping off the end
+  ## of the last rng state.  That requires some additional work though
+  ## to keep the state in sync.
+  ##
+  ## The other bit of fiddle is replacing the stochastic noise in
+  ## compare with deterministic epsilon to avoid -Inf likelihoods in
+  ## dpois
+  dat <- example_sir_shared()
+  n_particles <- 42
+
+  ## The usual compare, but add a fixed amount of noise
+  compare <- function(state, observed, pars = NULL) {
+    if (is.na(observed$incidence)) {
+      return(NULL)
+    }
+    incidence_modelled <- state[1, , drop = TRUE]
+    incidence_observed <- observed$incidence
+    lambda <- incidence_modelled + 1e-7
+    dpois(x = incidence_observed, lambda = lambda, log = TRUE)
+  }
+
+  pars <- list(list(beta = 0.2, gamma = 0.1),
+               list(beta = 0.3, gamma = 0.1))
+
+  seed <- dust::dust_rng_pointer$new(1, n_particles * 2)$state()
+  seed1 <- seed[seq_len(length(seed) / 2)]
+  seed2 <- seed[-seq_len(length(seed) / 2)]
+
+  data1 <- particle_filter_data(dat$data_raw[dat$data_raw$populations == "a", ],
+                                time = "day", rate = 4)
+  data2 <- particle_filter_data(dat$data_raw[dat$data_raw$populations == "b", ],
+                                time = "day", rate = 4)
+
+  set.seed(1)
+  p1 <- particle_filter$new(data1, dat$model, n_particles, compare,
+                            index = dat$index, seed = seed1)
+  p2 <- particle_filter$new(data2, dat$model, n_particles, compare,
+                            index = dat$index, seed = seed2)
+
+  s1 <- p1$run_begin(pars[[1]], save_history = TRUE)
+  s2 <- p2$run_begin(pars[[2]], save_history = TRUE)
+  for (i in seq_len(nrow(data1))) {
+    s1$step(i)
+    s2$step(i)
+  }
+
+  set.seed(1)
+  p3 <- particle_filter$new(dat$data, dat$model, n_particles, compare,
+                            index = dat$index, seed = seed)
+  s3 <- p3$run_begin(pars, save_history = TRUE)
+  for (i in seq_len(nrow(data1))) {
+    s3$step(i)
+  }
+
+  expect_identical(c(s1$log_likelihood, s2$log_likelihood),
+                   s3$log_likelihood)
+  expect_identical(s3$history$value[, , 1, ], s1$history$value)
+  expect_identical(s3$history$value[, , 2, ], s2$history$value)
+  expect_identical(s3$history$order[, 1, ], s1$history$order)
+  expect_identical(s3$history$order[, 2, ], s2$history$order)
+  expect_identical(s3$history$index, s1$history$index)
 })
