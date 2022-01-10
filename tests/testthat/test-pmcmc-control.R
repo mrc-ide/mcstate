@@ -104,3 +104,21 @@ test_that("prevent invalid burnin and filter", {
     pmcmc_filter_on_generation(100, 10, 75),
     "'n_mcmc_retain' is too large to skip any samples,")
 })
+
+
+test_that("control can detect corruption", {
+  control <- pmcmc_control(100, n_steps_retain = 15, n_burnin = 5)
+  control$n_steps <- 30
+  expect_error(
+    pmcmc_check_control(control),
+    "Corrupt pmcmc_control (n_steps/n_steps_retain/n_burnin)",
+    fixed = TRUE)
+
+  control <- pmcmc_control(100, n_workers = 4, n_threads_total = 4,
+                           n_chains = 4)
+  control$n_workers <- 1
+  expect_error(
+    pmcmc_check_control(control),
+    "Corrupt pmcmc_control (n_steps/n_steps_each/n_workers)",
+    fixed = TRUE)
+})

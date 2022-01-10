@@ -317,10 +317,17 @@ pmcmc_filter_on_generation <- function(n_steps, n_burnin, n_steps_retain) {
 
 
 pmcmc_check_control <- function(control) {
+  ## An error here would mean history saving would fail in peculiar ways
   ok <- control$n_steps ==
     control$n_burnin + (control$n_steps_retain - 1) * control$n_steps_every + 1
   if (!ok) {
-    stop("Corrupt pmcmc_control, perhaps you modified it after creation?")
+    stop(paste("Corrupt pmcmc_control (n_steps/n_steps_retain/n_burnin),",
+               "perhaps you modified it after creation?"))
   }
-  ## TODO: also verify the steps/workers issue
+  ## An error here can lock up the process
+  err <- control$n_workers == 1 && control$n_steps_each != control$n_steps
+  if (err) {
+    stop(paste("Corrupt pmcmc_control (n_steps/n_steps_each/n_workers),",
+               "perhaps you modified it after creation?"))
+  }
 }
