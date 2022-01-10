@@ -296,20 +296,6 @@ pmcmc_filter_on_generation <- function(n_steps, n_burnin, n_steps_retain) {
   ## Back calculate the actual number of burnin steps to take:
   n_burnin <- n_steps - n_steps_every * (n_steps_retain - 1) - 1
 
-  ## This leaves us with two useful expressions:
-
-  ## i <- seq_len(n_steps)
-  ## i >= n_burnin2 & (i - n_burnin2 - 1) %% n_steps_every == 0
-
-  ## The other useful thing in this context is working out a little offset
-
-  ## (i - n_burnin - 1) / n_steps_every + 1
-
-  ## We should be able to easily compute the n_steps here and use that
-  ## later as a checksum
-
-  ## n_burnin + (n_steps_retain - 1) * n_steps_every + 1 == n_steps
-
   list(n_burnin = n_burnin,
        n_steps_retain = n_steps_retain,
        n_steps_every = n_steps_every)
