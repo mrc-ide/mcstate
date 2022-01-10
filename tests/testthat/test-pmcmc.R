@@ -333,12 +333,27 @@ test_that("can validate a matrix initial conditions", {
 
 
 test_that("can start a pmcmc from a matrix of starting points", {
-  skip("rewrite")
-  dat <- example_uniform()
-  initial <- matrix(runif(6), 2, 3, dimnames = list(c("a", "b"), NULL))
-  control <- pmcmc_control(1000, save_state = FALSE, n_chains = 3)
-  res <- pmcmc(dat$pars, dat$filter, control = control, initial = initial)
-  expect_equal(res$pars[res$iteration == 0, ], t(initial))
+  proposal_kernel <- diag(2) * 2
+  row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("beta", "gamma")
+  pars <- pmcmc_parameters$new(
+    list(pmcmc_parameter("beta", 0.2, min = 0, max = 1,
+                         prior = function(p) log(1e-10)),
+         pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
+                         prior = function(p) log(1e-10))),
+    proposal = proposal_kernel * 50)
+
+  p0 <- pars$initial()
+  initial <- matrix(p0, 2, 3, dimnames = list(names(p0), NULL))
+  initial[] <- initial + runif(6, 0, 0.001)
+
+  dat <- example_sir()
+  p <- particle_filter$new(dat$data, dat$model, 10, dat$compare,
+                           index = dat$index)
+
+  control <- pmcmc_control(2, n_chains = 3)
+  res <- pmcmc(pars, p, control = control, initial = initial)
+
+  expect_equal(nrow(unique(res$pars[res$iteration == 1, ])), 3)
 })
 
 
