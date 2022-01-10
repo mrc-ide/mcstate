@@ -265,7 +265,7 @@ pmcmc_state <- R6::R6Class(
         probabilities_full <- NULL
       } else {
         pars_full <- pars
-        probabilities_full <- probabilities_full
+        probabilities_full <- probabilities
         ## Then at this point we need to make sure that we filter the
         ## parameters and the pars
         i <- seq(private$control$n_burnin + 1,
