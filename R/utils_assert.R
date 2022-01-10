@@ -80,12 +80,14 @@ assert_scalar <- function(x, name = deparse(substitute(x))) {
 }
 
 
-assert_scalar_positive_integer <- function(x, name = deparse(substitute(x))) {
+assert_scalar_positive_integer <- function(x, allow_zero = FALSE,
+                                           name = deparse(substitute(x))) {
   force(name)
   assert_scalar(x, name)
   x <- assert_integer(x, name)
-  if (x < 1L) {
-    stop(sprintf("'%s' must be at least 1", name), call. = FALSE)
+  min <- if (allow_zero) 0 else 1
+  if (x < min) {
+    stop(sprintf("'%s' must be at least %d", name, min), call. = FALSE)
   }
   invisible(x)
 }

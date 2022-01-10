@@ -149,7 +149,8 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
                           use_parallel_seed = FALSE,
                           save_state = TRUE, save_restart = NULL,
                           save_trajectories = FALSE, progress = FALSE,
-                          nested_step_ratio = 1, filter_early_exit = FALSE) {
+                          nested_step_ratio = 1, filter_early_exit = FALSE,
+                          n_burnin = NULL, n_steps_retain = NULL) {
   assert_scalar_positive_integer(n_steps)
   assert_scalar_positive_integer(n_chains)
   assert_scalar_positive_integer(n_workers)
@@ -201,6 +202,8 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
                           must be an integer", nested_step_ratio))
   }
 
+  filter <- pmcmc_filter_on_generation(n_steps, n_burnin, n_steps_retain)
+
   ret <- list(n_steps = n_steps,
               n_chains = n_chains,
               n_workers = n_workers,
@@ -215,6 +218,74 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
               progress = progress,
               filter_early_exit = filter_early_exit,
               nested_step_ratio = nested_step_ratio)
+  ret[names(filter)] <- filter
+
   class(ret) <- "pmcmc_control"
   ret
+}
+
+
+## What do we do here about our starting point?  Probably best to just
+## forget that for now really, as it's not really a sample...
+pmcmc_filter_on_generation <- function(n_steps, n_burnin, n_steps_retain) {
+  n_burnin <- assert_scalar_positive_integer(n_burnin %||% 0, TRUE)
+  if (n_burnin >= n_steps) {
+    stop("'n_burnin' cannot be greater than or equal to 'n_steps'")
+  }
+  n_steps_possible <- n_steps - n_burnin
+  n_steps_retain <- assert_scalar_positive_integer(
+    n_steps_retain %||% n_steps_possible)
+  if (n_steps_retain > n_steps_possible) {
+    stop(sprintf(
+      "'n_steps_retain' is too large, max possible is %d but given %d",
+      n_steps_possible, n_steps_retain))
+  }
+
+  ## Now, compute the step ratio:
+  n_steps_every <- floor(n_steps_possible / n_steps_retain)
+  seq(to = n_steps, length.out = n_steps_retain, by = n_steps_every)
+
+  if (n_steps_every == 1) {
+    ## If we've dropped more than 5% of the chain this probably means
+    ## that they're out of whack.  Need a good explanation here
+    ## though.
+    if ((n_steps_possible - n_steps_retain) / n_steps_possible > 0.05) {
+      stop(paste("'n_steps_retain' is too large to skip any samples, and",
+                 "would result in just increasing 'n_burnin' by more than",
+                 "5% of your post-burnin samples. Please adjust 'n_steps'",
+                 "'n_burnin' or 'n_steps_retain' to make your intentions",
+                 "clearer"))
+    }
+  }
+
+  ## Back calculate the actual number of burnin steps to take:
+  n_burnin <- n_steps - n_steps_every * (n_steps_retain - 1) - 1
+
+  ## This leaves us with two useful expressions:
+
+  ## i <- seq_len(n_steps)
+  ## i >= n_burnin2 & (i - n_burnin2 - 1) %% n_steps_every == 0
+
+  ## The other useful thing in this context is working out a little offset
+
+  ## (i - n_burnin - 1) / n_steps_every + 1
+
+  ## We should be able to easily compute the n_steps here and use that
+  ## later as a checksum
+
+  ## n_burnin + (n_steps_retain - 1) * n_steps_every + 1 == n_steps
+
+  list(n_burnin = n_burnin,
+       n_steps_retain = n_steps_retain,
+       n_steps_every = n_steps_every)
+}
+
+
+pmcmc_check_control <- function(control) {
+  ok <- control$n_steps ==
+    control$n_burnin + (control$n_steps_retain - 1) * control$n_steps_every + 1
+  if (!ok) {
+    stop("Corrupt pmcmc_control, perhaps you modified it after creation?")
+  }
+  ## TODO: also verify the steps/workers issue
 }

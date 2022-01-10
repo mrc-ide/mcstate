@@ -48,6 +48,7 @@ pmcmc <- function(pars, filter, initial = NULL, control = NULL) {
   assert_is(pars, c("pmcmc_parameters", "pmcmc_parameters_nested"))
   assert_is(filter, c("particle_filter", "particle_deterministic"))
   assert_is(control, "pmcmc_control")
+  pmcmc_check_control(control)
   initial <- pmcmc_check_initial(initial, pars, control$n_chains)
 
   if (control$n_workers == 1) {

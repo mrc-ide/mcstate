@@ -91,6 +91,7 @@ test_that("pmcmc_check_initial_nested - error matrix initial", {
 test_that("pmcmc nested Uniform on unit square - fixed only", {
   dat <- example_uniform_shared(varied = FALSE)
   control <- pmcmc_control(200, save_state = FALSE, save_trajectories = FALSE)
+
   set.seed(1)
   testthat::try_again(5, {
     res <- pmcmc(dat$pars, dat$filter, control = control)
@@ -123,7 +124,7 @@ test_that("pmcmc nested Uniform on unit square - varied only", {
 
 test_that("pmcmc nested Uniform on unit square", {
   dat <- example_uniform_shared()
-  control <- pmcmc_control(200, save_state = FALSE, save_trajectories = FALSE)
+  control <- pmcmc_control(201, save_state = FALSE, save_trajectories = FALSE)
 
   set.seed(1)
   testthat::try_again(5, {
@@ -258,14 +259,14 @@ test_that("pmcmc nested sir - 2 chains", {
   set.seed(1)
   res3 <- pmcmc(pars, p2, control = control2)
   expect_s3_class(res3, "mcstate_pmcmc")
-  expect_equal(res3$chain, rep(1:3, each = 51))
-  expect_equal(res3$iteration, rep(0:50, 3))
-  expect_equal(dim(res3$trajectories$state), c(3, 2, 153, 101))
+  expect_equal(res3$chain, rep(1:3, each = 50))
+  expect_equal(res3$iteration, rep(1:50, 3))
+  expect_equal(dim(res3$trajectories$state), c(3, 2, 150, 101))
 
-  expect_equal(res1$pars, res3$pars[1:51, , ])
-  expect_equal(res1$state, res3$state[, , 1:51])
-  expect_equal(res1$restart$state, res3$restart$state[, , 1:51, ])
-  expect_equal(res1$trajectories$state, res3$trajectories$state[, , 1:51, ])
+  expect_equal(res1$pars, res3$pars[1:50, , ])
+  expect_equal(res1$state, res3$state[, , 1:50])
+  expect_equal(res1$restart$state, res3$restart$state[, , 1:50, ])
+  expect_equal(res1$trajectories$state, res3$trajectories$state[, , 1:50, ])
 })
 
 
@@ -335,7 +336,7 @@ test_that("run nested pmcmc with the particle filter and retain history", {
       "pars", "probabilities", "state", "trajectories", "restart", "predict"))
 
   expect_null(results1$chain)
-  expect_equal(results1$iteration, 0:30)
+  expect_equal(results1$iteration, 1:30)
 
   ## Including or not the history does not change the mcmc trajectory:
   expect_identical(names(results1), names(results2))
@@ -343,21 +344,21 @@ test_that("run nested pmcmc with the particle filter and retain history", {
   expect_equal(results1$probabilities, results2$probabilities)
 
   ## Parameters and probabilities have the expected shape
-  expect_equal(dim(results1$pars), c(31, 2, 2))
+  expect_equal(dim(results1$pars), c(30, 2, 2))
   expect_equal(dimnames(results1$pars),
                list(NULL, c("beta", "gamma"), c("a", "b")))
 
-  expect_equal(dim(results1$probabilities), c(31, 3, 2))
+  expect_equal(dim(results1$probabilities), c(30, 3, 2))
   expect_equal(
     dimnames(results1$probabilities),
     list(NULL, c("log_prior", "log_likelihood", "log_posterior"), c("a", "b")))
 
   ## History, if returned, has the correct shape
-  expect_equal(dim(results1$state), c(5, 2, 31)) # state, pop, mcmc
+  expect_equal(dim(results1$state), c(5, 2, 30)) # state, pop, mcmc
 
   ## Trajectories, if returned, have the same shape
   expect_s3_class(results1$trajectories, "mcstate_trajectories")
-  expect_equal(dim(results1$trajectories$state), c(3, 2, 31, 101))
+  expect_equal(dim(results1$trajectories$state), c(3, 2, 30, 101))
   expect_equal(results1$trajectories$step, seq(0, 400, by = 4))
   expect_equal(results1$trajectories$rate, 4)
 
@@ -384,7 +385,7 @@ test_that("nested_step_ratio works", {
   ## Here, we never update beta, which is varied
   control <- pmcmc_control(30, nested_step_ratio = 30)
   res1 <- pmcmc(pars, p, control = control)
-  expect_equal(as.numeric(res1$pars[, "beta", ]), rep(c(0.2, 0.3), each = 31))
+  expect_equal(as.numeric(res1$pars[, "beta", ]), rep(c(0.2, 0.3), each = 30))
   expect_equal(res1$pars[, "gamma", "a"], res1$pars[, "gamma", "b"])
   expect_false(all(res1$pars[, "gamma", "a"] == 0.1))
 
@@ -392,8 +393,8 @@ test_that("nested_step_ratio works", {
   control <- pmcmc_control(30, nested_step_ratio = 1 / 30)
   res2 <- pmcmc(pars, p, control = control)
   expect_equal(res2$pars[, "gamma", ],
-               matrix(0.1, 31, 2, dimnames = list(NULL, c("a", "b"))))
-  expect_false(all(res2$pars[, "beta", ] == rep(c(0.2, 0.3), each = 31)))
+               matrix(0.1, 30, 2, dimnames = list(NULL, c("a", "b"))))
+  expect_false(all(res2$pars[, "beta", ] == rep(c(0.2, 0.3), each = 30)))
 })
 
 

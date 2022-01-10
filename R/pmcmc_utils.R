@@ -1,7 +1,7 @@
 mcstate_pmcmc <- function(pars, probabilities, state, trajectories, restart,
                           predict, chain = NULL, iteration = NULL) {
 
-  iteration <- iteration %||% seq.int(0, length.out = nrow(pars))
+  iteration <- iteration %||% seq_len(nrow(pars))
 
   nested <- length(dim(pars)) == 3
 
