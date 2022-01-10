@@ -8,6 +8,34 @@
 ##' can. There are two ways of doing this which are discussed in some
 ##' detail in `vignette("parallelisation", package = "mcstate")`.
 ##'
+##' @section Thinning the chain at generation:
+##'
+##' Generally it may be preferable to thin the chains after generation
+##'   using [mcstate::pmcmc_thin] or [mcstate::pmcmc_sample].
+##'   However, waiting that long can create memory consumption issues
+##'   because the size of the trajectories can be very large.  To
+##'   avoid this, you can thin the chains at generation - this will
+##'   avoid creating large trajectory arrays, but will discard some
+##'   information irretrivably.
+##'
+##' If either of the options `n_burnin` or `n_steps_retain` are provided,
+##'   then we will subsample the chain at generation.
+##'
+##' * If `n_burnin` is provided, then the first `n_burnin` (of
+##'   `n_mcmc`) samples is discarded.  This must be at most `n_mcmc`
+##' * If `n_steps_retain` is provided, then we *evenly* sample out of
+##'   the remaining samples.  The algorithm will try and generate a
+##'   sensible set here, and will always include the last sample of
+##'   `n_mcmc` but may not always include the first post-burnin
+##'   sample.  An error will be thrown if a suitable sampling is not
+##'   possible (e.g., if `n_steps_retain` is larger than `n_mcmc -
+##'   n_burnin`
+##'
+##' If either of `n_burnin` or `n_steps_retain` is provided, the
+##'   resulting samples object will include the full set of parameters
+##'   and probabilities sampled, along with an index showing how they
+##'   relate to the filtered samples.
+##'
 ##' @title Control for the pmcmc
 ##'
 ##' @param n_steps Number of MCMC steps to run. This is the only
@@ -123,6 +151,13 @@
 ##'   between steps. This will the the case where your likelihood
 ##'   calculation is a sum of discrete normalised probability
 ##'   distributions, but may not be for continuous distributions!
+##'
+##' @param n_burnin Optionally, theumber of points to discard as
+##'   burnin.  This happens separately to the burnin in
+##'   [mcstate::pmcmc_thin] or [mcstate::pmcmc_sample].  See Details.
+##'
+##' @param n_steps_retains Optionally, the number of samples to retain from
+##'   the `n_mcmc - n_burnin` steps.  See Details.
 ##'
 ##' @return A `pmcmc_control` object, which should not be modified
 ##'   once created.
