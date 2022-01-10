@@ -13,16 +13,17 @@ pmcmc_sample(object, n_sample, burnin = NULL)
 \item{object}{Results of running \code{\link[=pmcmc]{pmcmc()}}}
 
 \item{burnin}{Optional integer number of iterations to discard as
-"burn-in". If given then samples \code{1:burnin} will be
-excluded from your results. Remember that the first sample
-represents the starting point of the chain. It is an error if
-this is not a positive integer or is greater than or equal to
-the number of samples (i.e., there must be at least one sample
-remaining after discarding burnin).}
+"burn-in". If given then samples \code{1:burnin} will be excluded
+from your results. It is an error if this is not a positive
+integer or is greater than or equal to the number of samples
+(i.e., there must be at least one sample remaining after
+discarding burnin).}
 
 \item{thin}{Optional integer thinning factor. If given, then every
-\code{thin}'th sample is retained (e.g., if \code{thin} is 10
-then we keep samples 1, 11, 21, ...).}
+\code{thin}'th sample is retained (e.g., if \code{thin} is 10 then we keep
+samples 1, 11, 21, ...).  Note that this can produce surprising
+results as it will always select the first sample but not
+necessarily always the last.}
 
 \item{n_sample}{The number of samples to draw from \code{object} \emph{with
 replacement}. This means that \code{n_sample} can be larger than the

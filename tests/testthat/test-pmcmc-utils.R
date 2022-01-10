@@ -80,14 +80,14 @@ test_that("print multichain object", {
   x <- pmcmc_combine(samples = example_sir_pmcmc2()$results)
 
   expected <- c(
-    "<mcstate_pmcmc> (93 samples across 3 chains)",
-    "  pars: 93 x 2 matrix of parameters",
+    "<mcstate_pmcmc> (90 samples across 3 chains)",
+    "  pars: 90 x 2 matrix of parameters",
     "    beta, gamma",
-    "  probabilities: 93 x 3 matrix of log-probabilities",
+    "  probabilities: 90 x 3 matrix of log-probabilities",
     "    log_prior, log_likelihood, log_posterior",
-    "  state: 5 x 93 matrix of final states",
-    "  trajectories: 3 x 93 x 101 array of particle trajectories",
-    "  restart: 5 x 93 x 1 array of particle restart state")
+    "  state: 5 x 90 matrix of final states",
+    "  trajectories: 3 x 90 x 101 array of particle trajectories",
+    "  restart: 5 x 90 x 1 array of particle restart state")
 
   expect_equal(format(x), expected)
   expect_output(print(x), paste(expected, collapse = "\n"), fixed = TRUE)

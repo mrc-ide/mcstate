@@ -9,7 +9,7 @@ test_that("pmcmc_thin with no args is a no-op", {
 test_that("discarding burnin drops beginnings of chain", {
   results <- example_sir_pmcmc()$pmcmc
   res <- pmcmc_thin(results, 10)
-  i <- 11:31
+  i <- 10:30
   expect_identical(res$pars, results$pars[i, ])
   expect_identical(res$probabilities, results$probabilities[i, ])
   expect_identical(res$state, results$state[, i])
@@ -22,7 +22,7 @@ test_that("discarding burnin drops beginnings of chain", {
 test_that("thinning drops all over chain", {
   results <- example_sir_pmcmc()$pmcmc
   res <- pmcmc_thin(results, thin = 4)
-  i <- seq(1, 31, by = 4)
+  i <- seq(1, 30, by = 4)
   expect_identical(res$pars, results$pars[i, ])
   expect_identical(res$probabilities, results$probabilities[i, ])
   expect_identical(res$state, results$state[, i])
@@ -34,7 +34,7 @@ test_that("thinning drops all over chain", {
 
 test_that("burnin and thin can be used together", {
   results <- example_sir_pmcmc()$pmcmc
-  i <- seq(11, 31, by = 4)
+  i <- seq(10, 30, by = 4)
   res <- pmcmc_thin(results, 10, 4)
   expect_identical(res$pars, results$pars[i, ])
   expect_identical(res$probabilities, results$probabilities[i, ])
@@ -47,7 +47,7 @@ test_that("burnin and thin can be used together", {
 
 test_that("can't discard the whole chain (or more)", {
   results <- example_sir_pmcmc()$pmcmc
-  expect_error(pmcmc_thin(results, 31),
+  expect_error(pmcmc_thin(results, 30),
                "'burnin' must be less than 30 for your results")
   expect_error(pmcmc_thin(results, 100),
                "'burnin' must be less than 30 for your results")
@@ -59,7 +59,7 @@ test_that("Can thin when no state/trajectories present", {
   results$trajectories <- NULL
   results$state <- NULL
 
-  i <- seq(11, 31, by = 4)
+  i <- seq(10, 30, by = 4)
   res <- pmcmc_thin(results, 10, 4)
   expect_identical(res$pars, results$pars[i, ])
   expect_identical(res$probabilities, results$probabilities[i, ])
@@ -197,7 +197,7 @@ test_that("require consistent data", {
   a <- results[[1]]
   b <- results[[2]]
   expect_error(
-    pmcmc_combine(a, pmcmc_thin(b, burnin = 1)),
+    pmcmc_combine(a, pmcmc_thin(b, burnin = 2)),
     "All chains must have the same length")
 })
 
@@ -370,7 +370,7 @@ test_that("require consistent nested data", {
   a <- results[[1]]
   b <- results[[2]]
   expect_error(
-    pmcmc_combine(a, pmcmc_thin(b, burnin = 1)),
+    pmcmc_combine(a, pmcmc_thin(b, burnin = 2)),
     "All chains must have the same length")
 })
 
@@ -378,7 +378,7 @@ test_that("require consistent nested data", {
 test_that("discarding burnin drops beginnings of nested chain", {
   results <- example_sir_nested_pmcmc()$results[[1]]
   res <- pmcmc_thin(results, 10)
-  i <- 11:31
+  i <- 10:30
   expect_identical(res$pars, results$pars[i, , ])
   expect_identical(res$probabilities, results$probabilities[i, , ])
   expect_identical(res$state, results$state[, , i])

@@ -81,9 +81,9 @@ test_that("Can run an mcmc on a nested model", {
 
   ## Extremely basic, just test we run for now
   res <- pmcmc(pars, p, control = control)
-  expect_equal(dim(res$pars), c(31, 2, 2))
-  expect_equal(dim(res$probabilities), c(31, 3, 2))
-  expect_equal(dim(res$state), c(5, 2, 31))
-  expect_equal(dim(res$trajectories$state), c(3, 2, 31, 101))
-  expect_equal(dim(res$restart$state), c(5, 2, 31, 1))
+  expect_equal(dim(res$pars), c(30, 2, 2))
+  expect_equal(dim(res$probabilities), c(30, 3, 2))
+  expect_equal(dim(res$state), c(5, 2, 30))
+  expect_equal(dim(res$trajectories$state), c(3, 2, 30, 101))
+  expect_equal(dim(res$restart$state), c(5, 2, 30, 1))
 })

@@ -286,7 +286,7 @@ test_that("Can run parallel mcmc with deterministic model", {
   p <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
   res <- pmcmc(dat$pars, p, NULL, control)
   expect_s3_class(res, "mcstate_pmcmc")
-  expect_equal(nrow(res$pars), n_chains * (n_steps + 1))
+  expect_equal(nrow(res$pars), n_chains * n_steps)
   expect_s3_class(res$predict$filter$model, "dust_generator")
 })
 

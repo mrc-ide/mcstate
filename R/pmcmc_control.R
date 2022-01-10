@@ -324,10 +324,4 @@ pmcmc_check_control <- function(control) {
     stop(paste("Corrupt pmcmc_control (n_steps/n_steps_retain/n_burnin),",
                "perhaps you modified it after creation?"))
   }
-  ## An error here can lock up the process
-  err <- control$n_workers == 1 && control$n_steps_each != control$n_steps
-  if (err) {
-    stop(paste("Corrupt pmcmc_control (n_steps/n_steps_each/n_workers),",
-               "perhaps you modified it after creation?"))
-  }
 }

@@ -58,34 +58,34 @@ test_that("integer step ratio", {
 
 test_that("filter on generation - no filter", {
   dat <- pmcmc_filter_on_generation(100, NULL, NULL)
-  expect_equal(dat, list(n_burnin = 0, n_mcmc_retain = 100, n_mcmc_every = 1))
-  steps <- seq(dat$n_burnin + 1, by = dat$n_mcmc_every,
-               length.out = dat$n_mcmc_retain)
+  expect_equal(dat, list(n_burnin = 0, n_steps_retain = 100, n_steps_every = 1))
+  steps <- seq(dat$n_burnin + 1, by = dat$n_steps_every,
+               length.out = dat$n_steps_retain)
   expect_equal(steps, 1:100)
   i <- seq_len(100)
   expect_equal(
-    which(i >= dat$n_burnin & (i - dat$n_burnin - 1) %% dat$n_mcmc_every == 0),
+    which(i >= dat$n_burnin & (i - dat$n_burnin - 1) %% dat$n_steps_every == 0),
     steps)
 
   expect_equal(
-    dat$n_burnin + (dat$n_mcmc_retain - 1) * dat$n_mcmc_every + 1,
+    dat$n_burnin + (dat$n_steps_retain - 1) * dat$n_steps_every + 1,
     100)
 })
 
 
 test_that("filter on generation - burnin and filter", {
   dat <- pmcmc_filter_on_generation(100, 40, 20)
-  expect_equal(dat, list(n_burnin = 42, n_mcmc_retain = 20, n_mcmc_every = 3))
-  steps <- seq(dat$n_burnin + 1, by = dat$n_mcmc_every,
-               length.out = dat$n_mcmc_retain)
+  expect_equal(dat, list(n_burnin = 42, n_steps_retain = 20, n_steps_every = 3))
+  steps <- seq(dat$n_burnin + 1, by = dat$n_steps_every,
+               length.out = dat$n_steps_retain)
   expect_equal(steps, seq(43, 100, by = 3))
   i <- seq_len(100)
   expect_equal(
-    which(i >= dat$n_burnin & (i - dat$n_burnin - 1) %% dat$n_mcmc_every == 0),
+    which(i >= dat$n_burnin & (i - dat$n_burnin - 1) %% dat$n_steps_every == 0),
     steps)
 
   expect_equal(
-    dat$n_burnin + (dat$n_mcmc_retain - 1) * dat$n_mcmc_every + 1,
+    dat$n_burnin + (dat$n_steps_retain - 1) * dat$n_steps_every + 1,
     100)
 })
 
@@ -93,16 +93,16 @@ test_that("filter on generation - burnin and filter", {
 test_that("prevent invalid burnin and filter", {
   expect_error(
     pmcmc_filter_on_generation(10, 100, 5),
-    "'n_burnin' cannot be greater than or equal to 'n_mcmc'")
+    "'n_burnin' cannot be greater than or equal to 'n_steps'")
   expect_error(
     pmcmc_filter_on_generation(100, 100, 5),
-    "'n_burnin' cannot be greater than or equal to 'n_mcmc'")
+    "'n_burnin' cannot be greater than or equal to 'n_steps'")
   expect_error(
     pmcmc_filter_on_generation(100, 10, 500),
-    "'n_mcmc_retain' is too large, max possible is 90 but given 500")
+    "'n_steps_retain' is too large, max possible is 90 but given 500")
   expect_error(
     pmcmc_filter_on_generation(100, 10, 75),
-    "'n_mcmc_retain' is too large to skip any samples,")
+    "'n_steps_retain' is too large to skip any samples,")
 })
 
 
@@ -112,13 +112,5 @@ test_that("control can detect corruption", {
   expect_error(
     pmcmc_check_control(control),
     "Corrupt pmcmc_control (n_steps/n_steps_retain/n_burnin)",
-    fixed = TRUE)
-
-  control <- pmcmc_control(100, n_workers = 4, n_threads_total = 4,
-                           n_chains = 4)
-  control$n_workers <- 1
-  expect_error(
-    pmcmc_check_control(control),
-    "Corrupt pmcmc_control (n_steps/n_steps_each/n_workers)",
     fixed = TRUE)
 })
