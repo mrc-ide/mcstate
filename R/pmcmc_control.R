@@ -156,7 +156,7 @@
 ##'   burnin.  This happens separately to the burnin in
 ##'   [mcstate::pmcmc_thin] or [mcstate::pmcmc_sample].  See Details.
 ##'
-##' @param n_steps_retains Optionally, the number of samples to retain from
+##' @param n_steps_retain Optionally, the number of samples to retain from
 ##'   the `n_mcmc - n_burnin` steps.  See Details.
 ##'
 ##' @return A `pmcmc_control` object, which should not be modified

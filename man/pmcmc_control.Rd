@@ -140,7 +140,7 @@ distributions, but may not be for continuous distributions!}
 burnin.  This happens separately to the burnin in
 \link{pmcmc_thin} or \link{pmcmc_sample}.  See Details.}
 
-\item{n_steps_retains}{Optionally, the number of samples to retain from
+\item{n_steps_retain}{Optionally, the number of samples to retain from
 the \code{n_mcmc - n_burnin} steps.  See Details.}
 }
 \value{
