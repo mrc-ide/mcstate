@@ -102,6 +102,7 @@ Create the particle filter
   compare,
   index = NULL,
   initial = NULL,
+  initial_log_likelihood = NULL,
   n_threads = 1L,
   seed = NULL,
   gpu_config = NULL
@@ -166,6 +167,12 @@ constructor, i.e., not less than the first element of
 can also return a vector or matrix of \code{state} and not alter
 the starting step, which is equivalent to returning
 \code{list(state = state, step = NULL)}.}
+
+\item{\code{initial_log_likelihood}}{An optional function, taking the
+model parameters, that computes the initial log-likelihood value.
+You can use this where your likelihood depends both on the time
+series (via \code{data}) but also on some non-temporal data.  You
+should bind any non-parameter dependencies into this closure.}
 
 \item{\code{n_threads}}{Number of threads to use when running the
 simulation. Defaults to 1, and should not be set higher than the

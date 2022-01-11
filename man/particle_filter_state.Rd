@@ -69,6 +69,7 @@ documented.
   initial,
   index,
   compare,
+  initial_log_likelihood,
   gpu_config,
   seed,
   min_log_likelihood,
@@ -101,6 +102,8 @@ documented.
 \item{\code{index}}{Index function (or \code{NULL})}
 
 \item{\code{compare}}{Compare function}
+
+\item{\code{initial_log_likelihood}}{Initial log likelihood function}
 
 \item{\code{gpu_config}}{GPU configuration, passed to \code{generator}}
 

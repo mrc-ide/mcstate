@@ -16,6 +16,14 @@ assert_function <- function(x, name = deparse(substitute(x))) {
 }
 
 
+assert_function_or_null <- function(x, name = deparse(substitute(x))) {
+  if (!is.null(x) && !is.function(x)) {
+    stop(sprintf("'%s' must be function if not NULL", name), call. = FALSE)
+  }
+  invisible(x)
+}
+
+
 assert_named <- function(x, unique = FALSE, name = deparse(substitute(x))) {
   if (is.null(names(x))) {
     stop(sprintf("'%s' must be named", name), call. = FALSE)

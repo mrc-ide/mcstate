@@ -18,6 +18,7 @@ particle_deterministic <- R6::R6Class(
     initial = NULL,
     index = NULL,
     compare = NULL,
+    initial_log_likelihood = NULL,
     last_model = NULL,
     last_history = NULL,
     last_state = NULL,
@@ -89,6 +90,12 @@ particle_deterministic <- R6::R6Class(
     ##' the starting step, which is equivalent to returning
     ##' `list(state = state, step = NULL)`.
     ##'
+    ##' @param initial_log_likelihood An optional function, taking the
+    ##' model parameters, that computes the initial log-likelihood value.
+    ##' You can use this where your likelihood depends both on the time
+    ##' series (via `data`) but also on some non-temporal data.  You
+    ##' should bind any non-parameter dependencies into this closure.
+    ##'
     ##' @param n_threads Number of threads to use when running the
     ##' simulation. Defaults to 1, and should not be set higher than the
     ##' number of cores available to the machine. This currently has no
@@ -96,16 +103,11 @@ particle_deterministic <- R6::R6Class(
     ##' particle for now.
     initialize = function(data, model, compare,
                           index = NULL, initial = NULL,
-                          n_threads = 1L) {
-      if (!is_dust_generator(model)) {
-        stop("'model' must be a dust_generator")
-      }
-      if (!is.null(index) && !is.function(index)) {
-        stop("'index' must be function if not NULL")
-      }
-      if (!is.null(initial) && !is.function(initial)) {
-        stop("'initial' must be function if not NULL")
-      }
+                          initial_log_likelihood = NULL, n_threads = 1L) {
+      assert_is(model, "dust_generator")
+      assert_function_or_null(index)
+      assert_function_or_null(initial)
+      assert_function_or_null(initial_log_likelihood)
       assert_is(data, "particle_filter_data")
 
       ## NOTE: unlike the particle filter, there is no support for
@@ -126,6 +128,7 @@ particle_deterministic <- R6::R6Class(
       private$compare <- compare
       private$index <- index
       private$initial <- initial
+      private$initial_log_likelihood <- initial_log_likelihood
 
       private$n_threads <- n_threads
 
@@ -205,6 +208,7 @@ particle_deterministic <- R6::R6Class(
         pars, self$model, private$last_model, private$data,
         private$data_split, private$steps, private$n_threads,
         private$initial, private$index, private$compare,
+        private$initial_log_likelihood,
         save_history, save_restart)
     },
 
@@ -295,6 +299,7 @@ particle_deterministic <- R6::R6Class(
            index = private$index,
            initial = private$initial,
            compare = private$compare,
+           initial_log_likelihood = private$initial_log_likelihood,
            n_threads = private$n_threads,
            seed = filter_current_seed(private$last_model, NULL))
     },

@@ -1,3 +1,7 @@
+# mcstate 0.8.1
+
+* New argument to `mcstate::particle_filter` and `mcstate::particle_deterministic`, `initial_log_likelihood` which can be used to compute the probabilities of non-time series data (#185)
+
 # mcstate 0.8.0
 
 * Rework the "nested" support; this now returns output in a different dimension order.  Primarily this is an internal refactoring.

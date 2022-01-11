@@ -65,9 +65,6 @@ smc2_engine <- R6::R6Class(
       log_likelihood <- rep(0.0, control$n_parameter_sets)
 
       inputs <- filter$inputs()
-      ## TODO: fix this in dust to make it easier to get a
-      ## "reasonable" state. We might also advance the state with a
-      ## long jump first?
       seed <- dust::dust_rng_distributed_state(inputs$seed,
                                                inputs$n_particles,
                                                control$n_parameter_sets,
@@ -75,9 +72,8 @@ smc2_engine <- R6::R6Class(
       filters <- vector("list", control$n_parameter_sets)
       pars_model <- pars$model(theta)
       for (i in seq_len(control$n_parameter_sets)) {
-        f <- particle_filter$new(
-          inputs$data, inputs$model, inputs$n_particles, inputs$compare,
-          inputs$index, inputs$initial, inputs$n_threads, seed[[i]])
+        inputs$seed <- seed[[i]]
+        f <- particle_filter_from_inputs(inputs)
         filters[[i]] <- f$run_begin(pars_model[[i]], control$save_trajectories)
       }
 
