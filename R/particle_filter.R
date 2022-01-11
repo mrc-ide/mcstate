@@ -187,7 +187,9 @@ particle_filter <- R6::R6Class(
                           initial_log_likelihood = NULL,
                           n_threads = 1L, seed = NULL,
                           gpu_config = NULL) {
-      assert_is(model, "dust_generator")
+      if (!is_dust_generator(model)) {
+        stop("'model' must be a dust_generator")
+      }
       assert_function_or_null(index)
       assert_function_or_null(initial)
       assert_function_or_null(initial_log_likelihood)
