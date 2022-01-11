@@ -152,7 +152,7 @@
 ##'   calculation is a sum of discrete normalised probability
 ##'   distributions, but may not be for continuous distributions!
 ##'
-##' @param n_burnin Optionally, theumber of points to discard as
+##' @param n_burnin Optionally, the number of points to discard as
 ##'   burnin.  This happens separately to the burnin in
 ##'   [mcstate::pmcmc_thin] or [mcstate::pmcmc_sample].  See Details.
 ##'

@@ -136,7 +136,7 @@ between steps. This will the the case where your likelihood
 calculation is a sum of discrete normalised probability
 distributions, but may not be for continuous distributions!}
 
-\item{n_burnin}{Optionally, theumber of points to discard as
+\item{n_burnin}{Optionally, the number of points to discard as
 burnin.  This happens separately to the burnin in
 \link{pmcmc_thin} or \link{pmcmc_sample}.  See Details.}
 
