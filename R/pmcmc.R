@@ -4,7 +4,7 @@
 ##' `filter` is run with a set of parameters to evaluate the
 ##' likelihood. A new set of parameters is proposed, and these
 ##' likelihoods are compared, jumping with probability equal to their
-##' ratio. This is repeated for `n_mcmc` proposals.
+##' ratio. This is repeated for `n_steps` proposals.
 ##'
 ##' While this function is called `pmcmc` and requires a particle
 ##' filter object, there's nothing special about it for particle

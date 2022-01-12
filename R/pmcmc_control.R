@@ -22,13 +22,13 @@
 ##'   then we will subsample the chain at generation.
 ##'
 ##' * If `n_burnin` is provided, then the first `n_burnin` (of
-##'   `n_mcmc`) samples is discarded.  This must be at most `n_mcmc`
+##'   `n_steps`) samples is discarded.  This must be at most `n_steps`
 ##' * If `n_steps_retain` is provided, then we *evenly* sample out of
 ##'   the remaining samples.  The algorithm will try and generate a
 ##'   sensible set here, and will always include the last sample of
-##'   `n_mcmc` but may not always include the first post-burnin
+##'   `n_steps` but may not always include the first post-burnin
 ##'   sample.  An error will be thrown if a suitable sampling is not
-##'   possible (e.g., if `n_steps_retain` is larger than `n_mcmc -
+##'   possible (e.g., if `n_steps_retain` is larger than `n_steps -
 ##'   n_burnin`
 ##'
 ##' If either of `n_burnin` or `n_steps_retain` is provided, the
@@ -157,7 +157,7 @@
 ##'   [mcstate::pmcmc_thin] or [mcstate::pmcmc_sample].  See Details.
 ##'
 ##' @param n_steps_retain Optionally, the number of samples to retain from
-##'   the `n_mcmc - n_burnin` steps.  See Details.
+##'   the `n_steps - n_burnin` steps.  See Details.
 ##'
 ##' @return A `pmcmc_control` object, which should not be modified
 ##'   once created.

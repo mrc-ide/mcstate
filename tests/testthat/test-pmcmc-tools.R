@@ -77,7 +77,7 @@ test_that("can combine chains", {
 
   res <- pmcmc_combine(results1, results2, results3)
 
-  n_mcmc <- nrow(results1$pars)
+  n_steps <- nrow(results1$pars)
   n_par <- ncol(results1$pars)
   n_particles <- nrow(results1$state)
   n_index <- nrow(results1$trajectories$state)
@@ -85,15 +85,15 @@ test_that("can combine chains", {
   n_restart <- dim(results1$restart$state)[[3]]
   n_state <- nrow(results1$state)
 
-  n_mcmc3 <- n_mcmc * 3
+  n_steps3 <- n_steps * 3
 
-  expect_equal(dim(res$pars), c(n_mcmc3, n_par))
-  expect_equal(dim(res$probabilities), c(n_mcmc3, 3))
-  expect_equal(dim(res$state), c(n_state, n_mcmc3))
-  expect_equal(dim(res$trajectories$state), c(n_index, n_mcmc3, n_time))
-  expect_equal(dim(res$restart$state), c(n_state, n_mcmc3, n_restart))
+  expect_equal(dim(res$pars), c(n_steps3, n_par))
+  expect_equal(dim(res$probabilities), c(n_steps3, 3))
+  expect_equal(dim(res$state), c(n_state, n_steps3))
+  expect_equal(dim(res$trajectories$state), c(n_index, n_steps3, n_time))
+  expect_equal(dim(res$restart$state), c(n_state, n_steps3, n_restart))
 
-  i <- seq_len(n_mcmc) + n_mcmc
+  i <- seq_len(n_steps) + n_steps
   expect_equal(res$pars[i, ], results2$pars)
   expect_equal(res$probabilities[i, ], results2$probabilities)
   expect_equal(res$state[, i], results2$state)
@@ -449,7 +449,7 @@ test_that("can combine chains for nested model", {
 
   res <- pmcmc_combine(results1, results2, results3)
 
-  n_mcmc <- nrow(results1$pars)
+  n_steps <- nrow(results1$pars)
   n_par <- ncol(results1$pars)
   n_pop <- nlayer(results1$pars)
   n_particles <- nrow(results1$state)
@@ -458,15 +458,15 @@ test_that("can combine chains for nested model", {
   n_restart <- dim(results1$restart$state)[[4]]
   n_state <- nrow(results1$state)
 
-  n_mcmc3 <- n_mcmc * 3
+  n_steps3 <- n_steps * 3
 
-  expect_equal(dim(res$pars), c(n_mcmc3, n_par, n_pop))
-  expect_equal(dim(res$probabilities), c(n_mcmc3, 3, n_pop))
-  expect_equal(dim(res$state), c(n_state, n_pop, n_mcmc3))
-  expect_equal(dim(res$trajectories$state), c(n_index, n_pop, n_mcmc3, n_time))
-  expect_equal(dim(res$restart$state), c(n_state, n_pop, n_mcmc3, n_restart))
+  expect_equal(dim(res$pars), c(n_steps3, n_par, n_pop))
+  expect_equal(dim(res$probabilities), c(n_steps3, 3, n_pop))
+  expect_equal(dim(res$state), c(n_state, n_pop, n_steps3))
+  expect_equal(dim(res$trajectories$state), c(n_index, n_pop, n_steps3, n_time))
+  expect_equal(dim(res$restart$state), c(n_state, n_pop, n_steps3, n_restart))
 
-  i <- seq_len(n_mcmc) + n_mcmc
+  i <- seq_len(n_steps) + n_steps
   expect_equal(res$pars[i, , ], results2$pars)
   expect_equal(res$probabilities[i, , ], results2$probabilities)
   expect_equal(res$state[, , i], results2$state)

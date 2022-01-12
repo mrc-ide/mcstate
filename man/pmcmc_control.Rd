@@ -141,7 +141,7 @@ burnin.  This happens separately to the burnin in
 \link{pmcmc_thin} or \link{pmcmc_sample}.  See Details.}
 
 \item{n_steps_retain}{Optionally, the number of samples to retain from
-the \code{n_mcmc - n_burnin} steps.  See Details.}
+the \code{n_steps - n_burnin} steps.  See Details.}
 }
 \value{
 A \code{pmcmc_control} object, which should not be modified
@@ -174,13 +174,13 @@ If either of the options \code{n_burnin} or \code{n_steps_retain} are provided,
 then we will subsample the chain at generation.
 \itemize{
 \item If \code{n_burnin} is provided, then the first \code{n_burnin} (of
-\code{n_mcmc}) samples is discarded.  This must be at most \code{n_mcmc}
+\code{n_steps}) samples is discarded.  This must be at most \code{n_steps}
 \item If \code{n_steps_retain} is provided, then we \emph{evenly} sample out of
 the remaining samples.  The algorithm will try and generate a
 sensible set here, and will always include the last sample of
-\code{n_mcmc} but may not always include the first post-burnin
+\code{n_steps} but may not always include the first post-burnin
 sample.  An error will be thrown if a suitable sampling is not
-possible (e.g., if \code{n_steps_retain} is larger than \code{n_mcmc - n_burnin}
+possible (e.g., if \code{n_steps_retain} is larger than \code{n_steps - n_burnin}
 }
 
 If either of \code{n_burnin} or \code{n_steps_retain} is provided, the
