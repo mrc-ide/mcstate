@@ -19,7 +19,7 @@ interface will be implemented later."><meta property="og:image" content="/logo.p
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.1</span>
       </span>
     </div>
 
@@ -131,6 +131,7 @@ the constructor.</p></dd>
   <span class="va">compare</span>,
   index <span class="op">=</span> <span class="cn">NULL</span>,
   initial <span class="op">=</span> <span class="cn">NULL</span>,
+  constant_log_likelihood <span class="op">=</span> <span class="cn">NULL</span>,
   n_threads <span class="op">=</span> <span class="fl">1L</span>,
   seed <span class="op">=</span> <span class="cn">NULL</span>,
   gpu_config <span class="op">=</span> <span class="cn">NULL</span>
@@ -205,6 +206,18 @@ constructor, i.e., not less than the first element of
 can also return a vector or matrix of <code>state</code> and not alter
 the starting step, which is equivalent to returning
 <code>list(state = state, step = NULL)</code>.</p></dd>
+
+
+<dt><code>constant_log_likelihood</code></dt>
+<dd><p>An optional function, taking the
+model parameters, that computes the constant part of the
+log-likelihood value (if any).  You can use this where your
+likelihood depends both on the time series (via <code>data</code>) but also
+on some non-temporal data.  You should bind any non-parameter
+dependencies into this closure.  This is applied at the
+beginning of the filter run, so represents the initial
+condition of the marginal log likelihood value propagated by
+the filter.</p></dd>
 
 
 <dt><code>n_threads</code></dt>
@@ -509,7 +522,7 @@ requested (based on environment variables and OpenMP support).</p></dd>
 <span class="r-in"><span class="co"># Construct the particle_filter object with 100 particles</span></span>
 <span class="r-in"><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">particle_filter</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">data</span>, <span class="va">gen</span>, <span class="fl">100</span>, <span class="va">compare</span><span class="op">)</span></span>
 <span class="r-in"><span class="va">p</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span>save_history <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -16624.21</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -17769.02</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># Our simulated trajectories, with the "real" data superimposed</span></span>
 <span class="r-in"><span class="va">history</span> <span class="op">&lt;-</span> <span class="va">p</span><span class="op">$</span><span class="fu">history</span><span class="op">(</span><span class="op">)</span></span>

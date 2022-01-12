@@ -19,7 +19,7 @@ particle deterministically."><meta property="og:image" content="/logo.png"><!-- 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.1</span>
       </span>
     </div>
 
@@ -126,6 +126,7 @@ the constructor.</p></dd>
   <span class="va">compare</span>,
   index <span class="op">=</span> <span class="cn">NULL</span>,
   initial <span class="op">=</span> <span class="cn">NULL</span>,
+  constant_log_likelihood <span class="op">=</span> <span class="cn">NULL</span>,
   n_threads <span class="op">=</span> <span class="fl">1L</span>
 <span class="op">)</span></code></pre></div><p></p></div>
 </div>
@@ -191,6 +192,18 @@ constructor, i.e., not less than the first element of
 can also return a vector or matrix of <code>state</code> and not alter
 the starting step, which is equivalent to returning
 <code>list(state = state, step = NULL)</code>.</p></dd>
+
+
+<dt><code>constant_log_likelihood</code></dt>
+<dd><p>An optional function, taking the
+model parameters, that computes the constant part of the
+log-likelihood value (if any).  You can use this where your
+likelihood depends both on the time series (via <code>data</code>) but also
+on some non-temporal data.  You should bind any non-parameter
+dependencies into this closure.  This is applied at the
+beginning of the filter run, so represents the initial
+condition of the marginal log likelihood value propagated by
+the process.</p></dd>
 
 
 <dt><code>n_threads</code></dt>
