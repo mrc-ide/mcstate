@@ -61,7 +61,7 @@ documented.
   initial,
   index,
   compare,
-  initial_log_likelihood,
+  constant_log_likelihood,
   save_history,
   save_restart
 )}\if{html}{\out{</div>}}
@@ -90,7 +90,7 @@ documented.
 
 \item{\code{compare}}{Compare function}
 
-\item{\code{initial_log_likelihood}}{Initial log likelihood function}
+\item{\code{constant_log_likelihood}}{Constant log likelihood function}
 
 \item{\code{save_history}}{Logical, indicating if we should save history}
 

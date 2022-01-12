@@ -344,7 +344,7 @@ test_that("Can offset the initial likelihood", {
   dat <- example_sir()
   n_particles <- 42
 
-  initial_ll <- function(pars) {
+  constant_ll <- function(pars) {
     10
   }
 
@@ -355,7 +355,7 @@ test_that("Can offset the initial likelihood", {
 
   set.seed(1)
   p2 <- particle_deterministic$new(dat$data, dat$model, dat$compare,
-                            initial_log_likelihood = initial_ll,
+                            constant_log_likelihood = constant_ll,
                             index = dat$index)
   ll2 <- p2$run(save_history = TRUE)
   expect_equal(ll2, ll1 + 10)

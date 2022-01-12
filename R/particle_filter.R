@@ -70,7 +70,7 @@ particle_filter <- R6::R6Class(
     index = NULL,
     initial = NULL,
     compare = NULL,
-    initial_log_likelihood = NULL,
+    constant_log_likelihood = NULL,
     gpu_config = NULL,
     ## Control for dust
     seed = NULL,
@@ -155,11 +155,15 @@ particle_filter <- R6::R6Class(
     ##' the starting step, which is equivalent to returning
     ##' `list(state = state, step = NULL)`.
     ##'
-    ##' @param initial_log_likelihood An optional function, taking the
-    ##' model parameters, that computes the initial log-likelihood value.
-    ##' You can use this where your likelihood depends both on the time
-    ##' series (via `data`) but also on some non-temporal data.  You
-    ##' should bind any non-parameter dependencies into this closure.
+    ##' @param constant_log_likelihood An optional function, taking the
+    ##' model parameters, that computes the constant part of the
+    ##' log-likelihood value (if any).  You can use this where your
+    ##' likelihood depends both on the time series (via `data`) but also
+    ##' on some non-temporal data.  You should bind any non-parameter
+    ##' dependencies into this closure.  This is applied at the
+    ##' beginning of the filter run, so represents the initial
+    ##' condition of the marginal log likelihood value propagated by
+    ##' the filter.
     ##'
     ##' @param n_threads Number of threads to use when running the
     ##' simulation. Defaults to 1, and should not be set higher than the
@@ -184,7 +188,7 @@ particle_filter <- R6::R6Class(
     ##' list will be added in a future version!
     initialize = function(data, model, n_particles, compare,
                           index = NULL, initial = NULL,
-                          initial_log_likelihood = NULL,
+                          constant_log_likelihood = NULL,
                           n_threads = 1L, seed = NULL,
                           gpu_config = NULL) {
       if (!is_dust_generator(model)) {
@@ -192,7 +196,7 @@ particle_filter <- R6::R6Class(
       }
       assert_function_or_null(index)
       assert_function_or_null(initial)
-      assert_function_or_null(initial_log_likelihood)
+      assert_function_or_null(constant_log_likelihood)
       assert_is(data, "particle_filter_data")
 
       if (is.null(compare)) {
@@ -222,7 +226,7 @@ particle_filter <- R6::R6Class(
       private$gpu_config <- gpu_config
       private$index <- index
       private$initial <- initial
-      private$initial_log_likelihood <- initial_log_likelihood
+      private$constant_log_likelihood <- constant_log_likelihood
 
       self$n_particles <- assert_scalar_positive_integer(n_particles)
       private$n_threads <- assert_scalar_positive_integer(n_threads)
@@ -315,7 +319,7 @@ particle_filter <- R6::R6Class(
         pars, self$model, private$last_model, private$data,
         private$data_split, private$steps, self$n_particles,
         private$n_threads, private$initial, private$index, private$compare,
-        private$initial_log_likelihood, private$gpu_config, private$seed,
+        private$constant_log_likelihood, private$gpu_config, private$seed,
         min_log_likelihood, save_history, save_restart)
     },
 
@@ -425,7 +429,7 @@ particle_filter <- R6::R6Class(
            index = private$index,
            initial = private$initial,
            compare = private$compare,
-           initial_log_likelihood = private$initial_log_likelihood,
+           constant_log_likelihood = private$constant_log_likelihood,
            gpu_config = private$gpu_config,
            n_threads = private$n_threads,
            seed = filter_current_seed(private$last_model, private$seed))
@@ -474,7 +478,7 @@ particle_filter_from_inputs <- function(inputs, seed = NULL) {
       compare = inputs$compare,
       index = inputs$index,
       initial = inputs$initial,
-      initial_log_likelihood = inputs$initial_log_likelihood,
+      constant_log_likelihood = inputs$constant_log_likelihood,
       n_threads = inputs$n_threads)
   } else {
     particle_filter$new(
@@ -485,7 +489,7 @@ particle_filter_from_inputs <- function(inputs, seed = NULL) {
       gpu_config = inputs$gpu_config,
       index = inputs$index,
       initial = inputs$initial,
-      initial_log_likelihood = inputs$initial_log_likelihood,
+      constant_log_likelihood = inputs$constant_log_likelihood,
       n_threads = inputs$n_threads,
       seed = seed %||% inputs$seed)
   }

@@ -1,6 +1,6 @@
 # mcstate 0.8.1
 
-* New argument to `mcstate::particle_filter` and `mcstate::particle_deterministic`, `initial_log_likelihood` which can be used to compute the probabilities of non-time series data (#185)
+* New argument to `mcstate::particle_filter` and `mcstate::particle_deterministic`, `constant_log_likelihood` which can be used to compute the probabilities of non-time series data (#185)
 
 # mcstate 0.8.0
 

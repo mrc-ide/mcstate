@@ -1352,7 +1352,7 @@ test_that("Can offset the initial likelihood", {
   dat <- example_sir()
   n_particles <- 42
 
-  initial_ll <- function(pars) {
+  constant_ll <- function(pars) {
     10
   }
 
@@ -1363,7 +1363,7 @@ test_that("Can offset the initial likelihood", {
 
   set.seed(1)
   p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            initial_log_likelihood = initial_ll,
+                            constant_log_likelihood = constant_ll,
                             index = dat$index, seed = 1L)
   ll2 <- p2$run(save_history = TRUE)
   expect_equal(ll2, ll1 + 10)
@@ -1379,7 +1379,7 @@ test_that("can save history - nested", {
 
   pars <- list(list(beta = 0.2, gamma = 0.1),
                list(beta = 0.3, gamma = 0.2))
-  initial_log_likelihood <- function(p) {
+  constant_log_likelihood <- function(p) {
     -p$beta * 10 - p$gamma
   }
 
@@ -1391,7 +1391,7 @@ test_that("can save history - nested", {
   set.seed(1)
   p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index, seed = 1,
-                            initial_log_likelihood = initial_log_likelihood)
+                            constant_log_likelihood = constant_log_likelihood)
   ll2 <- p2$run(pars)
   expect_equal(ll2, ll1 - c(2.1, 3.2))
 })

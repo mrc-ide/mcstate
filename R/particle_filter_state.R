@@ -97,7 +97,7 @@ particle_filter_state <- R6::R6Class(
     ##' @param initial Initial condition function (or `NULL`)
     ##' @param index Index function (or `NULL`)
     ##' @param compare Compare function
-    ##' @param initial_log_likelihood Initial log likelihood function
+    ##' @param constant_log_likelihood Constant log likelihood function
     ##' @param gpu_config GPU configuration, passed to `generator`
     ##' @param seed Initial RNG seed
     ##' @param min_log_likelihood Early termination control
@@ -105,7 +105,7 @@ particle_filter_state <- R6::R6Class(
     ##' @param save_restart Vector of steps to save restart at
     initialize = function(pars, generator, model, data, data_split, steps,
                           n_particles, n_threads, initial, index, compare,
-                          initial_log_likelihood, gpu_config, seed,
+                          constant_log_likelihood, gpu_config, seed,
                           min_log_likelihood, save_history, save_restart) {
       pars_multi <- inherits(data, "particle_filter_data_nested")
       support <- particle_filter_state_support(pars_multi)
@@ -181,8 +181,8 @@ particle_filter_state <- R6::R6Class(
 
       ## Variable (see also history)
       self$model <- model
-      self$log_likelihood <- particle_filter_initial_log_likelihood(
-        pars, pars_multi, initial_log_likelihood)
+      self$log_likelihood <- particle_filter_constant_log_likelihood(
+        pars, pars_multi, constant_log_likelihood)
     },
 
     ##' @description Run the particle filter to the end of the data. This is
@@ -339,7 +339,7 @@ particle_filter_state <- R6::R6Class(
       seed <- self$model$rng_state()
       save_history <- !is.null(self$history)
       initial <- NULL
-      initial_log_likelihood <- NULL
+      constant_log_likelihood <- NULL
 
       if (is.null(pars)) {
         pars <- self$model$pars()
@@ -347,7 +347,7 @@ particle_filter_state <- R6::R6Class(
       ret <- particle_filter_state$new(
         pars, private$generator, model, private$data, private$data_split,
         private$steps, private$n_particles, private$n_threads,
-        initial, private$index, private$compare, initial_log_likelihood,
+        initial, private$index, private$compare, constant_log_likelihood,
         gpu_config, seed, private$min_log_likelihood,
         save_history, private$save_restart)
 
@@ -382,7 +382,7 @@ particle_filter_state <- R6::R6Class(
         pars, private$generator, model, private$data, private$data_split,
         private$steps, private$n_particles, private$n_threads,
         private$initial, private$index, private$compare,
-        private$initial_log_likelihood, gpu_config,
+        private$constant_log_likelihood, gpu_config,
         seed, private$min_log_likelihood, save_history, private$save_restart)
 
       ## Run it up to the same point
@@ -445,9 +445,9 @@ particle_filter_early_exit <- function(log_likelihood, min_log_likelihood) {
 }
 
 
-particle_filter_initial_log_likelihood <- function(pars, pars_multi,
-                                                   initial_log_likelihood) {
-  if (is.null(initial_log_likelihood)) {
+particle_filter_constant_log_likelihood <- function(pars, pars_multi,
+                                                    constant_log_likelihood) {
+  if (is.null(constant_log_likelihood)) {
     if (pars_multi) {
       rep(0, length(pars))
     } else {
@@ -455,9 +455,9 @@ particle_filter_initial_log_likelihood <- function(pars, pars_multi,
     }
   } else {
     if (pars_multi) {
-      vnapply(pars, initial_log_likelihood)
+      vnapply(pars, constant_log_likelihood)
     } else {
-      initial_log_likelihood(pars)
+      constant_log_likelihood(pars)
     }
   }
 }
