@@ -1346,3 +1346,52 @@ test_that("Confirm nested filter is correct", {
   expect_identical(s3$history$order[, 2, ], s2$history$order)
   expect_identical(s3$history$index, s1$history$index)
 })
+
+
+test_that("Can offset the initial likelihood", {
+  dat <- example_sir()
+  n_particles <- 42
+
+  constant_ll <- function(pars) {
+    10
+  }
+
+  set.seed(1)
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, seed = 1L)
+  ll1 <- p1$run(save_history = TRUE)
+
+  set.seed(1)
+  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            constant_log_likelihood = constant_ll,
+                            index = dat$index, seed = 1L)
+  ll2 <- p2$run(save_history = TRUE)
+  expect_equal(ll2, ll1 + 10)
+  expect_identical(p1$history(), p2$history())
+  expect_identical(p1$state(), p2$state())
+})
+
+
+test_that("can save history - nested", {
+  dat <- example_sir_shared()
+  n_particles <- 42
+  set.seed(1)
+
+  pars <- list(list(beta = 0.2, gamma = 0.1),
+               list(beta = 0.3, gamma = 0.2))
+  constant_log_likelihood <- function(p) {
+    -p$beta * 10 - p$gamma
+  }
+
+  set.seed(1)
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1)
+  ll1 <- p1$run(pars)
+
+  set.seed(1)
+  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1,
+                            constant_log_likelihood = constant_log_likelihood)
+  ll2 <- p2$run(pars)
+  expect_equal(ll2, ll1 - c(2.1, 3.2))
+})

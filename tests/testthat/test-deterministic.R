@@ -338,3 +338,27 @@ test_that("Can partially run a deterministic particle and resume", {
   expect_equal(ll3_2, ll1, tolerance = 1e-11)
   expect_equal(s3$history$value, p1$history(), tolerance = 1e-11)
 })
+
+
+test_that("Can offset the initial likelihood", {
+  dat <- example_sir()
+  n_particles <- 42
+
+  constant_ll <- function(pars) {
+    10
+  }
+
+  set.seed(1)
+  p1 <- particle_deterministic$new(dat$data, dat$model, dat$compare,
+                                   index = dat$index)
+  ll1 <- p1$run(save_history = TRUE)
+
+  set.seed(1)
+  p2 <- particle_deterministic$new(dat$data, dat$model, dat$compare,
+                            constant_log_likelihood = constant_ll,
+                            index = dat$index)
+  ll2 <- p2$run(save_history = TRUE)
+  expect_equal(ll2, ll1 + 10)
+  expect_identical(p1$history(), p2$history())
+  expect_identical(p1$state(), p2$state())
+})

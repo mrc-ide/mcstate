@@ -69,10 +69,12 @@ particle_deterministic_state <- R6::R6Class(
     ##' @param initial Initial condition function (or `NULL`)
     ##' @param index Index function (or `NULL`)
     ##' @param compare Compare function
+    ##' @param constant_log_likelihood Constant log likelihood function
     ##' @param save_history Logical, indicating if we should save history
     ##' @param save_restart Vector of steps to save restart at
     initialize = function(pars, generator, model, data, data_split, steps,
                           n_threads, initial, index, compare,
+                          constant_log_likelihood,
                           save_history, save_restart) {
       pars_multi <- inherits(data, "particle_filter_data_nested")
       support <- particle_deterministic_state_support(pars_multi)
@@ -144,7 +146,8 @@ particle_deterministic_state <- R6::R6Class(
 
       ## Variable (see also history)
       self$model <- model
-      self$log_likelihood <- rep(0, prod(shape[-1]))
+      self$log_likelihood <- particle_filter_constant_log_likelihood(
+        pars, pars_multi, constant_log_likelihood)
     },
 
     ##' @description Run the deterministic particle to the end of the data.
@@ -249,6 +252,7 @@ particle_deterministic_state <- R6::R6Class(
       model <- NULL
       save_history <- !is.null(self$history)
       initial <- NULL
+      constant_log_likelihood <- NULL
 
       if (is.null(pars)) {
         pars <- self$model$pars()
@@ -256,7 +260,8 @@ particle_deterministic_state <- R6::R6Class(
       ret <- particle_deterministic_state$new(
         pars, private$generator, model, private$data, private$data_split,
         private$steps, private$n_threads, initial, private$index,
-        private$compare, save_history, private$save_restart)
+        private$compare, constant_log_likelihood,
+        save_history, private$save_restart)
 
       particle_filter_update_state(transform_state, self$model, ret$model)
 
