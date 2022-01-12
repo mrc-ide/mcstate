@@ -7,7 +7,6 @@ context("pmcmc")
 test_that("mcmc works for uniform distribution on unit square", {
   dat <- example_uniform()
   control <- pmcmc_control(1000, save_state = FALSE, save_trajectories = FALSE)
-  res <- pmcmc(dat$pars, dat$filter, control = control)
 
   set.seed(1)
   testthat::try_again(5, {
@@ -112,9 +111,10 @@ test_that("run pmcmc with the particle filter and retain history", {
 
   expect_setequal(
     names(results1),
-    c("nested", "chain", "iteration",
+    c("nested", "chain", "iteration", "pars_index",
       "pars", "probabilities", "state", "trajectories", "restart", "predict"))
 
+  expect_null(results1$pars_index)
   expect_null(results1$chain)
   expect_equal(results1$iteration, 1:30)
 
@@ -785,23 +785,28 @@ test_that("Can filter pmcmc on creation", {
   set.seed(1)
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index, seed = 1L)
-  results2 <- pmcmc(pars, p, control = control2)
+  results2 <- pmcmc(dat$pars, p, control = control2)
 
+  expect_equal(dim(results1$pars), c(30, 2))
   expect_equal(dim(results2$pars), c(7, 2))
 
-  expect_null(results1$pars_full)
-  expect_null(results1$probabilities_full)
+  expect_identical(results1$pars_full, results1$pars)
+  expect_identical(results1$probabilities_full, results1$probabilities)
   expect_equal(results2$pars_full, results1$pars)
   expect_equal(results2$probabilities_full, results1$probabilities)
-  expect_equal(results2$iteration, 1:7)
 
+  expect_equal(results1$iteration, 1:30)
   i <- seq(control2$n_burnin + 1,
            by = control2$n_steps_every,
            length.out = control2$n_steps_retain)
+  expect_equal(results2$iteration, i)
+
   cmp <- pmcmc_filter(results1, i)
-  v <- setdiff(names(results2),
-               c("pars_full", "probabilities_full", "iteration"))
+  v <- setdiff(names(results2), c("pars", "probabilities", "pars_index"))
   expect_equal(results2[v], cmp[v])
+  expect_equal(results2$pars, unclass(cmp)$pars)
+  expect_equal(results2$probabilities, unclass(cmp)$probabilities)
+  expect_null(cmp$pars_index)
 })
 
 
@@ -814,7 +819,6 @@ test_that("Can filter pmcmc on creation, after combining chains", {
   control2 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE,
                             n_chains = 2, n_burnin = 3, n_steps_retain = 7)
 
-
   set.seed(1)
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index, seed = 1L)
@@ -826,17 +830,22 @@ test_that("Can filter pmcmc on creation, after combining chains", {
 
   expect_equal(dim(results2$pars), c(14, 2))
 
-  expect_null(results1$pars_full)
-  expect_null(results1$probabilities_full)
+  expect_identical(results1$pars_full, results1$pars)
+  expect_identical(results1$probabilities_full, results1$probabilities)
+
   expect_equal(results2$pars_full, results1$pars)
   expect_equal(results2$probabilities_full, results1$probabilities)
-  expect_equal(results2$iteration, rep(1:7, 2))
 
+  expect_equal(results1$iteration, rep(1:30, 2))
   i <- seq(control2$n_burnin + 1,
            by = control2$n_steps_every,
            length.out = control2$n_steps_retain)
+  expect_equal(results2$iteration, rep(i, 2))
+
   cmp <- pmcmc_filter(results1, c(i, i + control1$n_steps))
-  v <- setdiff(names(results2),
-               c("pars_full", "probabilities_full", "iteration"))
+  v <- setdiff(names(results2), c("pars", "probabilities", "pars_index"))
   expect_equal(results2[v], cmp[v])
+  expect_equal(results2$pars, unclass(cmp)$pars)
+  expect_equal(results2$probabilities, unclass(cmp)$probabilities)
+  expect_null(cmp$pars_index)
 })

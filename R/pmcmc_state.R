@@ -260,21 +260,6 @@ pmcmc_state <- R6::R6Class(
         private$history_probabilities$get(), idx_pars)
       dimnames(probabilities) <- dimnames_probabilities
 
-      if (private$control$n_steps_retain == private$control$n_steps) {
-        pars_full <- NULL
-        probabilities_full <- NULL
-      } else {
-        pars_full <- pars
-        probabilities_full <- probabilities
-        ## Then at this point we need to make sure that we filter the
-        ## parameters and the pars
-        i <- seq(private$control$n_burnin + 1,
-                 by = private$control$n_steps_every,
-                 length.out = private$control$n_steps_retain)
-        pars <- array_first_dimension(pars_full, i)
-        probabilities <- array_first_dimension(probabilities_full, i)
-      }
-
       predict <- state <- restart <- trajectories <- NULL
 
       if (private$control$save_state || private$control$save_trajectories) {
@@ -320,11 +305,11 @@ pmcmc_state <- R6::R6Class(
                                              predicted = FALSE)
       }
 
-      ret <- mcstate_pmcmc(pars, probabilities, state, trajectories, restart,
-                           predict)
-      ret$pars_full <- pars_full
-      ret$probabilities_full <- probabilities_full
-      ret
+      iteration <- seq(private$control$n_burnin + 1,
+                       by = private$control$n_steps_every,
+                       length.out = private$control$n_steps_retain)
+      mcstate_pmcmc(iteration, pars, probabilities, state,
+                    trajectories, restart, predict)
     }
   ))
 

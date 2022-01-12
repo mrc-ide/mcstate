@@ -101,8 +101,8 @@ pmcmc_filter <- function(object, i) {
 pmcmc_combine <- function(..., samples = list(...)) {
   assert_list_of(samples, "mcstate_pmcmc")
 
-  pars <- lapply(samples, "[[", "pars")
-  probabilities <- lapply(samples, "[[", "probabilities")
+  pars <- lapply(samples, "[[", "pars_full")
+  probabilities <- lapply(samples, "[[", "probabilities_full")
   iteration <- lapply(samples, "[[", "iteration")
   state <- lapply(samples, "[[", "state")
   trajectories <- lapply(samples, "[[", "trajectories")
@@ -140,19 +140,8 @@ pmcmc_combine <- function(..., samples = list(...)) {
   ## We might check index, rate and step here though.
   predict <- last(samples)$predict
 
-  ret <- mcstate_pmcmc(pars, probabilities, state, trajectories, restart,
-                       predict, chain, iteration)
-
-  ## Special treatment in case the chains were sampled on generation:
-  if (!is.null(samples[[1]]$pars_full)) {
-    pars_full <- lapply(samples, "[[", "pars_full")
-    probabilities_full <- lapply(samples, "[[", "probabilities_full")
-    ret$pars_full <- array_bind(arrays = pars_full, dimension = 1)
-    ret$probabilities_full <-
-      array_bind(arrays = probabilities_full, dimension = 1)
-  }
-
-  ret
+  mcstate_pmcmc(iteration, pars, probabilities, state, trajectories,
+                restart, predict, chain)
 }
 
 check_combine <- function(samples, iteration, state, trajectories, restart) {
