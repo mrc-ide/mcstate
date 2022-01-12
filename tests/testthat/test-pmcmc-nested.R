@@ -454,3 +454,31 @@ test_that("Can do early exit with nested model", {
   ## better test of this really.
   expect_false(identical(p2$inputs()$seed, p1$inputs()$seed))
 })
+
+
+test_that("Can run both fixed and varied at once", {
+  dat <- example_sir_shared()
+  p <- particle_filter$new(dat$data, dat$model, 10, dat$compare,
+                           dat$index)
+  proposal_fixed <- matrix(0.00026)
+  proposal_varied <- matrix(0.00057)
+
+  pars <- pmcmc_parameters_nested$new(
+    list(pmcmc_varied_parameter("beta", letters[1:2], c(0.2, 0.3),
+                                min = 0, max = 1,
+                                prior = function(p) log(1e-10)),
+         pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
+                         prior = function(p) log(1e-10))),
+    proposal_fixed = proposal_fixed, proposal_varied = proposal_varied)
+
+  control <- pmcmc_control(30, nested_step_ratio = 30,
+                           nested_update_both = TRUE)
+  res <- pmcmc(pars, p, control = control)
+
+  ## Test that either all parameters change for everything or no
+  ## parameters change everywhere:
+  i <- which(res$pars[1:29, 1, 1] != res$pars[2:30, 1, 1])
+  expect_true(all(res$pars[i, , ] != res$pars[i + 1, , ]))
+  j <- setdiff(1:29, i)
+  expect_true(all(res$pars[j, , ] == res$pars[j + 1, , ]))
+})

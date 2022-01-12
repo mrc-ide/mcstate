@@ -18,6 +18,7 @@ pmcmc_control(
   save_trajectories = FALSE,
   progress = FALSE,
   nested_step_ratio = 1,
+  nested_update_both = FALSE,
   filter_early_exit = FALSE,
   n_burnin = NULL,
   n_steps_retain = NULL
@@ -128,6 +129,12 @@ iterations updating the fixed and varied parameters. Sensible choices
 of this parameter may depend on the true ratio of fixed:varied parameters
 or on desired run-time, for example updating fixed parameters is
 quicker so more varied steps could be more efficient.}
+
+\item{nested_update_both}{If \code{FALSE} (default) then alternates
+between proposing fixed and varied parameter updates according
+to the ratio in \code{nested_step_ratio}. If \code{TRUE} then proposes
+fixed and varied parameters simultaneously and collectively
+accepts/rejects them, \code{nested_step_ratio} is ignored.}
 
 \item{filter_early_exit}{Logical, indicating if we should allow
 the particle filter to exit early for points that will not be

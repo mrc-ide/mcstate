@@ -116,8 +116,8 @@ pmcmc_state <- R6::R6Class(
       }
     },
 
-    update_fixed = function() {
-      prop_pars <- private$pars$propose(private$curr_pars, type = "fixed")
+    update_combined = function(type) {
+      prop_pars <- private$pars$propose(private$curr_pars, type = type)
       prop_lprior <- private$pars$prior(prop_pars)
 
       u <- runif(1)
@@ -134,6 +134,14 @@ pmcmc_state <- R6::R6Class(
         private$curr_lpost <- prop_lpost
         private$update_particle_history()
       }
+    },
+
+    update_fixed = function() {
+      private$update_combined("fixed")
+    },
+
+    update_both = function() {
+      private$update_combined("both")
     },
 
     update_varied = function() {
@@ -199,6 +207,8 @@ pmcmc_state <- R6::R6Class(
         update <- update_single(private$update_varied)
       } else if (length(pars$names("varied")) == 0) {
         update <- update_single(private$update_fixed)
+      } else if (private$control$nested_update_both) {
+        update <- update_single(private$update_both)
       } else {
         update <- update_alternate(private$update_fixed,
                                    private$update_varied,
