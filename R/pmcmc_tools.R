@@ -31,7 +31,7 @@ pmcmc_thin <- function(object, burnin = NULL, thin = NULL) {
       stop(sprintf("'burnin' must be less than %d for your results",
                    burnin_max))
     }
-    i <- i & object$iteration >= burnin
+    i <- i & object$iteration > burnin
   }
 
   if (!is.null(thin)) {

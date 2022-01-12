@@ -8,7 +8,7 @@ test_that("pmcmc_thin with no args is a no-op", {
 
 test_that("discarding burnin drops beginnings of chain", {
   results <- example_sir_pmcmc()$pmcmc
-  res <- pmcmc_thin(results, 10)
+  res <- pmcmc_thin(results, 9)
   i <- 10:30
   expect_identical(res$pars, results$pars[i, ])
   expect_identical(res$probabilities, results$probabilities[i, ])
@@ -35,7 +35,7 @@ test_that("thinning drops all over chain", {
 test_that("burnin and thin can be used together", {
   results <- example_sir_pmcmc()$pmcmc
   i <- seq(10, 30, by = 4)
-  res <- pmcmc_thin(results, 10, 4)
+  res <- pmcmc_thin(results, 9, 4)
   expect_identical(res$pars, results$pars[i, ])
   expect_identical(res$probabilities, results$probabilities[i, ])
   expect_identical(res$state, results$state[, i])
@@ -60,7 +60,7 @@ test_that("Can thin when no state/trajectories present", {
   results$state <- NULL
 
   i <- seq(10, 30, by = 4)
-  res <- pmcmc_thin(results, 10, 4)
+  res <- pmcmc_thin(results, 9, 4)
   expect_identical(res$pars, results$pars[i, ])
   expect_identical(res$probabilities, results$probabilities[i, ])
   expect_null(res$state)
@@ -135,28 +135,28 @@ test_that("can combine chains without samples or state", {
 test_that("can drop burnin from combined chains", {
   results <- example_sir_pmcmc2()$results
   combined <- pmcmc_combine(samples = results)
-  res <- pmcmc_thin(combined, burnin = 10)
+  res <- pmcmc_thin(combined, burnin = 9)
   expect_equal(res$chain, rep(1:3, each = 21))
   expect_equal(res$iteration, rep(10:30, 3))
 
   ## Same performed either way:
   expect_identical(
     res,
-    pmcmc_combine(samples = lapply(results, pmcmc_thin, burnin = 10)))
+    pmcmc_combine(samples = lapply(results, pmcmc_thin, burnin = 9)))
 })
 
 
 test_that("can thin combined chains", {
   results <- example_sir_pmcmc2()$results
   combined <- pmcmc_combine(samples = results)
-  res <- pmcmc_thin(combined, burnin = 10, thin = 4)
+  res <- pmcmc_thin(combined, burnin = 9, thin = 4)
   expect_equal(res$chain, rep(1:3, each = 6))
   expect_equal(res$iteration, rep(seq(10, 30, by = 4), 3))
 
   ## Same performed either way:
   expect_identical(
     res,
-    pmcmc_combine(samples = lapply(results, pmcmc_thin, 10, 4)))
+    pmcmc_combine(samples = lapply(results, pmcmc_thin, 9, 4)))
 })
 
 
@@ -275,7 +275,7 @@ test_that("check object types for combine", {
 
 test_that("can sample from a mcmc", {
   results <- example_sir_pmcmc()$pmcmc
-  sub <- pmcmc_sample(results, 10, burnin = 10)
+  sub <- pmcmc_sample(results, 10, burnin = 9)
   expect_equal(nrow(sub$pars), 10)
   expect_true(all(sub$iteration >= 10))
 })
@@ -283,7 +283,7 @@ test_that("can sample from a mcmc", {
 
 test_that("sampling is with replacement", {
   results <- example_sir_pmcmc()$pmcmc
-  sub <- pmcmc_sample(results, 50, burnin = 10)
+  sub <- pmcmc_sample(results, 50, burnin = 9)
   expect_equal(nrow(sub$pars), 50)
   expect_true(all(sub$iteration >= 10))
   expect_true(any(duplicated(sub$iteration)))
@@ -292,7 +292,7 @@ test_that("sampling is with replacement", {
 
 test_that("can sample from a combined chain", {
   results <- pmcmc_combine(samples = example_sir_pmcmc2()$results)
-  sub <- pmcmc_sample(results, 50, burnin = 10)
+  sub <- pmcmc_sample(results, 50, burnin = 9)
   expect_equal(nrow(sub$pars), 50)
   expect_true(all(1:3 %in% sub$chain))
   expect_true(all(sub$iteration >= 10))
@@ -377,7 +377,7 @@ test_that("require consistent nested data", {
 
 test_that("discarding burnin drops beginnings of nested chain", {
   results <- example_sir_nested_pmcmc()$results[[1]]
-  res <- pmcmc_thin(results, 10)
+  res <- pmcmc_thin(results, 9)
   i <- 10:30
   expect_identical(res$pars, results$pars[i, , ])
   expect_identical(res$probabilities, results$probabilities[i, , ])
@@ -389,7 +389,7 @@ test_that("discarding burnin drops beginnings of nested chain", {
 
 test_that("can sample from a nested mcmc", {
   results <- example_sir_nested_pmcmc()$results[[1]]
-  sub <- pmcmc_sample(results, 10, burnin = 10)
+  sub <- pmcmc_sample(results, 10, burnin = 9)
   expect_equal(nrow(sub$pars), 10)
   expect_true(all(sub$iteration >= 10))
 })
