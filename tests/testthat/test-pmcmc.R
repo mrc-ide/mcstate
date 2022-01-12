@@ -772,18 +772,8 @@ test_that("Can create restart initial function", {
 
 
 test_that("Can filter pmcmc on creation", {
-  proposal_kernel <- diag(2) * 1e-4
-  row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("beta", "gamma")
-
-  pars <- pmcmc_parameters$new(
-    list(pmcmc_parameter("beta", 0.2, min = 0, max = 1,
-                         prior = function(p) log(1e-10)),
-         pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
-                         prior = function(p) log(1e-10))),
-    proposal = proposal_kernel)
-
   dat <- example_sir()
-  n_particles <- 100
+  n_particles <- 10
   control1 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE)
   control2 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE,
                             n_burnin = 5, n_steps_retain = 7)
@@ -791,7 +781,7 @@ test_that("Can filter pmcmc on creation", {
   set.seed(1)
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index, seed = 1L)
-    results1 <- pmcmc(pars, p, control = control1)
+  results1 <- pmcmc(dat$pars, p, control = control1)
   set.seed(1)
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index, seed = 1L)
@@ -809,6 +799,43 @@ test_that("Can filter pmcmc on creation", {
            by = control2$n_steps_every,
            length.out = control2$n_steps_retain)
   cmp <- pmcmc_filter(results1, i)
+  v <- setdiff(names(results2),
+               c("pars_full", "probabilities_full", "iteration"))
+  expect_equal(results2[v], cmp[v])
+})
+
+
+test_that("Can filter pmcmc on creation, after combining chains", {
+  dat <- example_sir()
+
+  n_particles <- 10
+  control1 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE,
+                            n_chains = 2)
+  control2 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE,
+                            n_chains = 2, n_burnin = 3, n_steps_retain = 7)
+
+
+  set.seed(1)
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, seed = 1L)
+  results1 <- pmcmc(dat$pars, p, control = control1)
+  set.seed(1)
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, seed = 1L)
+  results2 <- pmcmc(dat$pars, p, control = control2)
+
+  expect_equal(dim(results2$pars), c(14, 2))
+
+  expect_null(results1$pars_full)
+  expect_null(results1$probabilities_full)
+  expect_equal(results2$pars_full, results1$pars)
+  expect_equal(results2$probabilities_full, results1$probabilities)
+  expect_equal(results2$iteration, rep(1:7, 2))
+
+  i <- seq(control2$n_burnin + 1,
+           by = control2$n_steps_every,
+           length.out = control2$n_steps_retain)
+  cmp <- pmcmc_filter(results1, c(i, i + control1$n_steps))
   v <- setdiff(names(results2),
                c("pars_full", "probabilities_full", "iteration"))
   expect_equal(results2[v], cmp[v])
