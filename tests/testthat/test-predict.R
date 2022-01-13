@@ -18,7 +18,7 @@ test_that("can run a prediction from a mcmc run", {
   expect_equal(y$rate, 4)
   expect_equal(y$predicted, rep(TRUE, length(steps)))
 
-  expect_equal(dim(y$state), c(3, 31, length(steps)))
+  expect_equal(dim(y$state), c(3, 30, length(steps)))
 
   ## Start from correct point
   expect_equal(y$state[, , 1], results$state[1:3, ])
@@ -158,7 +158,7 @@ test_that("can run a prediction from a nested mcmc run", {
   expect_equal(y$rate, 4)
   expect_equal(y$predicted, rep(TRUE, length(steps)))
 
-  expect_equal(dim(y$state), c(3, 2, 31, length(steps)))
+  expect_equal(dim(y$state), c(3, 2, 30, length(steps)))
 
   ## Check predictions are reasonable:
   expect_true(all(diff(t(y$state[1, 1, , ])) <= 0))

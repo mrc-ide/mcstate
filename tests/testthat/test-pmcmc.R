@@ -111,11 +111,12 @@ test_that("run pmcmc with the particle filter and retain history", {
 
   expect_setequal(
     names(results1),
-    c("nested", "chain", "iteration",
+    c("nested", "chain", "iteration", "pars_index",
       "pars", "probabilities", "state", "trajectories", "restart", "predict"))
 
+  expect_null(results1$pars_index)
   expect_null(results1$chain)
-  expect_equal(results1$iteration, 0:30)
+  expect_equal(results1$iteration, 1:30)
 
   ## Including or not the history does not change the mcmc trajectory:
   expect_identical(names(results1), names(results2))
@@ -126,19 +127,19 @@ test_that("run pmcmc with the particle filter and retain history", {
   expect_true(all(acceptance_rate(results1$pars) > 0))
 
   ## Parameters and probabilities have the expected shape
-  expect_equal(dim(results1$pars), c(31, 2))
+  expect_equal(dim(results1$pars), c(30, 2))
   expect_equal(colnames(results1$pars), c("beta", "gamma"))
 
-  expect_equal(dim(results1$probabilities), c(31, 3))
+  expect_equal(dim(results1$probabilities), c(30, 3))
   expect_equal(colnames(results1$probabilities),
                c("log_prior", "log_likelihood", "log_posterior"))
 
   ## History, if returned, has the correct shape
-  expect_equal(dim(results1$state), c(5, 31)) # state, mcmc
+  expect_equal(dim(results1$state), c(5, 30)) # state, mcmc
 
   ## Trajectories, if returned, have the same shape
   expect_s3_class(results1$trajectories, "mcstate_trajectories")
-  expect_equal(dim(results1$trajectories$state), c(3, 31, 101))
+  expect_equal(dim(results1$trajectories$state), c(3, 30, 101))
   expect_equal(
     results1$trajectories$state[, , dim(results1$trajectories$state)[3]],
     results1$state[1:3, ])
@@ -213,9 +214,9 @@ test_that("run multiple chains", {
   set.seed(1)
   res3 <- pmcmc(dat$pars, dat$filter, control = control2)
   expect_s3_class(res3, "mcstate_pmcmc")
-  expect_equal(res3$chain, rep(1:3, each = 101))
+  expect_equal(res3$chain, rep(1:3, each = 100))
 
-  expect_equal(res1$pars, res3$pars[1:101, ])
+  expect_equal(res1$pars, res3$pars[1:100, ])
 })
 
 
@@ -332,11 +333,27 @@ test_that("can validate a matrix initial conditions", {
 
 
 test_that("can start a pmcmc from a matrix of starting points", {
-  dat <- example_uniform()
-  initial <- matrix(runif(6), 2, 3, dimnames = list(c("a", "b"), NULL))
-  control <- pmcmc_control(1000, save_state = FALSE, n_chains = 3)
-  res <- pmcmc(dat$pars, dat$filter, control = control, initial = initial)
-  expect_equal(res$pars[res$iteration == 0, ], t(initial))
+  proposal_kernel <- diag(2) * 2
+  row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("beta", "gamma")
+  pars <- pmcmc_parameters$new(
+    list(pmcmc_parameter("beta", 0.2, min = 0, max = 1,
+                         prior = function(p) log(1e-10)),
+         pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
+                         prior = function(p) log(1e-10))),
+    proposal = proposal_kernel * 50)
+
+  p0 <- pars$initial()
+  initial <- matrix(p0, 2, 3, dimnames = list(names(p0), NULL))
+  initial[] <- initial + runif(6, 0, 0.001)
+
+  dat <- example_sir()
+  p <- particle_filter$new(dat$data, dat$model, 10, dat$compare,
+                           index = dat$index)
+
+  control <- pmcmc_control(2, n_chains = 3)
+  res <- pmcmc(pars, p, control = control, initial = initial)
+
+  expect_equal(nrow(unique(res$pars[res$iteration == 1, ])), 3)
 })
 
 
@@ -417,7 +434,7 @@ test_that("can partially run the pmcmc", {
   obj <- pmcmc_state$new(pars, initial, p2, control)
   expect_equal(obj$run(), list(step = 10, finished = FALSE))
   tmp <- r6_private(obj)$history_pars$get()
-  expect_equal(lengths(tmp), rep(c(2, 0), c(11, 20)))
+  expect_equal(lengths(tmp), rep(c(2, 0), c(10, 20)))
   expect_equal(obj$run(), list(step = 20, finished = FALSE))
   expect_equal(obj$run(), list(step = 30, finished = TRUE))
   expect_equal(obj$run(), list(step = 30, finished = TRUE))
@@ -505,11 +522,11 @@ test_that("Can save intermediate state to restart", {
 
   expect_is(res2$restart, "list")
   expect_equal(res2$restart$time, 20)
-  expect_equal(dim(res2$restart$state), c(5, 31, 1))
+  expect_equal(dim(res2$restart$state), c(5, 30, 1))
 
   expect_is(res3$restart, "list")
   expect_equal(res3$restart$time, c(20, 30))
-  expect_equal(dim(res3$restart$state), c(5, 31, 2))
+  expect_equal(dim(res3$restart$state), c(5, 30, 2))
 
   expect_equal(res3$restart$state[, , 1], res2$restart$state[, , 1])
 })
@@ -531,7 +548,7 @@ test_that("can restart the mcmc using saved state", {
 
   ## Our new restart state, which includes a range of possible S
   ## values
-  expect_equal(dim(res1$restart$state), c(5, 51, 1))
+  expect_equal(dim(res1$restart$state), c(5, 50, 1))
   s <- res1$restart$state[, , 1]
   d2 <- dat$data[dat$data$day_start >= 40, ]
 
@@ -543,7 +560,7 @@ test_that("can restart the mcmc using saved state", {
   res2 <- pmcmc(dat$pars, p2, control = control2)
 
   expect_equal(res2$trajectories$step, (40:100) * 4)
-  expect_equal(dim(res2$trajectories$state), c(3, 51, 61))
+  expect_equal(dim(res2$trajectories$state), c(3, 50, 61))
 })
 
 
@@ -567,7 +584,7 @@ test_that("Fix parameters in sir model", {
   control <- pmcmc_control(10, save_trajectories = TRUE, save_state = TRUE)
 
   results <- pmcmc(pars2, p, control = control)
-  expect_equal(dim(results$pars), c(11, 1))
+  expect_equal(dim(results$pars), c(10, 1))
   expect_equal(results$predict$transform(pi), list(beta = pi, gamma = 0.1))
 })
 
@@ -699,7 +716,7 @@ test_that("Fix impossible control parameters", {
                            index = dat$index, seed = 1L)
   ## Previously this errored, here we're just looking for completion
   results <- pmcmc(dat$pars, p, control = ctrl)
-  expect_equal(dim(results$pars), c(11, 2))
+  expect_equal(dim(results$pars), c(10, 2))
   expect_false(any(is.na(results$pars)))
 })
 
@@ -733,11 +750,11 @@ test_that("Can save intermediate state to restart", {
 
   expect_is(res2$restart, "list")
   expect_equal(res2$restart$time, 20)
-  expect_equal(dim(res2$restart$state), c(5, 31, 1))
+  expect_equal(dim(res2$restart$state), c(5, 30, 1))
 
   expect_is(res3$restart, "list")
   expect_equal(res3$restart$time, c(20, 30))
-  expect_equal(dim(res3$restart$state), c(5, 31, 2))
+  expect_equal(dim(res3$restart$state), c(5, 30, 2))
 
   expect_equal(res3$restart$state[, , 1], res2$restart$state[, , 1])
 })
@@ -751,4 +768,88 @@ test_that("Can create restart initial function", {
   expect_equal(dim(res), c(10, 3))
   expect_equal(res %% 10, matrix(0:9, 10, 3))
   expect_true(all(diff(res %/% 10) == 0))
+})
+
+
+test_that("Can filter pmcmc on creation", {
+  dat <- example_sir()
+  n_particles <- 10
+  control1 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE)
+  control2 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE,
+                            n_burnin = 5, n_steps_retain = 7)
+
+  set.seed(1)
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, seed = 1L)
+  results1 <- pmcmc(dat$pars, p, control = control1)
+  set.seed(1)
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, seed = 1L)
+  results2 <- pmcmc(dat$pars, p, control = control2)
+
+  expect_equal(dim(results1$pars), c(30, 2))
+  expect_equal(dim(results2$pars), c(7, 2))
+
+  expect_identical(results1$pars_full, results1$pars)
+  expect_identical(results1$probabilities_full, results1$probabilities)
+  expect_equal(results2$pars_full, results1$pars)
+  expect_equal(results2$probabilities_full, results1$probabilities)
+
+  expect_equal(results1$iteration, 1:30)
+  i <- seq(control2$n_burnin + 1,
+           by = control2$n_steps_every,
+           length.out = control2$n_steps_retain)
+  expect_equal(results2$iteration, i)
+
+  cmp <- pmcmc_filter(results1, i)
+  v <- setdiff(names(results2), c("pars", "probabilities", "pars_index"))
+  expect_equal(results2[v], cmp[v])
+  expect_equal(results2$pars, unclass(cmp)$pars)
+  expect_equal(results2$probabilities, unclass(cmp)$probabilities)
+  expect_null(cmp$pars_index)
+})
+
+
+test_that("Can filter pmcmc on creation, after combining chains", {
+  dat <- example_sir()
+
+  n_particles <- 10
+  control1 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE,
+                            n_chains = 2)
+  control2 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE,
+                            n_chains = 2, n_burnin = 3, n_steps_retain = 7)
+
+  set.seed(1)
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, seed = 1L)
+  results1 <- pmcmc(dat$pars, p, control = control1)
+  set.seed(1)
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, seed = 1L)
+  results2 <- pmcmc(dat$pars, p, control = control2)
+
+  expect_equal(dim(results2$pars), c(14, 2))
+
+  expect_identical(results1$pars_full, results1$pars)
+  expect_identical(results1$probabilities_full, results1$probabilities)
+
+  expect_equal(results2$pars_full, results1$pars)
+  expect_equal(results2$probabilities_full, results1$probabilities)
+
+  expect_equal(results1$iteration, rep(1:30, 2))
+  i <- seq(control2$n_burnin + 1,
+           by = control2$n_steps_every,
+           length.out = control2$n_steps_retain)
+  expect_equal(results2$iteration, rep(i, 2))
+
+  cmp <- pmcmc_filter(results1, c(i, i + control1$n_steps))
+  v <- setdiff(names(results2), c("pars", "probabilities", "pars_index"))
+  expect_equal(results2[v], cmp[v])
+  expect_equal(results2$pars, unclass(cmp)$pars)
+  expect_equal(results2$probabilities, unclass(cmp)$probabilities)
+  expect_null(cmp$pars_index)
+
+  results3 <- pmcmc_thin(results2)
+  expect_identical(results3$pars, results2$pars)
+  expect_identical(results3$pars_full, results3$pars_full)
 })

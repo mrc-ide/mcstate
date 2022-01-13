@@ -1,3 +1,8 @@
+# mcstate 0.8.2
+
+* Allow filtering of the pmcmc chains during running (dropping burnin and filtering) to reduce memory usage when collectin large trajectories
+* pmcmc no longer retains the initial parameter values
+
 # mcstate 0.8.1
 
 * New argument to `mcstate::particle_filter` and `mcstate::particle_deterministic`, `constant_log_likelihood` which can be used to compute the probabilities of non-time series data (#185)

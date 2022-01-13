@@ -18,7 +18,9 @@ pmcmc_control(
   save_trajectories = FALSE,
   progress = FALSE,
   nested_step_ratio = 1,
-  filter_early_exit = FALSE
+  filter_early_exit = FALSE,
+  n_burnin = NULL,
+  n_steps_retain = NULL
 )
 }
 \arguments{
@@ -133,6 +135,13 @@ accepted. Only use this if your log-likelihood never increases
 between steps. This will the the case where your likelihood
 calculation is a sum of discrete normalised probability
 distributions, but may not be for continuous distributions!}
+
+\item{n_burnin}{Optionally, the number of points to discard as
+burnin.  This happens separately to the burnin in
+\link{pmcmc_thin} or \link{pmcmc_sample}.  See Details.}
+
+\item{n_steps_retain}{Optionally, the number of samples to retain from
+the \code{n_steps - n_burnin} steps.  See Details.}
 }
 \value{
 A \code{pmcmc_control} object, which should not be modified
@@ -150,6 +159,36 @@ pMCMC is slow and you will want to parallelise it if you possibly
 can. There are two ways of doing this which are discussed in some
 detail in \code{vignette("parallelisation", package = "mcstate")}.
 }
+\section{Thinning the chain at generation}{
+
+
+Generally it may be preferable to thin the chains after generation
+using \link{pmcmc_thin} or \link{pmcmc_sample}.
+However, waiting that long can create memory consumption issues
+because the size of the trajectories can be very large.  To
+avoid this, you can thin the chains at generation - this will
+avoid creating large trajectory arrays, but will discard some
+information irretrivably.
+
+If either of the options \code{n_burnin} or \code{n_steps_retain} are provided,
+then we will subsample the chain at generation.
+\itemize{
+\item If \code{n_burnin} is provided, then the first \code{n_burnin} (of
+\code{n_steps}) samples is discarded.  This must be at most \code{n_steps}
+\item If \code{n_steps_retain} is provided, then we \emph{evenly} sample out of
+the remaining samples.  The algorithm will try and generate a
+sensible set here, and will always include the last sample of
+\code{n_steps} but may not always include the first post-burnin
+sample.  An error will be thrown if a suitable sampling is not
+possible (e.g., if \code{n_steps_retain} is larger than \code{n_steps - n_burnin}
+}
+
+If either of \code{n_burnin} or \code{n_steps_retain} is provided, the
+resulting samples object will include the full set of parameters
+and probabilities sampled, along with an index showing how they
+relate to the filtered samples.
+}
+
 \examples{
 mcstate::pmcmc_control(1000)
 

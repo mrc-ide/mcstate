@@ -8,8 +8,8 @@ test_that("pmcmc_thin with no args is a no-op", {
 
 test_that("discarding burnin drops beginnings of chain", {
   results <- example_sir_pmcmc()$pmcmc
-  res <- pmcmc_thin(results, 10)
-  i <- 11:31
+  res <- pmcmc_thin(results, 9)
+  i <- 10:30
   expect_identical(res$pars, results$pars[i, ])
   expect_identical(res$probabilities, results$probabilities[i, ])
   expect_identical(res$state, results$state[, i])
@@ -22,7 +22,7 @@ test_that("discarding burnin drops beginnings of chain", {
 test_that("thinning drops all over chain", {
   results <- example_sir_pmcmc()$pmcmc
   res <- pmcmc_thin(results, thin = 4)
-  i <- seq(1, 31, by = 4)
+  i <- seq(1, 30, by = 4)
   expect_identical(res$pars, results$pars[i, ])
   expect_identical(res$probabilities, results$probabilities[i, ])
   expect_identical(res$state, results$state[, i])
@@ -34,8 +34,8 @@ test_that("thinning drops all over chain", {
 
 test_that("burnin and thin can be used together", {
   results <- example_sir_pmcmc()$pmcmc
-  i <- seq(11, 31, by = 4)
-  res <- pmcmc_thin(results, 10, 4)
+  i <- seq(10, 30, by = 4)
+  res <- pmcmc_thin(results, 9, 4)
   expect_identical(res$pars, results$pars[i, ])
   expect_identical(res$probabilities, results$probabilities[i, ])
   expect_identical(res$state, results$state[, i])
@@ -47,7 +47,7 @@ test_that("burnin and thin can be used together", {
 
 test_that("can't discard the whole chain (or more)", {
   results <- example_sir_pmcmc()$pmcmc
-  expect_error(pmcmc_thin(results, 31),
+  expect_error(pmcmc_thin(results, 30),
                "'burnin' must be less than 30 for your results")
   expect_error(pmcmc_thin(results, 100),
                "'burnin' must be less than 30 for your results")
@@ -59,8 +59,8 @@ test_that("Can thin when no state/trajectories present", {
   results$trajectories <- NULL
   results$state <- NULL
 
-  i <- seq(11, 31, by = 4)
-  res <- pmcmc_thin(results, 10, 4)
+  i <- seq(10, 30, by = 4)
+  res <- pmcmc_thin(results, 9, 4)
   expect_identical(res$pars, results$pars[i, ])
   expect_identical(res$probabilities, results$probabilities[i, ])
   expect_null(res$state)
@@ -77,7 +77,7 @@ test_that("can combine chains", {
 
   res <- pmcmc_combine(results1, results2, results3)
 
-  n_mcmc <- nrow(results1$pars)
+  n_steps <- nrow(results1$pars)
   n_par <- ncol(results1$pars)
   n_particles <- nrow(results1$state)
   n_index <- nrow(results1$trajectories$state)
@@ -85,15 +85,15 @@ test_that("can combine chains", {
   n_restart <- dim(results1$restart$state)[[3]]
   n_state <- nrow(results1$state)
 
-  n_mcmc3 <- n_mcmc * 3
+  n_steps3 <- n_steps * 3
 
-  expect_equal(dim(res$pars), c(n_mcmc3, n_par))
-  expect_equal(dim(res$probabilities), c(n_mcmc3, 3))
-  expect_equal(dim(res$state), c(n_state, n_mcmc3))
-  expect_equal(dim(res$trajectories$state), c(n_index, n_mcmc3, n_time))
-  expect_equal(dim(res$restart$state), c(n_state, n_mcmc3, n_restart))
+  expect_equal(dim(res$pars), c(n_steps3, n_par))
+  expect_equal(dim(res$probabilities), c(n_steps3, 3))
+  expect_equal(dim(res$state), c(n_state, n_steps3))
+  expect_equal(dim(res$trajectories$state), c(n_index, n_steps3, n_time))
+  expect_equal(dim(res$restart$state), c(n_state, n_steps3, n_restart))
 
-  i <- seq_len(n_mcmc) + n_mcmc
+  i <- seq_len(n_steps) + n_steps
   expect_equal(res$pars[i, ], results2$pars)
   expect_equal(res$probabilities[i, ], results2$probabilities)
   expect_equal(res$state[, i], results2$state)
@@ -135,28 +135,28 @@ test_that("can combine chains without samples or state", {
 test_that("can drop burnin from combined chains", {
   results <- example_sir_pmcmc2()$results
   combined <- pmcmc_combine(samples = results)
-  res <- pmcmc_thin(combined, burnin = 10)
+  res <- pmcmc_thin(combined, burnin = 9)
   expect_equal(res$chain, rep(1:3, each = 21))
   expect_equal(res$iteration, rep(10:30, 3))
 
   ## Same performed either way:
   expect_identical(
     res,
-    pmcmc_combine(samples = lapply(results, pmcmc_thin, burnin = 10)))
+    pmcmc_combine(samples = lapply(results, pmcmc_thin, burnin = 9)))
 })
 
 
 test_that("can thin combined chains", {
   results <- example_sir_pmcmc2()$results
   combined <- pmcmc_combine(samples = results)
-  res <- pmcmc_thin(combined, burnin = 10, thin = 4)
+  res <- pmcmc_thin(combined, burnin = 9, thin = 4)
   expect_equal(res$chain, rep(1:3, each = 6))
   expect_equal(res$iteration, rep(seq(10, 30, by = 4), 3))
 
   ## Same performed either way:
   expect_identical(
     res,
-    pmcmc_combine(samples = lapply(results, pmcmc_thin, 10, 4)))
+    pmcmc_combine(samples = lapply(results, pmcmc_thin, 9, 4)))
 })
 
 
@@ -197,7 +197,7 @@ test_that("require consistent data", {
   a <- results[[1]]
   b <- results[[2]]
   expect_error(
-    pmcmc_combine(a, pmcmc_thin(b, burnin = 1)),
+    pmcmc_combine(a, pmcmc_thin(b, burnin = 2)),
     "All chains must have the same length")
 })
 
@@ -275,7 +275,7 @@ test_that("check object types for combine", {
 
 test_that("can sample from a mcmc", {
   results <- example_sir_pmcmc()$pmcmc
-  sub <- pmcmc_sample(results, 10, burnin = 10)
+  sub <- pmcmc_sample(results, 10, burnin = 9)
   expect_equal(nrow(sub$pars), 10)
   expect_true(all(sub$iteration >= 10))
 })
@@ -283,7 +283,7 @@ test_that("can sample from a mcmc", {
 
 test_that("sampling is with replacement", {
   results <- example_sir_pmcmc()$pmcmc
-  sub <- pmcmc_sample(results, 50, burnin = 10)
+  sub <- pmcmc_sample(results, 50, burnin = 9)
   expect_equal(nrow(sub$pars), 50)
   expect_true(all(sub$iteration >= 10))
   expect_true(any(duplicated(sub$iteration)))
@@ -292,7 +292,7 @@ test_that("sampling is with replacement", {
 
 test_that("can sample from a combined chain", {
   results <- pmcmc_combine(samples = example_sir_pmcmc2()$results)
-  sub <- pmcmc_sample(results, 50, burnin = 10)
+  sub <- pmcmc_sample(results, 50, burnin = 9)
   expect_equal(nrow(sub$pars), 50)
   expect_true(all(1:3 %in% sub$chain))
   expect_true(all(sub$iteration >= 10))
@@ -370,15 +370,15 @@ test_that("require consistent nested data", {
   a <- results[[1]]
   b <- results[[2]]
   expect_error(
-    pmcmc_combine(a, pmcmc_thin(b, burnin = 1)),
+    pmcmc_combine(a, pmcmc_thin(b, burnin = 2)),
     "All chains must have the same length")
 })
 
 
 test_that("discarding burnin drops beginnings of nested chain", {
   results <- example_sir_nested_pmcmc()$results[[1]]
-  res <- pmcmc_thin(results, 10)
-  i <- 11:31
+  res <- pmcmc_thin(results, 9)
+  i <- 10:30
   expect_identical(res$pars, results$pars[i, , ])
   expect_identical(res$probabilities, results$probabilities[i, , ])
   expect_identical(res$state, results$state[, , i])
@@ -389,7 +389,7 @@ test_that("discarding burnin drops beginnings of nested chain", {
 
 test_that("can sample from a nested mcmc", {
   results <- example_sir_nested_pmcmc()$results[[1]]
-  sub <- pmcmc_sample(results, 10, burnin = 10)
+  sub <- pmcmc_sample(results, 10, burnin = 9)
   expect_equal(nrow(sub$pars), 10)
   expect_true(all(sub$iteration >= 10))
 })
@@ -449,7 +449,7 @@ test_that("can combine chains for nested model", {
 
   res <- pmcmc_combine(results1, results2, results3)
 
-  n_mcmc <- nrow(results1$pars)
+  n_steps <- nrow(results1$pars)
   n_par <- ncol(results1$pars)
   n_pop <- nlayer(results1$pars)
   n_particles <- nrow(results1$state)
@@ -458,15 +458,15 @@ test_that("can combine chains for nested model", {
   n_restart <- dim(results1$restart$state)[[4]]
   n_state <- nrow(results1$state)
 
-  n_mcmc3 <- n_mcmc * 3
+  n_steps3 <- n_steps * 3
 
-  expect_equal(dim(res$pars), c(n_mcmc3, n_par, n_pop))
-  expect_equal(dim(res$probabilities), c(n_mcmc3, 3, n_pop))
-  expect_equal(dim(res$state), c(n_state, n_pop, n_mcmc3))
-  expect_equal(dim(res$trajectories$state), c(n_index, n_pop, n_mcmc3, n_time))
-  expect_equal(dim(res$restart$state), c(n_state, n_pop, n_mcmc3, n_restart))
+  expect_equal(dim(res$pars), c(n_steps3, n_par, n_pop))
+  expect_equal(dim(res$probabilities), c(n_steps3, 3, n_pop))
+  expect_equal(dim(res$state), c(n_state, n_pop, n_steps3))
+  expect_equal(dim(res$trajectories$state), c(n_index, n_pop, n_steps3, n_time))
+  expect_equal(dim(res$restart$state), c(n_state, n_pop, n_steps3, n_restart))
 
-  i <- seq_len(n_mcmc) + n_mcmc
+  i <- seq_len(n_steps) + n_steps
   expect_equal(res$pars[i, , ], results2$pars)
   expect_equal(res$probabilities[i, , ], results2$probabilities)
   expect_equal(res$state[, , i], results2$state)

@@ -1,9 +1,21 @@
-mcstate_pmcmc <- function(pars, probabilities, state, trajectories, restart,
-                          predict, chain = NULL, iteration = NULL) {
-
-  iteration <- iteration %||% seq.int(0, length.out = nrow(pars))
-
+mcstate_pmcmc <- function(iteration, pars, probabilities, state,
+                          trajectories, restart, predict, chain = NULL) {
   nested <- length(dim(pars)) == 3
+
+  ## So the option here would be to either store the full
+  if (nrow(pars) == length(iteration)) {
+    pars_index <- NULL
+  } else if (is.null(chain)) {
+    pars_index <- iteration
+  } else {
+    ## We make the simplifying assumption that we always include the
+    ## last iteration, which is done for us.  That *won't* be true
+    ## after filtering, but that drops the full parameters so that's
+    ## ok.
+    len <- unname(tapply(iteration, chain, max))
+    stopifnot(nrow(pars) == sum(len))
+    pars_index <- iteration + cumsum(c(0, len[-length(len)]))[chain]
+  }
 
   ret <- list(nested = nested,
               chain = chain,
@@ -13,7 +25,8 @@ mcstate_pmcmc <- function(pars, probabilities, state, trajectories, restart,
               state = state,
               trajectories = trajectories,
               restart = restart,
-              predict = predict)
+              predict = predict,
+              pars_index = pars_index)
   class(ret) <- "mcstate_pmcmc"
   ret
 }
@@ -85,6 +98,31 @@ format.mcstate_pmcmc <- function(x, ...) {
 print.mcstate_pmcmc <- function(x, ...) {
   cat(paste0(format(x), "\n", collapse = ""))
   invisible(x)
+}
+
+
+##' @export
+`[[.mcstate_pmcmc` <- function(x, i, ...) { # nolint
+  assert_scalar_character(i)
+  if (i %in% c("pars", "probabilities")) {
+    ret <- NextMethod("[[")
+    index <- x$pars_index
+    if (!is.null(index)) {
+      ret <- array_first_dimension(ret, index)
+    }
+    ret
+  } else if (i %in% c("pars_full", "probabilities_full")) {
+    i <- sub("_full$", "", i)
+    NextMethod("[[")
+  } else {
+    NextMethod("[[")
+  }
+}
+
+
+##' @export
+`$.mcstate_pmcmc` <- function(x, name) { # nolint
+  x[[name]]
 }
 
 
