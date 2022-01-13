@@ -83,7 +83,7 @@ pmcmc_filter <- function(object, i) {
   }
 
   ## This must be removed (if it was present before)
-  object$pars_index <- NULL
+  object["pars_index"] <- list(NULL)
 
   object
 }
