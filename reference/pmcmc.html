@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.2</span>
       </span>
     </div>
 
@@ -122,7 +122,7 @@ simulation (if <code>return_trajectories</code> was <code>TRUE</code>).</p>
 <code>filter</code> is run with a set of parameters to evaluate the
 likelihood. A new set of parameters is proposed, and these
 likelihoods are compared, jumping with probability equal to their
-ratio. This is repeated for <code>n_mcmc</code> proposals.</p>
+ratio. This is repeated for <code>n_steps</code> proposals.</p>
 <p>While this function is called <code>pmcmc</code> and requires a particle
 filter object, there's nothing special about it for particle
 filtering. However, we may need to add things in the future that

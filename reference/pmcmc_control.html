@@ -21,7 +21,7 @@ as the order of the arguments may change in future."><meta property="og:image" c
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.2</span>
       </span>
     </div>
 
@@ -103,7 +103,9 @@ as the order of the arguments may change in future.</p>
   save_trajectories <span class="op">=</span> <span class="cn">FALSE</span>,
   progress <span class="op">=</span> <span class="cn">FALSE</span>,
   nested_step_ratio <span class="op">=</span> <span class="fl">1</span>,
-  filter_early_exit <span class="op">=</span> <span class="cn">FALSE</span>
+  filter_early_exit <span class="op">=</span> <span class="cn">FALSE</span>,
+  n_burnin <span class="op">=</span> <span class="cn">NULL</span>,
+  n_steps_retain <span class="op">=</span> <span class="cn">NULL</span>
 <span class="op">)</span></code></pre></div>
     </div>
 
@@ -221,6 +223,13 @@ accepted. Only use this if your log-likelihood never increases
 between steps. This will the the case where your likelihood
 calculation is a sum of discrete normalised probability
 distributions, but may not be for continuous distributions!</p></dd>
+<dt>n_burnin</dt>
+<dd><p>Optionally, the number of points to discard as
+burnin.  This happens separately to the burnin in
+<a href="pmcmc_thin.html">pmcmc_thin</a> or <a href="pmcmc_thin.html">pmcmc_sample</a>.  See Details.</p></dd>
+<dt>n_steps_retain</dt>
+<dd><p>Optionally, the number of samples to retain from
+the <code>n_steps - n_burnin</code> steps.  See Details.</p></dd>
 </dl></div>
     <div id="value">
     <h2>Value</h2>
@@ -232,6 +241,32 @@ once created.</p>
     <p>pMCMC is slow and you will want to parallelise it if you possibly
 can. There are two ways of doing this which are discussed in some
 detail in <code><a href="../articles/parallelisation.html">vignette("parallelisation", package = "mcstate")</a></code>.</p>
+    </div>
+    <div id="thinning-the-chain-at-generation">
+    <h2>Thinning the chain at generation</h2>
+    
+
+
+<p>Generally it may be preferable to thin the chains after generation
+using <a href="pmcmc_thin.html">pmcmc_thin</a> or <a href="pmcmc_thin.html">pmcmc_sample</a>.
+However, waiting that long can create memory consumption issues
+because the size of the trajectories can be very large.  To
+avoid this, you can thin the chains at generation - this will
+avoid creating large trajectory arrays, but will discard some
+information irretrivably.</p>
+<p>If either of the options <code>n_burnin</code> or <code>n_steps_retain</code> are provided,
+then we will subsample the chain at generation.</p><ul><li><p>If <code>n_burnin</code> is provided, then the first <code>n_burnin</code> (of
+<code>n_steps</code>) samples is discarded.  This must be at most <code>n_steps</code></p></li>
+<li><p>If <code>n_steps_retain</code> is provided, then we <em>evenly</em> sample out of
+the remaining samples.  The algorithm will try and generate a
+sensible set here, and will always include the last sample of
+<code>n_steps</code> but may not always include the first post-burnin
+sample.  An error will be thrown if a suitable sampling is not
+possible (e.g., if <code>n_steps_retain</code> is larger than <code>n_steps - n_burnin</code></p></li>
+</ul><p>If either of <code>n_burnin</code> or <code>n_steps_retain</code> is provided, the
+resulting samples object will include the full set of parameters
+and probabilities sampled, along with an index showing how they
+relate to the filtered samples.</p>
     </div>
 
     <div id="ref-examples">
@@ -277,6 +312,15 @@ detail in <code><a href="../articles/parallelisation.html">vignette("parallelisa
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $nested_step_ratio</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $n_burnin</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $n_steps_retain</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $n_steps_every</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
@@ -328,6 +372,15 @@ detail in <code><a href="../articles/parallelisation.html">vignette("parallelisa
 <span class="r-out co"><span class="r-pr">#&gt;</span> $nested_step_ratio</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $n_burnin</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $n_steps_retain</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $n_steps_every</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "pmcmc_control"</span>
 <span class="r-in"></span>
@@ -377,6 +430,15 @@ detail in <code><a href="../articles/parallelisation.html">vignette("parallelisa
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $nested_step_ratio</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $n_burnin</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $n_steps_retain</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $n_steps_every</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>

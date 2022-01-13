@@ -40,7 +40,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.2</span>
       </span>
     </div>
 
@@ -196,7 +196,7 @@
 <p>The restart state is a 3d array with dimensions corresponding to (1) model state, (2) MCMC sample, (3) restart time (a vector of times can be provided to <code>save_restart</code> but here just one time was returned).</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">res1</span><span class="op">$</span><span class="va">restart</span><span class="op">$</span><span class="va">state</span><span class="op">)</span>
-<span class="co">#&gt; [1]   5 501   1</span></code></pre></div>
+<span class="co">#&gt; [1]   5 500   1</span></code></pre></div>
 <p>This sample includes variablility over the pmcmc run:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="va">res1</span><span class="op">$</span><span class="va">restart</span><span class="op">$</span><span class="va">state</span><span class="op">[</span><span class="fl">2</span>, , <span class="op">]</span>, xlab <span class="op">=</span> <span class="st">"Number infected"</span>,

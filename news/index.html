@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.2</span>
       </span>
     </div>
 
@@ -75,6 +75,11 @@
       <small>Source: <a href="https://github.com/mrc-ide/mcstate/blob/HEAD/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="page-header" data-toc-text="0.8.2" id="mcstate-082">mcstate 0.8.2<a class="anchor" aria-label="anchor" href="#mcstate-082"></a></h2>
+<ul><li>Allow filtering of the pmcmc chains during running (dropping burnin and filtering) to reduce memory usage when collectin large trajectories</li>
+<li>pmcmc no longer retains the initial parameter values</li>
+</ul></div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="0.8.1" id="mcstate-081">mcstate 0.8.1<a class="anchor" aria-label="anchor" href="#mcstate-081"></a></h2>
 <ul><li>New argument to <code><a href="../reference/particle_filter.html">mcstate::particle_filter</a></code> and <code><a href="../reference/particle_deterministic.html">mcstate::particle_deterministic</a></code>, <code>constant_log_likelihood</code> which can be used to compute the probabilities of non-time series data (<a href="https://github.com/mrc-ide/mcstate/issues/185" class="external-link">#185</a>)</li>

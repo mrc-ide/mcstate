@@ -20,7 +20,7 @@ pmcmc_sample randomly selects a total of n_sample samples."><meta property="og:i
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.2</span>
       </span>
     </div>
 
@@ -98,16 +98,17 @@ disk.  <code>pmcmc_thin</code> takes every <code>thin</code>'th sample, while
 <dd><p>Results of running <code><a href="pmcmc.html">pmcmc()</a></code></p></dd>
 <dt>burnin</dt>
 <dd><p>Optional integer number of iterations to discard as
-"burn-in". If given then samples <code>1:burnin</code> will be
-excluded from your results. Remember that the first sample
-represents the starting point of the chain. It is an error if
-this is not a positive integer or is greater than or equal to
-the number of samples (i.e., there must be at least one sample
-remaining after discarding burnin).</p></dd>
+"burn-in". If given then samples <code>1:burnin</code> will be excluded
+from your results. It is an error if this is not a positive
+integer or is greater than or equal to the number of samples
+(i.e., there must be at least one sample remaining after
+discarding burnin).</p></dd>
 <dt>thin</dt>
 <dd><p>Optional integer thinning factor. If given, then every
-<code>thin</code>'th sample is retained (e.g., if <code>thin</code> is 10
-then we keep samples 1, 11, 21, ...).</p></dd>
+<code>thin</code>'th sample is retained (e.g., if <code>thin</code> is 10 then we keep
+samples 1, 11, 21, ...).  Note that this can produce surprising
+results as it will always select the first sample but not
+necessarily always the last.</p></dd>
 <dt>n_sample</dt>
 <dd><p>The number of samples to draw from <code>object</code> <em>with
 replacement</em>. This means that <code>n_sample</code> can be larger than the
