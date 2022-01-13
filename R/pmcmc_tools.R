@@ -82,6 +82,9 @@ pmcmc_filter <- function(object, i) {
     object$restart$state <- array_nth_dimension(object$restart$state, k, i)
   }
 
+  ## This must be removed (if it was present before)
+  object$pars_index <- NULL
+
   object
 }
 

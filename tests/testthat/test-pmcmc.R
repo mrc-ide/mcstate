@@ -848,4 +848,8 @@ test_that("Can filter pmcmc on creation, after combining chains", {
   expect_equal(results2$pars, unclass(cmp)$pars)
   expect_equal(results2$probabilities, unclass(cmp)$probabilities)
   expect_null(cmp$pars_index)
+
+  results3 <- pmcmc_thin(results2)
+  expect_identical(results3$pars, results2$pars)
+  expect_identical(results3$pars_full, results3$pars_full)
 })
