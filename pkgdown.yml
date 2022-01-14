@@ -1,5 +1,5 @@
 pandoc: 2.7.3
-pkgdown: 2.0.1
+pkgdown: 2.0.2
 pkgdown_sha: ~
 articles:
   deterministic: deterministic.html
@@ -9,5 +9,5 @@ articles:
   parallelisation: parallelisation.html
   restart: restart.html
   sir_models: sir_models.html
-last_built: 2022-01-13T16:07Z
+last_built: 2022-01-14T09:36Z
 

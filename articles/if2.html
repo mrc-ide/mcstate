@@ -40,7 +40,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.3</span>
       </span>
     </div>
 
@@ -125,9 +125,9 @@
 <p>Over the course of the iterations, the parameters closer to the data tend to be selected in the resampling step. The noise allows them to vary and approach an optimum. The cooling schedule is similar to simulated annealing, allowing larger steps at the beginning, and finer steps as the optimum is approached.</p>
 <p>This algorithm is described in the following paper:</p>
 <p>Ionides EL, Nguyen D, Atchadé Y, Stoev S, King AA (2015). “Inference for Dynamic and Latent Variable Models via Iterated, Perturbed Bayes Maps.” PNAS, 112(3), 719–724. <a href="https://doi.org/10.1073/pnas.1410597112" class="external-link uri">https://doi.org/10.1073/pnas.1410597112</a>.</p>
-<div class="section level1">
-<h1 id="setting-up-an-if2-run">Setting up an IF2 run<a class="anchor" aria-label="anchor" href="#setting-up-an-if2-run"></a>
-</h1>
+<div class="section level2">
+<h2 id="setting-up-an-if2-run">Setting up an IF2 run<a class="anchor" aria-label="anchor" href="#setting-up-an-if2-run"></a>
+</h2>
 <p>Based on the example in <code><a href="../articles/sir_models.html">vignette("sir_models")</a></code>, we will start by loading an SIR model and some simulated data. See that vignette for more details on what is being done here</p>
 <p>A data set to fit to</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
@@ -174,9 +174,9 @@
   progress <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
 <p>Here we will iterate 300 parameter sets with <code>X ~ N(0, 0.02)</code>, with geometrically decreasing noise, until after 100 iterations the magnitude of the noise has halved.</p>
 </div>
-<div class="section level1">
-<h1 id="running-the-if2-algorithm">Running the IF2 algorithm<a class="anchor" aria-label="anchor" href="#running-the-if2-algorithm"></a>
-</h1>
+<div class="section level2">
+<h2 id="running-the-if2-algorithm">Running the IF2 algorithm<a class="anchor" aria-label="anchor" href="#running-the-if2-algorithm"></a>
+</h2>
 <p>To start the IF2, we use a particle filter object in order to do some validation against the data. This may change in future and the particle filter is not actually run at this point in the process</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">filter</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="va"><a href="../reference/particle_filter.html">particle_filter</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">data</span>, <span class="va">sir</span>, <span class="fl">1L</span>, <span class="va">compare</span>, index <span class="op">=</span> <span class="va">index</span><span class="op">)</span></code></pre></div>
@@ -209,12 +209,12 @@
 <code class="sourceCode R"><span class="va">pars_series</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">result</span><span class="op">$</span><span class="va">pars</span>
 <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="va">pars_series</span><span class="op">[</span>, , <span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">pars_series</span><span class="op">)</span><span class="op">[[</span><span class="fl">3</span><span class="op">]</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>
 <span class="co">#&gt;       beta      gamma </span>
-<span class="co">#&gt; 0.20137161 0.06820769</span></code></pre></div>
+<span class="co">#&gt; 0.26242059 0.08112315</span></code></pre></div>
 <p>We can also run particle filters at each final parameter estimate to get an estimate of the model likelihood, showing the mean value in red:</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">n_particles</span> <span class="op">&lt;-</span> <span class="fl">100</span>
 <span class="va">ll_samples</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/if2.html">if2_sample</a></span><span class="op">(</span><span class="va">res</span>, <span class="va">n_particles</span><span class="op">)</span>
-<span class="co">#&gt; Finished 300 steps in 7 secs</span>
+<span class="co">#&gt; Finished 300 steps in 10 secs</span>
 <span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="va">ll_samples</span>, col <span class="op">=</span> <span class="st">"steelblue3"</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>v <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">ll_samples</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"red"</span>, lty <span class="op">=</span> <span class="fl">2</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></code></pre></div>
 <p><img src="if2_files/figure-html/unnamed-chunk-13-1.png" width="700"></p>
@@ -238,7 +238,7 @@
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.1.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
 </div>
 
       </footer>

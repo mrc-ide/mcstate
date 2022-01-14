@@ -21,7 +21,7 @@ as the order of the arguments may change in future."><meta property="og:image" c
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.3</span>
       </span>
     </div>
 
@@ -103,6 +103,7 @@ as the order of the arguments may change in future.</p>
   save_trajectories <span class="op">=</span> <span class="cn">FALSE</span>,
   progress <span class="op">=</span> <span class="cn">FALSE</span>,
   nested_step_ratio <span class="op">=</span> <span class="fl">1</span>,
+  nested_update_both <span class="op">=</span> <span class="cn">FALSE</span>,
   filter_early_exit <span class="op">=</span> <span class="cn">FALSE</span>,
   n_burnin <span class="op">=</span> <span class="cn">NULL</span>,
   n_steps_retain <span class="op">=</span> <span class="cn">NULL</span>
@@ -216,6 +217,12 @@ iterations updating the fixed and varied parameters. Sensible choices
 of this parameter may depend on the true ratio of fixed:varied parameters
 or on desired run-time, for example updating fixed parameters is
 quicker so more varied steps could be more efficient.</p></dd>
+<dt>nested_update_both</dt>
+<dd><p>If <code>FALSE</code> (default) then alternates
+between proposing fixed and varied parameter updates according
+to the ratio in <code>nested_step_ratio</code>. If <code>TRUE</code> then proposes
+fixed and varied parameters simultaneously and collectively
+accepts/rejects them, <code>nested_step_ratio</code> is ignored.</p></dd>
 <dt>filter_early_exit</dt>
 <dd><p>Logical, indicating if we should allow
 the particle filter to exit early for points that will not be
@@ -311,6 +318,9 @@ relate to the filtered samples.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $filter_early_exit</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $nested_update_both</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $nested_step_ratio</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -367,6 +377,9 @@ relate to the filtered samples.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $filter_early_exit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $nested_update_both</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $nested_step_ratio</span>
@@ -429,6 +442,9 @@ relate to the filtered samples.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $filter_early_exit</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $nested_update_both</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $nested_step_ratio</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -457,7 +473,7 @@ relate to the filtered samples.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.1.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
 </div>
 
       </footer></div>
