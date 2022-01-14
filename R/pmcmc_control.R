@@ -145,6 +145,12 @@
 ##'   or on desired run-time, for example updating fixed parameters is
 ##'   quicker so more varied steps could be more efficient.
 ##'
+##' @param nested_update_both If `FALSE` (default) then alternates
+##'   between proposing fixed and varied parameter updates according
+##'   to the ratio in `nested_step_ratio`. If `TRUE` then proposes
+##'   fixed and varied parameters simultaneously and collectively
+##'   accepts/rejects them, `nested_step_ratio` is ignored.
+##'
 ##' @param filter_early_exit Logical, indicating if we should allow
 ##'   the particle filter to exit early for points that will not be
 ##'   accepted. Only use this if your log-likelihood never increases
@@ -184,7 +190,8 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
                           use_parallel_seed = FALSE,
                           save_state = TRUE, save_restart = NULL,
                           save_trajectories = FALSE, progress = FALSE,
-                          nested_step_ratio = 1, filter_early_exit = FALSE,
+                          nested_step_ratio = 1, nested_update_both = FALSE,
+                          filter_early_exit = FALSE,
                           n_burnin = NULL, n_steps_retain = NULL) {
   assert_scalar_positive_integer(n_steps)
   assert_scalar_positive_integer(n_chains)
@@ -231,6 +238,7 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
     assert_strictly_increasing(save_restart)
   }
 
+  assert_scalar_logical(nested_update_both)
   ok <- test_integer(nested_step_ratio) || test_integer(1 / nested_step_ratio)
   if (!ok) {
     stop(sprintf("Either 'nested_step_ratio' (%g) or 1/'nested_step_ratio'
@@ -252,6 +260,7 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
               save_trajectories = save_trajectories,
               progress = progress,
               filter_early_exit = filter_early_exit,
+              nested_update_both = nested_update_both,
               nested_step_ratio = nested_step_ratio)
   ret[names(filter)] <- filter
 
