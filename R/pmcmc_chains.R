@@ -38,13 +38,15 @@ pmcmc_chains_run <- function(chain_id, path) {
   inputs <- readRDS(path$inputs)
   assert_is(inputs, "pmcmc_inputs")
 
-  if (chain_id < 1 || chain_id > inputs$control$n_chains) {
+  control <- inputs$control
+
+  if (chain_id < 1 || chain_id > control$n_chains) {
     stop(sprintf("'chain_id' must be an integer in 1..%d",
-                 inputs$control$n_chains))
+                 control$n_chains))
   }
 
   samples <- pmcmc_run_chain(chain_id, inputs$pars, inputs$initial,
-                             inputs$filter, inputs$control, inputs$seed)
+                             inputs$filter, control, inputs$seed)
 
   saveRDS(samples, path$results)
 
@@ -61,7 +63,8 @@ pmcmc_chains_collect <- function(path) {
     stop("Some results missing")
   }
 
-  ## Simplest way first, highest memory use:
+  ## Simplest way first, highest memory use; later we will try and do
+  ## something more clever here by building things up more nicely.
   samples <- lapply(path$results, readRDS)
   pmcmc_combine(samples = samples)
 }

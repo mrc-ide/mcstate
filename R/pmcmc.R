@@ -67,10 +67,6 @@ pmcmc_multiple_series <- function(pars, initial, filter, control) {
   }
   samples <- vector("list", control$n_chains)
 
-  ## Ensure that even if the control object has been updated we don't
-  ## do anything impossible:
-  control$n_steps_each <- control$n_steps
-
   for (i in seq_along(samples)) {
     samples[[i]] <- pmcmc_run_chain(i, pars, initial, filter, control, seed)
   }
@@ -103,6 +99,9 @@ pmcmc_run_chain <- function(chain_id, pars, initial, filter, control, seed) {
     set.seed(seed$r)
     filter <- particle_filter_from_inputs(filter$inputs(), seed$dust)
   }
+
+  ## TODO: can drop this later.
+  control$n_steps_each <- control$n_steps
 
   obj <- pmcmc_state$new(pars, initial, filter, control)
   obj$run()
