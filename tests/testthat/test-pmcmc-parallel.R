@@ -2,15 +2,20 @@ context("pmcmc (parallel)")
 
 test_that("basic parallel operation", {
   dat <- example_sir()
-  n_particles <- 42
-  n_steps <- 30
-  n_chains <- 3
+  n_particles <- 200
+  n_steps <- 50
 
-  p0 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+  p0 <- particle_filter$new(dat$data, dat$model, n_particles, NULL,
                             index = dat$index, seed = 1L)
-  control <- pmcmc_control(n_steps, n_chains = n_chains, n_workers = 2L,
-                           n_steps_each = 20L)
+  control <- pmcmc_control(n_steps, n_chains = 10, n_workers = 5L,
+                           n_threads_total = 10L,
+                           progress = TRUE)
   ans <- pmcmc(dat$pars, p0, control = control)
+
+
+  path <- tempfile()
+  pmcmc_chains_prepare(path, dat$pars, p0, control, NULL)
+  pmcmc_chains_run(1, path)
 
   ## Run two chains manually with a given pair of seeds:
   s <- make_seeds(n_chains, 1L, dat$model)

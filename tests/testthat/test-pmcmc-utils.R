@@ -131,3 +131,10 @@ test_that("progress bar creates progress_bar when progress = TRUE", {
     p(),
     "Finished 3 steps in [0-9.]+ secs")
 })
+
+
+
+p <- progress_percentage(200)
+p(0)
+p(1)
+p(1)

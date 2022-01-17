@@ -5,18 +5,16 @@ pmcmc_chains_prepare <- function(path, pars, filter, control,
   assert_is(filter, "particle_filter")
   assert_is(control, "pmcmc_control")
 
-  ## These feel like we might modify them?
-  ## if (control$n_workers != 1) {
-  ##   stop("'n_workers' must be 1")
-  ## }
-  ## if (!control$use_parallel_seed) {
-  ##   stop("'use_parallel_seed' must be TRUE")
-  ## }
+  if (!control$use_parallel_seed) {
+    stop("'use_parallel_seed' must be TRUE")
+  }
 
   initial <- pmcmc_check_initial(initial, pars, control$n_chains)
+  inputs <- filter$inputs()
 
-  seed <- make_seeds(control$n_chains, filter$inputs()$seed, filter$model)
+  browser()
 
+  seed <- make_seeds(control$n_chains, inputs$seed, filter$model)
   dat <- list(pars = pars, initial = initial, filter = filter,
               control = control, seed = seed)
   class(dat) <- "pmcmc_inputs"
@@ -39,14 +37,18 @@ pmcmc_chains_run <- function(chain_id, path) {
   assert_is(inputs, "pmcmc_inputs")
 
   control <- inputs$control
-
   if (chain_id < 1 || chain_id > control$n_chains) {
     stop(sprintf("'chain_id' must be an integer in 1..%d",
                  control$n_chains))
   }
 
+  seed <- inputs$seed[[chain_id]]
+  set.seed(seed$r) # likely problematic on CRAN...
+  filter <- particle_filter_from_inputs(inputs$filter, seed$dust)
+  filter$set_n_threads(control$n_threads)
+
   samples <- pmcmc_run_chain(chain_id, inputs$pars, inputs$initial,
-                             inputs$filter, control, inputs$seed)
+                             filter, control)
 
   saveRDS(samples, path$results)
 

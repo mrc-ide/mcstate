@@ -68,7 +68,8 @@ pmcmc_multiple_series <- function(pars, initial, filter, control) {
   samples <- vector("list", control$n_chains)
 
   for (i in seq_along(samples)) {
-    samples[[i]] <- pmcmc_run_chain(i, pars, initial, filter, control, seed)
+    ## TODO: deal with parallel seed here
+    samples[[i]] <- pmcmc_run_chain(i, pars, initial, filter, control)
   }
 
   if (control$n_chains == 1) {
@@ -79,26 +80,15 @@ pmcmc_multiple_series <- function(pars, initial, filter, control) {
 }
 
 
-pmcmc_run_chain <- function(chain_id, pars, initial, filter, control, seed) {
+pmcmc_run_chain <- function(chain_id, pars, initial, filter, control) {
   if (control$progress) {
     message(sprintf("Running chain %d / %d", chain_id, control$n_chains))
   }
-  if (!is.null(control$n_threads_total)) {
-    filter$set_n_threads(control$n_threads_total)
-  }
+  filter$set_n_threads(control$n_threads)
 
   initial <- array_drop(
     array_last_dimension(initial, chain_id), length(dim(initial)))
   seed <- seed[[chain_id]]
-
-  if (!is.null(seed)) {
-    ## TODO (#174): this feels pretty weird; can we just add a
-    ## "set_rng_state" method for the filter?
-    ##
-    ## This will be triggered where control$use_parallel_seed is TRUE
-    set.seed(seed$r)
-    filter <- particle_filter_from_inputs(filter$inputs(), seed$dust)
-  }
 
   ## TODO: can drop this later.
   control$n_steps_each <- control$n_steps
@@ -107,6 +97,17 @@ pmcmc_run_chain <- function(chain_id, pars, initial, filter, control, seed) {
   obj$run()
   obj$finish()
 }
+
+
+## pmcmc_apply_seed <- function(filter, seed) {
+##   if (!is.null(seed)) {
+##     ## TODO (#174): this feels pretty weird; can we just add a
+##     ## "set_rng_state" method for the filter?
+##     ##
+##     ## This will be triggered where control$use_parallel_seed is TRUE
+##     set.seed(seed$r)
+##     filter <- particle_filter_from_inputs(filter$inputs(), seed$dust)
+##   }
 
 
 pmcmc_multiple_parallel <- function(pars, initial, filter, control) {

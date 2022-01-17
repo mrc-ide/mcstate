@@ -196,15 +196,15 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
   assert_scalar_positive_integer(n_steps)
   assert_scalar_positive_integer(n_chains)
   assert_scalar_positive_integer(n_workers)
-  if (n_workers == 1L) {
-    ## Never use this in a non-parallel-worker situation
-    n_steps_each <- n_steps
-  } else if (is.null(n_steps_each)) {
-    n_steps_each <- ceiling(n_steps / 10)
+
+  ## Leave this be for now
+  n_steps_each <- n_steps
+  assert_scalar_positive_integer(n_steps_each)
+
+  if (is.null(n_threads_total)) {
+    n_threads <- 1L
+    n_threads_total <- n_workers
   } else {
-    assert_scalar_positive_integer(n_steps_each)
-  }
-  if (!is.null(n_threads_total)) {
     assert_scalar_positive_integer(n_threads_total)
     if (n_threads_total < n_workers) {
       stop(sprintf("'n_threads_total' (%d) is less than 'n_workers' (%d)",
@@ -215,6 +215,11 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
         "'n_threads_total' (%d) is not a multiple of 'n_workers' (%d)",
         n_threads_total, n_workers))
     }
+    n_threads <- n_threads_total / n_workers
+  }
+
+  if (n_workers > 0 && !use_parallel_seed) {
+    stop("If using workers, you must specify 'use_parallel_seed = TRUE'")
   }
 
   if (!identical(unname(rerun_every), Inf)) {
@@ -231,6 +236,11 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
   if (n_chains < n_workers) {
     stop(sprintf("'n_chains' (%d) is less than 'n_workers' (%d)",
                  n_chains, n_workers))
+  }
+
+  if (n_chains %% n_workers != 0) {
+    ## TODO: we should improve this message
+    message("Your last workers will be underpowered")
   }
 
   if (!is.null(save_restart)) {
@@ -251,6 +261,7 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
               n_chains = n_chains,
               n_workers = n_workers,
               n_steps_each = n_steps_each,
+              n_threads = n_threads,
               n_threads_total = n_threads_total,
               rerun_every = rerun_every,
               rerun_random = rerun_random,

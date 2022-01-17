@@ -163,7 +163,7 @@ progress_percentage <- function(total) {
     p <- floor(i / total * 100) # avoid 0.5 issues, report on completed steps
     if (p != prev) {
       prev <<- p
-      message(paste("progress:", p))
+      message(paste("progress:", i))
     }
   }
 }
