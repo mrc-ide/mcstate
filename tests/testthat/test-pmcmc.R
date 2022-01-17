@@ -405,78 +405,6 @@ test_that("rerunning the particle filter triggers the filter run method", {
 })
 
 
-test_that("can partially run the pmcmc", {
-  proposal_kernel <- diag(2) * 1e-4
-  row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("beta", "gamma")
-
-  pars <- pmcmc_parameters$new(
-    list(pmcmc_parameter("beta", 0.2, min = 0, max = 1,
-                         prior = function(p) log(1e-10)),
-         pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
-                         prior = function(p) log(1e-10))),
-    proposal = proposal_kernel)
-
-  control <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE)
-
-  dat <- example_sir()
-  n_particles <- 42
-  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index)
-  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index)
-
-  set.seed(1)
-  results1 <- pmcmc(pars, p1, control = control)
-
-  control$n_steps_each <- 10
-  set.seed(1)
-  initial <- pmcmc_check_initial(NULL, pars, 1)[, 1]
-  obj <- pmcmc_state$new(pars, initial, p2, control)
-  expect_equal(obj$run(), list(step = 10, finished = FALSE))
-  tmp <- r6_private(obj)$history_pars$get()
-  expect_equal(lengths(tmp), rep(c(2, 0), c(10, 20)))
-  expect_equal(obj$run(), list(step = 20, finished = FALSE))
-  expect_equal(obj$run(), list(step = 30, finished = TRUE))
-  expect_equal(obj$run(), list(step = 30, finished = TRUE))
-  results2 <- obj$finish()
-
-  expect_equal(results2, results1)
-})
-
-
-test_that("can change the number of threads mid-run", {
-  skip_on_cran()
-  dat <- example_sir()
-  n_particles <- 20
-  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index)
-  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index)
-
-
-  control <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE)
-
-  set.seed(1)
-  results1 <- pmcmc(dat$pars, p1, control = control)
-
-  control$n_steps_each <- 10
-  set.seed(1)
-  initial <- pmcmc_check_initial(NULL, dat$pars, 1)[, 1]
-  obj <- pmcmc_state$new(dat$pars, initial, p2, control)
-  expect_equal(obj$run(), list(step = 10, finished = FALSE))
-  expect_equal(obj$set_n_threads(2), 1)
-  expect_equal(obj$run(), list(step = 20, finished = FALSE))
-  expect_equal(r6_private(r6_private(obj)$filter)$n_threads, 2)
-  expect_equal(obj$set_n_threads(1), 2)
-  expect_equal(obj$run(), list(step = 30, finished = TRUE))
-  expect_equal(r6_private(r6_private(obj)$filter)$n_threads, 1)
-  expect_equal(obj$run(), list(step = 30, finished = TRUE))
-  results2 <- obj$finish()
-
-  expect_equal(results2, results1)
-})
-
-
 test_that("Can override thread count via control", {
   dat <- example_sir()
   n_particles <- 30
@@ -609,19 +537,6 @@ test_that("Can run pmcmc with early exit enabled", {
   ## identical to 300 steps at least, which is surprising. However,
   ## you can see that the RNG streams differ:
   expect_false(identical(p2$inputs()$seed, p1$inputs()$seed))
-})
-
-
-test_that("Fix impossible control parameters", {
-  ctrl <- pmcmc_control(10, n_workers = 1)
-  ctrl$n_steps_each <- 2
-  dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, 20, dat$compare,
-                           index = dat$index, seed = 1L)
-  ## Previously this errored, here we're just looking for completion
-  results <- pmcmc(dat$pars, p, control = ctrl)
-  expect_equal(dim(results$pars), c(10, 2))
-  expect_false(any(is.na(results$pars)))
 })
 
 

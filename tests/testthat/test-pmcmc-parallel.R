@@ -155,8 +155,7 @@ test_that("basic parallel operation nested", {
 
   filter <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                                 index = dat$index, seed = 1L)
-  control_parallel <- pmcmc_control(n_steps, n_chains = n_chains, n_workers = 2L,
-                                    n_steps_each = 20L)
+  control_parallel <- pmcmc_control(n_steps, n_chains = n_chains, n_workers = 2L)
   ans <- pmcmc(pars, filter, control = control_parallel)
 
   control_serial <- pmcmc_control(n_steps, n_chains = n_chains, progress = FALSE,

@@ -9,7 +9,6 @@ pmcmc_control(
   n_chains = 1L,
   n_threads_total = NULL,
   n_workers = 1L,
-  n_steps_each = NULL,
   rerun_every = Inf,
   rerun_random = FALSE,
   use_parallel_seed = FALSE,
@@ -52,17 +51,6 @@ in parallel. This must be at most \code{n_chains} and is recommended
 to be a divisor of \code{n_chains}. If \code{n_workers} is 1, then chains
 are run in series (i.e., one chain after the other). See the
 parallel vignette (\code{vignette("parallelisation", package = "mcstate")}) for more details about this approach.}
-
-\item{n_steps_each}{If using workers (i.e., \code{n_workers > 1}), the
-number of steps to run in each "chunk" on each worker before
-reporting back to the main process. Increasing this will make
-progress reporting less frequent and reduce some communication
-overhead (though the overhead is likely to be trivial in any
-real application). Decreasing this will give more frequent
-process reporting and if \code{n_threads_total} is given will allow
-for more rapid re-allocation of unused cores once chains start
-finishing. The default, if not given and if \code{n_workers > 1} is
-to use 10\% of \code{n_steps}.}
 
 \item{rerun_every}{Optional integer giving the frequency at which
 we should rerun the particle filter on the current "accepted"

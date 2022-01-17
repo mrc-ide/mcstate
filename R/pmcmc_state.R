@@ -223,7 +223,8 @@ pmcmc_state <- R6::R6Class(
 
     run = function() {
       control <- private$control
-      to <- min(private$curr_step + control$n_steps_each, control$n_steps)
+      ## TODO: simplify, then look at simplifying the rest
+      to <- min(private$curr_step + control$n_steps, control$n_steps)
       steps <- seq(from = private$curr_step + 1L,
                    length.out = to - private$curr_step)
       rerun <- make_rerun(control$rerun_every, control$rerun_random)

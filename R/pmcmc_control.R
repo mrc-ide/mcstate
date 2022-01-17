@@ -47,17 +47,6 @@
 ##'   with the same filter if `n_workers` is 1, or run in parallel
 ##'   otherwise.
 ##'
-##' @param n_steps_each If using workers (i.e., `n_workers > 1`), the
-##'   number of steps to run in each "chunk" on each worker before
-##'   reporting back to the main process. Increasing this will make
-##'   progress reporting less frequent and reduce some communication
-##'   overhead (though the overhead is likely to be trivial in any
-##'   real application). Decreasing this will give more frequent
-##'   process reporting and if `n_threads_total` is given will allow
-##'   for more rapid re-allocation of unused cores once chains start
-##'   finishing. The default, if not given and if `n_workers > 1` is
-##'   to use 10% of `n_steps`.
-##'
 ##' @param n_threads_total The total number of threads (i.e., cores)
 ##'   the total number of threads/cores to use. If `n_workers` is
 ##'   greater than 1 then these threads will be divided evenly across
@@ -185,7 +174,7 @@
 ##' mcstate::pmcmc_control(1000, n_chains = 8, n_threads_total = 16,
 ##'                        n_workers = 4)
 pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
-                          n_workers = 1L, n_steps_each = NULL,
+                          n_workers = 1L,
                           rerun_every = Inf, rerun_random = FALSE,
                           use_parallel_seed = FALSE,
                           save_state = TRUE, save_restart = NULL,
@@ -196,10 +185,6 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
   assert_scalar_positive_integer(n_steps)
   assert_scalar_positive_integer(n_chains)
   assert_scalar_positive_integer(n_workers)
-
-  ## Leave this be for now
-  n_steps_each <- n_steps
-  assert_scalar_positive_integer(n_steps_each)
 
   if (is.null(n_threads_total)) {
     n_threads <- 1L
@@ -256,7 +241,6 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
   ret <- list(n_steps = n_steps,
               n_chains = n_chains,
               n_workers = n_workers,
-              n_steps_each = n_steps_each,
               n_threads = n_threads,
               n_threads_total = n_threads_total,
               rerun_every = rerun_every,

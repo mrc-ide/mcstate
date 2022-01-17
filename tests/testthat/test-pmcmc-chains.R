@@ -24,27 +24,6 @@ test_that("Split chain manually", {
 })
 
 
-test_that("error", {
-  dat <- example_sir()
-  n_particles <- 42
-  n_steps <- 30
-  n_chains <- 3
-
-  p0 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index, seed = 1L)
-  control <- pmcmc_control(n_steps, n_chains = n_chains, n_workers = 2L,
-                           n_steps_each = 20L)
-  ## control$n_steps_each <- control$n_steps
-  ## control <- pmcmc_control(n_steps, n_chains = n_chains)
-
-  path <- tempfile()
-  pmcmc_chains_prepare(path, dat$pars, p0, control, NULL)
-  pmcmc_chains_run(1, path)
-}
-
-
-
-
 test_that("can run split chains with nested model", {
   dat <- example_sir_shared()
   p1 <- particle_filter$new(dat$data, dat$model, 10, dat$compare,
