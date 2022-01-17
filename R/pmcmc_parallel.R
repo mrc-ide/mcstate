@@ -32,13 +32,11 @@ pmcmc_orchestrator <- R6::R6Class(
 
   public = list(
     initialize = function(pars, initial, filter, control, path = NULL) {
-      ## This will be useful:
+      ## This will be useful, but we'll tidy it up later.
       if (control$progress) {
         control$progress_style <- "noninteractive"
       }
-      if (!is.null(control$n_threads_total)) {
-        control$n_threads <- control$n_threads_total / control$n_workers
-      }
+      control$use_parallel_seed <- TRUE
 
       path <- path %||% tempfile()
       private$path <- pmcmc_chains_prepare(path, pars, filter, control, initial)

@@ -9,6 +9,8 @@ test_that("basic parallel operation", {
   filter <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                                 index = dat$index, seed = 1L)
 
+  ## TODO: I am not clear why 'use_parallel_seed' here was apparently
+  ## optional; probably worth preserving?
   control_serial <- pmcmc_control(n_steps, n_chains = n_chains, progress = FALSE,
                                   use_parallel_seed = TRUE)
   cmp <- pmcmc(dat$pars, filter, control = control_serial)
@@ -57,57 +59,8 @@ test_that("make seeds with long raw retains size", {
 })
 
 
-test_that("noop operations with a null thread pool", {
-  skip_if_not_installed("mockery")
-  mock_remote <- list2env(
-    list(n_threads = 5,
-         set_n_threads = mockery::mock()))
-
-  p <- thread_pool$new(NULL, 2)
-  expect_false(p$active)
-  expect_equal(p$target, 1L)
-  expect_null(p$add(10))
-  expect_identical(p$free, 0L)
-  expect_null(p$remove(mock_remote))
-  expect_identical(p$free, 0L)
-  mockery::expect_called(mock_remote$set_n_threads, 0L)
-})
-
-
-test_that("add and remove from a thread pool", {
-  skip_if_not_installed("mockery")
-  p <- thread_pool$new(20, 4)
-  expect_true(p$active)
-  expect_equal(p$n_workers, 4)
-  expect_equal(p$n_threads, 20)
-  expect_equal(p$free, 0)
-  expect_equal(p$target, 5)
-
-  mock_remote <- list2env(
-    list(n_threads = 5,
-         set_n_threads = mockery::mock()))
-
-  p$add(mock_remote)
-  expect_equal(p$free, 5)
-  expect_equal(p$target, 7) # > 7 * 3 == 21
-
-  p$remove(mock_remote)
-  expect_equal(p$free, 3)
-  p$remove(mock_remote)
-  expect_equal(p$free, 1)
-  p$remove(mock_remote)
-  expect_equal(p$free, 0)
-  p$remove(mock_remote)
-  expect_equal(p$free, 0)
-
-  mockery::expect_called(mock_remote$set_n_threads, 3L)
-  expect_equal(
-    mockery::mock_args(mock_remote$set_n_threads),
-    list(list(7), list(7), list(6)))
-})
-
-
 test_that("construct parallel filter data", {
+  skip("rewrite")
   expect_equal(
     pmcmc_parallel_progress_data(list(NULL, NULL), 100),
     list(n = 0,
@@ -152,6 +105,7 @@ test_that("construct parallel filter data", {
 
 
 test_that("progress bar is a noop when progress = FALSE", {
+  skip("rewrite")
   control <- pmcmc_control(100, n_workers = 2, n_chains = 3, progress = FALSE)
   p <- pmcmc_parallel_progress(control, force = TRUE)
   expect_silent(p(list(NULL, NULL, NULL)))
@@ -163,6 +117,7 @@ test_that("progress bar is a noop when progress = FALSE", {
 
 
 test_that("progress bar creates progress_bar when progress = TRUE", {
+  skip("rewrite")
   control <- pmcmc_control(100, n_workers = 2, n_chains = 2, progress = TRUE)
   p <- pmcmc_parallel_progress(control, force = TRUE)
 
@@ -185,7 +140,7 @@ test_that("basic parallel operation nested", {
   dat <- example_sir_shared()
   n_particles <- 42
   n_steps <- 30
-  n_chains <- 3
+  n_chains <- 4
 
   proposal_fixed <- matrix(0.00026)
   proposal_varied <- matrix(0.00057)
@@ -198,70 +153,16 @@ test_that("basic parallel operation nested", {
                          prior = function(p) log(1e-10))),
     proposal_fixed = proposal_fixed, proposal_varied = proposal_varied)
 
-  p0 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index, seed = 1L)
-  control <- pmcmc_control(n_steps, n_chains = n_chains, n_workers = 2L,
-                           n_steps_each = 20L)
-  ans <- pmcmc(pars, p0, control = control)
+  filter <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                                index = dat$index, seed = 1L)
+  control_parallel <- pmcmc_control(n_steps, n_chains = n_chains, n_workers = 2L,
+                                    n_steps_each = 20L)
+  ans <- pmcmc(pars, filter, control = control_parallel)
 
-  ## Run two chains manually with a given pair of seeds:
-  s <- make_seeds(n_chains, 1L, dat$model)
-  f <- function(idx) {
-    set.seed(s[[idx]]$r)
-    p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                             index = dat$index, seed = s[[idx]]$dust)
-    pmcmc(dat$pars, p, control = pmcmc_control(n_steps))
-  }
-
-  samples <- lapply(seq_along(s), f)
-  cmp <- pmcmc_combine(samples = samples)
+  control_serial <- pmcmc_control(n_steps, n_chains = n_chains, progress = FALSE,
+                                  use_parallel_seed = TRUE)
+  cmp <- pmcmc(dat$pars, filter, control = control_serial)
 
   expect_equal(cmp$pars, ans$pars)
-  expect_equal(cmp$state, ans$state)
-})
-
-
-## Recent versions of callr/processx/covr have conspired to not reveal
-## this bit of logic through an integration test
-test_that("throw from callr operation", {
-  skip_on_cran()
-
-  dat <- example_sir()
-  n_particles <- 42
-  n_steps <- 30
-  n_chains <- 3
-  p0 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index, seed = 1L)
-  control <- pmcmc_control(n_steps, n_chains = 3, n_workers = 2,
-                           n_steps_each = 5)
-
-  initial <- pmcmc_check_initial(NULL, dat$pars, n_chains)
-  seed <- make_seeds(n_chains, NULL, dat$model)
-
-  control$n_workers <- 0
-  obj <- pmcmc_orchestrator$new(dat$pars, initial, p0, control)
-  path <- r6_private(obj)$path
-
-  r <- pmcmc_remote$new(path$input, 1)
-  r$wait_session_ready()
-  r$init(1L)
-  for (i in 1:20) {
-    if (r$session$poll_process(1000) == "ready") {
-      break
-    } else {
-      Sys.sleep(0.1)
-    }
-  }
-  r$read()
-  expect_equal(r$n_threads, 1)
-
-  prev <- r$set_n_threads(2)
-  expect_equal(prev, 1)
-  expect_equal(r$n_threads, 2)
-
-  prev <- r$set_n_threads(1)
-  expect_equal(prev, 2)
-  expect_equal(r$n_threads, 1)
-
-  r$session$kill(1)
+  expect_equal(cmp, ans)
 })

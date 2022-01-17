@@ -2,7 +2,7 @@ pmcmc_chains_prepare <- function(path, pars, filter, control,
                                  initial = NULL) {
   path <- pmcmc_chains_path(path)
   assert_is(pars, c("pmcmc_parameters", "pmcmc_parameters_nested"))
-  assert_is(filter, "particle_filter")
+  assert_is(filter, c("particle_filter", "particle_deterministic"))
   assert_is(control, "pmcmc_control")
 
   if (!control$use_parallel_seed) {

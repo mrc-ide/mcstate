@@ -218,10 +218,6 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
     n_threads <- n_threads_total / n_workers
   }
 
-  if (n_workers > 0 && !use_parallel_seed) {
-    stop("If using workers, you must specify 'use_parallel_seed = TRUE'")
-  }
-
   if (!identical(unname(rerun_every), Inf)) {
     assert_scalar_positive_integer(rerun_every)
   }
