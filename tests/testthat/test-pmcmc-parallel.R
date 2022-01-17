@@ -105,34 +105,31 @@ test_that("construct parallel filter data", {
 
 
 test_that("progress bar is a noop when progress = FALSE", {
-  skip("rewrite")
   control <- pmcmc_control(100, n_workers = 2, n_chains = 3, progress = FALSE)
   p <- pmcmc_parallel_progress(control, force = TRUE)
-  expect_silent(p(list(NULL, NULL, NULL)))
-  expect_false(p(list(NULL, NULL, NULL)))
-  expect_false(p(list(list(step = 100, finished = TRUE), NULL, NULL)))
-  expect_silent(p(rep(list(list(step = 100, finished = TRUE)), 3)))
-  expect_true(p(rep(list(list(step = 100, finished = TRUE)), 3)))
+  Sys.sleep(0.2)
+  expect_silent(p(rep("pending", 3), rep(0, 3)))
+  expect_silent(p(c("running", "pending", "pending"), c(100, 0, 0)))
+  expect_silent(p(c("done", "done", "done"), c(100, 100, 100)))
 })
 
 
 test_that("progress bar creates progress_bar when progress = TRUE", {
-  skip("rewrite")
   control <- pmcmc_control(100, n_workers = 2, n_chains = 2, progress = TRUE)
-  p <- pmcmc_parallel_progress(control, force = TRUE)
+  status <- rep("pending", 2)
+  steps <- rep(0, 2)
+  p <- pmcmc_parallel_progress(control, status, steps, force = TRUE)
 
   Sys.sleep(0.2)
   expect_message(
-    p(list(list(step = 50, finished = FALSE), NULL)),
-    "\\[.\\] \\[\\+ \\] ETA .* \\| 00:00:[0-9]{2} so far \\(50%\\)")
+    p(c("running", "pending"), c(50, 0)),
+    "\\[.\\] \\[\\+ \\] ETA .* \\| 00:00:[0-9]{2} so far \\( 50%\\)")
   expect_message(
-    p(list(list(step = 90, finished = FALSE),
-           list(step = 10, finished = FALSE))),
-    "\\[.\\] \\[\\+\\+\\] ETA .* \\| 00:00:[0-9]{2} so far \\(90% 10%\\)")
+    p(c("running", "running"), c(90, 10)),
+    "\\[.\\] \\[\\+\\+\\] ETA .* \\| 00:00:[0-9]{2} so far \\( 90%  10%\\)")
   expect_message(
-    p(list(list(step = 100, finished = TRUE),
-           list(step = 33, finished = FALSE))),
-    "\\[.\\] \\[\\#\\+\\] ETA .* \\| 00:00:[0-9]{2} so far \\(33%\\)")
+    p(c("done", "running"), c(100, 33)),
+    "\\[.\\] \\[\\#\\+\\] ETA .* \\| 00:00:[0-9]{2} so far \\( 33%\\)")
 })
 
 
