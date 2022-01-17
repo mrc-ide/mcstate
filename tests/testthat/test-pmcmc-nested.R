@@ -398,33 +398,6 @@ test_that("nested_step_ratio works", {
 })
 
 
-test_that("can run split chains with nested model", {
-  dat <- example_sir_shared()
-  p1 <- particle_filter$new(dat$data, dat$model, 10, dat$compare,
-                            dat$index, seed = 1L)
-  p2 <- particle_filter$new(dat$data, dat$model, 10, dat$compare,
-                            dat$index, seed = 1L)
-
-  pars <- pmcmc_parameters_nested$new(
-    list(pmcmc_varied_parameter("beta", letters[1:2], c(0.2, 0.3),
-                                min = 0, max = 1,
-                                prior = function(p) log(1e-10)),
-         pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
-                         prior = function(p) log(1e-10))),
-    proposal_fixed = matrix(0.00026),
-    proposal_varied = matrix(0.00057))
-
-  control <- pmcmc_control(10, n_chains = 2, use_parallel_seed = TRUE)
-  res1 <- pmcmc(pars, p1, control = control)
-
-  inputs <- pmcmc_chains_prepare(dat$pars, p2, NULL, control)
-  samples <- lapply(seq_len(control$n_chains), pmcmc_chains_run, inputs)
-  res2 <- pmcmc_combine(samples = samples)
-
-  expect_equal(res1, res2)
-})
-
-
 test_that("Can do early exit with nested model", {
   dat <- example_sir_shared()
   n_particles <- 5
