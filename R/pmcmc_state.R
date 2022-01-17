@@ -177,7 +177,7 @@ pmcmc_state <- R6::R6Class(
         stop("'pars' and 'filter' disagree on nestedness")
       }
 
-      private$tick <- pmcmc_progress(control$n_steps, control$progress)
+      private$tick <- pmcmc_progress(control)
 
       private$curr_step <- 0L
       private$curr_pars <- initial
