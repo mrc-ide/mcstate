@@ -116,3 +116,13 @@ test_that("is_3d_array", {
   expect_true(is_3d_array(array(1, c(1, 1, 1))))
   expect_false(is_3d_array(matrix(1, 2, 2)))
 })
+
+
+test_that("callr safe result will wait", {
+  bg <- callr::r_bg(function() {
+    Sys.sleep(0.05)
+    TRUE
+  })
+  res <- callr_safe_result(bg, dt = 0.001)
+  expect_true(res)
+})
