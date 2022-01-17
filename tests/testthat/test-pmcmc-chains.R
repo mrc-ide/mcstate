@@ -56,7 +56,6 @@ test_that("can run split chains with nested model", {
 
 
 test_that("split chain running requires one worker", {
-  skip("rework")
   dat <- example_sir()
   n_particles <- 30
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
@@ -64,13 +63,12 @@ test_that("split chain running requires one worker", {
   control <- pmcmc_control(10, n_chains = 4, n_workers = 2,
                            use_parallel_seed = TRUE)
   expect_error(
-    pmcmc_chains_prepare(dat$pars, p, NULL, control),
+    pmcmc_chains_prepare(tempfile(), dat$pars, p, control),
     "'n_workers' must be 1")
 })
 
 
 test_that("split chain running requires parallel seed setting", {
-  skip("rework")
   dat <- example_sir()
   n_particles <- 30
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
@@ -78,13 +76,12 @@ test_that("split chain running requires parallel seed setting", {
   control <- pmcmc_control(10, n_chains = 4, n_workers = 1,
                            use_parallel_seed = FALSE)
   expect_error(
-    pmcmc_chains_prepare(dat$pars, p, NULL, control),
+    pmcmc_chains_prepare(tempfile(), dat$pars, p, control),
     "'use_parallel_seed' must be TRUE")
 })
 
 
 test_that("split chain running validates the chain id", {
-  skip("rework")
   dat <- example_sir()
   n_particles <- 30
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
@@ -92,45 +89,13 @@ test_that("split chain running validates the chain id", {
   control <- pmcmc_control(10, n_chains = 4, n_workers = 1,
                            use_parallel_seed = TRUE)
 
-  inputs <- pmcmc_chains_prepare(dat$pars, p, NULL, control)
+  path <- pmcmc_chains_prepare(tempfile(), dat$pars, p, control)
   expect_error(
-    pmcmc_chains_run(0, inputs),
+    pmcmc_chains_run(0, path),
     "'chain_id' must be at least 1",
     fixed = TRUE)
   expect_error(
-    pmcmc_chains_run(5, inputs),
+    pmcmc_chains_run(5, path),
     "'chain_id' must be an integer in 1..4",
     fixed = TRUE)
-})
-
-
-test_that("Split chain and write to file", {
-  skip("rework")
-  dat <- example_sir()
-  n_particles <- 30
-  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index, seed = 1L)
-  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index, seed = 1L)
-  control <- pmcmc_control(10, n_chains = 4, use_parallel_seed = TRUE)
-
-  res1 <- pmcmc(dat$pars, p1, control = control)
-
-  inputs <- pmcmc_chains_prepare(dat$pars, p2, NULL, control)
-  ## typically the user will create this before but we won't here to
-  ## show that this is robust to that
-  path <- tempfile()
-
-  samples_path <- vcapply(seq_len(control$n_chains), pmcmc_chains_run,
-                          inputs, path)
-  expect_true(file.exists(path))
-  expect_true(file.info(path)$isdir)
-  expect_true(all(file.exists(samples_path)))
-  expect_setequal(dir(path), basename(samples_path))
-  expect_equal(basename(samples_path),
-               sprintf("samples_%d.rds", 1:4))
-  samples <- lapply(samples_path, readRDS)
-  res2 <- pmcmc_combine(samples = samples)
-
-  expect_equal(res1, res2)
 })

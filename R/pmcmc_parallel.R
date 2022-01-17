@@ -32,8 +32,15 @@ pmcmc_orchestrator <- R6::R6Class(
 
   public = list(
     initialize = function(pars, initial, filter, control, path = NULL) {
+      ## Changes behaviour of the internal progress bar so that we can
+      ## interpret it as per-chain progress.
       control$progress_simple <- TRUE
+      ## This is required, and we always set it
       control$use_parallel_seed <- TRUE
+      ## We set this so that chains prepare doesn't get concerned;
+      ## we've done the correct bookkeeping here and n_threads will be
+      ## correct.
+      control$n_workers <- 1L
 
       path <- path %||% tempfile()
       private$path <- pmcmc_chains_prepare(path, pars, filter, control, initial)

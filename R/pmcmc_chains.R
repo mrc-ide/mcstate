@@ -5,6 +5,9 @@ pmcmc_chains_prepare <- function(path, pars, filter, control,
   assert_is(filter, c("particle_filter", "particle_deterministic"))
   assert_is(control, "pmcmc_control")
 
+  if (control$n_workers != 1) {
+    stop("'n_workers' must be 1")
+  }
   if (!control$use_parallel_seed) {
     stop("'use_parallel_seed' must be TRUE")
   }
