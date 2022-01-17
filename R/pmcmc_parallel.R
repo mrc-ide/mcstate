@@ -68,7 +68,7 @@ pmcmc_orchestrator <- R6::R6Class(
         }
       }
 
-      if (control$progress) {
+      if (private$control$progress) {
         has_stderr <- vcapply(res, "[[", "error") == "ready" & !is_done
         if (any(has_stderr)) {
           for (process_id in which(has_stderr)) {

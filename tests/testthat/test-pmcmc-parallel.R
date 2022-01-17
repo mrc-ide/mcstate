@@ -2,92 +2,24 @@ context("pmcmc (parallel)")
 
 test_that("basic parallel operation", {
   dat <- example_sir()
-  n_particles <- 200
-  n_steps <- 50
+  n_particles <- 10
+  n_steps <- 15
+  n_chains <- 4
 
-  p0 <- particle_filter$new(dat$data, dat$model, n_particles, NULL,
-                            index = dat$index, seed = 1L)
-  control <- pmcmc_control(n_steps, n_chains = 10, n_workers = 5L,
-                           n_threads_total = 10L,
-                           progress = TRUE)
-  ans <- pmcmc(dat$pars, p0, control = control)
+  filter <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                                index = dat$index, seed = 1L)
 
+  control_serial <- pmcmc_control(n_steps, n_chains = n_chains, progress = FALSE,
+                                  use_parallel_seed = TRUE)
+  cmp <- pmcmc(dat$pars, filter, control = control_serial)
 
-  path <- tempfile()
-  pmcmc_chains_prepare(path, dat$pars, p0, control, NULL)
-  pmcmc_chains_run(1, path)
-
-  ## Run two chains manually with a given pair of seeds:
-  s <- make_seeds(n_chains, 1L, dat$model)
-  f <- function(idx) {
-    set.seed(s[[idx]]$r)
-    p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                             index = dat$index, seed = s[[idx]]$dust)
-    pmcmc(dat$pars, p, control = pmcmc_control(n_steps))
-  }
-
-  samples <- lapply(seq_along(s), f)
-  cmp <- pmcmc_combine(samples = samples)
+  control_parallel <- pmcmc_control(n_steps, n_chains = n_chains, n_workers = 2L,
+                                    n_threads_total = 2L,
+                                    progress = FALSE, use_parallel_seed = TRUE)
+  ans <- pmcmc(dat$pars, filter, control = control_parallel)
 
   expect_equal(cmp$pars, ans$pars)
   expect_equal(cmp, ans)
-})
-
-
-test_that("Share out cores", {
-  skip_on_cran()
-  dat <- example_sir()
-  n_particles <- 42
-  n_steps <- 30
-  n_chains <- 3
-
-  p0 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index, seed = 1L)
-  control1 <- pmcmc_control(n_steps, n_chains = n_chains, n_workers = 2L,
-                            n_steps_each = 15, n_threads_total = 4)
-  ans <- pmcmc(dat$pars, p0, control = control1)
-
-  control2 <- pmcmc_control(n_steps, n_chains = n_chains, n_workers = 1L,
-                            n_steps_each = 15, use_parallel_seed = TRUE)
-  cmp <- pmcmc(dat$pars, p0, control = control2)
-  expect_equal(cmp$pars, ans$pars)
-})
-
-
-test_that("throw from callr operation", {
-  skip_on_cran()
-
-  dat <- example_sir()
-  n_particles <- 42
-  n_steps <- 30
-  n_chains <- 3
-  p0 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index, seed = 1L)
-  control <- pmcmc_control(n_steps, n_chains = 3, n_workers = 2,
-                           n_steps_each = 5)
-
-  initial <- pmcmc_check_initial(NULL, dat$pars, n_chains)
-  seed <- make_seeds(n_chains, NULL, dat$model)
-
-  control$n_workers <- 0
-  obj <- pmcmc_orchestrator$new(dat$pars, initial, p0, control)
-  path <- r6_private(obj)$path
-
-  inputs <- readRDS(path$input)
-  inputs$filter$n_threads <- "one"
-  suppressWarnings(saveRDS(inputs, path$input))
-
-  r <- pmcmc_remote$new(path$input, 2)
-  r$wait_session_ready()
-  r$init(1L)
-  for (i in 1:20) {
-    if (r$session$poll_process(1000) == "ready") {
-      break
-    } else {
-      Sys.sleep(0.1)
-    }
-  }
-  expect_error(r$read(), "'n_threads' must be an integer")
 })
 
 
