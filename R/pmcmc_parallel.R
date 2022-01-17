@@ -24,7 +24,7 @@ pmcmc_orchestrator <- R6::R6Class(
 
     sessions = NULL, # list of session
     target = NULL,   # session -> chain map
-    status = NULL,   # pending / running / done
+    status = NULL,   # string, one of pending / running / done
     steps = NULL,    # number of steps complete
 
     progress = NULL
