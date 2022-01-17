@@ -11,12 +11,12 @@ test_that("basic parallel operation", {
 
   ## TODO: I am not clear why 'use_parallel_seed' here was apparently
   ## optional; probably worth preserving?
-  control_serial <- pmcmc_control(n_steps, n_chains = n_chains, progress = FALSE,
-                                  use_parallel_seed = TRUE)
+  control_serial <- pmcmc_control(n_steps, n_chains = n_chains,
+                                  progress = FALSE, use_parallel_seed = TRUE)
   cmp <- pmcmc(dat$pars, filter, control = control_serial)
 
-  control_parallel <- pmcmc_control(n_steps, n_chains = n_chains, n_workers = 2L,
-                                    n_threads_total = 2L,
+  control_parallel <- pmcmc_control(n_steps, n_chains = n_chains,
+                                    n_workers = 2L, n_threads_total = 2L,
                                     progress = FALSE, use_parallel_seed = TRUE)
   ans <- pmcmc(dat$pars, filter, control = control_parallel)
 
@@ -140,11 +140,12 @@ test_that("basic parallel operation nested", {
 
   filter <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                                 index = dat$index, seed = 1L)
-  control_parallel <- pmcmc_control(n_steps, n_chains = n_chains, n_workers = 2L)
+  control_parallel <- pmcmc_control(n_steps, n_chains = n_chains,
+                                    n_workers = 2L)
   ans <- pmcmc(pars, filter, control = control_parallel)
 
-  control_serial <- pmcmc_control(n_steps, n_chains = n_chains, progress = FALSE,
-                                  use_parallel_seed = TRUE)
+  control_serial <- pmcmc_control(n_steps, n_chains = n_chains,
+                                  progress = FALSE, use_parallel_seed = TRUE)
   cmp <- pmcmc(dat$pars, filter, control = control_serial)
 
   expect_equal(cmp$pars, ans$pars)

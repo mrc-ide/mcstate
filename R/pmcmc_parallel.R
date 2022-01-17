@@ -97,10 +97,7 @@ pmcmc_orchestrator <- R6::R6Class(
     },
 
     finish = function() {
-      ret <- pmcmc_chains_collect(private$path)
-      ## We should clean up here
-      ## unlink(private$path$root, recursive = TRUE)
-      ret
+      pmcmc_chains_collect(private$path)
     }
   ))
 
