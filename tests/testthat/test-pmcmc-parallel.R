@@ -60,47 +60,35 @@ test_that("make seeds with long raw retains size", {
 
 
 test_that("construct parallel filter data", {
-  skip("rewrite")
   expect_equal(
-    pmcmc_parallel_progress_data(list(NULL, NULL), 100),
-    list(n = 0,
-         tokens = list(bar_overall = "  ", p_running = ""),
-         result = FALSE))
+    pmcmc_parallel_progress_data(c("pending", "pending"), c(0, 0), 100),
+    list(steps = 0,
+         tokens = list(bar_overall = "  ", p_running = "")))
   expect_equal(
-    pmcmc_parallel_progress_data(list(NULL, NULL, NULL, NULL), 100),
-    list(n = 0,
-         tokens = list(bar_overall = "    ", p_running = ""),
-         result = FALSE))
+    pmcmc_parallel_progress_data(rep("pending", 4), rep(0, 4), 100),
+    list(steps = 0,
+         tokens = list(bar_overall = "    ", p_running = "")))
   expect_equal(
-    pmcmc_parallel_progress_data(list(list(step = 50, finished = FALSE),
-                                      NULL, NULL, NULL), 100),
-    list(n = 50,
-         tokens = list(bar_overall = "+   ", p_running = "50%"),
-         result = FALSE))
+    pmcmc_parallel_progress_data(c("running", "pending", "pending", "pending"),
+                                 c(50, 0, 0, 0), 100),
+    list(steps = 50,
+         tokens = list(bar_overall = "+   ", p_running = " 50%")))
   expect_equal(
-    pmcmc_parallel_progress_data(list(list(step = 100, finished = TRUE),
-                                      list(step = 12, finished = FALSE),
-                                      list(step = 67, finished = FALSE),
-                                      NULL, NULL), 100),
-    list(n = 179,
-         tokens = list(bar_overall = "#++  ", p_running = "12% 67%"),
-         result = FALSE))
+    pmcmc_parallel_progress_data(
+      c("done", "running", "running", "pending", "pending"),
+      c(100, 12, 67, 0, 0),
+      100),
+    list(steps = 179,
+         tokens = list(bar_overall = "#++  ", p_running = " 12%  67%")))
   expect_equal(
-    pmcmc_parallel_progress_data(list(list(step = 100, finished = TRUE),
-                                      list(step = 100, finished = TRUE),
-                                      list(step = 95, finished = FALSE)),
+    pmcmc_parallel_progress_data(c("done", "done", "running"), c(100, 100, 95),
                                  100),
-    list(n = 295,
-         tokens = list(bar_overall = "##+", p_running = "95%"),
-         result = FALSE))
+    list(steps = 295,
+         tokens = list(bar_overall = "##+", p_running = " 95%")))
   expect_equal(
-    pmcmc_parallel_progress_data(list(list(step = 100, finished = TRUE),
-                                      list(step = 100, finished = TRUE),
-                                      list(step = 100, finished = TRUE)),
-                                 100),
-    list(n = 300,
-         tokens = list(bar_overall = "###", p_running = ""),
-         result = TRUE))
+    pmcmc_parallel_progress_data(rep("done", 3), rep(100, 3), 100),
+    list(steps = 300,
+         tokens = list(bar_overall = "###", p_running = "")))
 })
 
 
