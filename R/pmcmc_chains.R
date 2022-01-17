@@ -1,3 +1,33 @@
+##' Run a pMCMC, with sensible random number behaviour, but schedule
+##' execution of the chains yourself. Use this if you want to
+##' distribute chains over (say) the nodes of an HPC system.
+##'
+##' Basic usage will look like
+##'
+##' ```
+##' path <- mcstate::pmcmc_chains_prepare(tempfile(), pars, filter, control)
+##' for (i in seq_len(control$n_chains)) {
+##'   mcstate::pmcmc_chains_run(i, path)
+##' }
+##' samples <- mcstate::pmcmc_chains_collect(path)
+##' mcstate::pmcmc_chains_cleanup(path)
+##' ```
+##'
+##' You can safely parallelise (or not) however you like at the point
+##' where the loop is (even across other machines) and get the same
+##' outputs regardless.
+##'
+##' @title pMCMC with manual chain scheduling
+##'
+##' @inheritParams pmcmc
+##'
+##' @param path The path to use to exchange inputs and results.  You
+##'   can use a temporary directory or a different path (relative or
+##'   absolute).  Several rds files will be created.  It is strongly
+##'   recommended not to use `.`
+##'
+##' @rdname pmcmc_chains
+##' @export
 pmcmc_chains_prepare <- function(path, pars, filter, control,
                                  initial = NULL) {
   path <- pmcmc_chains_path(path)
@@ -30,6 +60,9 @@ pmcmc_chains_prepare <- function(path, pars, filter, control,
 }
 
 
+##' @rdname pmcmc_chains
+##' @export
+##' @param chain_id The integer identifier of the chain to run
 pmcmc_chains_run <- function(chain_id, path) {
   assert_scalar_positive_integer(chain_id)
   path <- pmcmc_chains_path(path, chain_id)
@@ -58,6 +91,8 @@ pmcmc_chains_run <- function(chain_id, path) {
 }
 
 
+##' @export
+##' @rdname pmcmc_chains
 pmcmc_chains_collect <- function(path) {
   control <- readRDS(pmcmc_chains_path(path)$control)
   path <- pmcmc_chains_path(path, seq_len(control$n_chains))
@@ -76,6 +111,8 @@ pmcmc_chains_collect <- function(path) {
 }
 
 
+##' @export
+##' @rdname pmcmc_chains
 pmcmc_chains_cleanup <- function(path) {
   control <- readRDS(pmcmc_chains_path(path)$control)
   path <- pmcmc_chains_path(path, seq_len(control$n_chains))
