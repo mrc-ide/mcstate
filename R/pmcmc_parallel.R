@@ -31,7 +31,7 @@ pmcmc_orchestrator <- R6::R6Class(
   ),
 
   public = list(
-    initialize = function(pars, initial, filter, control, path = NULL) {
+    initialize = function(pars, initial, filter, control) {
       ## Changes behaviour of the internal progress bar so that we can
       ## interpret it as per-chain progress.
       control$progress_simple <- TRUE
@@ -42,7 +42,7 @@ pmcmc_orchestrator <- R6::R6Class(
       ## correct.
       control$n_workers <- 1L
 
-      path <- path %||% tempfile()
+      path <- control$path %||% tempfile()
       private$path <- pmcmc_chains_prepare(path, pars, filter, control, initial)
       private$control <- control
 

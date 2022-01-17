@@ -154,6 +154,10 @@
 ##' @param n_steps_retain Optionally, the number of samples to retain from
 ##'   the `n_steps - n_burnin` steps.  See Details.
 ##'
+##' @param path Optional path to save partial pmcmc results in, when
+##'   using workers.  If not given (or `NULL`) then a temporary
+##'   directory is used.
+##'
 ##' @return A `pmcmc_control` object, which should not be modified
 ##'   once created.
 ##'
@@ -181,7 +185,8 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
                           save_trajectories = FALSE, progress = FALSE,
                           nested_step_ratio = 1, nested_update_both = FALSE,
                           filter_early_exit = FALSE,
-                          n_burnin = NULL, n_steps_retain = NULL) {
+                          n_burnin = NULL, n_steps_retain = NULL,
+                          path = NULL) {
   assert_scalar_positive_integer(n_steps)
   assert_scalar_positive_integer(n_chains)
   assert_scalar_positive_integer(n_workers)
@@ -236,6 +241,13 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
                           must be an integer", nested_step_ratio))
   }
 
+  if (!is.null(path)) {
+    assert_scalar_character(path)
+    if (n_workers == 0) {
+      message("'path' given without n_workers has no effect and is ignored")
+    }
+  }
+
   filter <- pmcmc_filter_on_generation(n_steps, n_burnin, n_steps_retain)
 
   ret <- list(n_steps = n_steps,
@@ -251,6 +263,7 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
               save_trajectories = save_trajectories,
               progress = progress,
               progress_simple = FALSE,
+              path = path,
               filter_early_exit = filter_early_exit,
               nested_update_both = nested_update_both,
               nested_step_ratio = nested_step_ratio)

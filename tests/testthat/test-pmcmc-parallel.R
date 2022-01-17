@@ -151,3 +151,24 @@ test_that("basic parallel operation nested", {
   expect_equal(cmp$pars, ans$pars)
   expect_equal(cmp, ans)
 })
+
+
+test_that("pmcmc can save files in given place", {
+  dat <- example_sir()
+  n_particles <- 10
+  n_steps <- 15
+  n_chains <- 2
+  filter <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                                index = dat$index, seed = 1L)
+
+  ## TODO: I am not clear why 'use_parallel_seed' here was apparently
+  path <- tempfile()
+  control <- pmcmc_control(n_steps, n_chains = n_chains, n_workers = 2L,
+                           n_threads_total = 2L,
+                           progress = FALSE, use_parallel_seed = TRUE,
+                           path = path)
+  ans <- pmcmc(dat$pars, filter, control = control)
+  expect_true(file.exists(path))
+  expect_true(file.exists(file.path(path, "results_1.rds")))
+  expect_true(file.exists(file.path(path, "inputs.rds")))
+})

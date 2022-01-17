@@ -20,7 +20,8 @@ pmcmc_control(
   nested_update_both = FALSE,
   filter_early_exit = FALSE,
   n_burnin = NULL,
-  n_steps_retain = NULL
+  n_steps_retain = NULL,
+  path = NULL
 )
 }
 \arguments{
@@ -137,6 +138,10 @@ burnin.  This happens separately to the burnin in
 
 \item{n_steps_retain}{Optionally, the number of samples to retain from
 the \code{n_steps - n_burnin} steps.  See Details.}
+
+\item{path}{Optional path to save partial pmcmc results in, when
+using workers.  If not given (or \code{NULL}) then a temporary
+directory is used.}
 }
 \value{
 A \code{pmcmc_control} object, which should not be modified
