@@ -1,3 +1,9 @@
+# mcstate 0.8.3
+
+* Overhaul `mcstate::pmcmc_chains_*` to always use a file for communication, making them easier to understand and more robust (#179)
+* New functions `mcstate::pmcmc_chains_cleanup` for removing files created by the above, and `mcstate::pmcmc_chains_collect` for automating collecting samples
+* New, simpler, approach to pmcmc parallelisation which shares as much code with the above.
+
 # mcstate 0.8.2
 
 * Allow filtering of the pmcmc chains during running (dropping burnin and filtering) to reduce memory usage when collectin large trajectories
