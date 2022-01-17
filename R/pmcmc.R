@@ -65,11 +65,21 @@ pmcmc_multiple_series <- function(pars, initial, filter, control) {
   } else {
     seed <- NULL
   }
+
   samples <- vector("list", control$n_chains)
 
   for (i in seq_along(samples)) {
-    ## TODO: deal with parallel seed here
-    samples[[i]] <- pmcmc_run_chain(i, pars, initial, filter, control)
+    if (control$progress) {
+      message(sprintf("Running chain %d / %d", chain_id, control$n_chains))
+    }
+    if (control$use_parallel_seed) {
+      ## TODO (#174): this feels pretty weird; can we just add a
+      ## "set_rng_state" method for the filter? (see similar code in
+      ## pmcmc_chains)
+      set.seed(seed[[i]]$r)
+      filter <- particle_filter_from_inputs(filter$inputs(), seed[[i]]$dust)
+    }
+    samples[[i]] <- pmcmc_run_chain(pars, initial[[i]], filter, control)
   }
 
   if (control$n_chains == 1) {
@@ -80,34 +90,11 @@ pmcmc_multiple_series <- function(pars, initial, filter, control) {
 }
 
 
-pmcmc_run_chain <- function(chain_id, pars, initial, filter, control) {
-  if (control$progress) {
-    message(sprintf("Running chain %d / %d", chain_id, control$n_chains))
-  }
-  filter$set_n_threads(control$n_threads)
-
-  initial <- array_drop(
-    array_last_dimension(initial, chain_id), length(dim(initial)))
-  seed <- seed[[chain_id]]
-
-  ## TODO: can drop this later.
-  control$n_steps_each <- control$n_steps
-
+pmcmc_run_chain <- function(pars, initial, filter, control) {
   obj <- pmcmc_state$new(pars, initial, filter, control)
   obj$run()
   obj$finish()
 }
-
-
-## pmcmc_apply_seed <- function(filter, seed) {
-##   if (!is.null(seed)) {
-##     ## TODO (#174): this feels pretty weird; can we just add a
-##     ## "set_rng_state" method for the filter?
-##     ##
-##     ## This will be triggered where control$use_parallel_seed is TRUE
-##     set.seed(seed$r)
-##     filter <- particle_filter_from_inputs(filter$inputs(), seed$dust)
-##   }
 
 
 pmcmc_multiple_parallel <- function(pars, initial, filter, control) {
@@ -123,6 +110,11 @@ pmcmc_check_initial <- function(initial, pars, n_chains) {
   } else {
     initial <- pmcmc_check_initial_simple(initial, pars, n_chains)
   }
+
+  ## Process that into a list so that access later is simple (and
+  ## identical regardless of nestedness or not)
+  lapply(seq_len(n_chains), function(i)
+    array_drop(array_last_dimension(initial, i), length(dim(initial))))
 }
 
 

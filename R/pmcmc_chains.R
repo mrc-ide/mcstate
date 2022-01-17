@@ -12,10 +12,8 @@ pmcmc_chains_prepare <- function(path, pars, filter, control,
   initial <- pmcmc_check_initial(initial, pars, control$n_chains)
   inputs <- filter$inputs()
 
-  browser()
-
   seed <- make_seeds(control$n_chains, inputs$seed, filter$model)
-  dat <- list(pars = pars, initial = initial, filter = filter,
+  dat <- list(pars = pars, initial = initial, filter = inputs,
               control = control, seed = seed)
   class(dat) <- "pmcmc_inputs"
 
@@ -47,8 +45,9 @@ pmcmc_chains_run <- function(chain_id, path) {
   filter <- particle_filter_from_inputs(inputs$filter, seed$dust)
   filter$set_n_threads(control$n_threads)
 
-  samples <- pmcmc_run_chain(chain_id, inputs$pars, inputs$initial,
-                             filter, control)
+  initial <- inputs$initial[[chain_id]]
+
+  samples <- pmcmc_run_chain(inputs$pars, initial, filter, control)
 
   saveRDS(samples, path$results)
 
