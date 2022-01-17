@@ -60,7 +60,6 @@ pmcmc_orchestrator <- R6::R6Class(
       res <- processx::poll(private$sessions, timeout)
       is_done <- vcapply(res, "[[", "process") == "ready"
       if (any(is_done)) {
-        dat <- lapply(private$sessions[is_done], function(x) x$get_result())
         for (process_id in which(is_done)) {
           chain_id <- private$target[[process_id]]
           private$status[[chain_id]] <- "done"

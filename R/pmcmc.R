@@ -49,7 +49,6 @@ pmcmc <- function(pars, filter, initial = NULL, control = NULL) {
   assert_is(filter, c("particle_filter", "particle_deterministic"))
   assert_is(control, "pmcmc_control")
   pmcmc_check_control(control)
-  initial <- pmcmc_check_initial(initial, pars, control$n_chains)
 
   if (control$n_workers == 1) {
     pmcmc_multiple_series(pars, initial, filter, control)
@@ -60,6 +59,8 @@ pmcmc <- function(pars, filter, initial = NULL, control = NULL) {
 
 
 pmcmc_multiple_series <- function(pars, initial, filter, control) {
+  initial <- pmcmc_check_initial(initial, pars, control$n_chains)
+
   if (control$use_parallel_seed) {
     seed <- make_seeds(control$n_chains, filter$inputs()$seed, filter$model)
   } else {
