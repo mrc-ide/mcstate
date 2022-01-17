@@ -128,12 +128,10 @@ print.mcstate_pmcmc <- function(x, ...) {
 
 ## NOTE: we need to expose a 'force' argument here for testing, as
 ## otherwise under R CMD check the progress bar does not run.
-pmcmc_progress <- function(control, force = FALSE) {
-  if (control$progress) {
-    n_steps <- control$n_steps
-    ## TODO: tidy up this check here!
-    if (identical(control$progress_style, "noninteractive")) {
-      p <- progress_percentage(control$n_steps)
+pmcmc_progress <- function(n_steps, progress, simple = FALSE, force = FALSE) {
+  if (progress) {
+    if (simple) {
+      p <- progress_percentage(n_steps)
       p(0)
       p
     } else {
@@ -157,10 +155,10 @@ pmcmc_progress <- function(control, force = FALSE) {
 progress_percentage <- function(total) {
   force(total)
   i <- 0
-  prev <- -Inf
+  prev <- 0
   function(n = 1) {
     i <<- i + n
-    p <- floor(i / total * 100) # avoid 0.5 issues, report on completed steps
+    p <- floor(i / total * 100)
     if (p != prev) {
       prev <<- p
       message(paste("progress:", i))

@@ -5,7 +5,9 @@ test_that("Split chain manually", {
                             index = dat$index, seed = 1L)
   p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index, seed = 1L)
-  control <- pmcmc_control(10, n_chains = 4, use_parallel_seed = TRUE)
+  control <- pmcmc_control(10, n_chains = 4, use_parallel_seed = TRUE,
+                           progress = TRUE)
+  control$progress_simple <- TRUE
 
   res1 <- pmcmc(dat$pars, p1, control = control)
 

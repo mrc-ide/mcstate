@@ -32,10 +32,7 @@ pmcmc_orchestrator <- R6::R6Class(
 
   public = list(
     initialize = function(pars, initial, filter, control, path = NULL) {
-      ## This will be useful, but we'll tidy it up later.
-      if (control$progress) {
-        control$progress_style <- "noninteractive"
-      }
+      control$progress_simple <- TRUE
       control$use_parallel_seed <- TRUE
 
       path <- path %||% tempfile()
@@ -59,6 +56,7 @@ pmcmc_orchestrator <- R6::R6Class(
       is_done <- vcapply(res, "[[", "process") == "ready"
       if (any(is_done)) {
         for (process_id in which(is_done)) {
+          callr_safe_result(private$sessions[[process_id]])
           chain_id <- private$target[[process_id]]
           private$status[[chain_id]] <- "done"
           private$steps[[chain_id]] <- private$control$n_steps

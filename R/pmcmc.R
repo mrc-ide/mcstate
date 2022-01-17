@@ -71,7 +71,7 @@ pmcmc_multiple_series <- function(pars, initial, filter, control) {
 
   for (i in seq_along(samples)) {
     if (control$progress) {
-      message(sprintf("Running chain %d / %d", chain_id, control$n_chains))
+      message(sprintf("Running chain %d / %d", i, control$n_chains))
     }
     if (control$use_parallel_seed) {
       ## TODO (#174): this feels pretty weird; can we just add a

@@ -250,6 +250,7 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
               save_restart = save_restart,
               save_trajectories = save_trajectories,
               progress = progress,
+              progress_simple = FALSE,
               filter_early_exit = filter_early_exit,
               nested_update_both = nested_update_both,
               nested_step_ratio = nested_step_ratio)
