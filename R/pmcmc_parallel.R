@@ -76,8 +76,10 @@ pmcmc_orchestrator <- R6::R6Class(
         if (any(has_stderr)) {
           for (process_id in which(has_stderr)) {
             stderr <- private$sessions[[process_id]]$read_error_lines()
-            progress <- parse_progress(stderr)
-            if (!is.null(progress)) {
+            re <- "^progress: ([0-9]+)$"
+            i <- grep(re, stderr)
+            if (length(i) > 0) {
+              progress <- as.numeric(sub(re, "\\1", stderr[[last(i)]]))
               chain_id <- private$target[[process_id]]
               private$steps[[chain_id]] <- progress
             }
@@ -187,16 +189,4 @@ pmcmc_parallel_predict_filter <- function(dat, filter_inputs) {
     dat$predict$filter <- filter_inputs
   }
   dat
-}
-
-
-## TODO: better name, move elsewhere
-parse_progress <- function(txt) {
-  re <- "^progress: ([0-9]+)$"
-  i <- grep(re, txt)
-  if (length(i) > 0) {
-    as.numeric(sub(re, "\\1", txt[[last(i)]]))
-  } else {
-    NULL
-  }
 }
