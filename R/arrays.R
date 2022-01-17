@@ -184,10 +184,11 @@ array_reshape <- function(x, i, d) {
 ##' mcstate::array_drop(m2, 2)
 array_drop <- function(x, i) {
   dx <- dim(x)
-  if (length(dx) < max(i)) {
+  rank <- length(dx)
+  if (rank < max(i)) {
     stop(sprintf(
       "array only has %d dimensions, can't update dimension %d",
-      length(dx), max(i)))
+      rank, max(i)))
   }
   if (!all(dx[i] == 1)) {
     err <- i[dx[i] != 1]
@@ -204,7 +205,12 @@ array_drop <- function(x, i) {
   dn <- dimnames(x)
   dim(x) <- dim(x)[-i]
   if (!is.null(dn)) {
-    dimnames(x) <- dn[-i]
+    if (rank == 2) {
+      x <- c(x)
+      names(x) <- dn[[-i]]
+    } else {
+      dimnames(x) <- dn[-i]
+    }
   }
   x
 }
