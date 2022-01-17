@@ -181,12 +181,6 @@ pmcmc_parallel_progress_data <- function(status, steps, n_steps) {
 }
 
 
-pmcmc_parallel_initial <- function(n_chains, initial) {
-  lapply(seq_len(n_chains), function(index)
-    array_last_dimension(initial, index))
-}
-
-
 pmcmc_parallel_predict_filter <- function(dat, filter_inputs) {
   if (!is.null(dat$predict$filter)) {
     filter_inputs$seed <- dat$predict$filter

@@ -218,10 +218,6 @@ pmcmc_state <- R6::R6Class(
       private$update <- update
     },
 
-    set_n_threads = function(n_threads) {
-      private$filter$set_n_threads(n_threads)
-    },
-
     run = function() {
       control <- private$control
       ## TODO: simplify, then look at simplifying the rest

@@ -23,6 +23,9 @@ test_that("Split chain manually", {
   res2 <- pmcmc_chains_collect(path)
 
   expect_equal(res1, res2)
+
+  pmcmc_chains_cleanup(path)
+  expect_false(file.exists(path))
 })
 
 

@@ -74,6 +74,16 @@ pmcmc_chains_collect <- function(path) {
 }
 
 
+pmcmc_chains_cleanup <- function(path) {
+  control <- readRDS(pmcmc_chains_path(path)$control)
+  path <- pmcmc_chains_path(path, seq_len(control$n_chains))
+  unlink(c(path$inputs, path$control, path$results))
+  if (length(dir(path$root, all.files = TRUE, no.. = TRUE)) == 0) {
+    unlink(path$root, recursive = TRUE)
+  }
+}
+
+
 pmcmc_chains_path <- function(path, chain_id = NULL) {
   assert_scalar_character(path)
   list(root = path,
