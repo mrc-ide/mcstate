@@ -84,6 +84,25 @@ test_that("split chain running requires parallel seed setting", {
 })
 
 
+test_that("Error if results missing", {
+  dat <- example_sir()
+  n_particles <- 5
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, seed = 1L)
+  control <- pmcmc_control(3, n_chains = 4, use_parallel_seed = TRUE)
+  path <- pmcmc_chains_prepare(tempfile(), dat$pars, p, control)
+  expect_error(
+    pmcmc_chains_collect(path),
+    "Results missing for chains 1, 2, 3, 4")
+
+  pmcmc_chains_run(2, path)
+  pmcmc_chains_run(3, path)
+  expect_error(
+    pmcmc_chains_collect(path),
+    "Results missing for chains 1, 4")
+})
+
+
 test_that("split chain running validates the chain id", {
   dat <- example_sir()
   n_particles <- 30

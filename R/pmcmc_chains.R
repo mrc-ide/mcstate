@@ -63,8 +63,10 @@ pmcmc_chains_collect <- function(path) {
   path <- pmcmc_chains_path(path, seq_len(control$n_chains))
 
   ## TODO: better error message
-  if (!all(file.exists(path$results))) {
-    stop("Some results missing")
+  msg <- !file.exists(path$results)
+  if (any(msg)) {
+    stop(sprintf("Results missing for chains %s",
+                 paste(which(msg), collapse = ", ")))
   }
 
   ## Simplest way first, highest memory use; later we will try and do
