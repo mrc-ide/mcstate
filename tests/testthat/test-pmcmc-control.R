@@ -101,6 +101,13 @@ test_that("control can detect corruption", {
 
 test_that("Informational notices in control", {
   expect_message(
-    ctrl <- pmcmc_control(10, path = "location"),
+    pmcmc_control(10, path = "location"),
     "'path' given when n_workers = 1 has no effect and is ignored")
+})
+
+
+test_that("Using workers requires explicit number of threads", {
+  expect_error(
+    pmcmc_control(10, n_chains = 2, n_workers = 2),
+    "If n_workers > 1, then n_threads_total must be provided")
 })
