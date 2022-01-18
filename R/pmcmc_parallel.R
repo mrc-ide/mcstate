@@ -42,8 +42,7 @@ pmcmc_orchestrator <- R6::R6Class(
       ## we've done the correct bookkeeping here and n_threads will be
       ## correct (but first compute the number of threads we'll use
       ## for chain)
-      private$n_threads <- pmcmc_parallel_threads(
-        control$n_threads_total, control$n_workers, control$n_chains)
+      n_workers <- control$n_workers
       control$n_workers <- 1L
 
       path <- control$path %||% tempfile()
@@ -53,11 +52,13 @@ pmcmc_orchestrator <- R6::R6Class(
       private$target <- rep(NA_integer_, control$n_chains)
       private$status <- rep("pending", control$n_chains)
       private$steps <- rep(0, control$n_chains)
+      private$n_threads <- pmcmc_parallel_threads(
+        control$n_threads_total, n_workers, control$n_chains)
 
       private$progress <-
         pmcmc_parallel_progress(control, private$status, private$steps)
 
-      for (process_id in seq_len(control$n_workers)) {
+      for (process_id in seq_len(n_workers)) {
         private$launch(process_id)
       }
     },
