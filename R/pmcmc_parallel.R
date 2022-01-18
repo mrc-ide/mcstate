@@ -15,17 +15,18 @@ pmcmc_orchestrator <- R6::R6Class(
       private$status[[chain_id]] <- "running"
       private$sessions[[process_id]] <- callr::r_bg(
         pmcmc_chains_run,
-        list(chain_id, private$path),
+        list(chain_id, private$path, private$n_threads[[chain_id]]),
         package = "mcstate")
     },
 
     control = NULL,
     path = NULL,
 
-    sessions = NULL, # list of session
-    target = NULL,   # session -> chain map
-    status = NULL,   # string, one of pending / running / done
-    steps = NULL,    # number of steps complete
+    sessions = NULL,  # list of session
+    target = NULL,    # session -> chain map
+    status = NULL,    # string, one of pending / running / done
+    steps = NULL,     # number of steps complete
+    n_threads = NULL, # number of threads per chain (precomputed)
 
     progress = NULL
   ),
@@ -39,7 +40,10 @@ pmcmc_orchestrator <- R6::R6Class(
       control$use_parallel_seed <- TRUE
       ## We set this so that chains prepare doesn't get concerned;
       ## we've done the correct bookkeeping here and n_threads will be
-      ## correct.
+      ## correct (but first compute the number of threads we'll use
+      ## for chain)
+      private$n_threads <- pmcmc_parallel_threads(
+        control$n_threads_total, control$n_workers, control$n_chains)
       control$n_workers <- 1L
 
       path <- control$path %||% tempfile()
@@ -177,4 +181,23 @@ pmcmc_parallel_progress_data <- function(status, steps, n_steps) {
   p_running <- paste(sprintf("%3d%%", progress), collapse = " ")
   tokens <- list(bar_overall = bar_overall, p_running = p_running)
   list(steps = sum(steps), tokens = tokens)
+}
+
+
+## It is possible that we could allocate out threads better here
+## really.  For the last wave of workers we would multiply n_threads
+## by floor(n_threads * n_workers / n_workers_last); to get really
+## fancy you could work out what the floor had discarded and add that
+## to the last worker (which will be submitted last and benefit the
+## most).
+pmcmc_parallel_threads <- function(n_threads_total, n_workers, n_chains) {
+  n_threads <- rep(n_threads_total / n_workers,
+                   n_chains %/% n_workers * n_workers)
+  spare <- n_chains %% n_workers
+  if (spare != 0) {
+    last <- c(rep(floor(n_threads_total / spare), spare - 1),
+              floor(n_threads_total / spare) + n_threads_total %% spare)
+    n_threads <- c(n_threads, last)
+  }
+  n_threads
 }

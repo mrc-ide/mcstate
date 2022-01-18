@@ -7,7 +7,7 @@ test_that("basic parallel operation", {
   n_chains <- 4
 
   filter <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                                index = dat$index, seed = 1L)
+                                n_threads = 1, index = dat$index, seed = 1L)
 
   ## TODO: I am not clear why 'use_parallel_seed' here was apparently
   ## optional; probably worth preserving?
@@ -29,7 +29,8 @@ test_that("running pmcmc with progress = TRUE prints messages", {
   dat <- example_sir()
   p <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
                            index = dat$index, seed = 1L)
-  control <- pmcmc_control(10, n_chains = 2, n_workers = 2L, progress = TRUE)
+  control <- pmcmc_control(10, n_chains = 2, n_workers = 2L,
+                           n_threads_total = 2, progress = TRUE)
   expect_message(
     pmcmc(dat$pars, p, control = control),
     "Finished 20 steps in ")
@@ -93,7 +94,8 @@ test_that("construct parallel filter data", {
 
 
 test_that("progress bar is a noop when progress = FALSE", {
-  control <- pmcmc_control(100, n_workers = 2, n_chains = 3, progress = FALSE)
+  control <- pmcmc_control(100, n_workers = 2, n_chains = 3,
+                           n_threads_total = 2, progress = FALSE)
   p <- pmcmc_parallel_progress(control, force = TRUE)
   Sys.sleep(0.2)
   expect_silent(p(rep("pending", 3), rep(0, 3)))
@@ -103,7 +105,8 @@ test_that("progress bar is a noop when progress = FALSE", {
 
 
 test_that("progress bar creates progress_bar when progress = TRUE", {
-  control <- pmcmc_control(100, n_workers = 2, n_chains = 2, progress = TRUE)
+  control <- pmcmc_control(100, n_workers = 2, n_chains = 2,
+                           n_threads_total = 2, progress = TRUE)
   status <- rep("pending", 2)
   steps <- rep(0, 2)
   p <- pmcmc_parallel_progress(control, status, steps, force = TRUE)
@@ -141,7 +144,7 @@ test_that("basic parallel operation nested", {
   filter <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                                 index = dat$index, seed = 1L)
   control_parallel <- pmcmc_control(n_steps, n_chains = n_chains,
-                                    n_workers = 2L)
+                                    n_workers = 2L, n_threads_total = 2)
   ans <- pmcmc(pars, filter, control = control_parallel)
 
   control_serial <- pmcmc_control(n_steps, n_chains = n_chains,
@@ -171,4 +174,17 @@ test_that("pmcmc can save files in given place", {
   expect_true(file.exists(path))
   expect_true(file.exists(file.path(path, "results_1.rds")))
   expect_true(file.exists(file.path(path, "inputs.rds")))
+})
+
+
+test_that("thread allocation", {
+  expect_equal(pmcmc_parallel_threads(1, 1, 1), 1)
+  expect_equal(pmcmc_parallel_threads(20, 2, 2), c(10, 10))
+  expect_equal(pmcmc_parallel_threads(20, 2, 4), rep(10, 4))
+  expect_equal(pmcmc_parallel_threads(20, 2, 5), c(rep(10, 4), 20))
+
+  expect_equal(pmcmc_parallel_threads(6, 3, 7), c(rep(2, 6), 6))
+  expect_equal(pmcmc_parallel_threads(6, 3, 8), c(rep(2, 6), 3, 3))
+
+  expect_equal(pmcmc_parallel_threads(21, 3, 8), c(rep(7, 6), 10, 11))
 })

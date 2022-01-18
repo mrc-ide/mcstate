@@ -51,14 +51,11 @@
 ##'   the total number of threads/cores to use. If `n_workers` is
 ##'   greater than 1 then these threads will be divided evenly across
 ##'   your workers at first and so `n_threads_total` must be an even
-##'   multiple of `n_workers`. If chains finish at different times
-##'   (including if `n_chains` is not a multiple of `n_workers`) then
-##'   these threads/cores will be reallocated across workers that are
-##'   still going. If `n_workers` is 1 (i.e., running in parallel) and
-##'   `n_threads_total` is not given (i.e., `NULL`) we will use the
-##'   number of threads specified in the particle filter
-##'   creation. Otherwise this value overrides the value in the
-##'   particle filter.
+##'   multiple of `n_workers`.  If `n_chains` is not a clean multiple
+##'   of `n_workers` we will try and allocate the leftover threads
+##'   evenly across the last wave of chains.  This value must be
+##'   provided if `n_workers` is given, but is optional otherwise - if
+##'   given it overrides the value in the particle filter.
 ##'
 ##' @param n_workers Number of "worker" processes to use to run chains
 ##'   in parallel. This must be at most `n_chains` and is recommended
@@ -192,8 +189,13 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
   assert_scalar_positive_integer(n_workers)
 
   if (is.null(n_threads_total)) {
-    n_threads <- 1L
-    n_threads_total <- n_workers
+    if (n_workers > 1) {
+      ## There's no safe action we can take here otherwise as the
+      ## number of threads in the filter could be either the number
+      ## per worker or number total. Setting 'n_threads_total = n_workers'
+      ## here feels plausible but might be less than ideal too.
+      stop("If n_workers > 1, then n_threads_total must be provided")
+    }
   } else {
     assert_scalar_positive_integer(n_threads_total)
     if (n_threads_total < n_workers) {
@@ -205,7 +207,6 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
         "'n_threads_total' (%d) is not a multiple of 'n_workers' (%d)",
         n_threads_total, n_workers))
     }
-    n_threads <- n_threads_total / n_workers
   }
 
   if (!identical(unname(rerun_every), Inf)) {
@@ -225,8 +226,7 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
   }
 
   if (n_chains %% n_workers != 0) {
-    ## TODO: we should improve this message
-    message("Your last workers will be underpowered")
+    rem <- n_chains %% n_workers
   }
 
   if (!is.null(save_restart)) {
@@ -253,7 +253,6 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
   ret <- list(n_steps = n_steps,
               n_chains = n_chains,
               n_workers = n_workers,
-              n_threads = n_threads,
               n_threads_total = n_threads_total,
               rerun_every = rerun_every,
               rerun_random = rerun_random,

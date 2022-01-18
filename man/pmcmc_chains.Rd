@@ -9,7 +9,7 @@
 \usage{
 pmcmc_chains_prepare(path, pars, filter, control, initial = NULL)
 
-pmcmc_chains_run(chain_id, path)
+pmcmc_chains_run(chain_id, path, n_threads = NULL)
 
 pmcmc_chains_collect(path)
 
@@ -39,6 +39,11 @@ either a vector of initial conditions, or a matrix with
 chain.}
 
 \item{chain_id}{The integer identifier of the chain to run}
+
+\item{n_threads}{Optional thread count, overriding the number set
+in the \code{control}.  This will be useful where preparing the
+threads on a machine with one level of resource and running it
+on another.}
 }
 \description{
 Run a pMCMC, with sensible random number behaviour, but schedule

@@ -38,14 +38,11 @@ otherwise.}
 the total number of threads/cores to use. If \code{n_workers} is
 greater than 1 then these threads will be divided evenly across
 your workers at first and so \code{n_threads_total} must be an even
-multiple of \code{n_workers}. If chains finish at different times
-(including if \code{n_chains} is not a multiple of \code{n_workers}) then
-these threads/cores will be reallocated across workers that are
-still going. If \code{n_workers} is 1 (i.e., running in parallel) and
-\code{n_threads_total} is not given (i.e., \code{NULL}) we will use the
-number of threads specified in the particle filter
-creation. Otherwise this value overrides the value in the
-particle filter.}
+multiple of \code{n_workers}.  If \code{n_chains} is not a clean multiple
+of \code{n_workers} we will try and allocate the leftover threads
+evenly across the last wave of chains.  This value must be
+provided if \code{n_workers} is given, but is optional otherwise - if
+given it overrides the value in the particle filter.}
 
 \item{n_workers}{Number of "worker" processes to use to run chains
 in parallel. This must be at most \code{n_chains} and is recommended

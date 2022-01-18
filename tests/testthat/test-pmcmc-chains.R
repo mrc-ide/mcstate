@@ -63,6 +63,7 @@ test_that("split chain running requires one worker", {
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index, seed = 1L)
   control <- pmcmc_control(10, n_chains = 4, n_workers = 2,
+                           n_threads_total = 2,
                            use_parallel_seed = TRUE)
   expect_error(
     pmcmc_chains_prepare(tempfile(), dat$pars, p, control),

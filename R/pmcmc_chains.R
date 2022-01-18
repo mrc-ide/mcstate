@@ -63,7 +63,12 @@ pmcmc_chains_prepare <- function(path, pars, filter, control,
 ##' @rdname pmcmc_chains
 ##' @export
 ##' @param chain_id The integer identifier of the chain to run
-pmcmc_chains_run <- function(chain_id, path) {
+##'
+##' @param n_threads Optional thread count, overriding the number set
+##'   in the `control`.  This will be useful where preparing the
+##'   threads on a machine with one level of resource and running it
+##'   on another.
+pmcmc_chains_run <- function(chain_id, path, n_threads = NULL) {
   assert_scalar_positive_integer(chain_id)
   path <- pmcmc_chains_path(path, chain_id)
 
@@ -79,11 +84,10 @@ pmcmc_chains_run <- function(chain_id, path) {
   seed <- inputs$seed[[chain_id]]
   set.seed(seed$r) # likely problematic on CRAN...
   filter <- particle_filter_from_inputs(inputs$filter, seed$dust)
-  filter$set_n_threads(control$n_threads)
 
   initial <- inputs$initial[[chain_id]]
 
-  samples <- pmcmc_run_chain(inputs$pars, initial, filter, control)
+  samples <- pmcmc_run_chain(inputs$pars, initial, filter, control, n_threads)
 
   saveRDS(samples, path$results)
 

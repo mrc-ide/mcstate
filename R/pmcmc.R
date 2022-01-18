@@ -80,7 +80,7 @@ pmcmc_multiple_series <- function(pars, initial, filter, control) {
       set.seed(seed[[i]]$r)
       filter <- particle_filter_from_inputs(filter$inputs(), seed[[i]]$dust)
     }
-    samples[[i]] <- pmcmc_run_chain(pars, initial[[i]], filter, control)
+    samples[[i]] <- pmcmc_run_chain(pars, initial[[i]], filter, control, NULL)
   }
 
   if (control$n_chains == 1) {
@@ -91,7 +91,12 @@ pmcmc_multiple_series <- function(pars, initial, filter, control) {
 }
 
 
-pmcmc_run_chain <- function(pars, initial, filter, control) {
+pmcmc_run_chain <- function(pars, initial, filter, control, n_threads) {
+  if (!is.null(n_threads)) {
+    filter$set_n_threads(n_threads)
+  } else if (!is.null(control$n_threads_total)) {
+    filter$set_n_threads(control$n_threads_total / control$n_workers)
+  }
   obj <- pmcmc_state$new(pars, initial, filter, control)
   obj$run()
   obj$finish()
