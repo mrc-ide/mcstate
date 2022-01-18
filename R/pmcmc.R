@@ -60,7 +60,6 @@ pmcmc <- function(pars, filter, initial = NULL, control = NULL) {
 
 pmcmc_multiple_series <- function(pars, initial, filter, control) {
   initial <- pmcmc_check_initial(initial, pars, control$n_chains)
-
   if (control$use_parallel_seed) {
     seed <- make_seeds(control$n_chains, filter$inputs()$seed, filter$model)
   } else {

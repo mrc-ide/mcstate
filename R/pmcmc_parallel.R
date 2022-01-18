@@ -62,6 +62,11 @@ pmcmc_orchestrator <- R6::R6Class(
       }
     },
 
+    ## processx::poll will poll, with a timeout, all our processes.
+    ## There's not much downside to a long poll because if they *are*
+    ## ready then they will return instantly. However, the process
+    ## will only be interruptable each time the timeout triggers, so
+    ## use 1000 here (1s).
     step = function(timeout = 1000) {
       res <- processx::poll(private$sessions, timeout)
       is_done <- vcapply(res, "[[", "process") == "ready"

@@ -225,10 +225,6 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
                  n_chains, n_workers))
   }
 
-  if (n_chains %% n_workers != 0) {
-    rem <- n_chains %% n_workers
-  }
-
   if (!is.null(save_restart)) {
     ## possibly assert_integer(save_restart)?
     assert_strictly_increasing(save_restart)
@@ -244,7 +240,7 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
   if (!is.null(path)) {
     assert_scalar_character(path)
     if (n_workers == 1) {
-      message("'path' given without n_workers has no effect and is ignored")
+      message("'path' given when n_workers = 1 has no effect and is ignored")
     }
   }
 

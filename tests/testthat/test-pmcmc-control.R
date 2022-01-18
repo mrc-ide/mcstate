@@ -102,5 +102,5 @@ test_that("control can detect corruption", {
 test_that("Informational notices in control", {
   expect_message(
     ctrl <- pmcmc_control(10, path = "location"),
-    "'path' given without n_workers has no effect and is ignored")
+    "'path' given when n_workers = 1 has no effect and is ignored")
 })

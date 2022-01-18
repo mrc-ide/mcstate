@@ -51,8 +51,8 @@ pmcmc_chains_prepare <- function(path, pars, filter, control,
   class(dat) <- "pmcmc_inputs"
 
   dir.create(path$root, FALSE, TRUE)
-  ## TODO: avoids warnings about packages not being available on load,
-  ## but we might erase those differently....
+  ## NOTE: The 'suppressWarnings' avoids warnings about mcstate not
+  ## being available on load.
   suppressWarnings(saveRDS(dat, path$inputs))
   saveRDS(control, path$control)
 
@@ -101,7 +101,6 @@ pmcmc_chains_collect <- function(path) {
   control <- readRDS(pmcmc_chains_path(path)$control)
   path <- pmcmc_chains_path(path, seq_len(control$n_chains))
 
-  ## TODO: better error message
   msg <- !file.exists(path$results)
   if (any(msg)) {
     stop(sprintf("Results missing for chains %s",

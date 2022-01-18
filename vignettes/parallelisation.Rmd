@@ -81,7 +81,8 @@ control <- mcstate::pmcmc_control(1000, n_chains = 4, n_workers = 2,
 or, if your system does not support OpenMP you could use 4 workers for these chains:
 
 ```{r}
-control <- mcstate::pmcmc_control(1000, n_chains = 4, n_workers = 4)
+control <- mcstate::pmcmc_control(1000, n_chains = 4, n_workers = 4,
+                                  n_threads_total = 16)
 ```
 
 If your system _does_ support OpenMP, then once chains start finishing their threads will be allocated to the ongoing chains.
