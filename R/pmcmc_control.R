@@ -243,7 +243,7 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
 
   if (!is.null(path)) {
     assert_scalar_character(path)
-    if (n_workers == 0) {
+    if (n_workers == 1) {
       message("'path' given without n_workers has no effect and is ignored")
     }
   }

@@ -97,3 +97,10 @@ test_that("control can detect corruption", {
     "Corrupt pmcmc_control (n_steps/n_steps_retain/n_burnin)",
     fixed = TRUE)
 })
+
+
+test_that("Informational notices in control", {
+  expect_message(
+    ctrl <- pmcmc_control(10, path = "location"),
+    "'path' given without n_workers has no effect and is ignored")
+})
