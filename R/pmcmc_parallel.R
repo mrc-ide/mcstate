@@ -178,12 +178,3 @@ pmcmc_parallel_progress_data <- function(status, steps, n_steps) {
   tokens <- list(bar_overall = bar_overall, p_running = p_running)
   list(steps = sum(steps), tokens = tokens)
 }
-
-
-pmcmc_parallel_predict_filter <- function(dat, filter_inputs) {
-  if (!is.null(dat$predict$filter)) {
-    filter_inputs$seed <- dat$predict$filter
-    dat$predict$filter <- filter_inputs
-  }
-  dat
-}
