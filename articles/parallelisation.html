@@ -149,7 +149,8 @@
                                   n_threads_total <span class="op">=</span> <span class="fl">16</span><span class="op">)</span></code></pre></div>
 <p>or, if your system does not support OpenMP you could use 4 workers for these chains:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">control</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_control.html">pmcmc_control</a></span><span class="op">(</span><span class="fl">1000</span>, n_chains <span class="op">=</span> <span class="fl">4</span>, n_workers <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span class="va">control</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_control.html">pmcmc_control</a></span><span class="op">(</span><span class="fl">1000</span>, n_chains <span class="op">=</span> <span class="fl">4</span>, n_workers <span class="op">=</span> <span class="fl">4</span>,
+                                  n_threads_total <span class="op">=</span> <span class="fl">16</span><span class="op">)</span></code></pre></div>
 <p>If your system <em>does</em> support OpenMP, then once chains start finishing their threads will be allocated to the ongoing chains.</p>
 <p>The random numbers are configured in such a way that the final result will be dependent only on the seed to create your <code>filter</code> object and not the number of worker processes or threads used. However, the algorithm does differ slightly by default to that used without workers. To use this parallel behaviour even when <code>n_workers</code> is 1, set <code>use_parallel_seed = TRUE</code> within <code><a href="../reference/pmcmc_control.html">mcstate::pmcmc_control</a></code>.</p>
 </div>

@@ -74,8 +74,8 @@ distribute chains over (say) the nodes of an HPC system."><meta property="og:ima
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>pMCMC with manual chain scheduling</h1>
-    <small class="dont-index">Source: <a href="https://github.com/mrc-ide/mcstate/blob/HEAD/R/pmcmc.R" class="external-link"><code>R/pmcmc.R</code></a></small>
-    <div class="hidden name"><code>pmcmc_chains_prepare.Rd</code></div>
+    <small class="dont-index">Source: <a href="https://github.com/mrc-ide/mcstate/blob/HEAD/R/pmcmc_chains.R" class="external-link"><code>R/pmcmc_chains.R</code></a></small>
+    <div class="hidden name"><code>pmcmc_chains.Rd</code></div>
     </div>
 
     <div class="ref-description">
@@ -85,19 +85,31 @@ distribute chains over (say) the nodes of an HPC system.</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">pmcmc_chains_prepare</span><span class="op">(</span><span class="va">pars</span>, <span class="va">filter</span>, initial <span class="op">=</span> <span class="cn">NULL</span>, control <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">pmcmc_chains_prepare</span><span class="op">(</span><span class="va">path</span>, <span class="va">pars</span>, <span class="va">filter</span>, <span class="va">control</span>, initial <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span>
 
-<span class="fu">pmcmc_chains_run</span><span class="op">(</span><span class="va">chain_id</span>, <span class="va">inputs</span>, path <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></code></pre></div>
+<span class="fu">pmcmc_chains_run</span><span class="op">(</span><span class="va">chain_id</span>, <span class="va">path</span>, n_threads <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span>
+
+<span class="fu">pmcmc_chains_collect</span><span class="op">(</span><span class="va">path</span><span class="op">)</span>
+
+<span class="fu">pmcmc_chains_cleanup</span><span class="op">(</span><span class="va">path</span><span class="op">)</span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
-    <dl><dt>pars</dt>
+    <dl><dt>path</dt>
+<dd><p>The path to use to exchange inputs and results.  You
+can use a temporary directory or a different path (relative or
+absolute).  Several rds files will be created.  It is strongly
+recommended not to use <code>.</code></p></dd>
+<dt>pars</dt>
 <dd><p>A <code><a href="pmcmc_parameters.html">pmcmc_parameters</a></code> object containing
 information about parameters (ranges, priors, proposal kernel,
 translation functions for use with the particle filter).</p></dd>
 <dt>filter</dt>
 <dd><p>A <code><a href="particle_filter.html">particle_filter</a></code> object</p></dd>
+<dt>control</dt>
+<dd><p>A <a href="pmcmc_control.html">pmcmc_control</a> object which will
+control how the MCMC runs, including the number of steps etc.</p></dd>
 <dt>initial</dt>
 <dd><p>Optional initial starting point. If given, it must
 be compatible with the parameters given in <code>pars</code>, and must be
@@ -106,27 +118,26 @@ initial conditions saved in your <code>pars</code> object. You can provide
 either a vector of initial conditions, or a matrix with
 <code>n_chains</code> columns to use a different starting point for each
 chain.</p></dd>
-<dt>control</dt>
-<dd><p>A <a href="pmcmc_control.html">pmcmc_control</a> object which will
-control how the MCMC runs, including the number of steps etc.</p></dd>
 <dt>chain_id</dt>
-<dd><p>The chain index to run (1, 2, ..., <code>control$n_chains</code>)</p></dd>
-<dt>inputs</dt>
-<dd><p>A <code>pmcmc_inputs</code> object created by <code>pmcmc_chains_prepare</code></p></dd>
-<dt>path</dt>
-<dd><p>Optionally a directory to save output in. This might
-be useful if splitting work across multiple processes. Samples
-will be saved at <code>&lt;path&gt;/samples_&lt;chain_id&gt;.rds</code></p></dd>
+<dd><p>The integer identifier of the chain to run</p></dd>
+<dt>n_threads</dt>
+<dd><p>Optional thread count, overriding the number set
+in the <code>control</code>.  This will be useful where preparing the
+threads on a machine with one level of resource and running it
+on another.</p></dd>
 </dl></div>
     <div id="details">
     <h2>Details</h2>
-    <p>Basic usage will look like</p><div class="sourceCode"><pre><code><span class="va">inputs</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_chains_prepare.html">pmcmc_chains_prepare</a></span><span class="op">(</span><span class="va">pars</span>, <span class="va">filter</span>, control <span class="op">=</span> <span class="va">control</span><span class="op">)</span>
-<span class="va">samples_data</span> <span class="op">&lt;-</span>
-  <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">control</span><span class="op">$</span><span class="va">n_chains</span><span class="op">)</span>, <span class="fu">mcstate</span><span class="fu">::</span><span class="va"><a href="../reference/pmcmc_chains_prepare.html">pmcmc_chains_run</a></span>, <span class="va">inputs</span><span class="op">)</span>
-<span class="va">samples</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_combine.html">pmcmc_combine</a></span><span class="op">(</span>samples <span class="op">=</span> <span class="va">samples</span><span class="op">)</span></code></pre></div>
+    <p>Basic usage will look like</p><div class="sourceCode"><pre><code><span class="va">path</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_chains.html">pmcmc_chains_prepare</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span>, <span class="va">pars</span>, <span class="va">filter</span>, <span class="va">control</span><span class="op">)</span>
+<span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">control</span><span class="op">$</span><span class="va">n_chains</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span>
+  <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_chains.html">pmcmc_chains_run</a></span><span class="op">(</span><span class="va">i</span>, <span class="va">path</span><span class="op">)</span>
+<span class="op">}</span>
+<span class="va">samples</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_chains.html">pmcmc_chains_collect</a></span><span class="op">(</span><span class="va">path</span><span class="op">)</span>
+<span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_chains.html">pmcmc_chains_cleanup</a></span><span class="op">(</span><span class="va">path</span><span class="op">)</span></code></pre></div>
 
-<p>You can safely parallelise (or not) however you like at the
-<code>lapply</code> call and get the same outputs regardless.</p>
+<p>You can safely parallelise (or not) however you like at the point
+where the loop is (even across other machines) and get the same
+outputs regardless.</p>
     </div>
 
   </div>

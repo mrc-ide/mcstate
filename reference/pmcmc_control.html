@@ -94,7 +94,6 @@ as the order of the arguments may change in future.</p>
   n_chains <span class="op">=</span> <span class="fl">1L</span>,
   n_threads_total <span class="op">=</span> <span class="cn">NULL</span>,
   n_workers <span class="op">=</span> <span class="fl">1L</span>,
-  n_steps_each <span class="op">=</span> <span class="cn">NULL</span>,
   rerun_every <span class="op">=</span> <span class="cn">Inf</span>,
   rerun_random <span class="op">=</span> <span class="cn">FALSE</span>,
   use_parallel_seed <span class="op">=</span> <span class="cn">FALSE</span>,
@@ -106,7 +105,8 @@ as the order of the arguments may change in future.</p>
   nested_update_both <span class="op">=</span> <span class="cn">FALSE</span>,
   filter_early_exit <span class="op">=</span> <span class="cn">FALSE</span>,
   n_burnin <span class="op">=</span> <span class="cn">NULL</span>,
-  n_steps_retain <span class="op">=</span> <span class="cn">NULL</span>
+  n_steps_retain <span class="op">=</span> <span class="cn">NULL</span>,
+  path <span class="op">=</span> <span class="cn">NULL</span>
 <span class="op">)</span></code></pre></div>
     </div>
 
@@ -126,31 +126,17 @@ otherwise.</p></dd>
 the total number of threads/cores to use. If <code>n_workers</code> is
 greater than 1 then these threads will be divided evenly across
 your workers at first and so <code>n_threads_total</code> must be an even
-multiple of <code>n_workers</code>. If chains finish at different times
-(including if <code>n_chains</code> is not a multiple of <code>n_workers</code>) then
-these threads/cores will be reallocated across workers that are
-still going. If <code>n_workers</code> is 1 (i.e., running in parallel) and
-<code>n_threads_total</code> is not given (i.e., <code>NULL</code>) we will use the
-number of threads specified in the particle filter
-creation. Otherwise this value overrides the value in the
-particle filter.</p></dd>
+multiple of <code>n_workers</code>.  If <code>n_chains</code> is not a clean multiple
+of <code>n_workers</code> we will try and allocate the leftover threads
+evenly across the last wave of chains.  This value must be
+provided if <code>n_workers</code> is given, but is optional otherwise - if
+given it overrides the value in the particle filter.</p></dd>
 <dt>n_workers</dt>
 <dd><p>Number of "worker" processes to use to run chains
 in parallel. This must be at most <code>n_chains</code> and is recommended
 to be a divisor of <code>n_chains</code>. If <code>n_workers</code> is 1, then chains
 are run in series (i.e., one chain after the other). See the
 parallel vignette (<code><a href="../articles/parallelisation.html">vignette("parallelisation", package = "mcstate")</a></code>) for more details about this approach.</p></dd>
-<dt>n_steps_each</dt>
-<dd><p>If using workers (i.e., <code>n_workers &gt; 1</code>), the
-number of steps to run in each "chunk" on each worker before
-reporting back to the main process. Increasing this will make
-progress reporting less frequent and reduce some communication
-overhead (though the overhead is likely to be trivial in any
-real application). Decreasing this will give more frequent
-process reporting and if <code>n_threads_total</code> is given will allow
-for more rapid re-allocation of unused cores once chains start
-finishing. The default, if not given and if <code>n_workers &gt; 1</code> is
-to use 10% of <code>n_steps</code>.</p></dd>
 <dt>rerun_every</dt>
 <dd><p>Optional integer giving the frequency at which
 we should rerun the particle filter on the current "accepted"
@@ -237,6 +223,10 @@ burnin.  This happens separately to the burnin in
 <dt>n_steps_retain</dt>
 <dd><p>Optionally, the number of samples to retain from
 the <code>n_steps - n_burnin</code> steps.  See Details.</p></dd>
+<dt>path</dt>
+<dd><p>Optional path to save partial pmcmc results in, when
+using workers.  If not given (or <code>NULL</code>) then a temporary
+directory is used.</p></dd>
 </dl></div>
     <div id="value">
     <h2>Value</h2>
@@ -288,9 +278,6 @@ relate to the filtered samples.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $n_workers</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $n_steps_each</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $n_threads_total</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -314,6 +301,12 @@ relate to the filtered samples.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $progress</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $progress_simple</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $path</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $filter_early_exit</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
@@ -349,9 +342,6 @@ relate to the filtered samples.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $n_workers</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $n_steps_each</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $n_threads_total</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 16</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -375,6 +365,12 @@ relate to the filtered samples.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $progress</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $progress_simple</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $path</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $filter_early_exit</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
@@ -412,9 +408,6 @@ relate to the filtered samples.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $n_workers</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 4</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $n_steps_each</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 100</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $n_threads_total</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 16</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -438,6 +431,12 @@ relate to the filtered samples.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $progress</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $progress_simple</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $path</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $filter_early_exit</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>

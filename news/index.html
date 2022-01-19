@@ -76,6 +76,12 @@
     </div>
 
     <div class="section level2">
+<h2 class="page-header" data-toc-text="0.8.3" id="mcstate-083">mcstate 0.8.3<a class="anchor" aria-label="anchor" href="#mcstate-083"></a></h2>
+<ul><li>Overhaul <code>mcstate::pmcmc_chains_*</code> to always use a file for communication, making them easier to understand and more robust (<a href="https://github.com/mrc-ide/mcstate/issues/179" class="external-link">#179</a>)</li>
+<li>New functions <code><a href="../reference/pmcmc_chains.html">mcstate::pmcmc_chains_cleanup</a></code> for removing files created by the above, and <code><a href="../reference/pmcmc_chains.html">mcstate::pmcmc_chains_collect</a></code> for automating collecting samples</li>
+<li>New, simpler, approach to pmcmc parallelisation which shares as much code with the above.</li>
+</ul></div>
+    <div class="section level2">
 <h2 class="page-header" data-toc-text="0.8.2" id="mcstate-082">mcstate 0.8.2<a class="anchor" aria-label="anchor" href="#mcstate-082"></a></h2>
 <ul><li>Allow filtering of the pmcmc chains during running (dropping burnin and filtering) to reduce memory usage when collectin large trajectories</li>
 <li>pmcmc no longer retains the initial parameter values</li>
