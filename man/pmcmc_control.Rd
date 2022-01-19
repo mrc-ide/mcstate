@@ -9,7 +9,6 @@ pmcmc_control(
   n_chains = 1L,
   n_threads_total = NULL,
   n_workers = 1L,
-  n_steps_each = NULL,
   rerun_every = Inf,
   rerun_random = FALSE,
   use_parallel_seed = FALSE,
@@ -21,7 +20,8 @@ pmcmc_control(
   nested_update_both = FALSE,
   filter_early_exit = FALSE,
   n_burnin = NULL,
-  n_steps_retain = NULL
+  n_steps_retain = NULL,
+  path = NULL
 )
 }
 \arguments{
@@ -38,31 +38,17 @@ otherwise.}
 the total number of threads/cores to use. If \code{n_workers} is
 greater than 1 then these threads will be divided evenly across
 your workers at first and so \code{n_threads_total} must be an even
-multiple of \code{n_workers}. If chains finish at different times
-(including if \code{n_chains} is not a multiple of \code{n_workers}) then
-these threads/cores will be reallocated across workers that are
-still going. If \code{n_workers} is 1 (i.e., running in parallel) and
-\code{n_threads_total} is not given (i.e., \code{NULL}) we will use the
-number of threads specified in the particle filter
-creation. Otherwise this value overrides the value in the
-particle filter.}
+multiple of \code{n_workers}.  If \code{n_chains} is not a clean multiple
+of \code{n_workers} we will try and allocate the leftover threads
+evenly across the last wave of chains.  This value must be
+provided if \code{n_workers} is given, but is optional otherwise - if
+given it overrides the value in the particle filter.}
 
 \item{n_workers}{Number of "worker" processes to use to run chains
 in parallel. This must be at most \code{n_chains} and is recommended
 to be a divisor of \code{n_chains}. If \code{n_workers} is 1, then chains
 are run in series (i.e., one chain after the other). See the
 parallel vignette (\code{vignette("parallelisation", package = "mcstate")}) for more details about this approach.}
-
-\item{n_steps_each}{If using workers (i.e., \code{n_workers > 1}), the
-number of steps to run in each "chunk" on each worker before
-reporting back to the main process. Increasing this will make
-progress reporting less frequent and reduce some communication
-overhead (though the overhead is likely to be trivial in any
-real application). Decreasing this will give more frequent
-process reporting and if \code{n_threads_total} is given will allow
-for more rapid re-allocation of unused cores once chains start
-finishing. The default, if not given and if \code{n_workers > 1} is
-to use 10\% of \code{n_steps}.}
 
 \item{rerun_every}{Optional integer giving the frequency at which
 we should rerun the particle filter on the current "accepted"
@@ -149,6 +135,10 @@ burnin.  This happens separately to the burnin in
 
 \item{n_steps_retain}{Optionally, the number of samples to retain from
 the \code{n_steps - n_burnin} steps.  See Details.}
+
+\item{path}{Optional path to save partial pmcmc results in, when
+using workers.  If not given (or \code{NULL}) then a temporary
+directory is used.}
 }
 \value{
 A \code{pmcmc_control} object, which should not be modified

@@ -282,7 +282,7 @@ test_that("Can run parallel mcmc with deterministic model", {
   n_chains <- 3L
   control <- pmcmc_control(n_steps, save_trajectories = TRUE,
                            n_workers = 2L, n_chains = n_chains,
-                           save_state = TRUE)
+                           n_threads_total = 2, save_state = TRUE)
   p <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
   res <- pmcmc(dat$pars, p, NULL, control)
   expect_s3_class(res, "mcstate_pmcmc")

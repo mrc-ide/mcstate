@@ -263,23 +263,21 @@ test_that("return names on pmcmc output", {
 
 test_that("can use default initial conditions", {
   dat <- example_sir()
-  dn <- list(dat$pars$names(), NULL)
   expect_equal(pmcmc_check_initial(NULL, dat$pars, 1),
-               matrix(c(0.2, 0.1), 2, 1, dimnames = dn))
+               list(c(beta = 0.2, gamma = 0.1)))
   expect_equal(pmcmc_check_initial(NULL, dat$pars, 5),
-               matrix(c(0.2, 0.1), 2, 5, dimnames = dn))
+               rep(list(c(beta = 0.2, gamma = 0.1)), 5))
 })
 
 
 test_that("can use a vector initial conditions and expand it out", {
   dat <- example_uniform()
-  dn <- list(dat$pars$names(), NULL)
   expect_equal(pmcmc_check_initial(c(0.1, 0.2), dat$pars, 1),
-               matrix(c(0.1, 0.2), 2, 1, dimnames = dn))
+               list(c(a = 0.1, b = 0.2)))
   expect_equal(pmcmc_check_initial(c(0.1, 0.2), dat$pars, 5),
-               matrix(c(0.1, 0.2), 2, 5, dimnames = dn))
+               rep(list(c(a = 0.1, b = 0.2)), 5))
   expect_equal(pmcmc_check_initial(c(a = 0.1, b = 0.2), dat$pars, 5),
-               matrix(c(0.1, 0.2), 2, 5, dimnames = dn))
+               rep(list(c(a = 0.1, b = 0.2)), 5))
 })
 
 
@@ -300,10 +298,11 @@ test_that("can use a matrix initial conditions", {
   dat <- example_uniform()
   dn <- list(dat$pars$names(), NULL)
   expect_equal(pmcmc_check_initial(cbind(c(0.1, 0.2)), dat$pars, 1),
-               matrix(c(0.1, 0.2), 2, 1, dimnames = dn))
+               list(c(a = 0.1, b = 0.2)))
   m <- matrix(runif(10), 2, 5, dimnames = dn)
-  expect_equal(pmcmc_check_initial(unname(m), dat$pars, 5), m)
-  expect_equal(pmcmc_check_initial(m, dat$pars, 5), m)
+  cmp <- lapply(1:5, function(i) m[, i])
+  expect_equal(pmcmc_check_initial(unname(m), dat$pars, 5), cmp)
+  expect_equal(pmcmc_check_initial(m, dat$pars, 5), cmp)
 })
 
 
@@ -405,91 +404,21 @@ test_that("rerunning the particle filter triggers the filter run method", {
 })
 
 
-test_that("can partially run the pmcmc", {
-  proposal_kernel <- diag(2) * 1e-4
-  row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("beta", "gamma")
-
-  pars <- pmcmc_parameters$new(
-    list(pmcmc_parameter("beta", 0.2, min = 0, max = 1,
-                         prior = function(p) log(1e-10)),
-         pmcmc_parameter("gamma", 0.1, min = 0, max = 1,
-                         prior = function(p) log(1e-10))),
-    proposal = proposal_kernel)
-
-  control <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE)
-
-  dat <- example_sir()
-  n_particles <- 42
-  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index)
-  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index)
-
-  set.seed(1)
-  results1 <- pmcmc(pars, p1, control = control)
-
-  control$n_steps_each <- 10
-  set.seed(1)
-  initial <- pmcmc_check_initial(NULL, pars, 1)[, 1]
-  obj <- pmcmc_state$new(pars, initial, p2, control)
-  expect_equal(obj$run(), list(step = 10, finished = FALSE))
-  tmp <- r6_private(obj)$history_pars$get()
-  expect_equal(lengths(tmp), rep(c(2, 0), c(10, 20)))
-  expect_equal(obj$run(), list(step = 20, finished = FALSE))
-  expect_equal(obj$run(), list(step = 30, finished = TRUE))
-  expect_equal(obj$run(), list(step = 30, finished = TRUE))
-  results2 <- obj$finish()
-
-  expect_equal(results2, results1)
-})
-
-
-test_that("can change the number of threads mid-run", {
-  skip_on_cran()
-  dat <- example_sir()
-  n_particles <- 20
-  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index)
-  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index)
-
-
-  control <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE)
-
-  set.seed(1)
-  results1 <- pmcmc(dat$pars, p1, control = control)
-
-  control$n_steps_each <- 10
-  set.seed(1)
-  initial <- pmcmc_check_initial(NULL, dat$pars, 1)[, 1]
-  obj <- pmcmc_state$new(dat$pars, initial, p2, control)
-  expect_equal(obj$run(), list(step = 10, finished = FALSE))
-  expect_equal(obj$set_n_threads(2), 1)
-  expect_equal(obj$run(), list(step = 20, finished = FALSE))
-  expect_equal(r6_private(r6_private(obj)$filter)$n_threads, 2)
-  expect_equal(obj$set_n_threads(1), 2)
-  expect_equal(obj$run(), list(step = 30, finished = TRUE))
-  expect_equal(r6_private(r6_private(obj)$filter)$n_threads, 1)
-  expect_equal(obj$run(), list(step = 30, finished = TRUE))
-  results2 <- obj$finish()
-
-  expect_equal(results2, results1)
-})
-
-
 test_that("Can override thread count via control", {
   dat <- example_sir()
   n_particles <- 30
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                           index = dat$index, seed = 1L, n_threads = 4)
-  res <- pmcmc(dat$pars, p,
-               control = pmcmc_control(5, n_threads_total = 2))
+                           index = dat$index, seed = 1L, n_threads = 1)
+
+  ## This is very odd, we're getting totally the wrong number through here.
+  control <- pmcmc_control(5, n_threads_total = 2)
+  res <- pmcmc(dat$pars, p, control = control)
   expect_equal(res$predict$filter$n_threads, 2)
 
-  p$set_n_threads(4)
+  p$set_n_threads(1)
   res <- pmcmc(dat$pars, p,
                control = pmcmc_control(5, n_threads_total = NULL))
-  expect_equal(res$predict$filter$n_threads, 4)
+  expect_equal(res$predict$filter$n_threads, 1)
 })
 
 
@@ -589,102 +518,6 @@ test_that("Fix parameters in sir model", {
 })
 
 
-test_that("Split chain manually", {
-  dat <- example_sir()
-  n_particles <- 30
-  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index, seed = 1L)
-  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index, seed = 1L)
-  control <- pmcmc_control(10, n_chains = 4, use_parallel_seed = TRUE)
-
-  res1 <- pmcmc(dat$pars, p1, control = control)
-
-  inputs <- pmcmc_chains_prepare(dat$pars, p2, NULL, control)
-  samples <- lapply(seq_len(control$n_chains), pmcmc_chains_run, inputs)
-  res2 <- pmcmc_combine(samples = samples)
-
-  expect_equal(res1, res2)
-})
-
-
-test_that("split chain running requires one worker", {
-  dat <- example_sir()
-  n_particles <- 30
-  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                           index = dat$index, seed = 1L)
-  control <- pmcmc_control(10, n_chains = 4, n_workers = 2,
-                           use_parallel_seed = TRUE)
-  expect_error(
-    pmcmc_chains_prepare(dat$pars, p, NULL, control),
-    "'n_workers' must be 1")
-})
-
-
-test_that("split chain running requires parallel seed setting", {
-  dat <- example_sir()
-  n_particles <- 30
-  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                           index = dat$index, seed = 1L)
-  control <- pmcmc_control(10, n_chains = 4, n_workers = 1,
-                           use_parallel_seed = FALSE)
-  expect_error(
-    pmcmc_chains_prepare(dat$pars, p, NULL, control),
-    "'use_parallel_seed' must be TRUE")
-})
-
-
-test_that("split chain running validates the chain id", {
-  dat <- example_sir()
-  n_particles <- 30
-  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                           index = dat$index, seed = 1L)
-  control <- pmcmc_control(10, n_chains = 4, n_workers = 1,
-                           use_parallel_seed = TRUE)
-
-  inputs <- pmcmc_chains_prepare(dat$pars, p, NULL, control)
-  expect_error(
-    pmcmc_chains_run(0, inputs),
-    "'chain_id' must be at least 1",
-    fixed = TRUE)
-  expect_error(
-    pmcmc_chains_run(5, inputs),
-    "'chain_id' must be an integer in 1..4",
-    fixed = TRUE)
-})
-
-
-test_that("Split chain and write to file", {
-  dat <- example_sir()
-  n_particles <- 30
-  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index, seed = 1L)
-  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            index = dat$index, seed = 1L)
-  control <- pmcmc_control(10, n_chains = 4, use_parallel_seed = TRUE)
-
-  res1 <- pmcmc(dat$pars, p1, control = control)
-
-  inputs <- pmcmc_chains_prepare(dat$pars, p2, NULL, control)
-  ## typically the user will create this before but we won't here to
-  ## show that this is robust to that
-  path <- tempfile()
-
-  samples_path <- vcapply(seq_len(control$n_chains), pmcmc_chains_run,
-                          inputs, path)
-  expect_true(file.exists(path))
-  expect_true(file.info(path)$isdir)
-  expect_true(all(file.exists(samples_path)))
-  expect_setequal(dir(path), basename(samples_path))
-  expect_equal(basename(samples_path),
-               sprintf("samples_%d.rds", 1:4))
-  samples <- lapply(samples_path, readRDS)
-  res2 <- pmcmc_combine(samples = samples)
-
-  expect_equal(res1, res2)
-})
-
-
 test_that("Can run pmcmc with early exit enabled", {
   dat <- example_sir()
   ## Really low particle number to inflate variance and cause more
@@ -705,19 +538,6 @@ test_that("Can run pmcmc with early exit enabled", {
   ## identical to 300 steps at least, which is surprising. However,
   ## you can see that the RNG streams differ:
   expect_false(identical(p2$inputs()$seed, p1$inputs()$seed))
-})
-
-
-test_that("Fix impossible control parameters", {
-  ctrl <- pmcmc_control(10, n_workers = 1)
-  ctrl$n_steps_each <- 2
-  dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, 20, dat$compare,
-                           index = dat$index, seed = 1L)
-  ## Previously this errored, here we're just looking for completion
-  results <- pmcmc(dat$pars, p, control = ctrl)
-  expect_equal(dim(results$pars), c(10, 2))
-  expect_false(any(is.na(results$pars)))
 })
 
 

@@ -194,3 +194,19 @@ test_integer <- function(x, name = deparse(substitute(x)),
 
   TRUE
 }
+
+
+## I've seen rare cases where the processx poll says that the process
+## is ready, but the process is still alive (shutting down).  So we
+## give a short grace window here.
+callr_safe_result <- function(rs, grace = 2, dt = 0.1) {
+  for (i in seq(0, grace, by = dt)) {
+    if (!rs$is_alive()) {
+      break
+    }
+    Sys.sleep(dt)
+  }
+  ## Failure here will throw and propagate nicely to the controlling
+  ## process.
+  rs$get_result()
+}

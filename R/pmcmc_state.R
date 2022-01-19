@@ -177,7 +177,8 @@ pmcmc_state <- R6::R6Class(
         stop("'pars' and 'filter' disagree on nestedness")
       }
 
-      private$tick <- pmcmc_progress(control$n_steps, control$progress)
+      private$tick <- pmcmc_progress(control$n_steps, control$progress,
+                                     control$progress_simple)
 
       private$curr_step <- 0L
       private$curr_pars <- initial
@@ -217,13 +218,10 @@ pmcmc_state <- R6::R6Class(
       private$update <- update
     },
 
-    set_n_threads = function(n_threads) {
-      private$filter$set_n_threads(n_threads)
-    },
-
     run = function() {
       control <- private$control
-      to <- min(private$curr_step + control$n_steps_each, control$n_steps)
+      ## TODO: simplify, then look at simplifying the rest
+      to <- min(private$curr_step + control$n_steps, control$n_steps)
       steps <- seq(from = private$curr_step + 1L,
                    length.out = to - private$curr_step)
       rerun <- make_rerun(control$rerun_every, control$rerun_random)

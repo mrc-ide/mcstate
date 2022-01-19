@@ -128,18 +128,40 @@ print.mcstate_pmcmc <- function(x, ...) {
 
 ## NOTE: we need to expose a 'force' argument here for testing, as
 ## otherwise under R CMD check the progress bar does not run.
-pmcmc_progress <- function(n, show, force = FALSE) {
-  if (show) {
-    fmt <- "Step :current / :total [:bar] ETA :eta | :elapsedfull so far"
-    t0 <- Sys.time()
-    callback <- function(p) {
-      message(sprintf("Finished %d steps in %s",
-                      n, format(Sys.time() - t0, digits = 1)))
+pmcmc_progress <- function(n_steps, progress, simple = FALSE, force = FALSE) {
+  if (progress) {
+    if (simple) {
+      p <- progress_percentage(n_steps)
+      p(0)
+      p
+    } else {
+      fmt <- "Step :current / :total [:bar] ETA :eta | :elapsedfull so far"
+      t0 <- Sys.time()
+      callback <- function(p) {
+        message(sprintf("Finished %d steps in %s",
+                        n_steps, format(Sys.time() - t0, digits = 1)))
+      }
+      p <- progress::progress_bar$new(fmt, n_steps, callback = callback,
+                                      force = force)
+      p$tick(0)
+      p$tick
     }
-    p <- progress::progress_bar$new(fmt, n, callback = callback, force = force)
-    p$tick(0)
-    p$tick
   } else {
     function() NULL
+  }
+}
+
+
+progress_percentage <- function(total) {
+  force(total)
+  i <- 0
+  prev <- 0
+  function(n = 1) {
+    i <<- i + n
+    p <- floor(i / total * 100)
+    if (p != prev) {
+      prev <<- p
+      message(paste("progress:", i))
+    }
   }
 }

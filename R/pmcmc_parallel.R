@@ -5,110 +5,100 @@ pmcmc_orchestrator <- R6::R6Class(
   "pmcmc_orchestrator",
 
   private = list(
+    launch = function(process_id) {
+      is_pending <- private$status == "pending"
+      if (!any(is_pending)) {
+        return()
+      }
+      chain_id <- which(is_pending)[[1]]
+      private$target[[process_id]] <- chain_id
+      private$status[[chain_id]] <- "running"
+      private$sessions[[process_id]] <- callr::r_bg(
+        pmcmc_chains_run,
+        list(chain_id, private$path, private$n_threads[[chain_id]]),
+        package = "mcstate")
+    },
+
     control = NULL,
-    remotes = NULL,
-    sessions = NULL,
-    status = NULL,
-    results = NULL,
-    thread_pool = NULL,
-    progress = NULL,
     path = NULL,
-    filter_inputs = NULL
+
+    sessions = NULL,  # list of session
+    target = NULL,    # session -> chain map
+    status = NULL,    # string, one of pending / running / done
+    steps = NULL,     # number of steps complete
+    n_threads = NULL, # number of threads per chain (precomputed)
+
+    progress = NULL
   ),
 
   public = list(
-    initialize = function(pars, initial, filter, control, root = NULL) {
+    initialize = function(pars, initial, filter, control) {
+      ## Changes behaviour of the internal progress bar so that we can
+      ## interpret it as per-chain progress.
+      control$progress_simple <- TRUE
+      ## This is required, and we always set it
+      control$use_parallel_seed <- TRUE
+      ## We set this so that chains prepare doesn't get concerned;
+      ## we've done the correct bookkeeping here and n_threads will be
+      ## correct (but first compute the number of threads we'll use
+      ## for chain)
+      n_workers <- control$n_workers
+      control$n_workers <- 1L
+
+      path <- control$path %||% tempfile()
+      private$path <- pmcmc_chains_prepare(path, pars, filter, control, initial)
       private$control <- control
-      private$thread_pool <- thread_pool$new(control$n_threads_total,
-                                             control$n_workers)
-      private$progress <- pmcmc_parallel_progress(control)
 
-      filter_inputs <- filter$inputs()
-      seed <- make_seeds(control$n_chains, filter_inputs$seed, filter$model)
-      filter_inputs$n_threads <- private$thread_pool$target
+      private$target <- rep(NA_integer_, control$n_chains)
+      private$status <- rep("pending", control$n_chains)
+      private$steps <- rep(0, control$n_chains)
+      private$n_threads <- pmcmc_parallel_threads(
+        control$n_threads_total, n_workers, control$n_chains)
 
-      private$remotes <- vector("list", control$n_workers)
-      private$sessions <- vector("list", control$n_workers)
-      private$status <- vector("list", control$n_chains)
-      private$results <- vector("list", control$n_chains)
-      private$filter_inputs <- filter_inputs
+      private$progress <-
+        pmcmc_parallel_progress(control, private$status, private$steps)
 
-      root <- root %||% tempfile()
-      dir.create(root, FALSE, TRUE)
-      private$path <- list(root = root,
-                           input = file.path(root, "input.rds"),
-                           output = file.path(root, "output-%d.rds"))
-
-      input <- list(
-        pars = pars,
-        initial = pmcmc_parallel_initial(control$n_chains, initial),
-        filter = filter_inputs,
-        control = control,
-        seed = seed)
-
-      ## Ignore warning:
-      ##   'package:mcstate' may not be available when loading
-      ## which would cause significantly more issues than here :)
-      suppressWarnings(saveRDS(input, private$path$input))
-
-      ## First stage starts the process and reads in input data, but
-      ## this is async over the workers
-      n_threads <- filter_inputs$n_threads
-      for (i in seq_len(control$n_workers)) {
-        private$remotes[[i]] <-
-          pmcmc_remote$new(private$path$input, n_threads)
-        private$sessions[[i]] <- private$remotes[[i]]$session
-      }
-      ## ...so once the sessions start coming up we start them working
-      for (i in seq_len(control$n_workers)) {
-        private$remotes[[i]]$wait_session_ready()
-        private$status[[i]] <- private$remotes[[i]]$init(i)
+      for (process_id in seq_len(n_workers)) {
+        private$launch(process_id)
       }
     },
 
-    step = function() {
-      ## processx::poll will poll, with a timeout, our
-      ## processes. There's not much downside to a long poll because
-      ## if they *are* ready they will return instantly. However, the
-      ## process will only be interruptable each time the timeout
-      ## triggers, so use 1000 here (1s).
-      res <- processx::poll(private$sessions, 1000)
-      i <- vcapply(res, "[[", "process") == "ready"
-      if (any(i)) {
-        dat <- lapply(private$remotes[i], function(x) x$read())
-        index <- vnapply(dat, "[[", "index")
-        result <- lapply(dat, "[[", "result")
-        private$status[index] <- result
-        finished <- vlapply(result, function(x) x$finished)
-        for (r in private$remotes[i][!finished]) {
-          private$thread_pool$remove(r)
-          r$continue()
+    ## processx::poll will poll, with a timeout, all our processes.
+    ## There's not much downside to a long poll because if they *are*
+    ## ready then they will return instantly. However, the process
+    ## will only be interruptable each time the timeout triggers, so
+    ## use 1000 here (1s).
+    step = function(timeout = 1000) {
+      res <- processx::poll(private$sessions, timeout)
+      is_done <- vcapply(res, "[[", "process") == "ready"
+      if (any(is_done)) {
+        for (process_id in which(is_done)) {
+          callr_safe_result(private$sessions[[process_id]])
+          chain_id <- private$target[[process_id]]
+          private$status[[chain_id]] <- "done"
+          private$steps[[chain_id]] <- private$control$n_steps
+          private$launch(process_id)
         }
-        if (any(finished)) {
-          ## It might be preferable to close out sessions *first* as
-          ## if we close out 2 sessions here simultaneously we
-          ## underallocate cores for one time-chunk. That does
-          ## complicate the book-keeping though.
-          remaining <- which(lengths(private$status) == 0)
-          for (r in private$remotes[i][finished]) {
-            filename <- sprintf(private$path$output, r$index)
-            res <- r$finish(filename)
-            dat <- readRDS(filename)
-            private$results[[r$index]] <-
-              pmcmc_parallel_predict_filter(dat, private$filter_inputs)
-            if (length(remaining) == 0L) {
-              r$session$close()
-              private$thread_pool$add(r)
-            } else {
-              private$thread_pool$remove(r)
-              j <- remaining[[1]]
-              remaining <- remaining[-1]
-              private$status[[j]] <- r$init(j)
+      }
+
+      if (private$control$progress) {
+        has_stderr <- vcapply(res, "[[", "error") == "ready" & !is_done
+        if (any(has_stderr)) {
+          for (process_id in which(has_stderr)) {
+            stderr <- private$sessions[[process_id]]$read_error_lines()
+            re <- "^progress: ([0-9]+)$"
+            i <- grep(re, stderr)
+            if (length(i) > 0) {
+              progress <- as.numeric(sub(re, "\\1", stderr[[last(i)]]))
+              chain_id <- private$target[[process_id]]
+              private$steps[[chain_id]] <- progress
             }
           }
         }
+        private$progress(private$status, private$steps)
       }
-      private$progress(private$status)
+
+      all(private$status == "done")
     },
 
     run = function() {
@@ -117,102 +107,7 @@ pmcmc_orchestrator <- R6::R6Class(
     },
 
     finish = function() {
-      unlink(private$path$root, recursive = TRUE)
-      pmcmc_combine(samples = private$results)
-    }
-  ))
-
-
-## This class takes care of the details if a partially run chain
-## running in a remote process, wrapping around callr's "r_session"
-## objects.
-pmcmc_remote <- R6::R6Class(
-  "pmcmc_remote",
-  private = list(
-    path = NULL,
-    step = NULL
-  ),
-
-  public = list(
-    session = NULL,
-    index = NULL,
-    n_threads = NULL,
-
-    ## NOTE: n_threads here must match that of the filter inputs
-    initialize = function(path, n_threads) {
-      options <- callr::r_session_options(
-        load_hook = bquote(.GlobalEnv$input <- readRDS(.(path))))
-      self$session <- callr::r_session$new(options = options, wait = FALSE)
-      self$n_threads <- n_threads
-      lockBinding("session", self)
-    },
-
-    ## 30000ms is the timeout for the session to come alive; an error
-    ## will be thrown if it is not alive by then (this number is used
-    ## by callr internally)
-    wait_session_ready = function(timeout = 30000) {
-      self$session$poll_process(timeout)
-      self$session$read()
-      TRUE
-    },
-
-    ## Initialise this remote with the i'th chain (based on our
-    ## initial conditions and seed that we began with). Every remote
-    ## is *capable* of starting every chain but we do the allocation
-    ## dynamically.
-    init = function(index) {
-      self$session$call(function(index) {
-        ## simplify resolution, technically not needed
-        input <- .GlobalEnv$input
-        seed <- input$seed[[index]]
-        initial <- input$initial[[index]]
-        control <- input$control
-
-        set.seed(seed$r)
-        filter <- particle_filter_from_inputs(input$filter, seed$dust)
-        control$progress <- FALSE
-        .GlobalEnv$obj <- pmcmc_state$new(input$pars, initial, filter, control)
-        .GlobalEnv$obj$run()
-      }, list(index), package = "mcstate")
-      self$index <- index
-      list(step = 0L, finished = FALSE)
-    },
-
-    continue = function() {
-      self$session$call(function() .GlobalEnv$obj$run())
-    },
-
-    read = function() {
-      data <- self$session$read()
-      if (!is.null(data$error)) {
-        ## NOTE: We have to use this non-exported function to get the
-        ## same nice error handling as Gabor has set up in the
-        ## package, and depending on any of the details of the
-        ## returned objects will likely be even more fragile than
-        ## grabbing this function from within the package.
-        callr:::throw(data$error)
-      }
-      list(index = self$index, result = data$result)
-    },
-
-    set_n_threads = function(n_threads) {
-      prev <- self$session$run(function(n) .GlobalEnv$obj$set_n_threads(n),
-                               list(n_threads))
-      self$n_threads <- n_threads
-      invisible(prev)
-    },
-
-    ## This one is synchronous, and writes to disk. Using callr's I/O
-    ## here is too slow. We might want to make this async, but it will
-    ## really complicate the above!
-    finish = function(filename) {
-      self$session$run(function(filename) {
-        results <- .GlobalEnv$obj$finish()
-        results$predict$filter <- results$predict$filter$seed
-        suppressWarnings(saveRDS(results, filename))
-      }, list(filename))
-
-      list(index = self$index, data = filename)
+      pmcmc_chains_collect(private$path)
     }
   ))
 
@@ -256,120 +151,59 @@ make_seeds <- function(n, seed, model) {
 }
 
 
-## Utility class to help with the thread book-keeping above.
-thread_pool <- R6::R6Class(
-  class = FALSE,
-  public = list(
-    n_threads = NULL,
-    n_workers = NULL,
-    free = 0L,
-    target = NULL,
-    active = NULL,
-
-    initialize = function(n_threads, n_workers) {
-      self$active <- !is.null(n_threads)
-      self$n_threads <- n_threads
-      self$n_workers <- n_workers
-      self$free <- 0L
-
-      if (self$active) {
-        self$target <- ceiling(n_threads / n_workers)
-      } else {
-        self$target <- 1L
-      }
-    },
-
-    add = function(remote) {
-      if (!self$active) {
-        return()
-      }
-      self$n_workers <- self$n_workers - 1L
-      self$free <- self$free + remote$n_threads
-      self$target <- ceiling(self$n_threads / self$n_workers)
-    },
-
-    remove = function(remote) {
-      if (!self$active || self$free == 0L) {
-        return()
-      }
-      n <- min(remote$n_threads + self$free, self$target)
-      d <- n - remote$n_threads
-      if (d > 0) {
-        remote$set_n_threads(n)
-        self$free <- self$free - d
-      }
-    }
-  ))
-
-
-pmcmc_parallel_progress_data <- function(status, n_steps) {
-  started <- lengths(status) > 0
-  finished <- vlapply(status[started], "[[", "finished")
-
-  n_finished <- sum(finished)
-  n_started <- sum(started)
-  n_running <- n_started - n_finished
-  n_waiting <- length(status) - n_started
-
-  n <- vnapply(status[started], "[[", "step")
-
-  ## Could use cli::symbol$full_block and crayon here to make this nicer
-  bar_overall <- paste0(strrep("#", n_finished),
-                        strrep("+", n_running),
-                        strrep(" ", n_waiting))
-  p_running <- paste(sprintf("%d%%", round(n[!finished] / n_steps * 100)),
-                     collapse = " ")
-
-  tokens <- list(bar_overall = bar_overall, p_running = p_running)
-  result <- n_finished == length(status)
-  list(n = sum(n), tokens = tokens, result = result)
-}
-
-
 ## Create a callback to create a progress bar
-pmcmc_parallel_progress <- function(control, force = FALSE) {
+pmcmc_parallel_progress <- function(control, status, steps, force = FALSE) {
   n_steps <- control$n_steps
   if (control$progress) {
-    n <- n_steps * control$n_chains
+    steps_total <- n_steps * control$n_chains
     fmt <- "[:spin] [:bar_overall] ETA :eta | :elapsedfull so far (:p_running)"
     t0 <- Sys.time()
     callback <- function(p) {
       message(sprintf("Finished %d steps in %s",
-                      n, format(Sys.time() - t0, digits = 1)))
+                      steps_total, format(Sys.time() - t0, digits = 1)))
     }
-    p <- progress::progress_bar$new(fmt, n, callback = callback, force = force)
+    p <- progress::progress_bar$new(fmt, steps_total, callback = callback,
+                                    force = force)
+    tick <- function(status, steps) {
+      d <- pmcmc_parallel_progress_data(status, steps, n_steps)
+      tryCatch(p$update(d$steps / steps_total, d$tokens),
+               error = function(e) NULL)
+    }
+
     ## Progress likes to be started right away:
-    d <- pmcmc_parallel_progress_data(vector("list", control$n_chains), n_steps)
-    p$update(d$n, d$tokens)
-    function(status) {
-      d <- pmcmc_parallel_progress_data(status, n_steps)
-      p$update(d$n / n, d$tokens)
-      d$result
-    }
+    tick(status, steps)
+
+    tick
   } else {
-    function(status) {
-      pmcmc_parallel_progress_data(status, n_steps)$result
+    function(status, steps) {
     }
   }
 }
 
-
-pmcmc_parallel_initial <- function(n_chains, initial) {
-  if (is_3d_array(initial)) {
-    initial <- lapply(seq_len(n_chains), function(index)
-      initial[, , index])
-  } else {
-    initial <- lapply(seq_len(n_chains), function(index)
-      initial[, index])
-  }
-  initial
+pmcmc_parallel_progress_data <- function(status, steps, n_steps) {
+  map <- c(pending = " ", running = "+", done = "#")
+  bar_overall <- paste(map[status], collapse = "")
+  progress <- floor(steps[status == "running"] / n_steps * 100)
+  p_running <- paste(sprintf("%3d%%", progress), collapse = " ")
+  tokens <- list(bar_overall = bar_overall, p_running = p_running)
+  list(steps = sum(steps), tokens = tokens)
 }
 
 
-pmcmc_parallel_predict_filter <- function(dat, filter_inputs) {
-  if (!is.null(dat$predict$filter)) {
-    filter_inputs$seed <- dat$predict$filter
-    dat$predict$filter <- filter_inputs
+## It is possible that we could allocate out threads better here
+## really.  For the last wave of workers we would multiply n_threads
+## by floor(n_threads * n_workers / n_workers_last); to get really
+## fancy you could work out what the floor had discarded and add that
+## to the last worker (which will be submitted last and benefit the
+## most).
+pmcmc_parallel_threads <- function(n_threads_total, n_workers, n_chains) {
+  n_threads <- rep(n_threads_total / n_workers,
+                   n_chains %/% n_workers * n_workers)
+  spare <- n_chains %% n_workers
+  if (spare != 0) {
+    last <- c(rep(floor(n_threads_total / spare), spare - 1),
+              floor(n_threads_total / spare) + n_threads_total %% spare)
+    n_threads <- c(n_threads, last)
   }
-  dat
+  n_threads
 }

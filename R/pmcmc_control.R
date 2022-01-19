@@ -47,29 +47,15 @@
 ##'   with the same filter if `n_workers` is 1, or run in parallel
 ##'   otherwise.
 ##'
-##' @param n_steps_each If using workers (i.e., `n_workers > 1`), the
-##'   number of steps to run in each "chunk" on each worker before
-##'   reporting back to the main process. Increasing this will make
-##'   progress reporting less frequent and reduce some communication
-##'   overhead (though the overhead is likely to be trivial in any
-##'   real application). Decreasing this will give more frequent
-##'   process reporting and if `n_threads_total` is given will allow
-##'   for more rapid re-allocation of unused cores once chains start
-##'   finishing. The default, if not given and if `n_workers > 1` is
-##'   to use 10% of `n_steps`.
-##'
 ##' @param n_threads_total The total number of threads (i.e., cores)
 ##'   the total number of threads/cores to use. If `n_workers` is
 ##'   greater than 1 then these threads will be divided evenly across
 ##'   your workers at first and so `n_threads_total` must be an even
-##'   multiple of `n_workers`. If chains finish at different times
-##'   (including if `n_chains` is not a multiple of `n_workers`) then
-##'   these threads/cores will be reallocated across workers that are
-##'   still going. If `n_workers` is 1 (i.e., running in parallel) and
-##'   `n_threads_total` is not given (i.e., `NULL`) we will use the
-##'   number of threads specified in the particle filter
-##'   creation. Otherwise this value overrides the value in the
-##'   particle filter.
+##'   multiple of `n_workers`.  If `n_chains` is not a clean multiple
+##'   of `n_workers` we will try and allocate the leftover threads
+##'   evenly across the last wave of chains.  This value must be
+##'   provided if `n_workers` is given, but is optional otherwise - if
+##'   given it overrides the value in the particle filter.
 ##'
 ##' @param n_workers Number of "worker" processes to use to run chains
 ##'   in parallel. This must be at most `n_chains` and is recommended
@@ -165,6 +151,10 @@
 ##' @param n_steps_retain Optionally, the number of samples to retain from
 ##'   the `n_steps - n_burnin` steps.  See Details.
 ##'
+##' @param path Optional path to save partial pmcmc results in, when
+##'   using workers.  If not given (or `NULL`) then a temporary
+##'   directory is used.
+##'
 ##' @return A `pmcmc_control` object, which should not be modified
 ##'   once created.
 ##'
@@ -185,26 +175,28 @@
 ##' mcstate::pmcmc_control(1000, n_chains = 8, n_threads_total = 16,
 ##'                        n_workers = 4)
 pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
-                          n_workers = 1L, n_steps_each = NULL,
+                          n_workers = 1L,
                           rerun_every = Inf, rerun_random = FALSE,
                           use_parallel_seed = FALSE,
                           save_state = TRUE, save_restart = NULL,
                           save_trajectories = FALSE, progress = FALSE,
                           nested_step_ratio = 1, nested_update_both = FALSE,
                           filter_early_exit = FALSE,
-                          n_burnin = NULL, n_steps_retain = NULL) {
+                          n_burnin = NULL, n_steps_retain = NULL,
+                          path = NULL) {
   assert_scalar_positive_integer(n_steps)
   assert_scalar_positive_integer(n_chains)
   assert_scalar_positive_integer(n_workers)
-  if (n_workers == 1L) {
-    ## Never use this in a non-parallel-worker situation
-    n_steps_each <- n_steps
-  } else if (is.null(n_steps_each)) {
-    n_steps_each <- ceiling(n_steps / 10)
+
+  if (is.null(n_threads_total)) {
+    if (n_workers > 1) {
+      ## There's no safe action we can take here otherwise as the
+      ## number of threads in the filter could be either the number
+      ## per worker or number total. Setting 'n_threads_total = n_workers'
+      ## here feels plausible but might be less than ideal too.
+      stop("If n_workers > 1, then n_threads_total must be provided")
+    }
   } else {
-    assert_scalar_positive_integer(n_steps_each)
-  }
-  if (!is.null(n_threads_total)) {
     assert_scalar_positive_integer(n_threads_total)
     if (n_threads_total < n_workers) {
       stop(sprintf("'n_threads_total' (%d) is less than 'n_workers' (%d)",
@@ -245,12 +237,18 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
                           must be an integer", nested_step_ratio))
   }
 
+  if (!is.null(path)) {
+    assert_scalar_character(path)
+    if (n_workers == 1) {
+      message("'path' given when n_workers = 1 has no effect and is ignored")
+    }
+  }
+
   filter <- pmcmc_filter_on_generation(n_steps, n_burnin, n_steps_retain)
 
   ret <- list(n_steps = n_steps,
               n_chains = n_chains,
               n_workers = n_workers,
-              n_steps_each = n_steps_each,
               n_threads_total = n_threads_total,
               rerun_every = rerun_every,
               rerun_random = rerun_random,
@@ -259,6 +257,8 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
               save_restart = save_restart,
               save_trajectories = save_trajectories,
               progress = progress,
+              progress_simple = FALSE,
+              path = path,
               filter_early_exit = filter_early_exit,
               nested_update_both = nested_update_both,
               nested_step_ratio = nested_step_ratio)

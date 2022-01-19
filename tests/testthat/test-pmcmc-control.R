@@ -3,7 +3,7 @@ context("pmcmc (control)")
 
 test_that("Don't allow fewer chains than workers", {
   expect_error(
-    pmcmc_control(100, n_chains = 2, n_workers = 5),
+    pmcmc_control(100, n_chains = 2, n_workers = 5, n_threads_total = 5),
     "'n_chains' (2) is less than 'n_workers' (5)",
     fixed = TRUE)
 })
@@ -18,23 +18,6 @@ test_that("Don't run with invalid n_threads", {
     pmcmc_control(100, n_chains = 5, n_workers = 5, n_threads_total = 8),
     "'n_threads_total' (8) is not a multiple of 'n_workers' (5)",
     fixed = TRUE)
-})
-
-
-test_that("If not using workers, n_run_each has no effect", {
-  expect_equal(
-    pmcmc_control(100, n_workers = 1, n_steps_each = 10)$n_steps_each,
-    100)
-})
-
-
-test_that("If not given, n_run_each is 10% of n_steps", {
-  expect_equal(
-    pmcmc_control(100, n_chains = 2, n_workers = 2)$n_steps_each,
-    10)
-  expect_equal(
-    pmcmc_control(105, n_chains = 2, n_workers = 2)$n_steps_each,
-    11)
 })
 
 
@@ -113,4 +96,18 @@ test_that("control can detect corruption", {
     pmcmc_check_control(control),
     "Corrupt pmcmc_control (n_steps/n_steps_retain/n_burnin)",
     fixed = TRUE)
+})
+
+
+test_that("Informational notices in control", {
+  expect_message(
+    pmcmc_control(10, path = "location"),
+    "'path' given when n_workers = 1 has no effect and is ignored")
+})
+
+
+test_that("Using workers requires explicit number of threads", {
+  expect_error(
+    pmcmc_control(10, n_chains = 2, n_workers = 2),
+    "If n_workers > 1, then n_threads_total must be provided")
 })
