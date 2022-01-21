@@ -31,22 +31,141 @@ particle_filter_state <- R6::R6Class(
     min_log_likelihood = NULL,
     support = NULL,
 
-    run_compiled = function() {
+    step_r = function(step_index, partial = FALSE) {
+      steps <- private$steps
+      curr <- self$current_step_index
+      check_step(curr, step_index, private$steps, "Particle filter")
+
+      model <- self$model
+      compare <- private$compare
+      nested <- inherits(private$data, "particle_filter_data_nested")
+
+      ## This needs a little work in dust:
+      ## https://github.com/mrc-ide/dust/issues/177
+      if (is.null(compare)) {
+        stop("Can't use low-level step with compiled particle filter (yet)")
+      }
+
+      steps <- private$steps
+      data_split <- private$data_split
+      pars <- private$pars
+
+      restart_state <- self$restart_state
+      save_restart_step <- private$save_restart_step
+      save_restart <- !is.null(restart_state)
+
+      history <- self$history
+      save_history <- !is.null(history)
+      save_history_index <- self$history$index
+      history_value <- history$value
+      history_order <- history$order
+
+      log_likelihood <- self$log_likelihood
+      n_particles <- private$n_particles
+
+      min_log_likelihood <- private$min_log_likelihood
+      support <- private$support
+
+      for (t in seq(curr + 1L, step_index)) {
+        step_end <- steps[t, 2L]
+        state <- model$run(step_end)
+
+        if (save_history) {
+          ## NOTE: There are two places here (and for the order below)
+          ## where we assign trajectories, and we have to do this
+          ## without using `array_last_dimension<-`, otherwise there's
+          ## a big performance regression due to excessive GC (we make
+          ## a copy into the function call, I suspect?)
+          ##
+          ## An alternative approach here would be to store the
+          ## history as a flat array (or access it as such), then
+          ## compute what the index would be.  If we know the product
+          ## of the first dimensions, this is pretty easy really.
+          if (nested) {
+            history_value[, , , t + 1L] <- model$state(save_history_index)
+          } else {
+            history_value[, , t + 1L] <- model$state(save_history_index)
+          }
+        }
+
+        weights <- support$compare(state, compare, data_split[[t]], pars)
+
+        if (is.null(weights)) {
+          log_likelihood_step <- NA_real_
+          kappa <- seq_len(n_particles)
+        } else {
+          log_likelihood_step <- weights$average
+          log_likelihood <- log_likelihood + log_likelihood_step
+
+          if (particle_filter_early_exit(log_likelihood, min_log_likelihood)) {
+            log_likelihood[] <- -Inf
+            break
+          }
+
+          kappa <- particle_resample(weights$weights)
+          model$reorder(kappa)
+        }
+
+        if (save_history) {
+          if (nested) {
+            history_order[, , t + 1L] <- kappa
+          } else {
+            history_order[, t + 1L] <- kappa
+          }
+        }
+
+        if (save_restart) {
+          i_restart <- match(step_end, save_restart_step)
+          if (!is.na(i_restart)) {
+            array_last_dimension(restart_state, i_restart) <- model$state()
+          }
+        }
+      }
+
+      self$log_likelihood_step <- log_likelihood_step
+      self$log_likelihood <- log_likelihood
+      self$current_step_index <- step_index
+      if (save_history) {
+        history$value <- history_value
+        history$order <- history_order
+        self$history <- history
+      }
+      if (save_restart) {
+        self$restart_state <- restart_state
+      }
+
+      if (partial) {
+        log_likelihood_step
+      } else {
+        log_likelihood
+      }
+    },
+
+    step_compiled = function(step_index, partial = FALSE) {
+      if (partial) {
+        stop("'partial' not supported with compiled compare")
+      }
+      curr <- self$current_step_index
+      check_step(curr, step_index, private$steps, "Particle filter")
+      step <- private$steps[step_index, 2]
+
+      model <- self$model
+
       history <- self$history
       save_history <- !is.null(history)
       save_history_index <- self$history$index
 
-      model <- self$model
       if (save_history) {
         model$set_index(save_history_index)
+        ## What was the idea here?
         on.exit(model$set_index(integer(0)))
       }
 
-      res <- model$filter(save_history, private$save_restart_step)
+      res <- model$filter(step, save_history, private$save_restart_step)
 
       self$log_likelihood_step <- NA_real_
       self$log_likelihood <- self$log_likelihood + res$log_likelihood
-      self$current_step_index <- nrow(private$steps)
+      self$current_step_index <- step_index
       if (save_history) {
         self$history <- list(value = res$trajectories,
                              index = save_history_index)
@@ -189,11 +308,7 @@ particle_filter_state <- R6::R6Class(
     ##' a convenience function around `$step()` which provides the correct
     ##' value of `step_index`
     run = function() {
-      if (is.null(private$compare)) {
-        private$run_compiled()
-      } else {
-        self$step(nrow(private$steps))
-      }
+      self$step(nrow(private$steps))
     },
 
     ##' @description Take a step with the particle filter. This moves
@@ -210,112 +325,10 @@ particle_filter_state <- R6::R6Class(
     ##' @param partial Logical, indicating if we should return the partial
     ##' likelihood, due to this step, rather than the full likelihood so far.
     step = function(step_index, partial = FALSE) {
-      steps <- private$steps
-      curr <- self$current_step_index
-      check_step(curr, step_index, private$steps, "Particle filter")
-
-      model <- self$model
-      compare <- private$compare
-      nested <- inherits(private$data, "particle_filter_data_nested")
-
-      ## This needs a little work in dust:
-      ## https://github.com/mrc-ide/dust/issues/177
-      if (is.null(compare)) {
-        stop("Can't use low-level step with compiled particle filter (yet)")
-      }
-
-      steps <- private$steps
-      data_split <- private$data_split
-      pars <- private$pars
-
-      restart_state <- self$restart_state
-      save_restart_step <- private$save_restart_step
-      save_restart <- !is.null(restart_state)
-
-      history <- self$history
-      save_history <- !is.null(history)
-      save_history_index <- self$history$index
-      history_value <- history$value
-      history_order <- history$order
-
-      log_likelihood <- self$log_likelihood
-      n_particles <- private$n_particles
-
-      min_log_likelihood <- private$min_log_likelihood
-      support <- private$support
-
-      for (t in seq(curr + 1L, step_index)) {
-        step_end <- steps[t, 2L]
-        state <- model$run(step_end)
-
-        if (save_history) {
-          ## NOTE: There are two places here (and for the order below)
-          ## where we assign trajectories, and we have to do this
-          ## without using `array_last_dimension<-`, otherwise there's
-          ## a big performance regression due to excessive GC (we make
-          ## a copy into the function call, I suspect?)
-          ##
-          ## An alternative approach here would be to store the
-          ## history as a flat array (or access it as such), then
-          ## compute what the index would be.  If we know the product
-          ## of the first dimensions, this is pretty easy really.
-          if (nested) {
-            history_value[, , , t + 1L] <- model$state(save_history_index)
-          } else {
-            history_value[, , t + 1L] <- model$state(save_history_index)
-          }
-        }
-
-        weights <- support$compare(state, compare, data_split[[t]], pars)
-
-        if (is.null(weights)) {
-          log_likelihood_step <- NA_real_
-          kappa <- seq_len(n_particles)
-        } else {
-          log_likelihood_step <- weights$average
-          log_likelihood <- log_likelihood + log_likelihood_step
-
-          if (particle_filter_early_exit(log_likelihood, min_log_likelihood)) {
-            log_likelihood[] <- -Inf
-            break
-          }
-
-          kappa <- particle_resample(weights$weights)
-          model$reorder(kappa)
-        }
-
-        if (save_history) {
-          if (nested) {
-            history_order[, , t + 1L] <- kappa
-          } else {
-            history_order[, t + 1L] <- kappa
-          }
-        }
-
-        if (save_restart) {
-          i_restart <- match(step_end, save_restart_step)
-          if (!is.na(i_restart)) {
-            array_last_dimension(restart_state, i_restart) <- model$state()
-          }
-        }
-      }
-
-      self$log_likelihood_step <- log_likelihood_step
-      self$log_likelihood <- log_likelihood
-      self$current_step_index <- step_index
-      if (save_history) {
-        history$value <- history_value
-        history$order <- history_order
-        self$history <- history
-      }
-      if (save_restart) {
-        self$restart_state <- restart_state
-      }
-
-      if (partial) {
-        log_likelihood_step
+      if (is.null(private$compare)) {
+        private$step_compiled(step_index, partial)
       } else {
-        log_likelihood
+        private$step_r(step_index, partial)
       }
     },
 
