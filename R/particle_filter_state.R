@@ -157,7 +157,6 @@ particle_filter_state <- R6::R6Class(
 
       if (save_history) {
         model$set_index(save_history_index)
-        ## What was the idea here?
         on.exit(model$set_index(integer(0)))
       }
 

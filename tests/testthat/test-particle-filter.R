@@ -711,28 +711,6 @@ test_that("Can't run past the end of the data", {
 })
 
 
-test_that("Can't partially run a compiled filter", {
-  dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, 10, NULL,
-                           index = dat$index, seed = 1L)
-  expect_error(p$run_begin()$step(5),
-               "Can't use low-level step with compiled particle filter (yet)",
-               fixed = TRUE)
-})
-
-
-test_that("Can't partially run a compiled filter (nested)", {
-  dat <- example_sir_shared()
-  pars <- list(list(beta = 0.2, gamma = 0.1),
-               list(beta = 0.3, gamma = 0.1))
-  p <- particle_filter$new(dat$data, dat$model, 10, NULL,
-                           index = dat$index)
-  expect_error(p$run_begin(pars)$step(5),
-               "Can't use low-level step with compiled particle filter (yet)",
-               fixed = TRUE)
-})
-
-
 test_that("Can fork a particle_filter_state object", {
   dat <- example_sir()
   n_particles <- 42
