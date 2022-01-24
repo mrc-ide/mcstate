@@ -147,12 +147,6 @@ particle_filter_state <- R6::R6Class(
 
       history <- self$history
       save_history <- !is.null(history)
-      save_history_index <- self$history$index
-
-      if (save_history) {
-        model$set_index(save_history_index)
-        on.exit(model$set_index(integer(0)))
-      }
 
       res <- model$filter(step, save_history, private$save_restart_step)
 
@@ -161,7 +155,7 @@ particle_filter_state <- R6::R6Class(
       self$current_step_index <- step_index
       if (save_history) {
         self$history <- list(value = res$trajectories,
-                             index = save_history_index)
+                             index = self$history$index)
       }
       self$restart_state <- res$snapshots
       self$log_likelihood
@@ -228,7 +222,6 @@ particle_filter_state <- R6::R6Class(
                                seed = seed, gpu_config = gpu_config,
                                pars_multi = pars_multi)
         if (is.null(compare)) {
-          model$set_index(integer(0))
           model$set_data(data_split)
         }
       } else {
@@ -244,8 +237,10 @@ particle_filter_state <- R6::R6Class(
         index_data <- NULL
       } else {
         index_data <- support$index(model, index)
-        if (!is.null(compare) && !is.null(index_data$run)) {
+        if (!is.null(compare)){
           model$set_index(index_data$run)
+        } else {
+          model$set_index(index_data$state)
         }
       }
 
