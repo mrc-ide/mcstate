@@ -438,6 +438,7 @@ example_variable <- function() {
     update(x[2:len]) <- i + step / 10
     initial(x[]) <- 0
     dim(x) <- len
+    config(compare) <- "compare_variable.cpp"
   }, verbose = FALSE)
 
   data <- particle_filter_data(data.frame(time = 1:50, observed = rnorm(50)),

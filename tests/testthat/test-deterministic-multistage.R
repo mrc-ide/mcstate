@@ -244,3 +244,54 @@ test_that("Confirm deterministic nested multistage is correct", {
   expect_identical(is.na(h_staged), is.na(h_cmp))
   expect_identical(h_staged, h_cmp)
 })
+
+
+test_that("Can run multistage with compiled", {
+  dat <- example_variable()
+
+  ## We need some multipopulation data here:
+  data_raw <- data.frame(time = rep(1:50, 2),
+                         observed = rnorm(100),
+                         population = factor(rep(c("a", "b"), each = 50)))
+  data <- particle_filter_data(data_raw, population = "population",
+                               time = "time", rate = 4)
+
+  p1 <- particle_deterministic$new(data, dat$model, compare = dat$compare,
+                                   index = dat$index)
+  p2 <- particle_deterministic$new(data, dat$model, compare = NULL,
+                                   index = dat$index)
+
+  ## Now, we can set up some runs where we fiddle with the size of the
+  ## model over time, and we should see that it matches the histories
+  ## above:
+  pars_base1 <- list(len = 10, sd = 1)
+  epochs1 <- list(
+    multistage_epoch(10,
+                 pars = list(len = 20, sd = 1),
+                 transform_state = dat$transform_state),
+    multistage_epoch(25,
+                 pars = list(len = 15, sd = 1),
+                 transform_state = dat$transform_state))
+  pars1 <- multistage_parameters(pars_base1, epochs1)
+
+  pars_base2 <- list(len = 10, sd = 2)
+  epochs2 <- list(
+    multistage_epoch(10,
+                 pars = list(len = 20, sd = 2),
+                 transform_state = dat$transform_state),
+    multistage_epoch(25,
+                 pars = list(len = 15, sd = 2),
+                 transform_state = dat$transform_state))
+  pars2 <- multistage_parameters(pars_base2, epochs2)
+
+  pars <- list(pars1, pars2)
+
+  ll1 <- p1$run(pars, save_history = TRUE)
+  h1 <- p1$history()
+
+  ll2 <- p2$run(pars, save_history = TRUE)
+  h2 <- p2$history()
+
+  expect_equal(ll1, ll2)
+  expect_equal(h1, h2)
+})
