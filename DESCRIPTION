@@ -1,6 +1,6 @@
 Package: mcstate
 Title: Monte Carlo Methods for State Space Models
-Version: 0.8.3
+Version: 0.8.4
 Authors@R: c(person("Rich", "FitzJohn", role = c("aut", "cre"),
                     email = "rich.fitzjohn@gmail.com"),
              person("Marc", "Baguelin", role = "aut"),
@@ -40,6 +40,6 @@ Suggests:
 RoxygenNote: 7.1.2
 Roxygen: list(markdown = TRUE)
 Remotes:
-    mrc-ide/dust,
+    mrc-ide/dust@i177-partial-filter,
     mrc-ide/odin.dust
 VignetteBuilder: knitr
