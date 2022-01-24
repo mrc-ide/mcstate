@@ -601,6 +601,21 @@ test_that("prevent using compiled compare where model does not support it", {
 })
 
 
+test_that("can't get partial likelihood with compiled compare", {
+  dat <- example_sir()
+  n_particles <- 100
+  set.seed(1)
+
+  model <- dust::dust_example("sir")
+  p <- particle_filter$new(dat$data, model, n_particles, NULL,
+                           index = dat$index)
+  obj <- p$run_begin()
+  expect_error(
+    obj$step(10, TRUE),
+    "'partial' not supported with compiled compare")
+})
+
+
 test_that("incrementally run a particle filter", {
   dat <- example_sir()
   n_particles <- 42
@@ -628,6 +643,33 @@ test_that("incrementally run a particle filter", {
   expect_identical(ans1[[length(ans1)]], cmp)
   expect_true(all(diff(ans1) < 0))
   expect_equal(c(ans1[[1]], diff(ans1)), ans2)
+})
+
+
+test_that("incrementally run a compiled particle filter", {
+  dat <- example_sir()
+  n_particles <- 42
+
+  set.seed(1)
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, NULL,
+                           index = dat$index, seed = 1L)
+  cmp <- p1$run()
+
+  set.seed(1)
+  p2 <- particle_filter$new(dat$data, dat$model, n_particles, NULL,
+                            index = dat$index, seed = 1L)
+
+  n <- nrow(dat$data)
+  ans <- numeric(n)
+  obj <- p2$run_begin()
+  expect_s3_class(obj, "particle_filter_state")
+  for (i in seq_len(n)) {
+    ans[[i]] <- obj$step(i)
+  }
+
+  expect_identical(obj$log_likelihood, cmp)
+  expect_identical(ans[[length(ans)]], cmp)
+  expect_true(all(diff(ans) < 0))
 })
 
 
@@ -681,28 +723,6 @@ test_that("Can't run past the end of the data", {
     obj$step(n + 1),
     "step_index 101 is beyond the length of the data (max 100)",
     fixed = TRUE)
-})
-
-
-test_that("Can't partially run a compiled filter", {
-  dat <- example_sir()
-  p <- particle_filter$new(dat$data, dat$model, 10, NULL,
-                           index = dat$index, seed = 1L)
-  expect_error(p$run_begin()$step(5),
-               "Can't use low-level step with compiled particle filter (yet)",
-               fixed = TRUE)
-})
-
-
-test_that("Can't partially run a compiled filter (nested)", {
-  dat <- example_sir_shared()
-  pars <- list(list(beta = 0.2, gamma = 0.1),
-               list(beta = 0.3, gamma = 0.1))
-  p <- particle_filter$new(dat$data, dat$model, 10, NULL,
-                           index = dat$index)
-  expect_error(p$run_begin(pars)$step(5),
-               "Can't use low-level step with compiled particle filter (yet)",
-               fixed = TRUE)
 })
 
 

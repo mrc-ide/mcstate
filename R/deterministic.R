@@ -116,9 +116,7 @@ particle_deterministic <- R6::R6Class(
       assert_function_or_null(constant_log_likelihood)
       assert_is(data, "particle_filter_data")
 
-      ## NOTE: unlike the particle filter, there is no support for
-      ## using a compiled compare function here
-      assert_function(compare)
+      check_compare(compare, model)
 
       ## NOTE: unlike the particle filter, there is no support for GPU
       ## here (probably never will be)

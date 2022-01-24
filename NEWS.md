@@ -1,3 +1,7 @@
+# mcstate 0.8.4
+
+* Compiled compare functions now supported in more places - `particle_deterministic` and multistage models (#177)
+
 # mcstate 0.8.3
 
 * Overhaul `mcstate::pmcmc_chains_*` to always use a file for communication, making them easier to understand and more robust (#179)

@@ -362,3 +362,37 @@ test_that("Can offset the initial likelihood", {
   expect_identical(p1$history(), p2$history())
   expect_identical(p1$state(), p2$state())
 })
+
+
+test_that("Can use compiled compare", {
+  dat <- example_sir()
+  p1 <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
+  p2 <- particle_deterministic$new(dat$data, dat$model, NULL, dat$index)
+  pars <- list(exp_noise = Inf)
+  ## there's a discrepency here which ironically goes away with
+  ## non-infinite noise due to combination of sum over small numbers
+  ## and slightly different density calculation accuracy.
+  expect_equal(p1$run(pars), p2$run(pars), tolerance = 2e-5)
+})
+
+
+test_that("Can get history with compiled particle filter", {
+  dat <- example_sir()
+  set.seed(1)
+
+  model <- dust::dust_example("sir")
+  p1 <- particle_deterministic$new(dat$data, dat$model, dat$compare,
+                                   index = dat$index)
+  p2 <- particle_deterministic$new(dat$data, model, NULL,
+                                   index = dat$index)
+
+  pars <- list(exp_noise = Inf)
+
+  p1$run(pars, save_history = TRUE)
+  p2$run(pars, save_history = TRUE)
+
+  expect_equal(dim(p1$history()), dim(p2$history()))
+  expect_true(all(diff(t(p2$history()[3, , ])) >= 0))
+  expect_equal(dim(p1$history(1L)), dim(p2$history(1L)))
+  expect_equal(p1$history(), p2$history())
+})

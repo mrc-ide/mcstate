@@ -199,13 +199,7 @@ particle_filter <- R6::R6Class(
       assert_function_or_null(constant_log_likelihood)
       assert_is(data, "particle_filter_data")
 
-      if (is.null(compare)) {
-        if (!model$public_methods$has_compare()) {
-          stop("Your model does not have a built-in 'compare' function")
-        }
-      } else {
-        assert_function(compare)
-      }
+      check_compare(compare, model)
 
       if (!is.null(gpu_config)) {
         if (!model$public_methods$has_gpu_support(TRUE)) {
@@ -793,4 +787,15 @@ particle_filter_pars_nested <- function(pars, n_populations) {
   }
 
   ret
+}
+
+
+check_compare <- function(compare, model) {
+  if (is.null(compare)) {
+    if (!model$public_methods$has_compare()) {
+      stop("Your model does not have a built-in 'compare' function")
+    }
+  } else {
+    assert_function(compare)
+  }
 }

@@ -31,185 +31,7 @@ particle_filter_state <- R6::R6Class(
     min_log_likelihood = NULL,
     support = NULL,
 
-    run_compiled = function() {
-      history <- self$history
-      save_history <- !is.null(history)
-      save_history_index <- self$history$index
-
-      model <- self$model
-      if (save_history) {
-        model$set_index(save_history_index)
-        on.exit(model$set_index(integer(0)))
-      }
-
-      res <- model$filter(save_history, private$save_restart_step)
-
-      self$log_likelihood_step <- NA_real_
-      self$log_likelihood <- self$log_likelihood + res$log_likelihood
-      self$current_step_index <- nrow(private$steps)
-      if (save_history) {
-        self$history <- list(value = res$trajectories,
-                             index = save_history_index)
-      }
-      self$restart_state <- res$snapshots
-      res$log_likelihood
-    }
-  ),
-
-  public = list(
-    ##' @field model The dust model being simulated
-    model = NULL,
-
-    ##' @field history The particle history, if created with
-    ##'   `save_history = TRUE`. This is an internal format subject to
-    ##    change.
-    history = NULL,
-
-    ##' @field restart_state Full model state at a series of points in
-    ##'   time, if the model was created with non-`NULL` `save_restart`.
-    ##'   This is a 3d (or greater) array as described in
-    ##'   [mcstate::particle_filter]
-    restart_state = NULL,
-
-    ##' @field log_likelihood The log-likelihood so far. This starts at
-    ##'   0 when initialised and accumulates value for each step taken.
-    log_likelihood = NULL,
-
-    ##' @field log_likelihood_step The log-likelihood attributable to the
-    ##' last step (i.e., the contribution to `log_likelihood` made on the
-    ##' last call to `$step()`.
-    log_likelihood_step = NULL,
-
-    ##' @field current_step_index The index of the last completed step.
-    current_step_index = 0L,
-
-    ##' @description Initialise the particle filter state. Ordinarily
-    ##' this should not be called by users, and so arguments are barely
-    ##' documented.
-    ##' @param pars Parameters for a single phase
-    ##' @param generator A dust generator object
-    ##' @param model If the generator has previously been initialised
-    ##' @param data A [mcstate::particle_filter_data] data object
-    ##' @param data_split The same data as `data` but split by step
-    ##' @param steps A matrix of step beginning and ends
-    ##' @param n_particles Number of particles to use
-    ##' @param n_threads The number of threads to use
-    ##' @param initial Initial condition function (or `NULL`)
-    ##' @param index Index function (or `NULL`)
-    ##' @param compare Compare function
-    ##' @param constant_log_likelihood Constant log likelihood function
-    ##' @param gpu_config GPU configuration, passed to `generator`
-    ##' @param seed Initial RNG seed
-    ##' @param min_log_likelihood Early termination control
-    ##' @param save_history Logical, indicating if we should save history
-    ##' @param save_restart Vector of steps to save restart at
-    initialize = function(pars, generator, model, data, data_split, steps,
-                          n_particles, n_threads, initial, index, compare,
-                          constant_log_likelihood, gpu_config, seed,
-                          min_log_likelihood, save_history, save_restart) {
-      pars_multi <- inherits(data, "particle_filter_data_nested")
-      support <- particle_filter_state_support(pars_multi)
-
-      if (is.null(model)) {
-        model <- generator$new(pars = pars, step = steps[[1L]],
-                               n_particles = n_particles, n_threads = n_threads,
-                               seed = seed, gpu_config = gpu_config,
-                               pars_multi = pars_multi)
-        if (is.null(compare)) {
-          model$set_index(integer(0))
-          model$set_data(data_split)
-        }
-      } else {
-        model$update_state(pars = pars, step = steps[[1L]])
-      }
-
-      if (!is.null(initial)) {
-        initial_data <- support$initial(model, initial, pars, n_particles)
-        model$update_state(state = initial_data)
-      }
-
-      if (is.null(index)) {
-        index_data <- NULL
-      } else {
-        index_data <- support$index(model, index)
-        if (!is.null(compare) && !is.null(index_data$run)) {
-          model$set_index(index_data$run)
-        }
-      }
-
-      ## The model shape is [n_particles, <any multi-par structure>]
-      shape <- model$shape()
-
-      if (save_history) {
-        len <- nrow(steps) + 1L
-        state <- model$state(index_data$state)
-        history_value <- array(NA_real_, c(dim(state), len))
-        array_last_dimension(history_value, 1) <- state
-        history_order <- array(seq_len(n_particles), c(shape, len))
-        self$history <- list(
-          value = history_value,
-          order = history_order,
-          index = index_data$state)
-      } else {
-        self$history <- NULL
-      }
-
-      save_restart_step <- check_save_restart(save_restart, data)
-      if (length(save_restart_step) > 0) {
-        self$restart_state <-
-          array(NA_real_, c(model$n_state(), shape, length(save_restart)))
-      } else {
-        self$restart_state <- NULL
-      }
-
-      ## Constants
-      private$generator <- generator
-      private$pars <- pars
-      private$data <- data
-      private$data_split <- data_split
-      private$steps <- steps
-      private$n_particles <- n_particles
-      private$n_threads <- n_threads
-      private$initial <- initial
-      private$index <- index
-      private$compare <- compare
-      private$gpu <- !is.null(gpu_config)
-      private$min_log_likelihood <- min_log_likelihood
-      private$save_restart_step <- save_restart_step
-      private$save_restart <- save_restart
-      private$support <- support
-
-      ## Variable (see also history)
-      self$model <- model
-      self$log_likelihood <- particle_filter_constant_log_likelihood(
-        pars, pars_multi, constant_log_likelihood)
-    },
-
-    ##' @description Run the particle filter to the end of the data. This is
-    ##' a convenience function around `$step()` which provides the correct
-    ##' value of `step_index`
-    run = function() {
-      if (is.null(private$compare)) {
-        private$run_compiled()
-      } else {
-        self$step(nrow(private$steps))
-      }
-    },
-
-    ##' @description Take a step with the particle filter. This moves
-    ##' the particle filter forward one step within the *data* (which
-    ##' may correspond to more than one step with your model) and
-    ##' returns the likelihood so far.
-    ##'
-    ##' @param step_index The step *index* to move to. This is not the same
-    ##' as the model step, nor time, so be careful (it's the index within
-    ##' the data provided to the filter). It is an error to provide
-    ##' a value here that is lower than the current step index, or past
-    ##' the end of the data.
-    ##'
-    ##' @param partial Logical, indicating if we should return the partial
-    ##' likelihood, due to this step, rather than the full likelihood so far.
-    step = function(step_index, partial = FALSE) {
+    step_r = function(step_index, partial = FALSE) {
       steps <- private$steps
       curr <- self$current_step_index
       check_step(curr, step_index, private$steps, "Particle filter")
@@ -217,12 +39,6 @@ particle_filter_state <- R6::R6Class(
       model <- self$model
       compare <- private$compare
       nested <- inherits(private$data, "particle_filter_data_nested")
-
-      ## This needs a little work in dust:
-      ## https://github.com/mrc-ide/dust/issues/177
-      if (is.null(compare)) {
-        stop("Can't use low-level step with compiled particle filter (yet)")
-      }
 
       steps <- private$steps
       data_split <- private$data_split
@@ -316,6 +132,191 @@ particle_filter_state <- R6::R6Class(
         log_likelihood_step
       } else {
         log_likelihood
+      }
+    },
+
+    step_compiled = function(step_index, partial = FALSE) {
+      if (partial) {
+        stop("'partial' not supported with compiled compare")
+      }
+      curr <- self$current_step_index
+      check_step(curr, step_index, private$steps, "Particle filter")
+      step <- private$steps[step_index, 2]
+
+      model <- self$model
+
+      history <- self$history
+      save_history <- !is.null(history)
+
+      res <- model$filter(step, save_history, private$save_restart_step)
+
+      self$log_likelihood_step <- NA_real_
+      self$log_likelihood <- self$log_likelihood + res$log_likelihood
+      self$current_step_index <- step_index
+      if (save_history) {
+        self$history <- list(value = res$trajectories,
+                             index = self$history$index)
+      }
+      self$restart_state <- res$snapshots
+      self$log_likelihood
+    }
+  ),
+
+  public = list(
+    ##' @field model The dust model being simulated
+    model = NULL,
+
+    ##' @field history The particle history, if created with
+    ##'   `save_history = TRUE`. This is an internal format subject to
+    ##    change.
+    history = NULL,
+
+    ##' @field restart_state Full model state at a series of points in
+    ##'   time, if the model was created with non-`NULL` `save_restart`.
+    ##'   This is a 3d (or greater) array as described in
+    ##'   [mcstate::particle_filter]
+    restart_state = NULL,
+
+    ##' @field log_likelihood The log-likelihood so far. This starts at
+    ##'   0 when initialised and accumulates value for each step taken.
+    log_likelihood = NULL,
+
+    ##' @field log_likelihood_step The log-likelihood attributable to the
+    ##' last step (i.e., the contribution to `log_likelihood` made on the
+    ##' last call to `$step()`.
+    log_likelihood_step = NULL,
+
+    ##' @field current_step_index The index of the last completed step.
+    current_step_index = 0L,
+
+    ##' @description Initialise the particle filter state. Ordinarily
+    ##' this should not be called by users, and so arguments are barely
+    ##' documented.
+    ##' @param pars Parameters for a single phase
+    ##' @param generator A dust generator object
+    ##' @param model If the generator has previously been initialised
+    ##' @param data A [mcstate::particle_filter_data] data object
+    ##' @param data_split The same data as `data` but split by step
+    ##' @param steps A matrix of step beginning and ends
+    ##' @param n_particles Number of particles to use
+    ##' @param n_threads The number of threads to use
+    ##' @param initial Initial condition function (or `NULL`)
+    ##' @param index Index function (or `NULL`)
+    ##' @param compare Compare function
+    ##' @param constant_log_likelihood Constant log likelihood function
+    ##' @param gpu_config GPU configuration, passed to `generator`
+    ##' @param seed Initial RNG seed
+    ##' @param min_log_likelihood Early termination control
+    ##' @param save_history Logical, indicating if we should save history
+    ##' @param save_restart Vector of steps to save restart at
+    initialize = function(pars, generator, model, data, data_split, steps,
+                          n_particles, n_threads, initial, index, compare,
+                          constant_log_likelihood, gpu_config, seed,
+                          min_log_likelihood, save_history, save_restart) {
+      pars_multi <- inherits(data, "particle_filter_data_nested")
+      support <- particle_filter_state_support(pars_multi)
+
+      if (is.null(model)) {
+        model <- generator$new(pars = pars, step = steps[[1L]],
+                               n_particles = n_particles, n_threads = n_threads,
+                               seed = seed, gpu_config = gpu_config,
+                               pars_multi = pars_multi)
+        if (is.null(compare)) {
+          model$set_data(data_split)
+        }
+      } else {
+        model$update_state(pars = pars, step = steps[[1L]])
+      }
+
+      if (!is.null(initial)) {
+        initial_data <- support$initial(model, initial, pars, n_particles)
+        model$update_state(state = initial_data)
+      }
+
+      if (is.null(index)) {
+        index_data <- NULL
+      } else {
+        index_data <- support$index(model, index)
+        if (!is.null(compare)) {
+          model$set_index(index_data$run)
+        } else {
+          model$set_index(index_data$state)
+        }
+      }
+
+      ## The model shape is [n_particles, <any multi-par structure>]
+      shape <- model$shape()
+
+      if (save_history) {
+        len <- nrow(steps) + 1L
+        state <- model$state(index_data$state)
+        history_value <- array(NA_real_, c(dim(state), len))
+        array_last_dimension(history_value, 1) <- state
+        history_order <- array(seq_len(n_particles), c(shape, len))
+        self$history <- list(
+          value = history_value,
+          order = history_order,
+          index = index_data$state)
+      } else {
+        self$history <- NULL
+      }
+
+      save_restart_step <- check_save_restart(save_restart, data)
+      if (length(save_restart_step) > 0) {
+        self$restart_state <-
+          array(NA_real_, c(model$n_state(), shape, length(save_restart)))
+      } else {
+        self$restart_state <- NULL
+      }
+
+      ## Constants
+      private$generator <- generator
+      private$pars <- pars
+      private$data <- data
+      private$data_split <- data_split
+      private$steps <- steps
+      private$n_particles <- n_particles
+      private$n_threads <- n_threads
+      private$initial <- initial
+      private$index <- index
+      private$compare <- compare
+      private$gpu <- !is.null(gpu_config)
+      private$min_log_likelihood <- min_log_likelihood
+      private$save_restart_step <- save_restart_step
+      private$save_restart <- save_restart
+      private$support <- support
+
+      ## Variable (see also history)
+      self$model <- model
+      self$log_likelihood <- particle_filter_constant_log_likelihood(
+        pars, pars_multi, constant_log_likelihood)
+    },
+
+    ##' @description Run the particle filter to the end of the data. This is
+    ##' a convenience function around `$step()` which provides the correct
+    ##' value of `step_index`
+    run = function() {
+      self$step(nrow(private$steps))
+    },
+
+    ##' @description Take a step with the particle filter. This moves
+    ##' the particle filter forward one step within the *data* (which
+    ##' may correspond to more than one step with your model) and
+    ##' returns the likelihood so far.
+    ##'
+    ##' @param step_index The step *index* to move to. This is not the same
+    ##' as the model step, nor time, so be careful (it's the index within
+    ##' the data provided to the filter). It is an error to provide
+    ##' a value here that is lower than the current step index, or past
+    ##' the end of the data.
+    ##'
+    ##' @param partial Logical, indicating if we should return the partial
+    ##' likelihood, due to this step, rather than the full likelihood so far.
+    step = function(step_index, partial = FALSE) {
+      if (is.null(private$compare)) {
+        private$step_compiled(step_index, partial)
+      } else {
+        private$step_r(step_index, partial)
       }
     },
 
