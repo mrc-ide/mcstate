@@ -237,7 +237,7 @@ particle_filter_state <- R6::R6Class(
         index_data <- NULL
       } else {
         index_data <- support$index(model, index)
-        if (!is.null(compare)){
+        if (!is.null(compare)) {
           model$set_index(index_data$run)
         } else {
           model$set_index(index_data$state)
