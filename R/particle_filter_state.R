@@ -40,12 +40,6 @@ particle_filter_state <- R6::R6Class(
       compare <- private$compare
       nested <- inherits(private$data, "particle_filter_data_nested")
 
-      ## This needs a little work in dust:
-      ## https://github.com/mrc-ide/dust/issues/177
-      if (is.null(compare)) {
-        stop("Can't use low-level step with compiled particle filter (yet)")
-      }
-
       steps <- private$steps
       data_split <- private$data_split
       pars <- private$pars

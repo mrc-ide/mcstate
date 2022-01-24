@@ -601,6 +601,21 @@ test_that("prevent using compiled compare where model does not support it", {
 })
 
 
+test_that("can't get partial likelihood with compiled compare", {
+  dat <- example_sir()
+  n_particles <- 100
+  set.seed(1)
+
+  model <- dust::dust_example("sir")
+  p <- particle_filter$new(dat$data, model, n_particles, NULL,
+                           index = dat$index)
+  obj <- p$run_begin()
+  expect_error(
+    obj$step(10, TRUE),
+    "'partial' not supported with compiled compare")
+})
+
+
 test_that("incrementally run a particle filter", {
   dat <- example_sir()
   n_particles <- 42
