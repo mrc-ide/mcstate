@@ -171,7 +171,7 @@ particle_filter_state <- R6::R6Class(
                              index = save_history_index)
       }
       self$restart_state <- res$snapshots
-      res$log_likelihood
+      self$log_likelihood
     }
   ),
 

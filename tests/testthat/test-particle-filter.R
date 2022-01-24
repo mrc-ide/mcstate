@@ -631,6 +631,33 @@ test_that("incrementally run a particle filter", {
 })
 
 
+test_that("incrementally run a compiled particle filter", {
+  dat <- example_sir()
+  n_particles <- 42
+
+  set.seed(1)
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, NULL,
+                           index = dat$index, seed = 1L)
+  cmp <- p1$run()
+
+  set.seed(1)
+  p2 <- particle_filter$new(dat$data, dat$model, n_particles, NULL,
+                            index = dat$index, seed = 1L)
+
+  n <- nrow(dat$data)
+  ans <- numeric(n)
+  obj <- p2$run_begin()
+  expect_s3_class(obj, "particle_filter_state")
+  for (i in seq_len(n)) {
+    ans[[i]] <- obj$step(i)
+  }
+
+  expect_identical(obj$log_likelihood, cmp)
+  expect_identical(ans[[length(ans)]], cmp)
+  expect_true(all(diff(ans) < 0))
+})
+
+
 test_that("Can't step a particle filter object past its end", {
   dat <- example_sir()
   n_particles <- 42
