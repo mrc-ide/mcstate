@@ -180,11 +180,11 @@ test_that("collecting state from model yields an RNG state", {
                     control = pmcmc_control(5, save_state = TRUE))
 
   expect_identical(
-    r6_private(p1)$last_model$rng_state(),
-    r6_private(p2)$last_model$rng_state())
+    r6_private(p1)$last_model[[1]]$rng_state(),
+    r6_private(p2)$last_model[[1]]$rng_state())
   expect_identical(
     results2$predict$filter$seed,
-    r6_private(p1)$last_model$rng_state()[1:32])
+    r6_private(p1)$last_model[[1]]$rng_state()[1:32])
   expect_false(
     identical(results2$predict$filter$seed, results3$predict$filter$seed))
 })

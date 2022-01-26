@@ -209,7 +209,7 @@ particle_deterministic <- R6::R6Class(
         stop("'min_log_likelihood' cannot be used with particle_deterministic")
       }
       particle_deterministic_state$new(
-        pars, self$model, private$last_model, private$data,
+        pars, self$model, private$last_model[[1]], private$data,
         private$data_split, private$steps, private$n_threads,
         private$initial, private$index, private$compare,
         private$constant_log_likelihood,
@@ -227,7 +227,7 @@ particle_deterministic <- R6::R6Class(
       if (is.null(private$last_model)) {
         stop("Model has not yet been run")
       }
-      private$last_model$state(index_state)
+      last(private$last_model)$state(index_state)
     },
 
     ##' @description Extract the particle trajectories. Requires that
@@ -305,7 +305,7 @@ particle_deterministic <- R6::R6Class(
            compare = private$compare,
            constant_log_likelihood = private$constant_log_likelihood,
            n_threads = private$n_threads,
-           seed = filter_current_seed(private$last_model, NULL))
+           seed = filter_current_seed(last(private$last_model), NULL))
     },
 
     ##' @description
@@ -319,11 +319,6 @@ particle_deterministic <- R6::R6Class(
     ##'   verify that you can actually use the number of threads
     ##'   requested (based on environment variables and OpenMP support).
     set_n_threads = function(n_threads) {
-      prev <- private$n_threads
-      private$n_threads <- n_threads
-      if (!is.null(private$last_model)) {
-        private$last_model$set_n_threads(n_threads)
-      }
-      invisible(prev)
+      particle_filter_set_n_threads(private, n_threads)
     }
   ))

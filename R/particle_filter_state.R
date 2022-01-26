@@ -328,19 +328,24 @@ particle_filter_state <- R6::R6Class(
     ##' allowed.  The model is not rerun to the current point, just
     ##' transformed at that point.
     ##'
+    ##' @param model A model object (or NULL)
+    ##'
     ##' @param pars New model parameters
     ##'
     ##' @param transform_state A function to transform the model state
     ##'   from the old to the new parameter set.  See
     ##'   [mcstate::multistage_epoch()] for details.
-    fork_multistage = function(pars, transform_state) {
+    fork_multistage = function(model, pars, transform_state) {
       stopifnot(!private$gpu) # this won't work
       gpu_config <- NULL
-      model <- NULL
       seed <- self$model$rng_state()
       save_history <- !is.null(self$history)
       initial <- NULL
       constant_log_likelihood <- NULL
+
+      if (!is.null(model)) {
+        model$set_rng_state(seed)
+      }
 
       if (is.null(pars)) {
         pars <- self$model$pars()

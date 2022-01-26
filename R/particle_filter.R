@@ -310,7 +310,7 @@ particle_filter <- R6::R6Class(
       assert_scalar_logical(save_history)
       min_log_likelihood <- min_log_likelihood %||% -Inf
       particle_filter_state$new(
-        pars, self$model, private$last_model, private$data,
+        pars, self$model, private$last_model[[1]], private$data,
         private$data_split, private$steps, self$n_particles,
         private$n_threads, private$initial, private$index, private$compare,
         private$constant_log_likelihood, private$gpu_config, private$seed,
@@ -426,7 +426,7 @@ particle_filter <- R6::R6Class(
            constant_log_likelihood = private$constant_log_likelihood,
            gpu_config = private$gpu_config,
            n_threads = private$n_threads,
-           seed = filter_current_seed(private$last_model, private$seed))
+           seed = filter_current_seed(last(private$last_model), private$seed))
     },
 
     ##' @description
@@ -440,12 +440,7 @@ particle_filter <- R6::R6Class(
     ##'   verify that you can actually use the number of threads
     ##'   requested (based on environment variables and OpenMP support).
     set_n_threads = function(n_threads) {
-      prev <- private$n_threads
-      private$n_threads <- n_threads
-      if (!is.null(private$last_model)) {
-        private$last_model$set_n_threads(n_threads)
-      }
-      invisible(prev)
+      particle_filter_set_n_threads(private, n_threads)
     }
   ))
 
@@ -676,7 +671,7 @@ filter_run_simple <- function(self, private, pars,
                         min_log_likelihood = min_log_likelihood)
   obj$run()
   private$last_history <- obj$history
-  private$last_model <- obj$model
+  private$last_model <- list(obj$model)
   private$last_state <- function(index) obj$model$state(index)
   private$last_restart_state <- obj$restart_state
   obj$log_likelihood
@@ -688,7 +683,7 @@ filter_run_multistage <- function(self, private, pars,
                                   min_log_likelihood) {
   stages <- filter_check_times(pars, private$data, save_restart)
 
-  models <- vector("list", length(stages))
+  models <- private$last_model %||% vector("list", length(stages))
   history <- vector("list", length(stages))
   restart <- vector("list", length(stages))
 
@@ -698,7 +693,7 @@ filter_run_multistage <- function(self, private, pars,
         stages[[i]]$pars, save_history, save_restart, min_log_likelihood)
     } else {
       obj <- obj$fork_multistage(
-        stages[[i]]$pars, stages[[i]]$transform_state)
+        models[[i]], stages[[i]]$pars, stages[[i]]$transform_state)
     }
     obj$step(stages[[i]]$step_index)
     models[[i]] <- obj$model
@@ -713,7 +708,7 @@ filter_run_multistage <- function(self, private, pars,
   ## We return this first model in the sequence as that's where
   ## the next run will start from, but state from the last model
   ## because that's where we got to.
-  private$last_model <- models[[1]]
+  private$last_model <- models
   private$last_state <- function(index) last(models)$state(index)
 
   if (save_history) {
@@ -787,6 +782,18 @@ particle_filter_pars_nested <- function(pars, n_populations) {
   }
 
   ret
+}
+
+
+particle_filter_set_n_threads <- function(private, n_threads) {
+  prev <- private$n_threads
+  private$n_threads <- n_threads
+  for (m in private$last_model) {
+    if (!is.null(m)) {
+      m$set_n_threads(n_threads)
+    }
+  }
+  invisible(prev)
 }
 
 

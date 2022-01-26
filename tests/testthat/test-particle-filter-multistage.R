@@ -101,8 +101,8 @@ test_that("A trivial multistage filter is identical to single stage", {
 
   expect_identical(ll1, ll2)
   expect_identical(
-    r6_private(filter1)$last_model$rng_state(),
-    r6_private(filter2)$last_model$rng_state())
+    r6_private(filter1)$last_model[[1]]$rng_state(),
+    r6_private(filter2)$last_model[[1]]$rng_state())
 
   expect_identical(filter1$history(), filter2$history())
 })
@@ -131,8 +131,8 @@ test_that("An effectless multistage filter is identical to single stage", {
 
   expect_identical(ll1, ll2)
   expect_identical(
-    r6_private(filter1)$last_model$rng_state(),
-    r6_private(filter2)$last_model$rng_state())
+    r6_private(filter1)$last_model[[1]]$rng_state(),
+    r6_private(filter2)$last_model[[3]]$rng_state())
 
   expect_identical(filter1$history(), filter2$history())
   expect_identical(filter1$restart_state(), filter2$restart_state())

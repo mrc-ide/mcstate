@@ -280,13 +280,14 @@ particle_deterministic_state <- R6::R6Class(
     ##' on this one (same model, position in time within the data) but with
     ##' new parameters, to support the "multistage particle filter".
     ##'
+    ##' @param model A model object
+    ##'
     ##' @param pars New model parameters
     ##'
     ##' @param transform_state A function to transform the model state
     ##'   from the old to the new parameter set.  See
     ##'   [mcstate::multistage_epoch()] for details.
-    fork_multistage = function(pars, transform_state) {
-      model <- NULL
+    fork_multistage = function(model, pars, transform_state) {
       save_history <- !is.null(self$history)
       initial <- NULL
       constant_log_likelihood <- NULL

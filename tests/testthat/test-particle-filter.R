@@ -419,13 +419,13 @@ test_that("can change the number of threads (null model)", {
   expect_equal(p$set_n_threads(2), 1)
   expect_equal(r6_private(p)$n_threads, 2)
   p$run()
-  expect_equal(r6_private(p)$last_model$n_threads(), 2)
+  expect_equal(r6_private(p)$last_model[[1]]$n_threads(), 2)
 
   expect_equal(p$set_n_threads(1), 2)
   expect_equal(r6_private(p)$n_threads, 1)
-  expect_equal(r6_private(p)$last_model$n_threads(), 1)
+  expect_equal(r6_private(p)$last_model[[1]]$n_threads(), 1)
   p$run()
-  expect_equal(r6_private(p)$last_model$n_threads(), 1)
+  expect_equal(r6_private(p)$last_model[[1]]$n_threads(), 1)
 })
 
 
