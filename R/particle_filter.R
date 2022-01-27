@@ -76,6 +76,7 @@ particle_filter <- R6::R6Class(
     seed = NULL,
     n_threads = NULL,
     ## Updated when the model is run
+    last_stages = NULL,
     last_model = NULL,
     last_state = NULL,
     last_history = NULL,
@@ -272,20 +273,8 @@ particle_filter <- R6::R6Class(
     ##' (`-Inf` if the model is impossible)
     run = function(pars = list(), save_history = FALSE, save_restart = NULL,
                    min_log_likelihood = NULL) {
-      assert_scalar_logical(save_history)
-      if (self$nested) {
-        n_populations <- length(attr(private$data, "populations"))
-        pars <- particle_filter_pars_nested(pars, n_populations)
-      }
-      is_multistage <- particle_filter_check_multistage_pars(
-        pars, private$last_model)
-      if (is_multistage) {
-        filter_run_multistage(self, private, pars, save_history, save_restart,
-                              min_log_likelihood)
-      } else {
-        filter_run_simple(self, private, pars, save_history, save_restart,
-                          min_log_likelihood)
-      }
+      filter_run(self, private, pars, save_history, save_restart,
+                 min_log_likelihood)
     },
 
     ##' @description Begin a particle filter run. This is part of the
@@ -661,9 +650,23 @@ filter_current_seed <- function(model, seed) {
 }
 
 
-## This is a generic interface used by the particle filter and
-## deterministic interface (and eventually the nested filter too).
-## We'll move this into a base class in a minute, I think....
+filter_run <- function(self, private, pars, save_history, save_restart,
+                       min_log_likelihood) {
+  assert_scalar_logical(save_history)
+  if (self$nested) {
+    n_populations <- length(attr(private$data, "populations"))
+    pars <- particle_filter_pars_nested(pars, n_populations)
+  }
+  private$last_stages <-
+    particle_filter_check_multistage_pars(pars, private$last_stages)
+  if (inherits(pars, "multistage_parameters")) {
+    filter_run_multistage(self, private, pars, save_history, save_restart,
+                          min_log_likelihood)
+  } else {
+    filter_run_simple(self, private, pars, save_history, save_restart,
+                      min_log_likelihood)
+  }
+}
 
 
 filter_run_simple <- function(self, private, pars,
@@ -799,24 +802,21 @@ particle_filter_set_n_threads <- function(private, n_threads) {
 }
 
 
-particle_filter_check_multistage_pars <- function(pars, last_model) {
+particle_filter_check_multistage_pars <- function(pars, n_stages_prev) {
   is_multistage <- inherits(pars, "multistage_parameters")
-  if (!is.null(last_model)) {
-    n_stages_prev <- length(last_model)
-    n_stages_given <- if (is_multistage) length(pars) else 1L
-    if (n_stages_prev != n_stages_given) {
-      if (n_stages_prev == 1) {
-        stop(sprintf(
-          "Expected single-stage parameters (but given one with %d stages)",
-          n_stages_given))
-      } else {
-        stop(sprintf(
-          "Expected multistage_pars with %d stages (but given one with %d)",
-          n_stages_prev, n_stages_given))
-      }
+  n_stages_given <- if (is_multistage) length(pars) else 1L
+  if (!is.null(n_stages_prev) && n_stages_prev != n_stages_given) {
+    if (n_stages_prev == 1) {
+      stop(sprintf(
+        "Expected single-stage parameters (but given one with %d stages)",
+        n_stages_given))
+    } else {
+      stop(sprintf(
+        "Expected multistage_pars with %d stages (but given one with %d)",
+        n_stages_prev, n_stages_given))
     }
   }
-  is_multistage
+  n_stages_given
 }
 
 

@@ -589,3 +589,32 @@ test_that("Can't change numbers of stages after creation", {
     "Expected multistage_pars with 2 stages (but given one with 1)",
     fixed = TRUE)
 })
+
+
+test_that("can run a particle filter over a subset of data, twice", {
+  dat <- example_variable()
+
+  index <- function(info) {
+    list(run = 5L, state = c(S = 1, I = 2, R = 3))
+  }
+
+  pars_base <- list(len = 10, sd = 1)
+  epochs <- list(
+    multistage_epoch(10,
+                 pars = list(len = 20, sd = 1),
+                 transform_state = dat$transform_state),
+    multistage_epoch(25,
+                 pars = list(len = 5, sd = 1),
+                 transform_state = dat$transform_state))
+  pars <- multistage_parameters(pars_base, epochs)
+
+  data <-subset(dat$data, time_start >= 30)
+  filter <- particle_filter$new(data, dat$model, 42, dat$compare,
+                                index = index, seed = 1L)
+  filter$run(pars)
+  ## Test of some internal bookkeeping
+  expect_length(r6_private(filter)$last_model, 1)
+  expect_equal(r6_private(filter)$last_stages, 3)
+  ## Previously this failed; confirm we can run it a second time!
+  expect_silent(filter$run(pars))
+})

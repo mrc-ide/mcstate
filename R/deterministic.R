@@ -19,6 +19,7 @@ particle_deterministic <- R6::R6Class(
     index = NULL,
     compare = NULL,
     constant_log_likelihood = NULL,
+    last_stages = NULL,
     last_model = NULL,
     last_history = NULL,
     last_state = NULL,
@@ -167,20 +168,8 @@ particle_deterministic <- R6::R6Class(
     ##' (`-Inf` if the model is impossible)
     run = function(pars = list(), save_history = FALSE, save_restart = NULL,
                    min_log_likelihood = -Inf) {
-      assert_scalar_logical(save_history)
-      if (self$nested) {
-        n_populations <- length(attr(private$data, "populations"))
-        pars <- particle_filter_pars_nested(pars, n_populations)
-      }
-      is_multistage <- particle_filter_check_multistage_pars(
-        pars, private$last_model)
-      if (is_multistage) {
-        filter_run_multistage(self, private, pars, save_history, save_restart,
-                              min_log_likelihood)
-      } else {
-        filter_run_simple(self, private, pars, save_history, save_restart,
-                          min_log_likelihood)
-      }
+      filter_run(self, private, pars, save_history, save_restart,
+                 min_log_likelihood)
     },
 
     ##' @description Begin a deterministic run. This is part of the
