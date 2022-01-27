@@ -12,12 +12,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.width = 7,
-  fig.height = 5
-)
-lang_output <- function(x, lang) {
-  cat(c(sprintf("```%s", lang), x, "```"), sep = "\n")
-}
-r_output <- function(x) lang_output(x, "r")
+  fig.height = 5)
 in_pkgdown <- identical(Sys.getenv("IN_PKGDOWN"), "true")
 ```
 
@@ -121,8 +116,7 @@ gamma <- mcstate::pmcmc_varied_parameter(
     function(p) dgamma(p, shape = 1, scale = 0.2, log = TRUE),
     function(p) dgamma(p, shape = 1, scale = 0.15, log = TRUE)
   ),
-  min = 0
-)
+  min = 0)
 ```
 
 In this example, the two populations have different initial values and priors, but the same range of values the parameter can take.
@@ -142,8 +136,7 @@ mcmc_pars <- mcstate::pmcmc_parameters_nested$new(
   parameters = list(beta = beta, gamma = gamma),
   proposal_varied = proposal_varied,
   proposal_fixed = proposal_fixed,
-  populations = c("a", "b")
-)
+  populations = c("a", "b"))
 ```
 
 Note that this final `populations` parameter is only strictly required if no varied parameters are included in the object. Now we are ready to run the pMCMC.

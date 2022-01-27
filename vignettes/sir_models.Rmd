@@ -10,8 +10,9 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
-)
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5)
 lang_output <- function(x, lang) {
   cat(c(sprintf("```%s", lang), x, "```"), sep = "\n")
 }
@@ -84,7 +85,7 @@ incidence <- read.csv(system.file("sir_incidence.csv", package = "mcstate"))
 
 This can then be processed with `mcstate::particle_filter_data()` as follows, taking four update steps between every observation so that `rate = 4`. Generally increasing the rate will improve resolution, especially if rates of change between partitions are high, though at the expense of extra computation time. We also define a time interval between each update $dt = \frac{1}{\mathrm(rate)}$:
 
-```{r paged.print=TRUE, layout="l-body-outset", fig.height=5, fig.width=7}
+```{r paged.print = TRUE, layout = "l-body-outset"}
 dt <- 0.25
 sir_data <- mcstate::particle_filter_data(data = incidence,
                                           time = "day",
@@ -155,7 +156,7 @@ filter$run(save_history = TRUE, pars = list(dt = dt))
 
 If we plot these along with the data, we can see compared to above that only trajectories consistent with the data are kept, and the variance between particles has been reduced compared to the simulations shown in the `odin.dust` vignette:
 
-```{r fig.height=5, fig.width=7}
+```{r}
 plot_particle_filter <- function(history, true_history, times, obs_end = NULL) {
   if (is.null(obs_end)) {
     obs_end <- max(times)
@@ -179,7 +180,7 @@ plot_particle_filter(filter$history(), true_history, incidence$day)
 
 Doing the same with a $\beta$ and $\gamma$ which are further from the truth yields a lower likelihood:
 
-```{r fig.height=5, fig.width=7}
+```{r}
 filter$run(save_history = TRUE, pars = list(dt = dt, beta = 0.4, gamma = 0.2))
 plot_particle_filter(filter$history(), true_history, incidence$day)
 ```
@@ -216,7 +217,7 @@ n_burnin <- 10
 
 Taking `r n_steps` steps on a single chain:
 
-```{r pmcmc_combined, fig.height = 5, fig.width = 7}
+```{r pmcmc_combined}
 control <- mcstate::pmcmc_control(
     n_steps,
     save_state = TRUE,
@@ -236,7 +237,7 @@ parameter_mean_hpd
 
 The resulting objects can also be analysed in a typical MCMC analysis package such as [`coda`](https://cran.r-project.org/web/packages/coda/index.html). We will need to combine the two parts of the object which contain the probabilities and parameter values across the iterations:
 
-```{r coda_plots, fig.height=10, fig.width=14}
+```{r coda_plots, fig.height = 10}
 mcmc1 <- coda::as.mcmc(cbind(pmcmc_run$probabilities, pmcmc_run$pars))
 
 summary(mcmc1)
@@ -264,7 +265,7 @@ proposal_matrix
 
 Let's now run four independent chains with these proposals:
 
-```{r, fig.height=10, fig.width=14}
+```{r, fig.height = 10}
 control <- mcstate::pmcmc_control(
     n_steps,
     save_state = TRUE,
@@ -291,7 +292,7 @@ coda::effectiveSize(mcmc2)
 
 Going back to the simple SIR model above, we can easily continue running the fitted model forward in time using the posterior estimated by `pmcmc()` to create a forecast past the end of the data, sampling 10 particles:
 
-```{r fig.height=5, fig.width=7}
+```{r}
 forecast <- predict(processed_chains,
                     steps = seq(400, 800, 4),
                     prepend_trajectories = TRUE,
@@ -324,7 +325,7 @@ gen_death <- odin.dust::odin_dust("deaths.R", verbose = FALSE)
 
 We can simulate some data to fit to, as before. We have also made the case data patchy, so it is missing on some days:
 
-```{r layout="l-body-outset", paged.print=TRUE }
+```{r layout = "l-body-outset", paged.print = TRUE }
 dt <- 0.25
 death_data <- read.table("death_data.csv", header = TRUE, sep = ",")
 true_history_deaths <- readRDS("deaths_true_history.rds")

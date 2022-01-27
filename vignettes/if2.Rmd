@@ -102,7 +102,7 @@ control <- mcstate::if2_control(
   iterations = n_par_sets,
   n_par_sets = n_iterations,
   cooling_target = 0.5,
-  progress = TRUE)
+  progress = interactive())
 ```
 
 Here we will iterate `r control$n_par_sets` parameter sets with `X ~ N(0, 0.02)`, with geometrically decreasing noise, until after `r control$iterations` iterations the magnitude of the noise has halved.
@@ -137,7 +137,7 @@ plot_if2_parameter <- function(name, obj) {
   plot(apply(pars[name, , ], 2, mean), type = "l", lwd = 1, col = "#000000",
        xlab = "IF iteration", ylab = name, ylim = range(quantiles))
   matlines(t(quantiles), type = "l", lty = 2, lwd = 1, col = "#999999")
-  legend("bottomright", lwd = 1, legend = c("Mean", "95% quantile"), bty = "n")
+  legend("topright", lwd = 1, legend = c("Mean", "95% quantile"), bty = "n")
 }
 plot_if2_parameter("beta", res)
 plot_if2_parameter("gamma", res)

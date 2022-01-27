@@ -118,7 +118,7 @@ points(I ~ t, history, pch = 19, col = "blue")
 And the daily incidence
 
 ```{r}
-matplot(t[-1], diff(t(res1$trajectories$state[5, , ])), type = "l",
+matplot(t, t(res1$trajectories$state[5, , ]), type = "l",
         lty = 1, col = "#00000005", xlab = "Day", ylab = "Daily incidence")
 points(cases ~ day, incidence, col = "blue", pch = 19)
 ```
