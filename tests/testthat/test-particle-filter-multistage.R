@@ -555,3 +555,37 @@ test_that("Confirm nested filter is correct", {
   expect_identical(is.na(h_staged), is.na(h_cmp))
   expect_identical(h_staged, h_cmp)
 })
+
+
+test_that("Can't change numbers of stages after creation", {
+  dat <- example_sir()
+
+  index <- function(info) {
+    list(run = 5L, state = c(S = 1, I = 2, R = 3))
+  }
+  pars_base <- dat$pars$model(dat$pars$initial())
+  pars0 <- pars_base
+  pars1 <- multistage_parameters(pars_base, list())
+  pars2 <- multistage_parameters(pars_base, list(multistage_epoch(10)))
+
+  filter1 <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
+                                 index = index, seed = 1L)
+  filter1$run(pars0)
+  expect_silent(filter1$run(pars1))
+  expect_error(
+    filter1$run(pars2),
+    "Expected single-stage parameters (but given one with 2 stages)",
+    fixed = TRUE)
+
+  filter2 <- particle_filter$new(dat$data, dat$model, 42, dat$compare,
+                                 index = index, seed = 1L)
+  filter2$run(pars2)
+  expect_error(
+    filter2$run(pars0),
+    "Expected multistage_pars with 2 stages (but given one with 1)",
+    fixed = TRUE)
+  expect_error(
+    filter2$run(pars1),
+    "Expected multistage_pars with 2 stages (but given one with 1)",
+    fixed = TRUE)
+})

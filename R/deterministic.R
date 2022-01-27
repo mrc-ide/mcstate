@@ -172,7 +172,9 @@ particle_deterministic <- R6::R6Class(
         n_populations <- length(attr(private$data, "populations"))
         pars <- particle_filter_pars_nested(pars, n_populations)
       }
-      if (inherits(pars, "multistage_parameters")) {
+      is_multistage <- particle_filter_check_multistage_pars(
+        pars, private$last_model)
+      if (is_multistage) {
         filter_run_multistage(self, private, pars, save_history, save_restart,
                               min_log_likelihood)
       } else {

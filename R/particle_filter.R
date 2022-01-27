@@ -277,7 +277,9 @@ particle_filter <- R6::R6Class(
         n_populations <- length(attr(private$data, "populations"))
         pars <- particle_filter_pars_nested(pars, n_populations)
       }
-      if (inherits(pars, "multistage_parameters")) {
+      is_multistage <- particle_filter_check_multistage_pars(
+        pars, private$last_model)
+      if (is_multistage) {
         filter_run_multistage(self, private, pars, save_history, save_restart,
                               min_log_likelihood)
       } else {
@@ -794,6 +796,27 @@ particle_filter_set_n_threads <- function(private, n_threads) {
     }
   }
   invisible(prev)
+}
+
+
+particle_filter_check_multistage_pars <- function(pars, last_model) {
+  is_multistage <- inherits(pars, "multistage_parameters")
+  if (!is.null(last_model)) {
+    n_stages_prev <- length(last_model)
+    n_stages_given <- if (is_multistage) length(pars) else 1L
+    if (n_stages_prev != n_stages_given) {
+      if (n_stages_prev == 1) {
+        stop(sprintf(
+          "Expected single-stage parameters (but given one with %d stages)",
+          n_stages_given))
+      } else {
+        stop(sprintf(
+          "Expected multistage_pars with %d stages (but given one with %d)",
+          n_stages_prev, n_stages_given))
+      }
+    }
+  }
+  is_multistage
 }
 
 
