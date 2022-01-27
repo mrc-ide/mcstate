@@ -295,3 +295,31 @@ test_that("Can run multistage with compiled", {
   expect_equal(ll1, ll2)
   expect_equal(h1, h2)
 })
+
+
+test_that("multistage model does not reuse data after initialisation", {
+  dat <- example_variable()
+  pars_base <- list(len = 10)
+  epochs <- list(
+    multistage_epoch(10,
+                 pars = list(len = 20),
+                 transform_state = dat$transform_state),
+    multistage_epoch(25,
+                 pars = list(len = 15),
+                 transform_state = dat$transform_state))
+  pars <- multistage_parameters(pars_base, epochs)
+
+  filter <- particle_deterministic$new(dat$data, dat$model, compare = NULL,
+                                       index = dat$index)
+  ## This fully initialises the model, setting data:
+  filter$run(pars)
+
+  ## Set these to things that otherwise will error on use (here this
+  ## will fail at model$set_data(data_split) which is what we want to
+  ## avoid.  We can't achieve this via mocking because of the way that
+  ## R6 organises classes and how mockery replace things
+  ## https://github.com/r-lib/mockery/issues/21
+  private <- r6_private(filter)
+  private$data_split <- 1
+  expect_silent(filter$run(pars))
+})
