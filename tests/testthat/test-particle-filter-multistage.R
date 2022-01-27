@@ -608,7 +608,7 @@ test_that("can run a particle filter over a subset of data, twice", {
                  transform_state = dat$transform_state))
   pars <- multistage_parameters(pars_base, epochs)
 
-  data <-subset(dat$data, time_start >= 30)
+  data <- subset(dat$data, time_start >= 30)
   filter <- particle_filter$new(data, dat$model, 42, dat$compare,
                                 index = index, seed = 1L)
   filter$run(pars)
