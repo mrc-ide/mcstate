@@ -10,8 +10,10 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
-)
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5)
+in_pkgdown <- identical(Sys.getenv("IN_PKGDOWN"), "true")
 ```
 
 The iterated filtering method, called `IF2` in `mcstate`, is an alternative method to infer the most likely parameters. Instead of conducting an MCMC over particle filter likelihoods, as in the `pmcmc` methods, the `IF2` algorithm proceeds roughly as follows:
@@ -84,11 +86,21 @@ For this example, we start far away from the true values of $\beta = 0.2$ and $\
 
 The IF2 algorithm needs a number of parameter sets to perturb, the magnitude of the noise with which to perturb them, the amount to reduce the perturbations by, and the number of iterations of which to perform this reduction in magnitude. As with our `mcstate::pmcmc` method, we organise these parameters into a single control object:
 
+```{r, include = in_pkgdown, eval = in_pkgdown}
+n_par_sets <- 300
+n_iterations <- 100
+```
+
+```{r, include = !in_pkgdown, eval = !in_pkgdown}
+n_par_sets <- 30
+n_iterations <- 10
+```
+
 ```{r}
 control <- mcstate::if2_control(
   pars_sd = list("beta" = 0.02, "gamma" = 0.02),
-  iterations = 100,
-  n_par_sets = 300,
+  iterations = n_par_sets,
+  n_par_sets = n_iterations,
   cooling_target = 0.5,
   progress = TRUE)
 ```

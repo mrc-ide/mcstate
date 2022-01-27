@@ -12,12 +12,8 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.width = 7,
-  fig.height = 5
-)
-lang_output <- function(x, lang) {
-  cat(c(sprintf("```%s", lang), x, "```"), sep = "\n")
-}
-r_output <- function(x) lang_output(x, "r")
+  fig.height = 5)
+in_pkgdown <- identical(Sys.getenv("IN_PKGDOWN"), "true")
 ```
 
 We are experimenting with an ability to "restart" the simulation at a point in time based on the outcome of a MCMC run. The motivating reason to do this is in our [`sircovid`](https://mrc-ide.github.io/sircovid/) model where run an epidemiological model with a number of time varying parameters corresponding to interventions which leads to a number of "waves" of infections. We want to be able to restart the simulation from the trough between two waves so that we can avoid refitting the first peak and better capture changes in parameters as the epidemic unfolds.
@@ -83,16 +79,29 @@ pars <- mcstate::pmcmc_parameters$new(
   proposal = proposal_kernel)
 ```
 
+Basic control parameters we'll use below
+
+```{r, include = in_pkgdown, eval = in_pkgdown}
+n_steps <- 500
+n_particles <- 100
+n_threads <- dust::dust_openmp_threads()
+```
+
+```{r, include = !in_pkgdown, eval = !in_pkgdown}
+n_steps <- 50
+n_particles <- 10
+n_threads <- dust::dust_openmp_threads()
+```
+
 ## All-in-one
 
-Run a pMCMC with 100 particles for the full length of the data. This means that we are fitting to the entire series.
+Run a pMCMC with `r n_particles` particles for the full length of the data. This means that we are fitting to the entire series.
 
 ```{r}
-n_particles <- 100
 p1 <- mcstate::particle_filter$new(data, sir, n_particles, compare,
                                    index = index,
-                                   n_threads = dust::dust_openmp_threads())
-control1 <- mcstate::pmcmc_control(500, save_trajectories = TRUE,
+                                   n_threads = n_threads)
+control1 <- mcstate::pmcmc_control(n_steps, save_trajectories = TRUE,
                                    save_state = TRUE, save_restart = 40)
 res1 <- mcstate::pmcmc(pars, p1, control = control1)
 ```
@@ -145,13 +154,13 @@ Then subset the data that we will fit to and create a new particle filter
 data2 <- data[data$day_start >= 40, ]
 p2 <- mcstate::particle_filter$new(data2, sir, n_particles, compare,
                                    index = index, initial = initial,
-                                   n_threads = dust::dust_openmp_threads())
+                                   n_threads = n_threads)
 ```
 
 And run a pMCMC that fits parmeters to the second half of the epidemic
 
 ```{r}
-control2 <- mcstate::pmcmc_control(500, save_trajectories = TRUE,
+control2 <- mcstate::pmcmc_control(n_steps, save_trajectories = TRUE,
                                    save_state = TRUE)
 res2 <- mcstate::pmcmc(pars, p2, control = control2)
 ```

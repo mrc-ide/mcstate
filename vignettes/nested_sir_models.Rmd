@@ -18,6 +18,7 @@ lang_output <- function(x, lang) {
   cat(c(sprintf("```%s", lang), x, "```"), sep = "\n")
 }
 r_output <- function(x) lang_output(x, "r")
+in_pkgdown <- identical(Sys.getenv("IN_PKGDOWN"), "true")
 ```
 
 This vignette extends the SIR model in `vignette("sir_models")` to a "nested" model over multiple populations. 
@@ -153,8 +154,18 @@ Note that this final `populations` parameter is only strictly required if no var
 
 We can now continue as in the un-nested case, just be careful when analysing results to include the additional dimension of population.
 
+```{r, include = in_pkgdown, eval = in_pkgdown}
+n_steps <- 500
+n_burnin <- 200
+```
+
+```{r, include = !in_pkgdown, eval = !in_pkgdown}
+n_steps <- 50
+n_burnin <- 10
+```
+
 ```{r run}
-control <- mcstate::pmcmc_control(500, save_trajectories = TRUE,
+control <- mcstate::pmcmc_control(n_steps, save_trajectories = TRUE,
                                   save_state = TRUE, save_restart = 40)
 set.seed(42L)
 res <- mcstate::pmcmc(mcmc_pars, filter, control = control)
@@ -165,10 +176,11 @@ res <- mcstate::pmcmc(mcmc_pars, filter, control = control)
 t <- 0:100
 par(mfrow = c(1, 2))
 matplot(t, t(res$trajectories$state[2, , 1, ]), type = "l", lty = 1,
-        col = "#00000011", xlab =  "Day", ylab = "Infected", main = "Daily Infected in Population A")
+        col = "#00000011", xlab =  "Day", ylab = "Infected",
+        main = "Daily Infected in Population A")
 matplot(t, t(res$trajectories$state[2, , 2, ]),
-        col = "#00000011", xlab =  "Day", ylab = "Infected", type = "l", lty = 1,
-        main = "Daily Infected in Population B")
+        col = "#00000011", xlab =  "Day", ylab = "Infected", type = "l",
+        lty = 1, main = "Daily Infected in Population B")
 par(mfrow = c(1, 1))
 ```
 
@@ -190,10 +202,11 @@ par(mfrow = c(1, 1))
 ```
 
 ```{r plot_sir}
-plot_particle_filter <- function(history, true_history, times, population, main) {
-  times <- times[seq(length(times)/2)]
-  obs_end = max(times)
-  
+plot_particle_filter <- function(history, true_history, times, population,
+                                 main) {
+  times <- times[seq(length(times) / 2)]
+  obs_end <- max(times)
+
   par(mar = c(4.1, 5.1, 2.5, 0.5), las = 1)
   cols <- c(S = "#8c8cd9", I = "#cc0044", R = "#999966")
   matplot(times, t(history[1, , population,  -1]), type = "l",
@@ -207,6 +220,8 @@ plot_particle_filter <- function(history, true_history, times, population, main)
 }
 
 true_history <- readRDS("nested_sir_true_history.rds")
-plot_particle_filter(filter$history(), true_history, incidence$day, 1L, "Population A")
-plot_particle_filter(filter$history(), true_history, incidence$day, 2L, "Population B")
+plot_particle_filter(filter$history(), true_history, incidence$day, 1L,
+                     "Population A")
+plot_particle_filter(filter$history(), true_history, incidence$day, 2L,
+                     "Population B")
 ```
