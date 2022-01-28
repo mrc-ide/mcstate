@@ -40,7 +40,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.6</span>
       </span>
     </div>
 
@@ -134,7 +134,7 @@
 <code class="sourceCode R"><span class="va">incidence</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"sir_incidence.csv"</span>, package <span class="op">=</span> <span class="st">"mcstate"</span><span class="op">)</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">cases</span> <span class="op">~</span> <span class="va">day</span>, <span class="va">incidence</span>,
      type <span class="op">=</span> <span class="st">"o"</span>, xlab <span class="op">=</span> <span class="st">"Day"</span>, ylab <span class="op">=</span> <span class="st">"New cases"</span>, pch <span class="op">=</span> <span class="fl">19</span><span class="op">)</span></code></pre></div>
-<p><img src="if2_files/figure-html/unnamed-chunk-2-1.png" width="700"></p>
+<p><img src="if2_files/figure-html/unnamed-chunk-2-1.png" width="672"></p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/particle_filter_data.html">particle_filter_data</a></span><span class="op">(</span><span class="va">incidence</span>, time <span class="op">=</span> <span class="st">"day"</span>, rate <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></code></pre></div>
 <p>A dust model generator object</p>
@@ -166,58 +166,59 @@
 <p>For this example, we start far away from the true values of <span class="math inline">\(\beta = 0.2\)</span> and <span class="math inline">\(\gamma = 0.1\)</span>.</p>
 <p>The IF2 algorithm needs a number of parameter sets to perturb, the magnitude of the noise with which to perturb them, the amount to reduce the perturbations by, and the number of iterations of which to perform this reduction in magnitude. As with our <code><a href="../reference/pmcmc.html">mcstate::pmcmc</a></code> method, we organise these parameters into a single control object:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">n_par_sets</span> <span class="op">&lt;-</span> <span class="fl">300</span>
+<span class="va">n_iterations</span> <span class="op">&lt;-</span> <span class="fl">100</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">control</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/if2_control.html">if2_control</a></span><span class="op">(</span>
   pars_sd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"beta"</span> <span class="op">=</span> <span class="fl">0.02</span>, <span class="st">"gamma"</span> <span class="op">=</span> <span class="fl">0.02</span><span class="op">)</span>,
-  iterations <span class="op">=</span> <span class="fl">100</span>,
-  n_par_sets <span class="op">=</span> <span class="fl">300</span>,
+  iterations <span class="op">=</span> <span class="va">n_par_sets</span>,
+  n_par_sets <span class="op">=</span> <span class="va">n_iterations</span>,
   cooling_target <span class="op">=</span> <span class="fl">0.5</span>,
-  progress <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
-<p>Here we will iterate 300 parameter sets with <code>X ~ N(0, 0.02)</code>, with geometrically decreasing noise, until after 100 iterations the magnitude of the noise has halved.</p>
+  progress <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+<p>Here we will iterate 100 parameter sets with <code>X ~ N(0, 0.02)</code>, with geometrically decreasing noise, until after 300 iterations the magnitude of the noise has halved.</p>
 </div>
 <div class="section level2">
 <h2 id="running-the-if2-algorithm">Running the IF2 algorithm<a class="anchor" aria-label="anchor" href="#running-the-if2-algorithm"></a>
 </h2>
 <p>To start the IF2, we use a particle filter object in order to do some validation against the data. This may change in future and the particle filter is not actually run at this point in the process</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">filter</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="va"><a href="../reference/particle_filter.html">particle_filter</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">data</span>, <span class="va">sir</span>, <span class="fl">1L</span>, <span class="va">compare</span>, index <span class="op">=</span> <span class="va">index</span><span class="op">)</span></code></pre></div>
 <p>Then, call <code><a href="../reference/if2.html">mcstate::if2</a></code>, which will take a while to run</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/if2.html">if2</a></span><span class="op">(</span><span class="va">pars</span>, <span class="va">filter</span>, <span class="va">control</span><span class="op">)</span>
-<span class="co">#&gt; Finished 100 steps in 2 mins</span></code></pre></div>
-<p>We can plot the likelihood over the course of the iterations</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/if2.html">if2</a></span><span class="op">(</span><span class="va">pars</span>, <span class="va">filter</span>, <span class="va">control</span><span class="op">)</span></code></pre></div>
+<p>We can plot the likelihood over the course of the iterations</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">result</span><span class="op">$</span><span class="va">log_likelihood</span>, main <span class="op">=</span> <span class="st">"LL profile"</span>,
      xlab <span class="op">=</span> <span class="st">"IF iteration"</span>, ylab <span class="op">=</span> <span class="st">"Log likelihood"</span>, type <span class="op">=</span> <span class="st">"l"</span><span class="op">)</span></code></pre></div>
-<p><img src="if2_files/figure-html/unnamed-chunk-10-1.png" width="700"></p>
+<p><img src="if2_files/figure-html/unnamed-chunk-12-1.png" width="672"></p>
 <p>and the values of <span class="math inline">\(\beta\)</span> and <span class="math inline">\(\gamma\)</span> (using a small helper function)</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">plot_if2_parameter</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">name</span>, <span class="va">obj</span><span class="op">)</span> <span class="op">{</span>
   <span class="va">pars</span> <span class="op">&lt;-</span> <span class="va">obj</span><span class="op">$</span><span class="va">result</span><span class="op">$</span><span class="va">pars</span>
   <span class="va">quantiles</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">pars</span><span class="op">[</span><span class="va">name</span>, , <span class="op">]</span>, <span class="fl">2</span>, <span class="va">quantile</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.025</span>, <span class="fl">0.975</span><span class="op">)</span><span class="op">)</span>
   <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">pars</span><span class="op">[</span><span class="va">name</span>, , <span class="op">]</span>, <span class="fl">2</span>, <span class="va">mean</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"l"</span>, lwd <span class="op">=</span> <span class="fl">1</span>, col <span class="op">=</span> <span class="st">"#000000"</span>,
        xlab <span class="op">=</span> <span class="st">"IF iteration"</span>, ylab <span class="op">=</span> <span class="va">name</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">quantiles</span><span class="op">)</span><span class="op">)</span>
   <span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html" class="external-link">matlines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">quantiles</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"l"</span>, lty <span class="op">=</span> <span class="fl">2</span>, lwd <span class="op">=</span> <span class="fl">1</span>, col <span class="op">=</span> <span class="st">"#999999"</span><span class="op">)</span>
-  <span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"bottomright"</span>, lwd <span class="op">=</span> <span class="fl">1</span>, legend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Mean"</span>, <span class="st">"95% quantile"</span><span class="op">)</span>, bty <span class="op">=</span> <span class="st">"n"</span><span class="op">)</span>
+  <span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"topright"</span>, lwd <span class="op">=</span> <span class="fl">1</span>, legend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Mean"</span>, <span class="st">"95% quantile"</span><span class="op">)</span>, bty <span class="op">=</span> <span class="st">"n"</span><span class="op">)</span>
 <span class="op">}</span>
 <span class="fu">plot_if2_parameter</span><span class="op">(</span><span class="st">"beta"</span>, <span class="va">res</span><span class="op">)</span></code></pre></div>
-<p><img src="if2_files/figure-html/unnamed-chunk-11-1.png" width="700"></p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu">plot_if2_parameter</span><span class="op">(</span><span class="st">"gamma"</span>, <span class="va">res</span><span class="op">)</span></code></pre></div>
-<p><img src="if2_files/figure-html/unnamed-chunk-11-2.png" width="700"></p>
-<p>Checking the mean values of each parameter at the final iteration, they are close to their true values:</p>
+<p><img src="if2_files/figure-html/unnamed-chunk-13-1.png" width="672"></p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu">plot_if2_parameter</span><span class="op">(</span><span class="st">"gamma"</span>, <span class="va">res</span><span class="op">)</span></code></pre></div>
+<p><img src="if2_files/figure-html/unnamed-chunk-13-2.png" width="672"></p>
+<p>Checking the mean values of each parameter at the final iteration, they are close to their true values:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">pars_series</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">result</span><span class="op">$</span><span class="va">pars</span>
 <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="va">pars_series</span><span class="op">[</span>, , <span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">pars_series</span><span class="op">)</span><span class="op">[[</span><span class="fl">3</span><span class="op">]</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>
 <span class="co">#&gt;       beta      gamma </span>
-<span class="co">#&gt; 0.28960254 0.08336282</span></code></pre></div>
+<span class="co">#&gt; 0.19820182 0.07597881</span></code></pre></div>
 <p>We can also run particle filters at each final parameter estimate to get an estimate of the model likelihood, showing the mean value in red:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">n_particles</span> <span class="op">&lt;-</span> <span class="fl">100</span>
 <span class="va">ll_samples</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/if2.html">if2_sample</a></span><span class="op">(</span><span class="va">res</span>, <span class="va">n_particles</span><span class="op">)</span>
-<span class="co">#&gt; Finished 300 steps in 6 secs</span>
 <span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="va">ll_samples</span>, col <span class="op">=</span> <span class="st">"steelblue3"</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>v <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">ll_samples</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"red"</span>, lty <span class="op">=</span> <span class="fl">2</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></code></pre></div>
-<p><img src="if2_files/figure-html/unnamed-chunk-13-1.png" width="700"></p>
+<p><img src="if2_files/figure-html/unnamed-chunk-15-1.png" width="672"></p>
 </div>
   </div>
 

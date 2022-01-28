@@ -40,7 +40,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.6</span>
       </span>
     </div>
 
@@ -162,63 +162,67 @@
        <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_parameter.html">pmcmc_parameter</a></span><span class="op">(</span><span class="st">"gamma"</span>, <span class="fl">0.1</span>, min <span class="op">=</span> <span class="fl">0</span>, max <span class="op">=</span> <span class="fl">1</span>,
                                 prior <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">p</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1e-10</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,
   proposal <span class="op">=</span> <span class="va">proposal_kernel</span><span class="op">)</span></code></pre></div>
+<p>The basic control parameters that we’ll use throughout in the runs below:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">n_steps</span> <span class="op">&lt;-</span> <span class="fl">500</span>
+<span class="va">n_particles</span> <span class="op">&lt;-</span> <span class="fl">100</span>
+<span class="va">n_threads</span> <span class="op">&lt;-</span> <span class="fu">dust</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/dust/man/dust_openmp_threads.html" class="external-link">dust_openmp_threads</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="all-in-one">All-in-one<a class="anchor" aria-label="anchor" href="#all-in-one"></a>
 </h2>
 <p>Run a pMCMC with 100 particles for the full length of the data. This means that we are fitting to the entire series.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">n_particles</span> <span class="op">&lt;-</span> <span class="fl">100</span>
-<span class="va">p1</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="va"><a href="../reference/particle_filter.html">particle_filter</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">data</span>, <span class="va">sir</span>, <span class="va">n_particles</span>, <span class="va">compare</span>,
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">p1</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="va"><a href="../reference/particle_filter.html">particle_filter</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">data</span>, <span class="va">sir</span>, <span class="va">n_particles</span>, <span class="va">compare</span>,
                                    index <span class="op">=</span> <span class="va">index</span>,
-                                   n_threads <span class="op">=</span> <span class="fu">dust</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/dust/man/dust_openmp_threads.html" class="external-link">dust_openmp_threads</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>
-<span class="va">control1</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_control.html">pmcmc_control</a></span><span class="op">(</span><span class="fl">500</span>, save_trajectories <span class="op">=</span> <span class="cn">TRUE</span>,
+                                   n_threads <span class="op">=</span> <span class="va">n_threads</span><span class="op">)</span>
+<span class="va">control1</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_control.html">pmcmc_control</a></span><span class="op">(</span><span class="va">n_steps</span>, save_trajectories <span class="op">=</span> <span class="cn">TRUE</span>,
                                    save_state <span class="op">=</span> <span class="cn">TRUE</span>, save_restart <span class="op">=</span> <span class="fl">40</span><span class="op">)</span>
 <span class="va">res1</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc.html">pmcmc</a></span><span class="op">(</span><span class="va">pars</span>, <span class="va">p1</span>, control <span class="op">=</span> <span class="va">control1</span><span class="op">)</span></code></pre></div>
 <p>Here’s the trajectories showing the number of people infected</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">t</span> <span class="op">&lt;-</span> <span class="fl">0</span><span class="op">:</span><span class="fl">100</span>
 <span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html" class="external-link">matplot</a></span><span class="op">(</span><span class="va">t</span>, <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">res1</span><span class="op">$</span><span class="va">trajectories</span><span class="op">$</span><span class="va">state</span><span class="op">[</span><span class="fl">2</span>, , <span class="op">]</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"l"</span>, lty <span class="op">=</span> <span class="fl">1</span>,
         col <span class="op">=</span> <span class="st">"#00000011"</span>, xlab <span class="op">=</span>  <span class="st">"Day"</span>, ylab <span class="op">=</span> <span class="st">"Infected"</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/graphics/points.html" class="external-link">points</a></span><span class="op">(</span><span class="va">I</span> <span class="op">~</span> <span class="va">t</span>, <span class="va">history</span>, pch <span class="op">=</span> <span class="fl">19</span>, col <span class="op">=</span> <span class="st">"blue"</span><span class="op">)</span></code></pre></div>
-<p><img src="restart_files/figure-html/unnamed-chunk-9-1.png" width="672"></p>
+<p><img src="restart_files/figure-html/unnamed-chunk-11-1.png" width="672"></p>
 <p>And the daily incidence</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html" class="external-link">matplot</a></span><span class="op">(</span><span class="va">t</span><span class="op">[</span><span class="op">-</span><span class="fl">1</span><span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/base/diff.html" class="external-link">diff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">res1</span><span class="op">$</span><span class="va">trajectories</span><span class="op">$</span><span class="va">state</span><span class="op">[</span><span class="fl">5</span>, , <span class="op">]</span><span class="op">)</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"l"</span>,
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html" class="external-link">matplot</a></span><span class="op">(</span><span class="va">t</span>, <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">res1</span><span class="op">$</span><span class="va">trajectories</span><span class="op">$</span><span class="va">state</span><span class="op">[</span><span class="fl">5</span>, , <span class="op">]</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"l"</span>,
         lty <span class="op">=</span> <span class="fl">1</span>, col <span class="op">=</span> <span class="st">"#00000005"</span>, xlab <span class="op">=</span> <span class="st">"Day"</span>, ylab <span class="op">=</span> <span class="st">"Daily incidence"</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/graphics/points.html" class="external-link">points</a></span><span class="op">(</span><span class="va">cases</span> <span class="op">~</span> <span class="va">day</span>, <span class="va">incidence</span>, col <span class="op">=</span> <span class="st">"blue"</span>, pch <span class="op">=</span> <span class="fl">19</span><span class="op">)</span></code></pre></div>
-<p><img src="restart_files/figure-html/unnamed-chunk-10-1.png" width="672"></p>
+<p><img src="restart_files/figure-html/unnamed-chunk-12-1.png" width="672"></p>
 </div>
 <div class="section level2">
 <h2 id="restarting">Restarting<a class="anchor" aria-label="anchor" href="#restarting"></a>
 </h2>
 <p>In the <code><a href="../reference/pmcmc_control.html">mcstate::pmcmc_control</a></code> call above we added <code>save_restart = 40</code>; this means that we save the entire internal state of a single particle at time step 40 (this is the “day” time, not the model step).</p>
 <p>The restart state is a 3d array with dimensions corresponding to (1) model state, (2) MCMC sample, (3) restart time (a vector of times can be provided to <code>save_restart</code> but here just one time was returned).</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">res1</span><span class="op">$</span><span class="va">restart</span><span class="op">$</span><span class="va">state</span><span class="op">)</span>
 <span class="co">#&gt; [1]   5 500   1</span></code></pre></div>
 <p>This sample includes variablility over the pmcmc run:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="va">res1</span><span class="op">$</span><span class="va">restart</span><span class="op">$</span><span class="va">state</span><span class="op">[</span><span class="fl">2</span>, , <span class="op">]</span>, xlab <span class="op">=</span> <span class="st">"Number infected"</span>,
      main <span class="op">=</span> <span class="st">"Distribution of number infected over mcmc samples"</span><span class="op">)</span></code></pre></div>
-<p><img src="restart_files/figure-html/unnamed-chunk-12-1.png" width="672"></p>
+<p><img src="restart_files/figure-html/unnamed-chunk-14-1.png" width="672"></p>
 <p>This matrix includes all information to restart the stochastic process and we can use this to run a pmcmc that starts the particle filter that runs over data starting from day 40. Note that this is <em>not</em> the same model as it does fit to the first 40 days of the epidemic so we expect parameters to differ (it’s a bit like allowing a break in parameters at day = 40 except our initial parameter sets here <em>do</em> include both parts.</p>
 <p>The key part is to create an <code>initial</code> function for the particle function that will create suitable initial conditions. We do this by sampling <code>n_particles</code> worth of particles out of this matrix. (The <code>initial</code> function must conform to mcstate’s interface so we accept <code>info</code> and <code>pars</code> here even though we ignore them). Most cases can use the <code><a href="../reference/particle_filter_initial.html">mcstate::particle_filter_initial</a></code> to do this, as below.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">initial</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/particle_filter_initial.html">particle_filter_initial</a></span><span class="op">(</span><span class="va">res1</span><span class="op">$</span><span class="va">restart</span><span class="op">$</span><span class="va">state</span><span class="op">[</span>, , <span class="fl">1</span><span class="op">]</span><span class="op">)</span></code></pre></div>
 <p>Then subset the data that we will fit to and create a new particle filter</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">data2</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">[</span><span class="va">data</span><span class="op">$</span><span class="va">day_start</span> <span class="op">&gt;=</span> <span class="fl">40</span>, <span class="op">]</span>
 <span class="va">p2</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="va"><a href="../reference/particle_filter.html">particle_filter</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">data2</span>, <span class="va">sir</span>, <span class="va">n_particles</span>, <span class="va">compare</span>,
                                    index <span class="op">=</span> <span class="va">index</span>, initial <span class="op">=</span> <span class="va">initial</span>,
-                                   n_threads <span class="op">=</span> <span class="fu">dust</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/dust/man/dust_openmp_threads.html" class="external-link">dust_openmp_threads</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+                                   n_threads <span class="op">=</span> <span class="va">n_threads</span><span class="op">)</span></code></pre></div>
 <p>And run a pMCMC that fits parmeters to the second half of the epidemic</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">control2</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_control.html">pmcmc_control</a></span><span class="op">(</span><span class="fl">500</span>, save_trajectories <span class="op">=</span> <span class="cn">TRUE</span>,
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">control2</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_control.html">pmcmc_control</a></span><span class="op">(</span><span class="va">n_steps</span>, save_trajectories <span class="op">=</span> <span class="cn">TRUE</span>,
                                    save_state <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
 <span class="va">res2</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc.html">pmcmc</a></span><span class="op">(</span><span class="va">pars</span>, <span class="va">p2</span>, control <span class="op">=</span> <span class="va">control2</span><span class="op">)</span></code></pre></div>
 <p>Plot of the number of people infected over time with the overall model (black) and the restarted model (red) with observed data (blue)</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">t</span> <span class="op">&lt;-</span> <span class="fl">0</span><span class="op">:</span><span class="fl">100</span>
 <span class="va">t2</span> <span class="op">&lt;-</span> <span class="fl">40</span><span class="op">:</span><span class="fl">100</span>
 <span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html" class="external-link">matplot</a></span><span class="op">(</span><span class="va">t</span>, <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">res1</span><span class="op">$</span><span class="va">trajectories</span><span class="op">$</span><span class="va">state</span><span class="op">[</span><span class="fl">2</span>, , <span class="op">]</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"l"</span>, lty <span class="op">=</span> <span class="fl">1</span>,
@@ -226,23 +230,23 @@
 <span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html" class="external-link">matlines</a></span><span class="op">(</span><span class="va">t2</span>, <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">res2</span><span class="op">$</span><span class="va">trajectories</span><span class="op">$</span><span class="va">state</span><span class="op">[</span><span class="fl">2</span>, , <span class="op">]</span><span class="op">)</span>, lty <span class="op">=</span> <span class="fl">1</span>,
          col <span class="op">=</span> <span class="st">"#ff000011"</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/graphics/points.html" class="external-link">points</a></span><span class="op">(</span><span class="va">I</span> <span class="op">~</span> <span class="va">t</span>, <span class="va">history</span>, pch <span class="op">=</span> <span class="fl">19</span>, col <span class="op">=</span> <span class="st">"blue"</span><span class="op">)</span></code></pre></div>
-<p><img src="restart_files/figure-html/unnamed-chunk-16-1.png" width="672"></p>
+<p><img src="restart_files/figure-html/unnamed-chunk-18-1.png" width="672"></p>
 <p>Daily incidence, which is what the model actually fits to</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html" class="external-link">matplot</a></span><span class="op">(</span><span class="va">t</span><span class="op">[</span><span class="op">-</span><span class="fl">1</span><span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/base/diff.html" class="external-link">diff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">res1</span><span class="op">$</span><span class="va">trajectories</span><span class="op">$</span><span class="va">state</span><span class="op">[</span><span class="fl">4</span>, , <span class="op">]</span><span class="op">)</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"l"</span>,
         lty <span class="op">=</span> <span class="fl">1</span>, col <span class="op">=</span> <span class="st">"#00000002"</span>, xlab <span class="op">=</span> <span class="st">"Day"</span>, ylab <span class="op">=</span> <span class="st">"Daily incidence"</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html" class="external-link">matlines</a></span><span class="op">(</span><span class="va">t2</span><span class="op">[</span><span class="op">-</span><span class="fl">1</span><span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/base/diff.html" class="external-link">diff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">res2</span><span class="op">$</span><span class="va">trajectories</span><span class="op">$</span><span class="va">state</span><span class="op">[</span><span class="fl">4</span>, , <span class="op">]</span><span class="op">)</span><span class="op">)</span>,
         lty <span class="op">=</span> <span class="fl">1</span>, col <span class="op">=</span> <span class="st">"#ff000005"</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/graphics/points.html" class="external-link">points</a></span><span class="op">(</span><span class="va">cases</span> <span class="op">~</span> <span class="va">day</span>, <span class="va">incidence</span>, col <span class="op">=</span> <span class="st">"blue"</span>, pch <span class="op">=</span> <span class="fl">19</span><span class="op">)</span></code></pre></div>
-<p><img src="restart_files/figure-html/unnamed-chunk-17-1.png" width="672"></p>
+<p><img src="restart_files/figure-html/unnamed-chunk-19-1.png" width="672"></p>
 <p>The parameter estimates, which are a similar but not identical distribution</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res1</span><span class="op">$</span><span class="va">pars</span>,
      xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">res1</span><span class="op">$</span><span class="va">pars</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span>, <span class="va">res2</span><span class="op">$</span><span class="va">pars</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span><span class="op">)</span>,
      ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">res1</span><span class="op">$</span><span class="va">pars</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span>, <span class="va">res2</span><span class="op">$</span><span class="va">pars</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span><span class="op">)</span>, pch <span class="op">=</span> <span class="fl">19</span>,
      col <span class="op">=</span> <span class="st">"#0000ff55"</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/graphics/points.html" class="external-link">points</a></span><span class="op">(</span><span class="va">res2</span><span class="op">$</span><span class="va">pars</span>, col <span class="op">=</span> <span class="st">"#ff000055"</span>, pch <span class="op">=</span> <span class="fl">19</span><span class="op">)</span></code></pre></div>
-<p><img src="restart_files/figure-html/unnamed-chunk-18-1.png" width="672"></p>
+<p><img src="restart_files/figure-html/unnamed-chunk-20-1.png" width="672"></p>
 </div>
   </div>
 
