@@ -19,6 +19,7 @@ particle_deterministic <- R6::R6Class(
     index = NULL,
     compare = NULL,
     constant_log_likelihood = NULL,
+    last_stages = NULL,
     last_model = NULL,
     last_history = NULL,
     last_state = NULL,
@@ -167,18 +168,8 @@ particle_deterministic <- R6::R6Class(
     ##' (`-Inf` if the model is impossible)
     run = function(pars = list(), save_history = FALSE, save_restart = NULL,
                    min_log_likelihood = -Inf) {
-      assert_scalar_logical(save_history)
-      if (self$nested) {
-        n_populations <- length(attr(private$data, "populations"))
-        pars <- particle_filter_pars_nested(pars, n_populations)
-      }
-      if (inherits(pars, "multistage_parameters")) {
-        filter_run_multistage(self, private, pars, save_history, save_restart,
-                              min_log_likelihood)
-      } else {
-        filter_run_simple(self, private, pars, save_history, save_restart,
-                          min_log_likelihood)
-      }
+      filter_run(self, private, pars, save_history, save_restart,
+                 min_log_likelihood)
     },
 
     ##' @description Begin a deterministic run. This is part of the
@@ -209,7 +200,7 @@ particle_deterministic <- R6::R6Class(
         stop("'min_log_likelihood' cannot be used with particle_deterministic")
       }
       particle_deterministic_state$new(
-        pars, self$model, private$last_model, private$data,
+        pars, self$model, private$last_model[[1]], private$data,
         private$data_split, private$steps, private$n_threads,
         private$initial, private$index, private$compare,
         private$constant_log_likelihood,
@@ -227,7 +218,7 @@ particle_deterministic <- R6::R6Class(
       if (is.null(private$last_model)) {
         stop("Model has not yet been run")
       }
-      private$last_model$state(index_state)
+      last(private$last_model)$state(index_state)
     },
 
     ##' @description Extract the particle trajectories. Requires that
@@ -305,7 +296,7 @@ particle_deterministic <- R6::R6Class(
            compare = private$compare,
            constant_log_likelihood = private$constant_log_likelihood,
            n_threads = private$n_threads,
-           seed = filter_current_seed(private$last_model, NULL))
+           seed = filter_current_seed(last(private$last_model), NULL))
     },
 
     ##' @description
@@ -319,11 +310,6 @@ particle_deterministic <- R6::R6Class(
     ##'   verify that you can actually use the number of threads
     ##'   requested (based on environment variables and OpenMP support).
     set_n_threads = function(n_threads) {
-      prev <- private$n_threads
-      private$n_threads <- n_threads
-      if (!is.null(private$last_model)) {
-        private$last_model$set_n_threads(n_threads)
-      }
-      invisible(prev)
+      particle_filter_set_n_threads(private, n_threads)
     }
   ))

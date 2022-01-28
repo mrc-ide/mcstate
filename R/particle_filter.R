@@ -76,6 +76,7 @@ particle_filter <- R6::R6Class(
     seed = NULL,
     n_threads = NULL,
     ## Updated when the model is run
+    last_stages = NULL,
     last_model = NULL,
     last_state = NULL,
     last_history = NULL,
@@ -272,18 +273,8 @@ particle_filter <- R6::R6Class(
     ##' (`-Inf` if the model is impossible)
     run = function(pars = list(), save_history = FALSE, save_restart = NULL,
                    min_log_likelihood = NULL) {
-      assert_scalar_logical(save_history)
-      if (self$nested) {
-        n_populations <- length(attr(private$data, "populations"))
-        pars <- particle_filter_pars_nested(pars, n_populations)
-      }
-      if (inherits(pars, "multistage_parameters")) {
-        filter_run_multistage(self, private, pars, save_history, save_restart,
-                              min_log_likelihood)
-      } else {
-        filter_run_simple(self, private, pars, save_history, save_restart,
-                          min_log_likelihood)
-      }
+      filter_run(self, private, pars, save_history, save_restart,
+                 min_log_likelihood)
     },
 
     ##' @description Begin a particle filter run. This is part of the
@@ -310,7 +301,7 @@ particle_filter <- R6::R6Class(
       assert_scalar_logical(save_history)
       min_log_likelihood <- min_log_likelihood %||% -Inf
       particle_filter_state$new(
-        pars, self$model, private$last_model, private$data,
+        pars, self$model, private$last_model[[1]], private$data,
         private$data_split, private$steps, self$n_particles,
         private$n_threads, private$initial, private$index, private$compare,
         private$constant_log_likelihood, private$gpu_config, private$seed,
@@ -426,7 +417,7 @@ particle_filter <- R6::R6Class(
            constant_log_likelihood = private$constant_log_likelihood,
            gpu_config = private$gpu_config,
            n_threads = private$n_threads,
-           seed = filter_current_seed(private$last_model, private$seed))
+           seed = filter_current_seed(last(private$last_model), private$seed))
     },
 
     ##' @description
@@ -440,12 +431,7 @@ particle_filter <- R6::R6Class(
     ##'   verify that you can actually use the number of threads
     ##'   requested (based on environment variables and OpenMP support).
     set_n_threads = function(n_threads) {
-      prev <- private$n_threads
-      private$n_threads <- n_threads
-      if (!is.null(private$last_model)) {
-        private$last_model$set_n_threads(n_threads)
-      }
-      invisible(prev)
+      particle_filter_set_n_threads(private, n_threads)
     }
   ))
 
@@ -664,9 +650,23 @@ filter_current_seed <- function(model, seed) {
 }
 
 
-## This is a generic interface used by the particle filter and
-## deterministic interface (and eventually the nested filter too).
-## We'll move this into a base class in a minute, I think....
+filter_run <- function(self, private, pars, save_history, save_restart,
+                       min_log_likelihood) {
+  assert_scalar_logical(save_history)
+  if (self$nested) {
+    n_populations <- length(attr(private$data, "populations"))
+    pars <- particle_filter_pars_nested(pars, n_populations)
+  }
+  private$last_stages <-
+    particle_filter_check_multistage_pars(pars, private$last_stages)
+  if (inherits(pars, "multistage_parameters")) {
+    filter_run_multistage(self, private, pars, save_history, save_restart,
+                          min_log_likelihood)
+  } else {
+    filter_run_simple(self, private, pars, save_history, save_restart,
+                      min_log_likelihood)
+  }
+}
 
 
 filter_run_simple <- function(self, private, pars,
@@ -676,7 +676,7 @@ filter_run_simple <- function(self, private, pars,
                         min_log_likelihood = min_log_likelihood)
   obj$run()
   private$last_history <- obj$history
-  private$last_model <- obj$model
+  private$last_model <- list(obj$model)
   private$last_state <- function(index) obj$model$state(index)
   private$last_restart_state <- obj$restart_state
   obj$log_likelihood
@@ -688,7 +688,7 @@ filter_run_multistage <- function(self, private, pars,
                                   min_log_likelihood) {
   stages <- filter_check_times(pars, private$data, save_restart)
 
-  models <- vector("list", length(stages))
+  models <- private$last_model %||% vector("list", length(stages))
   history <- vector("list", length(stages))
   restart <- vector("list", length(stages))
 
@@ -698,7 +698,7 @@ filter_run_multistage <- function(self, private, pars,
         stages[[i]]$pars, save_history, save_restart, min_log_likelihood)
     } else {
       obj <- obj$fork_multistage(
-        stages[[i]]$pars, stages[[i]]$transform_state)
+        models[[i]], stages[[i]]$pars, stages[[i]]$transform_state)
     }
     obj$step(stages[[i]]$step_index)
     models[[i]] <- obj$model
@@ -713,7 +713,7 @@ filter_run_multistage <- function(self, private, pars,
   ## We return this first model in the sequence as that's where
   ## the next run will start from, but state from the last model
   ## because that's where we got to.
-  private$last_model <- models[[1]]
+  private$last_model <- models
   private$last_state <- function(index) last(models)$state(index)
 
   if (save_history) {
@@ -787,6 +787,36 @@ particle_filter_pars_nested <- function(pars, n_populations) {
   }
 
   ret
+}
+
+
+particle_filter_set_n_threads <- function(private, n_threads) {
+  prev <- private$n_threads
+  private$n_threads <- n_threads
+  for (m in private$last_model) {
+    if (!is.null(m)) {
+      m$set_n_threads(n_threads)
+    }
+  }
+  invisible(prev)
+}
+
+
+particle_filter_check_multistage_pars <- function(pars, n_stages_prev) {
+  is_multistage <- inherits(pars, "multistage_parameters")
+  n_stages_given <- if (is_multistage) length(pars) else 1L
+  if (!is.null(n_stages_prev) && n_stages_prev != n_stages_given) {
+    if (n_stages_prev == 1) {
+      stop(sprintf(
+        "Expected single-stage parameters (but given one with %d stages)",
+        n_stages_given))
+    } else {
+      stop(sprintf(
+        "Expected multistage_pars with %d stages (but given one with %d)",
+        n_stages_prev, n_stages_given))
+    }
+  }
+  n_stages_given
 }
 
 
