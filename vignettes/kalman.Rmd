@@ -88,7 +88,7 @@ volatility_data <- mcstate::particle_filter_data(data, "step", 1)
 head(volatility_data)
 ```
 
-The particle filter can run with more or fewer particles - this will trade-off runtime with the variance in the estimate:
+The particle filter can run with more or fewer particles - this will trade-off runtime with the variance in the estimate, though in a fairly non-linear manner:
 
 ```{r, include = in_pkgdown, eval = in_pkgdown}
 n_particles <- 1000

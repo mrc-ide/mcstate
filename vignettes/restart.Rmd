@@ -79,7 +79,7 @@ pars <- mcstate::pmcmc_parameters$new(
   proposal = proposal_kernel)
 ```
 
-Basic control parameters we'll use below
+The basic control parameters that we'll use throughout in the runs below:
 
 ```{r, include = in_pkgdown, eval = in_pkgdown}
 n_steps <- 500
