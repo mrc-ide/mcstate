@@ -10,13 +10,14 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
-)
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5)
 lang_output <- function(x, lang) {
   cat(c(sprintf("```%s", lang), x, "```"), sep = "\n")
 }
-r_output <- function(x) lang_output(x, "r")
 cc_output <- function(x) lang_output(x, "cc")
+in_pkgdown <- identical(Sys.getenv("IN_PKGDOWN"), "true")
 ```
 
 We can test that the SMC algorithm implemented in `mcstate::particle_filter()`
@@ -49,7 +50,7 @@ data <- local({
 })
 ```
 
-```{r volatility_data_show, fig.height=5, fig.width=7}
+```{r volatility_data_show}
 head(data)
 plot(value ~ step, data, type = "o", pch = 19, las = 1)
 ```
@@ -87,10 +88,21 @@ volatility_data <- mcstate::particle_filter_data(data, "step", 1)
 head(volatility_data)
 ```
 
-With all these pieces we can create our particle filter object, specifying that we will use $10^3$ particles
+The particle filter can run with more or fewer particles - this will trade-off runtime with the variance in the estimate, though in a fairly non-linear manner:
+
+```{r, include = in_pkgdown, eval = in_pkgdown}
+n_particles <- 1000
+```
+
+```{r, include = !in_pkgdown, eval = !in_pkgdown}
+n_particles <- 100
+```
+
+
+With all these pieces we can create our particle filter object with `r n_particles` particles
 
 ```{r}
-filter <- mcstate::particle_filter$new(volatility_data, volatility, 1000,
+filter <- mcstate::particle_filter$new(volatility_data, volatility, n_particles,
                                        compare = volatility_compare,
                                        initial = volatility_initial)
 filter
@@ -147,19 +159,28 @@ kalman_filter(pars$alpha, pars$sigma, pars$gamma, pars$tau, volatility_data)
 
 However, the particle filter, run multiple times, will create a distribution centred on this likelihood:
 
-```{r fig.height=5, fig.width=7}
-ll <- replicate(200, filter$run(pars))
+```{r, include = in_pkgdown, eval = in_pkgdown}
+n_replicates <- 200
+```
+
+```{r, include = !in_pkgdown, eval = !in_pkgdown}
+n_replicates <- 20
+```
+
+```{r}
+ll <- replicate(n_replicates, filter$run(pars))
 hist(ll, col = "steelblue3")
 abline(v = ll_k, col = "red", lty = 2, lwd = 2)
 ```
 
 As the number of particles used changes, the variance of this estimate will change
 
-```{r fig.height=5, fig.width=7}
-filter2 <- mcstate::particle_filter$new(volatility_data, volatility, 100,
-                                       compare = volatility_compare,
-                                       initial = volatility_initial)
-ll2 <- replicate(200, filter2$run(pars))
+```{r}
+filter2 <- mcstate::particle_filter$new(volatility_data, volatility,
+                                        n_particles / 10,
+                                        compare = volatility_compare,
+                                        initial = volatility_initial)
+ll2 <- replicate(n_replicates, filter2$run(pars))
 hist(ll2, col = "steelblue3")
 abline(v = ll_k, col = "red", lty = 2, lwd = 2)
 abline(v = range(ll), col = "orange", lty = 3, lwd = 2)
@@ -174,7 +195,7 @@ dim(filter$history())
 
 This is a _N_ state (here 1) x _N_ particles (1000) x _N_ time steps (100) 3d array, but we will drop the first rank of this for plotting
 
-```{r fig.height=5, fig.width=7}
+```{r}
 matplot(0:100, t(drop(filter$history())), xlab = "Step", ylab = "Value",
         las = 1, type = "l", lty = 1, col = "#00000002")
 points(value ~ step, data, col = "steelblue3", pch = 19)

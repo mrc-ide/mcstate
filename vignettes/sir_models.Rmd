@@ -10,12 +10,14 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
-)
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5)
 lang_output <- function(x, lang) {
   cat(c(sprintf("```%s", lang), x, "```"), sep = "\n")
 }
 r_output <- function(x) lang_output(x, "r")
+in_pkgdown <- identical(Sys.getenv("IN_PKGDOWN"), "true")
 ```
 
 `mcstate` sits at the top of a stack of packages, which together allow inference of a stochastic model's parameters by fitting to a time-series of observational data. To use `mcstate`, we require the following pieces:
@@ -83,7 +85,7 @@ incidence <- read.csv(system.file("sir_incidence.csv", package = "mcstate"))
 
 This can then be processed with `mcstate::particle_filter_data()` as follows, taking four update steps between every observation so that `rate = 4`. Generally increasing the rate will improve resolution, especially if rates of change between partitions are high, though at the expense of extra computation time. We also define a time interval between each update $dt = \frac{1}{\mathrm(rate)}$:
 
-```{r paged.print=TRUE, layout="l-body-outset", fig.height=5, fig.width=7}
+```{r paged.print = TRUE, layout = "l-body-outset"}
 dt <- 0.25
 sir_data <- mcstate::particle_filter_data(data = incidence,
                                           time = "day",
@@ -154,10 +156,10 @@ filter$run(save_history = TRUE, pars = list(dt = dt))
 
 If we plot these along with the data, we can see compared to above that only trajectories consistent with the data are kept, and the variance between particles has been reduced compared to the simulations shown in the `odin.dust` vignette:
 
-```{r fig.height=5, fig.width=7}
+```{r}
 plot_particle_filter <- function(history, true_history, times, obs_end = NULL) {
   if (is.null(obs_end)) {
-    obs_end = max(times)
+    obs_end <- max(times)
   }
 
   par(mar = c(4.1, 5.1, 0.5, 0.5), las = 1)
@@ -178,7 +180,7 @@ plot_particle_filter(filter$history(), true_history, incidence$day)
 
 Doing the same with a $\beta$ and $\gamma$ which are further from the truth yields a lower likelihood:
 
-```{r fig.height=5, fig.width=7}
+```{r}
 filter$run(save_history = TRUE, pars = list(dt = dt, beta = 0.4, gamma = 0.2))
 plot_particle_filter(filter$history(), true_history, incidence$day)
 ```
@@ -191,22 +193,33 @@ Using this, we can do a MCMC using the Metropolis-Hastings algorithm to infer th
 
 ```{r}
 beta <- mcstate::pmcmc_parameter("beta", 0.2, min = 0)
-gamma <- mcstate::pmcmc_parameter("gamma", 0.1, min = 0,
-                         prior = function(p)
-                           dgamma(p, shape = 1, scale = 0.2, log = TRUE)
-                         )
+gamma <- mcstate::pmcmc_parameter("gamma", 0.1, min = 0, prior = function(p)
+  dgamma(p, shape = 1, scale = 0.2, log = TRUE))
 
-proposal_matrix <- matrix(c(0.01, 0, 0, 0.01), nrow = 2, ncol = 2, byrow = TRUE)
-mcmc_pars <- mcstate::pmcmc_parameters$new(list(beta = beta, gamma = gamma), proposal_matrix)
+proposal_matrix <- diag(0.1, 2)
+mcmc_pars <- mcstate::pmcmc_parameters$new(list(beta = beta, gamma = gamma),
+                                           proposal_matrix)
 ```
 
 The proposals for each MCMC step are also set here. Proposals are drawn from a multi-variate normal distribution, with the variance-covariance matrix set here. In this case we have simply set $\beta_{n+1} \sim N(\beta_{n}, 0.01)$ and $\gamma_{n+1} \sim N(\gamma_{n}, 0.01)$ so there is no covariance. We show how to improve this below.
 
-The sampler can now be run using these parameters, and the particle filter defined above. Taking 500 steps on a single chains:
+The sampler can now be run using these parameters, and the particle filter defined above.
 
-```{r pmcmc_combined, fig.height = 5, fig.width = 7}
+```{r, include = in_pkgdown, eval = in_pkgdown}
+n_steps <- 500
+n_burnin <- 200
+```
+
+```{r, include = !in_pkgdown, eval = !in_pkgdown}
+n_steps <- 50
+n_burnin <- 10
+```
+
+Taking `r n_steps` steps on a single chain:
+
+```{r pmcmc_combined}
 control <- mcstate::pmcmc_control(
-    500,
+    n_steps,
     save_state = TRUE,
     save_trajectories = TRUE,
     progress = TRUE)
@@ -217,14 +230,14 @@ plot_particle_filter(pmcmc_run$trajectories$state, true_history, incidence$day)
 We also provide some basic tools for dealing with this output, before running prediction (see below). We can remove burn-in and thin the four chains as follows:
 
 ```{r}
-processed_chains <- mcstate::pmcmc_thin(pmcmc_run, burnin = 200, thin = 2)
+processed_chains <- mcstate::pmcmc_thin(pmcmc_run, burnin = n_burnin, thin = 2)
 parameter_mean_hpd <- apply(processed_chains$pars, 2, mean)
 parameter_mean_hpd
 ```
 
 The resulting objects can also be analysed in a typical MCMC analysis package such as [`coda`](https://cran.r-project.org/web/packages/coda/index.html). We will need to combine the two parts of the object which contain the probabilities and parameter values across the iterations:
 
-```{r coda_plots, fig.height=10, fig.width=14}
+```{r coda_plots, fig.height = 10}
 mcmc1 <- coda::as.mcmc(cbind(pmcmc_run$probabilities, pmcmc_run$pars))
 
 summary(mcmc1)
@@ -242,7 +255,7 @@ coda::effectiveSize(mcmc1)
 
 Clearly the acceptance rate is too low. Generally a target of 0.5, reducing to 0.234 as the number of parameters increases, [is thought to be optimal](https://dx.doi.org/10.1016/j.spa.2007.12.005). The proposal distribution needs to be modified, in this case reducing the variance of the jump sizes. One option to automate this process is to run a chain for a bit, as above, then use the covariance of the state as the proposal matrix:
 
-```{r}
+```{r, error = !in_pkgdown}
 proposal_matrix <- cov(pmcmc_run$pars)
 mcmc_pars <- mcstate::pmcmc_parameters$new(
   list(beta = beta, gamma = gamma),
@@ -252,9 +265,9 @@ proposal_matrix
 
 Let's now run four independent chains with these proposals:
 
-```{r, fig.height=10, fig.width=14}
+```{r, fig.height = 10}
 control <- mcstate::pmcmc_control(
-    500,
+    n_steps,
     save_state = TRUE,
     save_trajectories = TRUE,
     progress = TRUE,
@@ -279,13 +292,14 @@ coda::effectiveSize(mcmc2)
 
 Going back to the simple SIR model above, we can easily continue running the fitted model forward in time using the posterior estimated by `pmcmc()` to create a forecast past the end of the data, sampling 10 particles:
 
-```{r fig.height=5, fig.width=7}
+```{r}
 forecast <- predict(processed_chains,
                     steps = seq(400, 800, 4),
                     prepend_trajectories = TRUE,
                     seed = processed_chains$predict$seed)
 
-mini_forecast <- forecast$state[,sample.int(ncol(forecast$state), size = 10),]
+keep <- sample.int(ncol(forecast$state), size = 10)
+mini_forecast <- forecast$state[, keep, ]
 
 plot_particle_filter(mini_forecast,
                      true_history,
@@ -311,7 +325,7 @@ gen_death <- odin.dust::odin_dust("deaths.R", verbose = FALSE)
 
 We can simulate some data to fit to, as before. We have also made the case data patchy, so it is missing on some days:
 
-```{r layout="l-body-outset", paged.print=TRUE }
+```{r layout = "l-body-outset", paged.print = TRUE }
 dt <- 0.25
 death_data <- read.table("death_data.csv", header = TRUE, sep = ",")
 true_history_deaths <- readRDS("deaths_true_history.rds")
