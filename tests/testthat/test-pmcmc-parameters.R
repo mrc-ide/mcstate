@@ -296,3 +296,24 @@ test_that("prevent impossible fixed parameters", {
   expect_error(p$fix(c(a = 1, b = 1, c = 1, d = 1, e = 1)),
                "Cannot fix all parameters")
 })
+
+
+test_that("update proposal kernel", {
+  kernel <- diag(2) * 0.01
+  row.names(kernel) <- colnames(kernel)
+  p <- pmcmc_parameters$new(
+    list(pmcmc_parameter("a", 1),
+         pmcmc_parameter("b", 2)),
+    proposal = kernel)
+
+  ## No spurious correlation (this is tested above, but confirm that
+  ## we have this sort of covariance structure here)
+  res1 <- t(replicate(1000, p$propose(c(1, 2))))
+  expect_lt(abs(cor(res1)[1, 2]), 0.1)
+
+  ## Replace with a perfectly correlated proposal
+  p$update_proposal(matrix(0.01, 2, 2))
+  res2 <- t(replicate(1000, p$propose(c(1, 2))))
+  expect_equal(res2[, 2] - res2[, 1], rep(1, 1000))
+  expect_equal(cor(res2), matrix(1, 2, 2))
+})

@@ -143,26 +143,10 @@ pmcmc_parameters <- R6::R6Class(
       }
       assert_is(transform, "function")
 
-      assert_is(proposal, "matrix")
-      if (!all(dim(proposal) == length(parameters))) {
-        stop(sprintf(
-          "Expected a square proposal matrix with %d rows and columns",
-          length(parameters)))
-      }
-      if (!is.null(dimnames(proposal))) {
-        ## At this point we could reorder if that's useful and these
-        ## are setequal.
-        ok <- identical(rownames(proposal), names(parameters)) &&
-          identical(colnames(proposal), names(parameters))
-        if (!ok) {
-          stop("Expected dimension names of 'proposal' to match parameters")
-        }
-      }
-
       private$parameters <- parameters
-      private$proposal_kernel <- proposal
-      private$proposal <- rmvnorm_generator(proposal)
       private$transform <- transform
+
+      self$update_proposal(proposal)
 
       private$discrete <- vlapply(private$parameters, "[[", "discrete",
                                   USE.NAMES = FALSE)
@@ -218,6 +202,30 @@ pmcmc_parameters <- R6::R6Class(
       theta <- private$proposal(theta, scale)
       theta[private$discrete] <- round(theta[private$discrete])
       reflect_proposal(theta, private$min, private$max)
+    },
+
+    ##' Update the proposal kernel.  Use this to adapt the proposal kernel
+    ##' originally set into the object mid-run.
+    ##'
+    ##' @param proposal A square proposal distribution corresponding to the
+    ##' variance-covariance matrix of a multivariate gaussian distribution
+    ##' used to generate new parameters (the same restrictions apply as
+    ##' for `proposal` passed to the constructor).
+    update_proposal = function(proposal) {
+      assert_is(proposal, "matrix")
+      n <- length(private$parameters)
+      if (!all(dim(proposal) == c(n, n))) {
+        stop(sprintf(
+          "Expected a square proposal matrix with %d rows and columns", n))
+      }
+      if (!is.null(dimnames(proposal))) {
+        expected <- list(names(private$parameters), names(private$parameters))
+        if (!identical(unname(dimnames(proposal)), expected)) {
+          stop("Expected dimension names of 'proposal' to match parameters")
+        }
+      }
+      private$proposal_kernel <- proposal
+      private$proposal <- rmvnorm_generator(proposal)
     },
 
     ##' @description Apply the model transformation function to a parameter

@@ -44,6 +44,7 @@ pars$model(p)
 \item \href{#method-summary}{\code{pmcmc_parameters$summary()}}
 \item \href{#method-prior}{\code{pmcmc_parameters$prior()}}
 \item \href{#method-propose}{\code{pmcmc_parameters$propose()}}
+\item \href{#method-update_proposal}{\code{pmcmc_parameters$update_proposal()}}
 \item \href{#method-model}{\code{pmcmc_parameters$model()}}
 \item \href{#method-fix}{\code{pmcmc_parameters$fix()}}
 }
@@ -156,7 +157,30 @@ parameters were defined in (see \verb{$names()} for that order.}
 \item{\code{scale}}{an optional scaling factor to apply to the
 proposal distribution. This may be useful in sampling starting
 points. The parameter is equivalent to a multiplicative factor
-applied to the variance covariance matrix.}
+applied to the variance covariance matrix.
+Update the proposal kernel}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-update_proposal"></a>}}
+\if{latex}{\out{\hypertarget{method-update_proposal}{}}}
+\subsection{Method \code{update_proposal()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters$update_proposal(proposal)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{proposal}}{A square proposal distribution corresponding to the
+variance-covariance matrix of a multivariate gaussian distribution
+used to generate new parameters. It must have the same number of
+rows and columns as there are elements in \code{parameters}, and if
+named the names must correspond exactly to the names in
+\code{parameters}. Because it corresponds to a variance-covariance
+matrix it must be symmetric and positive definite.}
 }
 \if{html}{\out{</div>}}
 }

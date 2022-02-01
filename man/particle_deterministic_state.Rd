@@ -143,12 +143,14 @@ Create a new \code{deterministic_particle_state} object based
 on this one (same model, position in time within the data) but with
 new parameters, to support the "multistage particle filter".
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_deterministic_state$fork_multistage(pars, transform_state)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{particle_deterministic_state$fork_multistage(model, pars, transform_state)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
+\item{\code{model}}{A model object}
+
 \item{\code{pars}}{New model parameters}
 
 \item{\code{transform_state}}{A function to transform the model state
