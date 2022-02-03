@@ -14,12 +14,12 @@
 ##'   new proposal matrix will be set into this object (i.e.,
 ##'   modifying the original)
 ##'
-##' @param filter A [`particle_filter`] object
-##'
 ##' @param control Base [mcstate::pmcmc_control] object.  We will
 ##'   override a few things in here (especially the number of steps,
 ##'   trajectory information and burnin/thinning), but we'll reuse
 ##'   others (parallel control, number of chains, rerun control)
+##'
+##' @inheritParams pmcmc
 ##'
 ##' @param kernel_scaling The scaling to apply to the variance
 ##'   covariance matrix.  If `NULL` we use the "optimal" scaling
@@ -82,7 +82,7 @@ pmcmc_tune <- function(n_tune_blocks, n_tune_steps,
     p <- t(array_flatten(history_pars[, , , seq_len(i), drop = FALSE], 2:4))
     wt <- rep(exp(-(i - seq_len(i)) * weighting_rate),
               each = n_tune_steps * control$n_chains)
-    vcv <- cov.wt(p, wt)$cov
+    vcv <- stats::cov.wt(p, wt)$cov
     pars$update_proposal(vcv * kernel_scaling)
 
     ## I think there's a question here about how much you want to keep

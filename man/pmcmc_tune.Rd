@@ -33,6 +33,14 @@ override a few things in here (especially the number of steps,
 trajectory information and burnin/thinning), but we'll reuse
 others (parallel control, number of chains, rerun control)}
 
+\item{initial}{Optional initial starting point. If given, it must
+be compatible with the parameters given in \code{pars}, and must be
+valid against your prior. You can use this to override the
+initial conditions saved in your \code{pars} object. You can provide
+either a vector of initial conditions, or a matrix with
+\code{n_chains} columns to use a different starting point for each
+chain.}
+
 \item{kernel_scaling}{The scaling to apply to the variance
 covariance matrix.  If \code{NULL} we use the "optimal" scaling
 (\verb{2.38^2 / (number of parameters)})}
