@@ -80,7 +80,7 @@ pmcmc_tune <- function(n_tune_blocks, n_tune_steps,
 
     ## Then we look at our pars over time:
     p <- t(array_flatten(history_pars[, , , seq_len(i), drop = FALSE], 2:4))
-    wt <- rep(exp(-(i - seq_len(i)) * weighting_rate),
+    wt <- rep(exp(-seq(i - 1, 0) * weighting_rate),
               each = n_tune_steps * control$n_chains)
     vcv <- stats::cov.wt(p, wt)$cov
     pars$update_proposal(vcv * kernel_scaling)
