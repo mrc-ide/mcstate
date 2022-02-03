@@ -61,11 +61,19 @@ test_that("assert_logical", {
 })
 
 
+test_that("assert_numeric", {
+  expect_silent(assert_numeric(1))
+  expect_error(assert_numeric("1"), "must be a numeric")
+  expect_error(assert_numeric(TRUE), "must be a numeric")
+})
+
+
 test_that("assert_character", {
   expect_silent(assert_character("string"))
   expect_error(assert_character(1), "must be a character")
   expect_error(assert_character(TRUE), "must be a character")
 })
+
 
 test_that("assert_list_of", {
   expect_error(assert_list_of(list("a"), "numeric"), "Elements of")
