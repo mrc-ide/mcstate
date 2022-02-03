@@ -16,7 +16,10 @@ pmcmc_tune(
 )
 }
 \arguments{
-\item{n_tune_blocks}{The number of tuning blocks}
+\item{n_tune_blocks}{The number of tuning blocks.  Using 0 here is
+acceptable, resulting in no tuning steps and \code{initial} being
+returned unmodified.  The resulting \code{vcv} and \code{proposal_matrix}
+elements will be \code{NA} everywhere, and \code{pars} will be unmodified.}
 
 \item{n_tune_steps}{The number of steps per block}
 

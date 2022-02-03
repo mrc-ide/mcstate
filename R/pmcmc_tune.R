@@ -4,7 +4,10 @@
 ##'
 ##' @title Tune pmcmc proposals
 ##'
-##' @param n_tune_blocks The number of tuning blocks
+##' @param n_tune_blocks The number of tuning blocks.  Using 0 here is
+##'   acceptable, resulting in no tuning steps and `initial` being
+##'   returned unmodified.  The resulting `vcv` and `proposal_matrix`
+##'   elements will be `NA` everywhere, and `pars` will be unmodified.
 ##'
 ##' @param n_tune_steps The number of steps per block
 ##'
@@ -55,21 +58,25 @@ pmcmc_tune <- function(n_tune_blocks, n_tune_steps,
 
   ## Some manual patching of the control object is required:
   control$n_steps <- n_tune_steps
+
+  ## Disable any in-run state saving
   control$save_state <- FALSE
   control$save_restart <- NULL
   control$save_trajectories <- FALSE
+
+  ## Disable any in-run filtering
   control$n_steps_retain <- n_tune_steps
   control$n_burnin <- 0
   control$n_steps_every <- 1
-  control$n_blocks <- n_tune_blocks
-  control$kernel_scaling <- kernel_scaling
-  control$weighting_rate <- weighting_rate
 
-  n_steps <- n_tune_steps * control$n_chains
   history_pars <-
     array(NA_real_, c(n_pars, n_tune_steps, control$n_chains, n_tune_blocks))
   history_probabilities <-
     array(NA_real_, c(3, n_tune_steps, control$n_chains, n_tune_blocks))
+
+  ## In case we make no steps
+  vcv <- matrix(NA_real_, n_pars, n_pars,
+                dimnames = list(pars$names(), pars$names()))
 
   for (i in seq_len(n_tune_blocks)) {
     ## TODO: update to use new progress bars, see #199
@@ -93,9 +100,16 @@ pmcmc_tune <- function(n_tune_blocks, n_tune_steps,
       c(2, 4))
   }
 
-  rownames(initial) <- pars$names()
+  if (!is.null(initial)) {
+    if (is.null(dim(initial))) {
+      names(initial) <- pars$names()
+    } else {
+      rownames(initial) <- pars$names()
+    }
+  }
   rownames(history_pars) <- pars$names()
-  rownames(history_probabilities) <- colnames(results$probabilities)
+  rownames(history_probabilities) <-
+    c("log_prior", "log_likelihood", "log_posterior")
   history <- list(pars = history_pars,
                   probabilities = history_probabilities)
 
