@@ -158,7 +158,8 @@ parameters were defined in (see \verb{$names()} for that order.}
 proposal distribution. This may be useful in sampling starting
 points. The parameter is equivalent to a multiplicative factor
 applied to the variance covariance matrix.
-Update the proposal kernel}
+Update the proposal kernel.  Use this to adapt the proposal kernel
+originally set into the object mid-run.}
 }
 \if{html}{\out{</div>}}
 }
@@ -176,11 +177,8 @@ Update the proposal kernel}
 \describe{
 \item{\code{proposal}}{A square proposal distribution corresponding to the
 variance-covariance matrix of a multivariate gaussian distribution
-used to generate new parameters. It must have the same number of
-rows and columns as there are elements in \code{parameters}, and if
-named the names must correspond exactly to the names in
-\code{parameters}. Because it corresponds to a variance-covariance
-matrix it must be symmetric and positive definite.}
+used to generate new parameters (the same restrictions apply as
+for \code{proposal} passed to the constructor).}
 }
 \if{html}{\out{</div>}}
 }
