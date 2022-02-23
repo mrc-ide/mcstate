@@ -170,8 +170,8 @@ particle_deterministic_state <- R6::R6Class(
                           n_threads, initial, index, compare,
                           constant_log_likelihood,
                           save_history, save_restart) {
-      pars_multi <- inherits(data, "particle_filter_data_nested")
-      support <- particle_deterministic_state_support(pars_multi)
+      nested <- inherits(data, "particle_filter_data_nested")
+      support <- particle_deterministic_state_support(nested)
 
       ## This adds an extra dimension (vs using NULL), which is not
       ## amazing, but it does simplify logic in a few places and keeps
@@ -181,7 +181,7 @@ particle_deterministic_state <- R6::R6Class(
         model <- generator$new(pars = pars, step = steps[[1]],
                                n_particles = n_particles, n_threads = n_threads,
                                seed = NULL, deterministic = TRUE,
-                               pars_multi = pars_multi)
+                               pars_multi = nested)
         if (is.null(compare)) {
           model$set_data(data_split)
         }
@@ -248,7 +248,7 @@ particle_deterministic_state <- R6::R6Class(
       ## Variable (see also history)
       self$model <- model
       self$log_likelihood <- particle_filter_constant_log_likelihood(
-        pars, pars_multi, constant_log_likelihood)
+        pars, nested, constant_log_likelihood)
     },
 
     ##' @description Run the deterministic particle to the end of the data.
