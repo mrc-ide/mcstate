@@ -213,14 +213,14 @@ particle_filter_state <- R6::R6Class(
                           n_particles, n_threads, initial, index, compare,
                           constant_log_likelihood, gpu_config, seed,
                           min_log_likelihood, save_history, save_restart) {
-      pars_multi <- inherits(data, "particle_filter_data_nested")
-      support <- particle_filter_state_support(pars_multi)
+      nested <- inherits(data, "particle_filter_data_nested")
+      support <- particle_filter_state_support(nested)
 
       if (is.null(model)) {
         model <- generator$new(pars = pars, step = steps[[1L]],
                                n_particles = n_particles, n_threads = n_threads,
                                seed = seed, gpu_config = gpu_config,
-                               pars_multi = pars_multi)
+                               pars_multi = nested)
         if (is.null(compare)) {
           model$set_data(data_split)
         }
@@ -289,7 +289,7 @@ particle_filter_state <- R6::R6Class(
       ## Variable (see also history)
       self$model <- model
       self$log_likelihood <- particle_filter_constant_log_likelihood(
-        pars, pars_multi, constant_log_likelihood)
+        pars, nested, constant_log_likelihood)
     },
 
     ##' @description Run the particle filter to the end of the data. This is
@@ -451,16 +451,16 @@ particle_filter_early_exit <- function(log_likelihood, min_log_likelihood) {
 }
 
 
-particle_filter_constant_log_likelihood <- function(pars, pars_multi,
+particle_filter_constant_log_likelihood <- function(pars, nested,
                                                     constant_log_likelihood) {
   if (is.null(constant_log_likelihood)) {
-    if (pars_multi) {
+    if (nested) {
       rep(0, length(pars))
     } else {
       0
     }
   } else {
-    if (pars_multi) {
+    if (nested) {
       vnapply(pars, constant_log_likelihood)
     } else {
       constant_log_likelihood(pars)
