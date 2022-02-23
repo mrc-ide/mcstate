@@ -181,6 +181,7 @@ test_that("Can transform state in the model", {
 
 
 test_that("Can transform state size", {
+  testthat::skip_if_not_installed("odin.dust")
   dat <- example_variable()
 
   pars_base <- list(len = 10, sd = 1)
@@ -202,6 +203,7 @@ test_that("Can transform state size", {
 
 
 test_that("multistage, dimension changing, model agrees with single stage", {
+  testthat::skip_if_not_installed("odin.dust")
   dat <- example_variable()
   new_filter <- function() {
     set.seed(1)
@@ -278,6 +280,7 @@ test_that("Require named index for history-saving multistage filter", {
 
 
 test_that("Can't save restart when size changes", {
+  testthat::skip_if_not_installed("odin.dust")
   dat <- example_variable()
 
   ## There's going to be some work here to update this so that it's
@@ -318,6 +321,7 @@ test_that("Can't save restart when size changes", {
 
 
 test_that("Prevent restart on epoch changes", {
+  testthat::skip_if_not_installed("odin.dust")
   dat <- example_variable()
 
   ## There's going to be some work here to update this so that it's
@@ -353,6 +357,7 @@ test_that("Prevent restart on epoch changes", {
 
 
 test_that("Gracefully cope with early exit", {
+  testthat::skip_if_not_installed("odin.dust")
   dat <- example_variable()
 
   ## There's going to be some work here to update this so that it's
@@ -437,6 +442,7 @@ test_that("Can filter multistage parameters based on data", {
 ## This is not a great test, but covers the key bits; that we filter
 ## down the parameters to the right set, in particular.
 test_that("Can run a multistage filter from part way through", {
+  testthat::skip_if_not_installed("odin.dust")
   dat <- example_variable()
 
   pars_base <- list(len = 10, sd = 1)
@@ -477,6 +483,7 @@ test_that("Can run a multistage filter from part way through", {
 
 
 test_that("Confirm nested filter is correct", {
+  testthat::skip_if_not_installed("odin.dust")
   dat <- example_variable()
 
   ## We need some multipopulation data here:
@@ -592,6 +599,7 @@ test_that("Can't change numbers of stages after creation", {
 
 
 test_that("can run a particle filter over a subset of data, twice", {
+  testthat::skip_if_not_installed("odin.dust")
   dat <- example_variable()
 
   index <- function(info) {

@@ -169,12 +169,14 @@ model shape and arbitrary transformations of the state are
 allowed.  The model is not rerun to the current point, just
 transformed at that point.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_filter_state$fork_multistage(pars, transform_state)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter_state$fork_multistage(model, pars, transform_state)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
+\item{\code{model}}{A model object (or NULL)}
+
 \item{\code{pars}}{New model parameters}
 
 \item{\code{transform_state}}{A function to transform the model state

@@ -211,6 +211,7 @@ test_that("Can run deterministic filter without index", {
 
 
 test_that("initial passes args as expected", {
+  testthat::skip_if_not_installed("mockery")
   dat <- example_sir()
   initial <- mockery::mock(c(1000, 10, 0, 0, 0), cycle = TRUE)
   p <- particle_deterministic$new(dat$data, dat$model, dat$compare,
