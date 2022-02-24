@@ -9,8 +9,8 @@ test_that("Can construct a varied parameter", {
   expect_equal(p$b$min, -Inf)
   expect_equal(p$a$max, Inf)
   expect_equal(p$b$max, Inf)
-  expect_equal(p$a$discrete, FALSE)
-  expect_equal(p$b$discrete, FALSE)
+  expect_equal(p$a$integer, FALSE)
+  expect_equal(p$b$integer, FALSE)
   expect_equal(p$a$prior(1), 0)
   expect_equal(p$b$prior(1), 0)
 })
@@ -22,7 +22,7 @@ test_that("varied parameter reps", {
   expect_equal(
     pmcmc_varied_parameter("p1", letters[1:3], 1, max = 1)$c$max, 1)
   expect_true(
-    pmcmc_varied_parameter("p1", letters[1:3], 1, discrete = TRUE)$c$discrete)
+    pmcmc_varied_parameter("p1", letters[1:3], 1, integer = TRUE)$c$integer)
   expect_equal(
     pmcmc_varied_parameter("p1", letters[1:3], 1,
                            prior = function(x) 1)$c$prior,
@@ -210,7 +210,7 @@ test_that("construct pmcmc_parameters_nested; contruction and basic use", {
   expect_equal(
     res$summary(),
     data_frame(name = rep(letters[1:4], 2),
-               min = -Inf, max = Inf, discrete = FALSE,
+               min = -Inf, max = Inf, integer = FALSE,
                type = rep(c("varied", "fixed"), each = 2),
                population = rep(c("p1", "p2"), each = 4)))
 })

@@ -13,7 +13,7 @@ test_that("can construct a parameter", {
   expect_equal(p$name, "a")
   expect_equal(p$min, 0)
   expect_equal(p$max, 10)
-  expect_false(p$discrete)
+  expect_false(p$integer)
   expect_equal(p$prior(1), log(0.1))
   set.seed(1)
   res <- p$sample(20)
@@ -50,7 +50,7 @@ test_that("can construct a set of parameters", {
                data_frame(name = c("beta", "gamma"),
                           min = c(0, 1),
                           max = c(10, 2),
-                          discrete = FALSE))
+                          integer = FALSE))
 })
 
 

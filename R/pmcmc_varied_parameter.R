@@ -24,8 +24,12 @@
 ##'   value. Must be either length `n_pop` or `1`, in which case the same value
 ##'   is assumed for all populations.
 ##'
-##' @param discrete Logical, indicating if this parameter is
+##' @param discrete Deprecated. Logical, indicating if this parameter is
 ##'   discrete. If `TRUE` then the parameter will be rounded
+##'   after a new parameter is proposed.
+##'
+##' @param integer Logical, indicating if this parameter is
+##'   integer. If `TRUE` then the parameter will be rounded
 ##'   after a new parameter is proposed.
 ##'
 ##' @param prior A prior function (if not given an improper flat prior
@@ -43,17 +47,21 @@
 ##'   initial = c(100, 200),
 ##'   min = 0,
 ##'   max = Inf,
-##'   discrete = TRUE,
+##'   integer = TRUE,
 ##'   prior = list(dnorm, dexp))
 pmcmc_varied_parameter <- function(name, populations, initial, min = -Inf,
-                                   max = Inf, discrete = FALSE, prior = NULL) {
+                                   max = Inf, discrete, integer = FALSE, prior = NULL) {
+  if (!missing(discrete)) {
+    .Deprecated("integer", old = "discrete")
+    integer <- discrete
+  }
   assert_character(populations)
   len <- length(populations)
 
   initial <- recycle(initial, len)
   min <- recycle(min, len)
   max <- recycle(max, len)
-  discrete <- assert_scalar_logical(discrete)
+  integer <- assert_scalar_logical(integer)
 
   if (is.null(prior)) {
     prior <- function(p) 0
@@ -65,7 +73,7 @@ pmcmc_varied_parameter <- function(name, populations, initial, min = -Inf,
     prior <- recycle(prior, len)
   }
 
-  params <- Map(pmcmc_parameter, name, initial, min, max, discrete, prior)
+  params <- Map(pmcmc_parameter, name, initial, min, max, integer, prior)
   names(params) <- populations
   class(params) <- "pmcmc_varied_parameter"
 
