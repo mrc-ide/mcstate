@@ -22,7 +22,7 @@ how it can be used."><meta property="og:image" content="/logo.png"><!-- mathjax 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.0</span>
       </span>
     </div>
 
@@ -209,7 +209,7 @@ fixed parameters are same across all populations.</p><div class="section">
 </div><p></p><hr><a id="method-summary"></a><div class="section">
 <h3 id="method-summary-">Method <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code><a class="anchor" aria-label="anchor" href="#method-summary-"></a></h3>
 <p>Return a <code>data.frame</code> with information about
-parameters (name, min, max, discrete, type (fixed or varied)
+parameters (name, min, max, integer, type (fixed or varied)
 and population)</p><div class="section">
 <h4 id="usage-4">Usage<a class="anchor" aria-label="anchor" href="#usage-4"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters_nested</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span><span class="op">)</span></code></pre></div><p></p></div>
@@ -247,7 +247,7 @@ named vector with names corresponding to populations.</p><div class="section">
 <h3 id="method-propose-">Method <code>propose()</code><a class="anchor" aria-label="anchor" href="#method-propose-"></a></h3>
 <p>This proposes a new parameter matrix given your current
 matrix and the variance-covariance matrices of the proposal
-kernels, discretises any discrete values, and reflects bounded
+kernels, rounds any integer values, and reflects bounded
 parameters until they lie within <code>min</code>:<code>max</code>. Returns matrix with rows
 corresponding to parameters and columns to populations (i.e.,
 the same orientation as <code>theta</code>).</p><div class="section">
@@ -347,23 +347,23 @@ be set to a single value and no longer used in inference.</p><div class="section
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># Propose a new parameter point</span></span>
 <span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">propose</span><span class="op">(</span><span class="va">p</span>, type <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         p1       p2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> a 3.310146 1.522606</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> b 1.544781 1.275423</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> c 1.534013 1.534013</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> d 4.405263 4.405263</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         p1        p2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> a 4.756598 2.1083830</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> b 4.031700 0.2893295</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> c 4.353987 4.3539869</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> d 5.354746 5.3547459</span>
 <span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">propose</span><span class="op">(</span><span class="va">p</span>, type <span class="op">=</span> <span class="st">"fixed"</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         p1       p2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> a 2.000000 2.000000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> b 2.000000 2.000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> c 3.399685 3.399685</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> d 4.723285 4.723285</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> c 2.914049 2.914049</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> d 4.536640 4.536640</span>
 <span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">propose</span><span class="op">(</span><span class="va">p</span>, type <span class="op">=</span> <span class="st">"varied"</span><span class="op">)</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         p1        p2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> a 2.765317 0.3767839</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> b 3.993044 0.4856040</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> c 3.000000 3.0000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> d 4.000000 4.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         p1       p2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> a 2.900886 3.679160</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> b 1.787892 1.051676</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> c 3.000000 3.000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> d 4.000000 4.000000</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># Information about parameters:</span></span>
 <span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">names</span><span class="op">(</span><span class="op">)</span></span>
@@ -373,15 +373,15 @@ be set to a single value and no longer used in inference.</p><div class="section
 <span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">names</span><span class="op">(</span><span class="st">"varied"</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "a" "b"</span>
 <span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   name  min max discrete   type population</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    a -Inf Inf    FALSE varied         p1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    b -Inf Inf    FALSE varied         p1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3    c -Inf Inf    FALSE  fixed         p1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4    d -Inf Inf    FALSE  fixed         p1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5    a -Inf Inf    FALSE varied         p2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6    b -Inf Inf    FALSE varied         p2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7    c -Inf Inf    FALSE  fixed         p2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8    d -Inf Inf    FALSE  fixed         p2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   name  min max discrete integer   type population</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    a -Inf Inf    FALSE   FALSE varied         p1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    b -Inf Inf    FALSE   FALSE varied         p1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    c -Inf Inf    FALSE   FALSE  fixed         p1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    d -Inf Inf    FALSE   FALSE  fixed         p1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5    a -Inf Inf    FALSE   FALSE varied         p2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6    b -Inf Inf    FALSE   FALSE varied         p2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7    c -Inf Inf    FALSE   FALSE  fixed         p2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8    d -Inf Inf    FALSE   FALSE  fixed         p2</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># Compute log prior probability, per population</span></span>
 <span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">prior</span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span>

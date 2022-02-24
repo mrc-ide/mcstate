@@ -20,7 +20,7 @@ these together for use with pmcmc()."><meta property="og:image" content="/logo.p
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.0</span>
       </span>
     </div>
 
@@ -93,7 +93,8 @@ these together for use with <code><a href="pmcmc.html">pmcmc()</a></code>.</p>
   <span class="va">initial</span>,
   min <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>,
   max <span class="op">=</span> <span class="cn">Inf</span>,
-  discrete <span class="op">=</span> <span class="cn">FALSE</span>,
+  <span class="va">discrete</span>,
+  integer <span class="op">=</span> <span class="cn">FALSE</span>,
   prior <span class="op">=</span> <span class="cn">NULL</span>
 <span class="op">)</span></code></pre></div>
     </div>
@@ -120,8 +121,10 @@ is assumed for all populations.</p></dd>
 value. Must be either length <code>n_pop</code> or <code>1</code>, in which case the same value
 is assumed for all populations.</p></dd>
 <dt>discrete</dt>
+<dd><p>Deprecated; use <code>integer</code> instead.</p></dd>
+<dt>integer</dt>
 <dd><p>Logical, indicating if this parameter is
-discrete. If <code>TRUE</code> then the parameter will be rounded
+integer. If <code>TRUE</code> then the parameter will be rounded
 after a new parameter is proposed.</p></dd>
 <dt>prior</dt>
 <dd><p>A prior function (if not given an improper flat prior
@@ -140,7 +143,7 @@ populations.</p></dd>
 <span class="r-in">  initial <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">200</span><span class="op">)</span>,</span>
 <span class="r-in">  min <span class="op">=</span> <span class="fl">0</span>,</span>
 <span class="r-in">  max <span class="op">=</span> <span class="cn">Inf</span>,</span>
-<span class="r-in">  discrete <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span class="r-in">  integer <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span class="r-in">  prior <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">dnorm</span>, <span class="va">dexp</span><span class="op">)</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $Europe</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $name</span>
@@ -155,13 +158,13 @@ populations.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $max</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] Inf</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $discrete</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $integer</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $prior</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> function (x, mean = 0, sd = 1, log = FALSE) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> .Call(C_dnorm, x, mean, sd, log)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;bytecode: 0x7fc8c9cdf820&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;bytecode: 0x7f9b70310c00&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: namespace:stats&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
@@ -180,13 +183,13 @@ populations.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $max</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] Inf</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $discrete</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $integer</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $prior</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> function (x, rate = 1, log = FALSE) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> .Call(C_dexp, x, 1/rate, log)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;bytecode: 0x7fc8cf696b60&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;bytecode: 0x7f9b70ca8e10&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: namespace:stats&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>

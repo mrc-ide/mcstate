@@ -20,7 +20,7 @@ these together for use with smc2()."><meta property="og:image" content="/logo.pn
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.0</span>
       </span>
     </div>
 
@@ -87,7 +87,15 @@ these together for use with <code><a href="smc2.html">smc2()</a></code>.</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">smc2_parameter</span><span class="op">(</span><span class="va">name</span>, <span class="va">sample</span>, <span class="va">prior</span>, min <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>, max <span class="op">=</span> <span class="cn">Inf</span>, discrete <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">smc2_parameter</span><span class="op">(</span>
+  <span class="va">name</span>,
+  <span class="va">sample</span>,
+  <span class="va">prior</span>,
+  min <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>,
+  max <span class="op">=</span> <span class="cn">Inf</span>,
+  <span class="va">discrete</span>,
+  integer <span class="op">=</span> <span class="cn">FALSE</span>
+<span class="op">)</span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -100,7 +108,7 @@ representing the number of sampled to be returned. Typically
 this will be a <code>r</code> probability function corresponding to the
 sampling version of your prior (e.g., you might use <code>runif</code> and
 <code>dunif</code> for <code>sample</code> and <code>prior</code>). If you provide <code>min</code>, <code>max</code>
-or <code>discrete</code> you <em>must</em> ensure that your function returns
+or <code>integer</code> you <em>must</em> ensure that your function returns
 values that satisfy these constraints, as this is not (yet)
 checked.</p></dd>
 <dt>prior</dt>
@@ -115,8 +123,10 @@ value.</p></dd>
 <code>Inf</code>). If given, then <code>initial</code> must be at most this
 value.</p></dd>
 <dt>discrete</dt>
-<dd><p>Logical, indicating if this parameter is
-discrete. If <code>TRUE</code> then the parameter will be rounded
+<dd><p>Deprecated; use <code>integer</code> instead.</p></dd>
+<dt>integer</dt>
+<dd><p>Logical, indicating if this parameter is an
+integer. If <code>TRUE</code> then the parameter will be rounded
 after a new parameter is proposed.</p></dd>
 </dl></div>
 
@@ -130,11 +140,11 @@ after a new parameter is proposed.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $sample</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> function(n) rnorm(n)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x7fc8cb159a88&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x7f9b754a1db8&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $prior</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> function(x) dnorm(n, log = TRUE)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x7fc8cb159a88&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x7f9b754a1db8&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $min</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] -Inf</span>
@@ -142,7 +152,7 @@ after a new parameter is proposed.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $max</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] Inf</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $discrete</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $integer</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>

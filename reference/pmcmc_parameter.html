@@ -20,7 +20,7 @@ these together for use with pmcmc()."><meta property="og:image" content="/logo.p
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.0</span>
       </span>
     </div>
 
@@ -92,7 +92,8 @@ these together for use with <code><a href="pmcmc.html">pmcmc()</a></code>.</p>
   <span class="va">initial</span>,
   min <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>,
   max <span class="op">=</span> <span class="cn">Inf</span>,
-  discrete <span class="op">=</span> <span class="cn">FALSE</span>,
+  <span class="va">discrete</span>,
+  integer <span class="op">=</span> <span class="cn">FALSE</span>,
   prior <span class="op">=</span> <span class="cn">NULL</span>
 <span class="op">)</span></code></pre></div>
     </div>
@@ -112,8 +113,10 @@ value.</p></dd>
 <code>Inf</code>). If given, then <code>initial</code> must be at most this
 value.</p></dd>
 <dt>discrete</dt>
+<dd><p>Deprecated; use <code>integer</code> instead.</p></dd>
+<dt>integer</dt>
 <dd><p>Logical, indicating if this parameter is
-discrete. If <code>TRUE</code> then the parameter will be rounded
+integer. If <code>TRUE</code> then the parameter will be rounded
 after a new parameter is proposed.</p></dd>
 <dt>prior</dt>
 <dd><p>A prior function (if not given an improper flat prior
@@ -137,14 +140,14 @@ then <code>prior(initial)</code> must evaluate to a finite value.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $max</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] Inf</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $discrete</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $integer</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $prior</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> function (p) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;bytecode: 0x7fc8ccfcc720&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x7fc8ccfcbb18&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;bytecode: 0x7f9b74b8ae68&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x7f9b74b8a1b8&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "pmcmc_parameter"</span>

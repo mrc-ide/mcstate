@@ -21,7 +21,7 @@ used."><meta property="og:image" content="/logo.png"><!-- mathjax --><script src
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.8.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.0</span>
       </span>
     </div>
 
@@ -162,7 +162,7 @@ vector</p><div class="section">
 </div><p></p><hr><a id="method-summary"></a><div class="section">
 <h3 id="method-summary-">Method <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code><a class="anchor" aria-label="anchor" href="#method-summary-"></a></h3>
 <p>Return a <code>data.frame</code> with information about
-parameters (name, min, max, and discrete).</p><div class="section">
+parameters (name, min, max, and integer).</p><div class="section">
 <h4 id="usage-3">Usage<a class="anchor" aria-label="anchor" href="#usage-3"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span><span class="op">)</span></code></pre></div><p></p></div>
 </div>
@@ -190,7 +190,7 @@ parameters were defined in (see <code>$names()</code> for that order.</p></dd>
 <p>Propose a new parameter vector given a current parameter
 vector. This proposes a new parameter vector given your current
 vector and the variance-covariance matrix of your proposal
-kernel, discretises any discrete values, and reflects bounded
+kernel, rounds any integer values, and reflects bounded
 parameters until they lie within <code>min</code>:<code>max</code>.</p><div class="section">
 <h4 id="usage-5">Usage<a class="anchor" aria-label="anchor" href="#usage-5"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">propose</span><span class="op">(</span><span class="va">theta</span>, scale <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></code></pre></div><p></p></div>
@@ -270,15 +270,15 @@ reduce the dimensionality of your system.</p><div class="section">
 <span class="r-in"><span class="co"># Propose a new parameter point</span></span>
 <span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">propose</span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          a          b </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  0.1655955 -1.0393770 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  0.8991840 -0.1020381 </span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># Information about parameters:</span></span>
 <span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">names</span><span class="op">(</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "a" "b"</span>
 <span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   name  min max discrete</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    a    0   1    FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    b -Inf Inf    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   name  min max discrete integer</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    a    0   1    FALSE   FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    b -Inf Inf    FALSE   FALSE</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># Compute prior</span></span>
 <span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">prior</span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span>
