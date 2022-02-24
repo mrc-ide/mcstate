@@ -145,7 +145,7 @@ test_that("run pmcmc with the particle filter and retain history", {
   expect_equal(dim(results1$trajectories$state), c(3, 30, 101))
   expect_equal(
     results1$trajectories$state[, , dim(results1$trajectories$state)[3]],
-    results1$state[1:3,])
+    results1$state[1:3, ])
   expect_equal(results1$trajectories$predicted, rep(FALSE, 101))
   expect_equal(results1$trajectories$step, seq(0, 400, by = 4))
   expect_equal(results1$trajectories$rate, 4)
@@ -219,7 +219,7 @@ test_that("run multiple chains", {
   expect_s3_class(res3, "mcstate_pmcmc")
   expect_equal(res3$chain, rep(1:3, each = 100))
 
-  expect_equal(res1$pars, res3$pars[1:100,])
+  expect_equal(res1$pars, res3$pars[1:100, ])
 })
 
 
@@ -296,14 +296,17 @@ test_that("can validate a vector of initial conditions", {
   expect_error(pmcmc_check_initial(1.1, pars, 1),
                "'initial' must be an integer but was not (chain 1)",
                fixed = TRUE)
-  expect_error(pmcmc_check_initial(c(-2, 1), dat$pars, 1),
-               "'initial' is less than 'min' (-1, -1) (chain 1)",
+  expect_error(pmcmc_check_initial(c(-1, 1), dat$pars, 1),
+               "'initial' is less than 'min' (0, 0) (chain 1)",
                fixed = TRUE)
   expect_error(pmcmc_check_initial(c(0, 1.1), dat$pars, 1),
                "'initial' is greater than 'max' (1, 1) (chain 1)",
                fixed = TRUE)
-  expect_error(pmcmc_check_initial(c(-0.1, 0.2), dat$pars, 1),
-               "Starting point does not have finite prior probability (chain 1)",
+  a <- pmcmc_parameter("a", 1,
+                           prior = function(p) if (p > 1) Inf else p)
+  pars <- pmcmc_parameters$new(list(a), diag(1) * 0.1)
+  expect_error(pmcmc_check_initial(2, pars, 1),
+               "Starting point does not have finite prior probability",
                fixed = TRUE)
 })
 
@@ -335,9 +338,17 @@ test_that("can validate a matrix initial conditions", {
     "Expected names of dimension 1 of 'initial' to match parameters ('a', 'b')",
     fixed = TRUE)
 
+  a <- pmcmc_parameter("a", 1, integer = TRUE)
+  b <- pmcmc_parameter("b", 1)
+  pars <- pmcmc_parameters$new(list(a, b), diag(2) * 0.1)
+  m <- matrix(c(1, 2, 3.3, 4, 5, 6.6, 7, 8, 9, 1), 2, 5)
+  expect_error(pmcmc_check_initial(m, pars, 5),
+               "'initial' must be an integer but was not (chain 2)",
+               fixed = TRUE)
+
   m <- matrix(c(-1.1, 0.2, 0.3, -1.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1), 2, 5)
   expect_error(pmcmc_check_initial(m, dat$pars, 5),
-               "'initial' is less than 'min' (-1, -1) (chain 1, 2)",
+               "'initial' is less than 'min' (0, 0) (chain 1, 2)",
                fixed = TRUE)
 
   m <- matrix(c(0.1, 0.2, 0.3, 1.4, 0.5, 0.6, 0.7, 0.8, 1.9, 1), 2, 5)
@@ -345,13 +356,16 @@ test_that("can validate a matrix initial conditions", {
                "'initial' is greater than 'max' (1, 1) (chain 2, 5)",
                fixed = TRUE)
 
-  m <- matrix(runif(10), 2, 5)
-  i <- cbind(c(2, 1, 2), c(2, 4, 5))
-  m[i] <- -m[i]
-  expect_error(
-    pmcmc_check_initial(m, dat$pars, 5),
-    "Starting point does not have finite prior probability (chain 2, 4, 5)",
-    fixed = TRUE)
+  m <- matrix(c(0.1, 0.2, 3, 0.4, 0.5, 0.6, 7, 0.8, 9, 1), 2, 5)
+  a <- pmcmc_parameter("a", 1,
+                       prior = function(p) if (p > 1) Inf else p)
+  b <- pmcmc_parameter("b", 1,
+                       prior = function(p) if (p > 1) Inf else p)
+  pars <- pmcmc_parameters$new(list(a, b), diag(2) * 0.1)
+  e <- "Starting point does not have finite prior probability (chain 2, 4, 5)"
+  expect_error(pmcmc_check_initial(m, pars, 5),
+               e,
+               fixed = TRUE)
 })
 
 
@@ -376,7 +390,7 @@ test_that("can start a pmcmc from a matrix of starting points", {
   control <- pmcmc_control(2, n_chains = 3)
   res <- pmcmc(pars, p, control = control, initial = initial)
 
-  expect_equal(nrow(unique(res$pars[res$iteration == 1,])), 3)
+  expect_equal(nrow(unique(res$pars[res$iteration == 1, ])), 3)
 })
 
 
@@ -503,7 +517,7 @@ test_that("can restart the mcmc using saved state", {
   ## values
   expect_equal(dim(res1$restart$state), c(5, 50, 1))
   s <- res1$restart$state[, , 1]
-  d2 <- dat$data[dat$data$day_start >= 40,]
+  d2 <- dat$data[dat$data$day_start >= 40, ]
 
   initial2 <- particle_filter_initial(s)
   p2 <- particle_filter$new(d2, dat$model, n_particles, dat$compare,
