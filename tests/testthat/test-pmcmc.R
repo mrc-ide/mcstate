@@ -291,6 +291,11 @@ test_that("can validate a vector of initial conditions", {
   expect_error(pmcmc_check_initial(c(x = 0.1, y = 0.2), dat$pars, 1),
                "Expected names of 'initial' to match parameters ('a', 'b')",
                fixed = TRUE)
+  a <- pmcmc_parameter("a", 1, integer = TRUE)
+  pars <- pmcmc_parameters$new(list(a), diag(1) * 0.1)
+  expect_error(pmcmc_check_initial(1.1, pars, 1),
+               "'initial' must be an integer but was not (chain 1)",
+               fixed = TRUE)
   expect_error(pmcmc_check_initial(c(-2, 1), dat$pars, 1),
                "'initial' is less than 'min' (-1, -1) (chain 1)",
                fixed = TRUE)

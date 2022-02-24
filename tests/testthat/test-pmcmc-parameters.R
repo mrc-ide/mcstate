@@ -39,6 +39,14 @@ test_that("parameter initial point must lie in range", {
 })
 
 
+test_that("parameter initial point must agree with 'integer' argument'", {
+  expect_silent(pmcmc_parameter("a", 1, integer = TRUE))
+  expect_silent(pmcmc_parameter("a", 1.1, integer = FALSE))
+  expect_error(pmcmc_parameter("a", 1.1,  integer = TRUE),
+               "'initial' must be an integer but was 1.1", fixed = TRUE)
+})
+
+
 test_that("initial value must satify prior and not fail", {
   expect_silent(
     pmcmc_parameter("a", 10, prior = log))

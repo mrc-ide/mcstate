@@ -144,6 +144,14 @@ pmcmc_check_initial_simple <- function(initial, pars, n_chains) {
   }
 
   summary <- pars$summary()
+  ok <- apply(initial, 2,
+              function(p) all(round(p) == p | !summary$integer))
+  if (!any(ok)) {
+    stop(sprintf(
+      "'initial' must be an integer but was not (chain %s)",
+      paste(which(!ok), collapse = ", ")))
+  }
+
   ok <- apply(initial, 2, function(p) all(p >= summary$min))
   if (any(!ok)) {
     stop(sprintf(
