@@ -89,6 +89,7 @@ test_that("pmcmc_check_initial_nested - error matrix initial", {
 
 
 test_that("pmcmc nested Uniform on unit square - fixed only", {
+  testthat::skip_if_not_installed("coda")
   dat <- example_uniform_shared(varied = FALSE)
   control <- pmcmc_control(200, save_state = FALSE, save_trajectories = FALSE)
 
@@ -106,6 +107,7 @@ test_that("pmcmc nested Uniform on unit square - fixed only", {
 
 
 test_that("pmcmc nested Uniform on unit square - varied only", {
+  testthat::skip_if_not_installed("coda")
   dat <- example_uniform_shared(fixed = FALSE)
   control <- pmcmc_control(200, save_state = FALSE, save_trajectories = FALSE)
 
@@ -123,6 +125,7 @@ test_that("pmcmc nested Uniform on unit square - varied only", {
 
 
 test_that("pmcmc nested Uniform on unit square", {
+  testthat::skip_if_not_installed("coda")
   dat <- example_uniform_shared()
   control <- pmcmc_control(201, save_state = FALSE, save_trajectories = FALSE)
 

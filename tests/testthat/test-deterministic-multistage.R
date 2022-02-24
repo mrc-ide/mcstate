@@ -64,6 +64,7 @@ test_that("An effectless multistage filter is identical to single stage", {
 
 
 test_that("multistage, dimension changing, model agrees with single stage", {
+  testthat::skip_if_not_installed("odin.dust")
   dat <- example_variable()
   new_filter <- function() {
     set.seed(1)
@@ -128,6 +129,7 @@ test_that("multistage, dimension changing, model agrees with single stage", {
 
 
 test_that("Can't save restart when size changes", {
+  testthat::skip_if_not_installed("odin.dust")
   dat <- example_variable()
 
   ## There's going to be some work here to update this so that it's
@@ -167,6 +169,7 @@ test_that("Can't save restart when size changes", {
 
 
 test_that("Confirm deterministic nested multistage is correct", {
+  testthat::skip_if_not_installed("odin.dust")
   dat <- example_variable()
 
   ## We need some multipopulation data here:
@@ -247,6 +250,7 @@ test_that("Confirm deterministic nested multistage is correct", {
 
 
 test_that("Can run multistage with compiled", {
+  testthat::skip_if_not_installed("odin.dust")
   dat <- example_variable()
 
   ## We need some multipopulation data here:
@@ -298,6 +302,7 @@ test_that("Can run multistage with compiled", {
 
 
 test_that("multistage model does not reuse data after initialisation", {
+  testthat::skip_if_not_installed("odin.dust")
   dat <- example_variable()
   pars_base <- list(len = 10)
   epochs <- list(
