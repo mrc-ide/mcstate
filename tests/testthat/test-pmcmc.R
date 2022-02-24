@@ -5,6 +5,7 @@ context("pmcmc")
 ## sampler should be ok to run for ~10k iterations without taking too
 ## long to be annoying in tests.
 test_that("mcmc works for uniform distribution on unit square", {
+  testthat::skip_if_not_installed("coda")
   dat <- example_uniform()
   control <- pmcmc_control(1000, save_state = FALSE, save_trajectories = FALSE)
 
@@ -74,6 +75,7 @@ test_that("reflect parameters: upper", {
 
 
 test_that("proposal uses provided covariance structure", {
+  testthat::skip_if_not_installed("coda")
   dat <- example_uniform(proposal_kernel = matrix(0.1, 2, 2))
   control <- pmcmc_control(100, save_state = FALSE, save_trajectories = FALSE)
   res <- pmcmc(dat$pars, dat$filter, control = control)
@@ -84,6 +86,7 @@ test_that("proposal uses provided covariance structure", {
 
 
 test_that("run pmcmc with the particle filter and retain history", {
+  testthat::skip_if_not_installed("coda")
   proposal_kernel <- diag(2) * 1e-4
   row.names(proposal_kernel) <- colnames(proposal_kernel) <- c("beta", "gamma")
 

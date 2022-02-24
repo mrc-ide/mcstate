@@ -1,15 +1,24 @@
 context("IF2 (parameters)")
 
 test_that("can construct a parameter", {
-  p <- if2_parameter("a", 0.1, min = 0, max = 1)
+  p <- if2_parameter("a", 0.1, min = 0, max = 1, integer = TRUE)
 
   expect_s3_class(p, "if2_parameter")
   expect_equal(p$name, "a")
   expect_equal(p$min, 0)
   expect_equal(p$max, 1)
   expect_equal(p$initial, 0.1)
-  expect_false(p$discrete)
+  expect_true(p$integer)
   expect_equal(p$prior(), 0)
+})
+
+
+test_that("Can use 'discrete' argument but deprecation warning is shown", {
+  expect_warning(p <- p <- if2_parameter("a", 0.1, min = 0, max = 1,
+                                         discrete = TRUE),
+                 "'discrete' is deprecated.\nUse 'integer' instead.")
+  expect_s3_class(p, "if2_parameter")
+  expect_equal(p$integer, TRUE)
 })
 
 
@@ -44,7 +53,7 @@ test_that("can construct and walk a set of parameters", {
   pars <- if2_parameters$new(
             list(if2_parameter("beta", 0.15, min = 0.1, max = 2),
                  if2_parameter("gamma", 0.05, min = 0, max = 1),
-                 if2_parameter("time", 10, discrete = TRUE)))
+                 if2_parameter("time", 10, integer = TRUE)))
   expect_s3_class(pars, "if2_parameters")
   expect_equal(pars$names(), c("beta", "gamma", "time"))
   expect_equal(pars$initial(), c("beta" = 0.15, "gamma" = 0.05, "time" = 10))
@@ -52,7 +61,8 @@ test_that("can construct and walk a set of parameters", {
                data_frame(name = c("beta", "gamma", "time"),
                           min = c(0.1, 0, -Inf),
                           max = c(2, 1, Inf),
-                          discrete = c(FALSE, FALSE, TRUE)))
+                          discrete = c(FALSE, FALSE, TRUE),
+                          integer = c(FALSE, FALSE, TRUE)))
 
   n_pars <- length(pars$names())
   n_par_sets <- 5

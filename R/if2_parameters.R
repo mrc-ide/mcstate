@@ -17,8 +17,12 @@
 ##'   `Inf`). If given, then `initial` must be at most this
 ##'   value.
 ##'
-##' @param discrete Logical, indicating if this parameter is
+##' @param discrete Deprecated. Logical, indicating if this parameter is
 ##'   discrete. If `TRUE` then the parameter will be rounded
+##'   after a new parameter is proposed.
+##'
+##' @param integer Logical, indicating if this parameter is
+##'   integer. If `TRUE` then the parameter will be rounded
 ##'   after a new parameter is proposed.
 ##'
 ##' @param prior A prior function (if not given an improper flat prior
@@ -30,10 +34,15 @@
 ##' @examples
 ##' mcstate::if2_parameter("a", 0.1)
 if2_parameter <- function(name, initial,
-                          min = -Inf, max = Inf, discrete = FALSE,
+                          min = -Inf, max = Inf, discrete,
+                          integer = FALSE,
                           prior = NULL) {
+  if (!missing(discrete)) {
+    .Deprecated("integer", old = "discrete")
+    integer <- discrete
+  }
   assert_scalar_character(name)
-  assert_scalar_logical(discrete)
+  assert_scalar_logical(integer)
 
   if (initial < min) {
     stop(sprintf("'initial' must be >= 'min' (%s)", min))
@@ -59,7 +68,7 @@ if2_parameter <- function(name, initial,
   }
 
   ret <- list(name = name, initial = initial, min = min, max = max,
-              discrete = discrete, prior = prior)
+              integer = integer, prior = prior)
   class(ret) <- "if2_parameter"
   ret
 }
@@ -110,7 +119,7 @@ if2_parameters <- R6::R6Class(
   private = list(
     parameters = NULL,
     transform = NULL,
-    discrete = NULL,
+    integer = NULL,
     min = NULL,
     max = NULL
   ),
@@ -141,7 +150,7 @@ if2_parameters <- R6::R6Class(
       private$parameters <- parameters
       private$transform <- transform
 
-      private$discrete <- vlapply(private$parameters, "[[", "discrete",
+      private$integer <- vlapply(private$parameters, "[[", "integer",
                                   USE.NAMES = FALSE)
       private$min <- vnapply(private$parameters, "[[", "min",
                              USE.NAMES = FALSE)
@@ -185,7 +194,7 @@ if2_parameters <- R6::R6Class(
       for (par_idx in seq_len(length(private$parameters))) {
         pars[par_idx, ] <-
           rnorm(n_par_sets, pars[par_idx, ], pars_sd[[par_idx]])
-        if (private$discrete[par_idx]) {
+        if (private$integer[par_idx]) {
           pars[par_idx, ] <- vnapply(pars[par_idx, ], round)
         }
         pars[par_idx, pars[par_idx, ] < private$min[par_idx]] <-
@@ -203,12 +212,13 @@ if2_parameters <- R6::R6Class(
     },
 
     ##' @description Return a [`data.frame`] with information about
-    ##' parameters (name, min, max, and discrete).
+    ##' parameters (name, min, max, and integer).
     summary = function() {
       data_frame(name = self$names(),
                  min = private$min,
                  max = private$max,
-                 discrete = private$discrete)
+                 discrete = private$integer,
+                 integer = private$integer)
     },
 
     ##' @description Compute the prior for a parameter vector

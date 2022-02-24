@@ -110,7 +110,7 @@ Return the names of the parameters
 \if{latex}{\out{\hypertarget{method-summary}{}}}
 \subsection{Method \code{summary()}}{
 Return a \code{data.frame} with information about
-parameters (name, min, max, and discrete).
+parameters (name, min, max, and integer).
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters$summary()}\if{html}{\out{</div>}}
 }
@@ -141,7 +141,7 @@ parameters were defined in (see \verb{$names()} for that order.}
 Propose a new parameter vector given a current parameter
 vector. This proposes a new parameter vector given your current
 vector and the variance-covariance matrix of your proposal
-kernel, discretises any discrete values, and reflects bounded
+kernel, rounds any integer values, and reflects bounded
 parameters until they lie within \code{min}:\code{max}.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters$propose(theta, scale = 1)}\if{html}{\out{</div>}}
