@@ -162,7 +162,7 @@ fixed parameters are same across all populations.
 \if{latex}{\out{\hypertarget{method-summary}{}}}
 \subsection{Method \code{summary()}}{
 Return a \code{data.frame} with information about
-parameters (name, min, max, discrete, type (fixed or varied)
+parameters (name, min, max, integer, type (fixed or varied)
 and population)
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters_nested$summary()}\if{html}{\out{</div>}}
@@ -205,7 +205,7 @@ named vector with names corresponding to populations.
 \subsection{Method \code{propose()}}{
 This proposes a new parameter matrix given your current
 matrix and the variance-covariance matrices of the proposal
-kernels, discretises any discrete values, and reflects bounded
+kernels, rounds any integer values, and reflects bounded
 parameters until they lie within \code{min}:\code{max}. Returns matrix with rows
 corresponding to parameters and columns to populations (i.e.,
 the same orientation as \code{theta}).

@@ -7,8 +7,17 @@ test_that("Can construct a parameter", {
   expect_equal(p$initial, 1)
   expect_equal(p$min, 0)
   expect_equal(p$max, 10)
-  expect_false(p$discrete)
+  expect_false(p$integer)
   expect_equal(p$prior(1), 0)
+})
+
+
+test_that("Can use 'discrete' argument but deprecation warning is shown", {
+  expect_warning(p <- pmcmc_parameter("a", 1, 0, 10,
+                                      discrete = TRUE),
+                 "'discrete' is deprecated.\nUse 'integer' instead.")
+  expect_s3_class(p, "pmcmc_parameter")
+  expect_true(p$integer)
 })
 
 
@@ -209,7 +218,8 @@ test_that("can summarise parameters", {
   expect_equal(p$names(), c("beta", "gamma"))
   expect_equal(
     p$summary(),
-    data_frame(name = c("beta", "gamma"), min = 0, max = 1, discrete = FALSE))
+    data_frame(name = c("beta", "gamma"), min = 0, max = 1, discrete = FALSE,
+               integer = FALSE))
 })
 
 

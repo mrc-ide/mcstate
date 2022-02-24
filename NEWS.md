@@ -1,3 +1,7 @@
+# mcstate 0.9.0
+
+* Deprecated 'discrete' argument to parameters in favour of 'integer' - affects `if2_parameter`, `pmcmc_parameter`, `pmcmc_varied_parameter`, `smc2_parameter` 
+
 # mcstate 0.8.4
 
 * Compiled compare functions now supported in more places - `particle_deterministic` and multistage models (#177)

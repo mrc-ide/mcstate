@@ -149,7 +149,7 @@ pmcmc_parameters_nested <- R6::R6Class(
     },
 
     ##' @description Return a `data.frame` with information about
-    ##' parameters (name, min, max, discrete, type (fixed or varied)
+    ##' parameters (name, min, max, integer, type (fixed or varied)
     ##' and population)
     summary = function() {
       populations <- self$populations()
@@ -229,7 +229,7 @@ pmcmc_parameters_nested <- R6::R6Class(
 
     ##' @description This proposes a new parameter matrix given your current
     ##' matrix and the variance-covariance matrices of the proposal
-    ##' kernels, discretises any discrete values, and reflects bounded
+    ##' kernels, rounds any integer values, and reflects bounded
     ##' parameters until they lie within `min`:`max`. Returns matrix with rows
     ##' corresponding to parameters and columns to populations (i.e.,
     ##' the same orientation as `theta`).

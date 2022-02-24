@@ -150,7 +150,7 @@ Return the names of the parameters
 \if{latex}{\out{\hypertarget{method-summary}{}}}
 \subsection{Method \code{summary()}}{
 Return a \code{\link{data.frame}} with information about
-parameters (name, min, max, and discrete).
+parameters (name, min, max, and integer).
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{if2_parameters$summary()}\if{html}{\out{</div>}}
 }

@@ -83,7 +83,7 @@ Return the names of the parameters
 \if{latex}{\out{\hypertarget{method-summary}{}}}
 \subsection{Method \code{summary()}}{
 Return a \code{data.frame} with information about
-parameters (name, min, max, and discrete).
+parameters (name, min, max, and integer).
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{smc2_parameters$summary()}\if{html}{\out{</div>}}
 }
@@ -112,8 +112,8 @@ parameters were defined in (see \verb{$names()} for that order.}
 \if{latex}{\out{\hypertarget{method-propose}{}}}
 \subsection{Method \code{propose()}}{
 Propose a new parameter vector given a current parameter
-vector and variance covariance matrix. After proposal, this discretises
-any discrete values, and reflects bounded parameters until they lie
+vector and variance covariance matrix. After proposal, this rounds
+any integer values, and reflects bounded parameters until they lie
 within \code{min}:\code{max}.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{smc2_parameters$propose(theta, vcv)}\if{html}{\out{</div>}}

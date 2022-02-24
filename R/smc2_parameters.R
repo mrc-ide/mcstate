@@ -12,7 +12,7 @@
 ##'   this will be a `r` probability function corresponding to the
 ##'   sampling version of your prior (e.g., you might use `runif` and
 ##'   `dunif` for `sample` and `prior`). If you provide `min`, `max`
-##'   or `discrete` you *must* ensure that your function returns
+##'   or `integer` you *must* ensure that your function returns
 ##'   values that satisfy these constraints, as this is not (yet)
 ##'   checked.
 ##'
@@ -27,8 +27,10 @@
 ##'   `Inf`). If given, then `initial` must be at most this
 ##'   value.
 ##'
-##' @param discrete Logical, indicating if this parameter is
-##'   discrete. If `TRUE` then the parameter will be rounded
+##' @param discrete Deprecated; use `integer` instead.
+##'
+##' @param integer Logical, indicating if this parameter is an
+##'   integer. If `TRUE` then the parameter will be rounded
 ##'   after a new parameter is proposed.
 ##'
 ##' @export
@@ -37,9 +39,13 @@
 ##'                         function(n) rnorm(n),
 ##'                         function(x) dnorm(n, log = TRUE))
 smc2_parameter <- function(name, sample, prior,
-                           min = -Inf, max = Inf, discrete = FALSE) {
+                           min = -Inf, max = Inf, discrete, integer = FALSE) {
+  if (!missing(discrete)) {
+    .Deprecated("integer", old = "discrete")
+    integer <- discrete
+  }
   assert_scalar_character(name)
-  assert_scalar_logical(discrete)
+  assert_scalar_logical(integer)
   assert_is(sample, "function")
   assert_is(prior, "function")
 
@@ -56,7 +62,7 @@ smc2_parameter <- function(name, sample, prior,
   ## but it's not going to be a massive timesink, and it would clean
   ## up the interface nicely.
   ret <- list(name = name, sample = sample, prior = prior,
-              min = min, max = max, discrete = discrete)
+              min = min, max = max, integer = integer)
   class(ret) <- "smc2_parameter"
   ret
 }
@@ -78,12 +84,12 @@ smc2_parameters <- R6::R6Class(
   private = list(
     parameters = NULL,
     transform = NULL,
-    discrete = NULL,
+    integer = NULL,
     min = NULL,
     max = NULL,
 
     constrain_parameters = function(theta) {
-      theta[, private$discrete] <- round(theta[, private$discrete])
+      theta[, private$integer] <- round(theta[, private$integer])
       min <- rep(private$min, each = nrow(theta))
       max <- rep(private$max, each = nrow(theta))
       theta[] <- reflect_proposal(theta, min, max)
@@ -117,7 +123,7 @@ smc2_parameters <- R6::R6Class(
       private$parameters <- parameters
       private$transform <- transform
 
-      private$discrete <- vlapply(private$parameters, "[[", "discrete",
+      private$integer <- vlapply(private$parameters, "[[", "integer",
                                   USE.NAMES = FALSE)
       private$min <- vnapply(private$parameters, "[[", "min",
                              USE.NAMES = FALSE)
@@ -140,12 +146,13 @@ smc2_parameters <- R6::R6Class(
     },
 
     ##' @description Return a `data.frame` with information about
-    ##' parameters (name, min, max, and discrete).
+    ##' parameters (name, min, max, and integer).
     summary = function() {
       data_frame(name = self$names(),
                  min = private$min,
                  max = private$max,
-                 discrete = private$discrete)
+                 discrete = private$integer,
+                 integer = private$integer)
     },
 
     ##' @description Compute the prior for a parameter vector
@@ -163,8 +170,8 @@ smc2_parameters <- R6::R6Class(
     },
 
     ##' @description Propose a new parameter vector given a current parameter
-    ##' vector and variance covariance matrix. After proposal, this discretises
-    ##' any discrete values, and reflects bounded parameters until they lie
+    ##' vector and variance covariance matrix. After proposal, this rounds
+    ##' any integer values, and reflects bounded parameters until they lie
     ##' within `min`:`max`.
     ##'
     ##' @param theta a parameter vector in the same order as your

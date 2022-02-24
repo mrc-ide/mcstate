@@ -17,8 +17,10 @@
 ##'   `Inf`). If given, then `initial` must be at most this
 ##'   value.
 ##'
-##' @param discrete Logical, indicating if this parameter is
-##'   discrete. If `TRUE` then the parameter will be rounded
+##' @param discrete  Deprecated; use `integer` instead.
+##'
+##' @param integer Logical, indicating if this parameter is
+##'   integer. If `TRUE` then the parameter will be rounded
 ##'   after a new parameter is proposed.
 ##'
 ##' @param prior A prior function (if not given an improper flat prior
@@ -30,9 +32,13 @@
 ##' @examples
 ##' pmcmc_parameter("a", 0.1)
 pmcmc_parameter <- function(name, initial, min = -Inf, max = Inf,
-                            discrete = FALSE, prior = NULL) {
+                            discrete, integer = FALSE, prior = NULL) {
+  if (!missing(discrete)) {
+    .Deprecated("integer", old = "discrete")
+    integer <- discrete
+  }
   assert_scalar_character(name)
-  assert_scalar_logical(discrete)
+  assert_scalar_logical(integer)
 
   if (initial < min) {
     stop(sprintf("'initial' must be >= 'min' (%s)", min))
@@ -59,7 +65,7 @@ pmcmc_parameter <- function(name, initial, min = -Inf, max = Inf,
   }
 
   ret <- list(name = name, initial = initial, min = min, max = max,
-              discrete = discrete, prior = prior)
+              integer = integer, prior = prior)
   class(ret) <- "pmcmc_parameter"
   ret
 }
@@ -107,7 +113,7 @@ pmcmc_parameters <- R6::R6Class(
     proposal = NULL,
     proposal_kernel = NULL,
     transform = NULL,
-    discrete = NULL,
+    integer = NULL,
     min = NULL,
     max = NULL
   ),
@@ -164,7 +170,7 @@ pmcmc_parameters <- R6::R6Class(
       private$proposal <- rmvnorm_generator(proposal)
       private$transform <- transform
 
-      private$discrete <- vlapply(private$parameters, "[[", "discrete",
+      private$integer <- vlapply(private$parameters, "[[", "integer",
                                   USE.NAMES = FALSE)
       private$min <- vnapply(private$parameters, "[[", "min",
                              USE.NAMES = FALSE)
@@ -184,12 +190,13 @@ pmcmc_parameters <- R6::R6Class(
     },
 
     ##' @description Return a `data.frame` with information about
-    ##' parameters (name, min, max, and discrete).
+    ##' parameters (name, min, max, and integer).
     summary = function() {
       data_frame(name = self$names(),
                  min = private$min,
                  max = private$max,
-                 discrete = private$discrete)
+                 discrete = private$integer,
+                 integer = private$integer)
     },
 
     ##' @description Compute the prior for a parameter vector
@@ -204,7 +211,7 @@ pmcmc_parameters <- R6::R6Class(
     ##' @description Propose a new parameter vector given a current parameter
     ##' vector. This proposes a new parameter vector given your current
     ##' vector and the variance-covariance matrix of your proposal
-    ##' kernel, discretises any discrete values, and reflects bounded
+    ##' kernel, rounds any integer values, and reflects bounded
     ##' parameters until they lie within `min`:`max`.
     ##'
     ##' @param theta a parameter vector in the same order as your
@@ -216,7 +223,7 @@ pmcmc_parameters <- R6::R6Class(
     ##' applied to the variance covariance matrix.
     propose = function(theta, scale = 1) {
       theta <- private$proposal(theta, scale)
-      theta[private$discrete] <- round(theta[private$discrete])
+      theta[private$integer] <- round(theta[private$integer])
       reflect_proposal(theta, private$min, private$max)
     },
 

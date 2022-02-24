@@ -10,7 +10,8 @@ pmcmc_varied_parameter(
   initial,
   min = -Inf,
   max = Inf,
-  discrete = FALSE,
+  discrete,
+  integer = FALSE,
   prior = NULL
 )
 }
@@ -34,8 +35,10 @@ is assumed for all populations.}
 value. Must be either length \code{n_pop} or \code{1}, in which case the same value
 is assumed for all populations.}
 
-\item{discrete}{Logical, indicating if this parameter is
-discrete. If \code{TRUE} then the parameter will be rounded
+\item{discrete}{Deprecated; use \code{integer} instead.}
+
+\item{integer}{Logical, indicating if this parameter is
+integer. If \code{TRUE} then the parameter will be rounded
 after a new parameter is proposed.}
 
 \item{prior}{A prior function (if not given an improper flat prior
@@ -58,6 +61,6 @@ mcstate::pmcmc_varied_parameter(
   initial = c(100, 200),
   min = 0,
   max = Inf,
-  discrete = TRUE,
+  integer = TRUE,
   prior = list(dnorm, dexp))
 }
