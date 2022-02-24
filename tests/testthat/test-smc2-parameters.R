@@ -7,18 +7,29 @@ test_that("can construct a parameter", {
   p <- smc2_parameter("a",
                      function(n) runif(n, 0, 10),
                      function(x) dunif(x, 0, 10, log = TRUE),
-                     min = 0, max = 10)
+                     min = 0, max = 10, integer = TRUE)
 
   expect_s3_class(p, "smc2_parameter")
   expect_equal(p$name, "a")
   expect_equal(p$min, 0)
   expect_equal(p$max, 10)
-  expect_false(p$integer)
+  expect_true(p$integer)
   expect_equal(p$prior(1), log(0.1))
   set.seed(1)
   res <- p$sample(20)
   set.seed(1)
   expect_equal(res, runif(20, 0, 10))
+})
+
+
+test_that("Can use 'discrete' argument but deprecation warning is shown", {
+  expect_warning(p <- smc2_parameter("a",
+                                     function(n) runif(n, 0, 10),
+                                     function(x) dunif(x, 0, 10, log = TRUE),
+                                     min = 0, max = 10, discrete = TRUE),
+                 "'discrete' is deprecated.\nUse 'integer' instead.")
+  expect_s3_class(p, "smc2_parameter")
+  expect_equal(p$integer, TRUE)
 })
 
 
@@ -50,6 +61,7 @@ test_that("can construct a set of parameters", {
                data_frame(name = c("beta", "gamma"),
                           min = c(0, 1),
                           max = c(10, 2),
+                          discrete = FALSE,
                           integer = FALSE))
 })
 

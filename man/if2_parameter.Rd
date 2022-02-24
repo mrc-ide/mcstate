@@ -9,7 +9,8 @@ if2_parameter(
   initial,
   min = -Inf,
   max = Inf,
-  discrete = FALSE,
+  discrete,
+  integer = FALSE,
   prior = NULL
 )
 }
@@ -26,8 +27,12 @@ value.}
 \code{Inf}). If given, then \code{initial} must be at most this
 value.}
 
-\item{discrete}{Logical, indicating if this parameter is
+\item{discrete}{Deprecated. Logical, indicating if this parameter is
 discrete. If \code{TRUE} then the parameter will be rounded
+after a new parameter is proposed.}
+
+\item{integer}{Logical, indicating if this parameter is
+integer. If \code{TRUE} then the parameter will be rounded
 after a new parameter is proposed.}
 
 \item{prior}{A prior function (if not given an improper flat prior

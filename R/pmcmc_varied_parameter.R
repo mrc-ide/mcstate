@@ -50,7 +50,8 @@
 ##'   integer = TRUE,
 ##'   prior = list(dnorm, dexp))
 pmcmc_varied_parameter <- function(name, populations, initial, min = -Inf,
-                                   max = Inf, discrete, integer = FALSE, prior = NULL) {
+                                   max = Inf, discrete, integer = FALSE,
+                                   prior = NULL) {
   if (!missing(discrete)) {
     .Deprecated("integer", old = "discrete")
     integer <- discrete
@@ -73,7 +74,8 @@ pmcmc_varied_parameter <- function(name, populations, initial, min = -Inf,
     prior <- recycle(prior, len)
   }
 
-  params <- Map(pmcmc_parameter, name, initial, min, max, integer, prior)
+  params <- Map(pmcmc_parameter, name = name, initial = initial, min = min,
+                max = max, integer = integer, prior = prior)
   names(params) <- populations
   class(params) <- "pmcmc_varied_parameter"
 

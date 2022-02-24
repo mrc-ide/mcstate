@@ -4,7 +4,15 @@
 \alias{smc2_parameter}
 \title{Describe single pmcmc parameter}
 \usage{
-smc2_parameter(name, sample, prior, min = -Inf, max = Inf, discrete = FALSE)
+smc2_parameter(
+  name,
+  sample,
+  prior,
+  min = -Inf,
+  max = Inf,
+  discrete,
+  integer = FALSE
+)
 }
 \arguments{
 \item{name}{Name for the parameter (a string)}
@@ -14,7 +22,7 @@ representing the number of sampled to be returned. Typically
 this will be a \code{r} probability function corresponding to the
 sampling version of your prior (e.g., you might use \code{runif} and
 \code{dunif} for \code{sample} and \code{prior}). If you provide \code{min}, \code{max}
-or \code{discrete} you \emph{must} ensure that your function returns
+or \code{integer} you \emph{must} ensure that your function returns
 values that satisfy these constraints, as this is not (yet)
 checked.}
 
@@ -29,8 +37,12 @@ value.}
 \code{Inf}). If given, then \code{initial} must be at most this
 value.}
 
-\item{discrete}{Logical, indicating if this parameter is
+\item{discrete}{Deprecated. Logical, indicating if this parameter is
 discrete. If \code{TRUE} then the parameter will be rounded
+after a new parameter is proposed.}
+
+\item{integer}{Logical, indicating if this parameter is an
+integer. If \code{TRUE} then the parameter will be rounded
 after a new parameter is proposed.}
 }
 \description{

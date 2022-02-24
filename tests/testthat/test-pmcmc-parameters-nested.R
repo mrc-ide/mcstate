@@ -1,5 +1,5 @@
 test_that("Can construct a varied parameter", {
-  p <- pmcmc_varied_parameter("p1", letters[1:2], 1:2)
+  p <- pmcmc_varied_parameter("p1", letters[1:2], 1:2, integer = TRUE)
   expect_s3_class(p, "pmcmc_varied_parameter")
   expect_equal(p$a$name, "p1")
   expect_equal(p$b$name, "p1")
@@ -9,11 +9,21 @@ test_that("Can construct a varied parameter", {
   expect_equal(p$b$min, -Inf)
   expect_equal(p$a$max, Inf)
   expect_equal(p$b$max, Inf)
-  expect_equal(p$a$integer, FALSE)
-  expect_equal(p$b$integer, FALSE)
+  expect_equal(p$a$integer, TRUE)
+  expect_equal(p$b$integer, TRUE)
   expect_equal(p$a$prior(1), 0)
   expect_equal(p$b$prior(1), 0)
 })
+
+
+test_that("Can use 'discrete' argument but deprecation warning is shown", {
+  expect_warning(p <- pmcmc_varied_parameter("p1", letters[1:2], 1:2,
+                                             discrete = TRUE),
+                 "'discrete' is deprecated.\nUse 'integer' instead.")
+  expect_s3_class(p, "pmcmc_varied_parameter")
+  expect_equal(p$a$integer, TRUE)
+})
+
 
 test_that("varied parameter reps", {
   expect_equal(pmcmc_varied_parameter("p1", letters[1:3], 1)$c$initial, 1)
@@ -210,7 +220,7 @@ test_that("construct pmcmc_parameters_nested; contruction and basic use", {
   expect_equal(
     res$summary(),
     data_frame(name = rep(letters[1:4], 2),
-               min = -Inf, max = Inf, integer = FALSE,
+               min = -Inf, max = Inf, discrete = FALSE, integer = FALSE,
                type = rep(c("varied", "fixed"), each = 2),
                population = rep(c("p1", "p2"), each = 4)))
 })
