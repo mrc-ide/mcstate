@@ -27,9 +27,7 @@
 ##'   `Inf`). If given, then `initial` must be at most this
 ##'   value.
 ##'
-##' @param discrete Deprecated. Logical, indicating if this parameter is
-##'   discrete. If `TRUE` then the parameter will be rounded
-##'   after a new parameter is proposed.
+##' @param discrete Deprecated; use `integer` instead.
 ##'
 ##' @param integer Logical, indicating if this parameter is an
 ##'   integer. If `TRUE` then the parameter will be rounded

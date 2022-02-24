@@ -24,9 +24,7 @@
 ##'   value. Must be either length `n_pop` or `1`, in which case the same value
 ##'   is assumed for all populations.
 ##'
-##' @param discrete Deprecated. Logical, indicating if this parameter is
-##'   discrete. If `TRUE` then the parameter will be rounded
-##'   after a new parameter is proposed.
+##' @param discrete Deprecated; use `integer` instead.
 ##'
 ##' @param integer Logical, indicating if this parameter is
 ##'   integer. If `TRUE` then the parameter will be rounded

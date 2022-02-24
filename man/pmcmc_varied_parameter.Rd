@@ -35,9 +35,7 @@ is assumed for all populations.}
 value. Must be either length \code{n_pop} or \code{1}, in which case the same value
 is assumed for all populations.}
 
-\item{discrete}{Deprecated. Logical, indicating if this parameter is
-discrete. If \code{TRUE} then the parameter will be rounded
-after a new parameter is proposed.}
+\item{discrete}{Deprecated; use \code{integer} instead.}
 
 \item{integer}{Logical, indicating if this parameter is
 integer. If \code{TRUE} then the parameter will be rounded
