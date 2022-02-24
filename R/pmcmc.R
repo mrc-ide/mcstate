@@ -143,6 +143,21 @@ pmcmc_check_initial_simple <- function(initial, pars, n_chains) {
                      dimnames = list(nms, NULL))
   }
 
+  summary <- pars$summary()
+  ok <- apply(initial, 2, function(p) all(p >= summary$min))
+  if (any(!ok)) {
+    stop(sprintf(
+      "'initial' is less than 'min' (%s) (chain %s)",
+      paste(summary$min, collapse = ", "),
+      paste(which(!ok), collapse = ", ")))
+  }
+  ok <- apply(initial, 2, function(p) all(p <= summary$max))
+  if (any(!ok)) {
+    stop(sprintf(
+      "'initial' is greater than 'max' (%s) (chain %s)",
+      paste(summary$max, collapse = ", "),
+      paste(which(!ok), collapse = ", ")))
+  }
   ok <- apply(initial, 2, function(p) is.finite(pars$prior(p)))
   if (any(!ok)) {
     stop(sprintf(
