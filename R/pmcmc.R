@@ -123,10 +123,6 @@ pmcmc_check_initial <- function(initial, pars, n_chains) {
 }
 
 
-## TODO (#175): This does not check that the parameters are in range,
-## or that they are appropriately discrete. We should add that in too
-## at some point, though this overlaps with some outstanding
-## validation in the smc2 branch.
 pmcmc_check_initial_simple <- function(initial, pars, n_chains) {
   nms <- pars$names()
   n_pars <- length(nms)
@@ -143,43 +139,10 @@ pmcmc_check_initial_simple <- function(initial, pars, n_chains) {
                      dimnames = list(nms, NULL))
   }
 
-  summary <- pars$summary()
-  ok <- apply(initial, 2,
-              function(p) all(round(p) == p | !summary$integer))
-  if (any(!ok)) {
-    stop(sprintf(
-      "'initial' must be an integer but was not (chain %s)",
-      paste(which(!ok), collapse = ", ")))
-  }
-
-  ok <- apply(initial, 2, function(p) all(p >= summary$min))
-  if (any(!ok)) {
-    stop(sprintf(
-      "'initial' is less than 'min' (%s) (chain %s)",
-      paste(summary$min, collapse = ", "),
-      paste(which(!ok), collapse = ", ")))
-  }
-  ok <- apply(initial, 2, function(p) all(p <= summary$max))
-  if (any(!ok)) {
-    stop(sprintf(
-      "'initial' is greater than 'max' (%s) (chain %s)",
-      paste(summary$max, collapse = ", "),
-      paste(which(!ok), collapse = ", ")))
-  }
-  ok <- apply(initial, 2, function(p) is.finite(pars$prior(p)))
-  if (any(!ok)) {
-    stop(sprintf(
-      "Starting point does not have finite prior probability (chain %s)",
-      paste(which(!ok), collapse = ", ")))
-  }
-
-  initial
+  pmcmc_check_initial_values(initial, pars, 2)
 }
 
-## TODO (#175): This does not check that the parameters are in range, or that
-## they are appropriately discrete. We should add that in too at some
-## point, though this overlaps with some outstanding validation in the
-## smc2 branch.
+
 pmcmc_check_initial_nested <- function(initial, pars, n_chains) {
   nms <- pars$names()
   pops <- pars$populations()
@@ -201,12 +164,38 @@ pmcmc_check_initial_nested <- function(initial, pars, n_chains) {
                      dimnames = list(nms, pops, NULL))
   }
 
-  ok <- apply(initial, 3, function(p) all(is.finite(pars$prior(p))))
+  pmcmc_check_initial_values(initial, pars, 3)
+}
+
+pmcmc_check_initial_values <- function(initial, pars, margin) {
+  summary <- pars$summary()
+  ok <- apply(initial, margin,
+              function(p) all(round(p) == p | !summary$integer))
+  if (any(!ok)) {
+    stop(sprintf(
+      "'initial' must be an integer but was not (chain %s)",
+      paste(which(!ok), collapse = ", ")))
+  }
+
+  ok <- apply(initial, margin, function(p) all(p >= summary$min))
+  if (any(!ok)) {
+    stop(sprintf(
+      "'initial' is less than 'min' (%s) (chain %s)",
+      paste(summary$min, collapse = ", "),
+      paste(which(!ok), collapse = ", ")))
+  }
+  ok <- apply(initial, margin, function(p) all(p <= summary$max))
+  if (any(!ok)) {
+    stop(sprintf(
+      "'initial' is greater than 'max' (%s) (chain %s)",
+      paste(summary$max, collapse = ", "),
+      paste(which(!ok), collapse = ", ")))
+  }
+  ok <- apply(initial, margin, function(p) all(is.finite(pars$prior(p))))
   if (any(!ok)) {
     stop(sprintf(
       "Starting point does not have finite prior probability (chain %s)",
       paste(which(!ok), collapse = ", ")))
   }
-
   initial
 }

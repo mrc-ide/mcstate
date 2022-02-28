@@ -36,6 +36,7 @@ example_sir <- function() {
 
   data_raw <- data.frame(day = day, incidence = incidence)
   data <- particle_filter_data(data_raw, "day", 4)
+
   index <- function(info) {
     list(run = 5L, state = 1:3)
   }
@@ -104,6 +105,7 @@ example_volatility <- function(pars = NULL) {
 
     log_likelihood
   }
+
   list(pars = pars, data = data, compare = compare,
        model = volatility, kalman_filter = kalman_filter)
 }
@@ -182,9 +184,11 @@ example_sir_shared <- function() {
 
 
 example_uniform <- function(proposal_kernel = NULL) {
+
   target <- function(p, ...) {
     1
   }
+
   filter <- structure(list(run = target,
                            n_particles = 10,
                            nested = FALSE,
@@ -267,7 +271,32 @@ example_uniform_shared <- function(varied = TRUE, fixed = TRUE,
 }
 
 
+example_infinite_prior <- function() {
+  pops <- paste0("p", 1:3)
+  proposal_fixed <- diag(2) * 0.1
+  row.names(proposal_fixed) <- colnames(proposal_fixed) <- c("a", "b")
+  proposal_varied <- diag(2) * 0.1
+  row.names(proposal_varied) <- colnames(proposal_varied) <- c("c", "d")
+  pars <- c(
+    list(
+      pmcmc_parameter("a", 0.5, min = -1, max = 1,
+                      prior = function(p) dunif(p, log = TRUE)),
+      pmcmc_parameter("b", 0.5, min = -1, max = 1,
+                      prior = function(p) dunif(p, log = TRUE))
+    ),
+    list(pmcmc_varied_parameter("c", pops, 0.5,
+                                min = -1, max = 1,
+                                prior = function(p) dunif(p,
+                                                          log = TRUE)),
+         pmcmc_varied_parameter("d", pops, 0.5,
+                                min = -1, max = 1,
+                                prior = function(p) dunif(p, log = TRUE))
+    ))
+  pmcmc_parameters_nested$new(pars, proposal_varied, proposal_fixed, pops)
+}
+
 example_mvnorm <- function() {
+
   target <- function(p, ...) {
     mvtnorm::dmvnorm(unlist(p), log = TRUE)
   }
@@ -292,9 +321,11 @@ example_mvnorm <- function() {
 example_mvnorm_shared <- function(varied = TRUE, fixed = TRUE,
                                   proposal_varied = NULL,
                                   proposal_fixed = NULL) {
+
   target <- function(p, ...) {
     vnapply(p, function(x) mvtnorm::dmvnorm(unlist(x), log = TRUE))
   }
+
   if (!varied || !fixed) {
     n_par <- 2
   } else {
@@ -399,7 +430,7 @@ example_sir_nested_pmcmc <- function() {
 
     n_particles <- 10
     p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
-                            dat$index, seed = 1L)
+                             dat$index, seed = 1L)
     set.seed(1)
 
     control <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE,
