@@ -293,20 +293,23 @@ test_that("can validate a vector of initial conditions", {
                fixed = TRUE)
   a <- pmcmc_parameter("a", 1, integer = TRUE)
   pars <- pmcmc_parameters$new(list(a), diag(1) * 0.1)
+  e <- "'initial' value for 'a' must be an integer but was not (all chains)"
   expect_error(pmcmc_check_initial(1.1, pars, 1),
-               "'initial' must be an integer but was not (chain 1)",
+               e,
                fixed = TRUE)
   expect_error(pmcmc_check_initial(c(-1, 1), dat$pars, 1),
-               "'initial' is less than 'min' (0, 0) (chain 1)",
+               "'initial' is less than 'min' for 'a' (all chains)",
                fixed = TRUE)
   expect_error(pmcmc_check_initial(c(0, 1.1), dat$pars, 1),
-               "'initial' is greater than 'max' (1, 1) (chain 1)",
+               "'initial' is greater than 'max' for 'b' (all chains)",
                fixed = TRUE)
   a <- pmcmc_parameter("a", 1,
-                           prior = function(p) if (p > 1) Inf else p)
+                       prior = function(p) if (p > 1) Inf else p)
   pars <- pmcmc_parameters$new(list(a), diag(1) * 0.1)
+  e <- "Starting point does not have finite prior probability for 'a'
+  (all chains)"
   expect_error(pmcmc_check_initial(2, pars, 1),
-               "Starting point does not have finite prior probability",
+               e,
                fixed = TRUE)
 })
 
@@ -342,18 +345,19 @@ test_that("can validate a matrix initial conditions", {
   b <- pmcmc_parameter("b", 1)
   pars <- pmcmc_parameters$new(list(a, b), diag(2) * 0.1)
   m <- matrix(c(1, 2, 3.3, 4, 5, 6.6, 7, 8, 9, 1), 2, 5)
+  e <- "'initial' value for 'a' must be an integer but was not (chain 2)"
   expect_error(pmcmc_check_initial(m, pars, 5),
-               "'initial' must be an integer but was not (chain 2)",
+               e,
                fixed = TRUE)
 
   m <- matrix(c(-1.1, 0.2, 0.3, -1.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1), 2, 5)
   expect_error(pmcmc_check_initial(m, dat$pars, 5),
-               "'initial' is less than 'min' (0, 0) (chain 1, 2)",
+               "'initial' is less than 'min' for 'a', 'b' (chain 1, 2)",
                fixed = TRUE)
 
   m <- matrix(c(0.1, 0.2, 0.3, 1.4, 0.5, 0.6, 0.7, 0.8, 1.9, 1), 2, 5)
   expect_error(pmcmc_check_initial(m, dat$pars, 5),
-               "'initial' is greater than 'max' (1, 1) (chain 2, 5)",
+               "'initial' is greater than 'max' for 'a', 'b' (chain 2, 5)",
                fixed = TRUE)
 
   m <- matrix(c(0.1, 0.2, 3, 0.4, 0.5, 0.6, 7, 0.8, 9, 1), 2, 5)
@@ -362,7 +366,8 @@ test_that("can validate a matrix initial conditions", {
   b <- pmcmc_parameter("b", 1,
                        prior = function(p) if (p > 1) Inf else p)
   pars <- pmcmc_parameters$new(list(a, b), diag(2) * 0.1)
-  e <- "Starting point does not have finite prior probability (chain 2, 4, 5)"
+  e <- "Starting point does not have finite prior probability for 'a'
+  (chain 2, 4, 5)"
   expect_error(pmcmc_check_initial(m, pars, 5),
                e,
                fixed = TRUE)

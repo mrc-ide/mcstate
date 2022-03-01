@@ -139,7 +139,7 @@ pmcmc_check_initial_simple <- function(initial, pars, n_chains) {
                      dimnames = list(nms, NULL))
   }
 
-  pmcmc_check_initial_values(initial, pars, 2)
+  pmcmc_check_initial_values(initial, pars)
 }
 
 
@@ -164,38 +164,55 @@ pmcmc_check_initial_nested <- function(initial, pars, n_chains) {
                      dimnames = list(nms, pops, NULL))
   }
 
-  pmcmc_check_initial_values(initial, pars, 3)
+  pmcmc_check_initial_values(initial, pars)
 }
 
-pmcmc_check_initial_values <- function(initial, pars, margin) {
+
+pmcmc_check_initial_values <- function(initial, pars) {
   summary <- pars$summary()
-  ok <- apply(initial, margin,
-              function(p) all(round(p) == p | !summary$integer))
-  if (any(!ok)) {
-    stop(sprintf(
-      "'initial' must be an integer but was not (chain %s)",
-      paste(which(!ok), collapse = ", ")))
+  margin <- length(dim(initial))
+  nms <- pars$names()
+
+  validate <- function(invalid, msg) {
+    ok <- lengths(invalid) == 0
+    if (any(!ok)) {
+      if (all(!ok)) {
+        chains <- "all chains"
+      }
+      else {
+        chains <- paste("chain", paste(which(!ok), collapse = ", "))
+      }
+      invalid <- nms[sort(unique(unlist(invalid)))]
+      stop(sprintf(msg, paste0("'", invalid, "'", collapse = ", "), chains))
+    }
   }
 
-  ok <- apply(initial, margin, function(p) all(p >= summary$min))
-  if (any(!ok)) {
-    stop(sprintf(
-      "'initial' is less than 'min' (%s) (chain %s)",
-      paste(summary$min, collapse = ", "),
-      paste(which(!ok), collapse = ", ")))
+  initial_ints <- array_first_dimension(initial, summary$integer)
+  if (length(initial_ints) > 0) {
+    invalid <- apply(initial_ints, margin,
+                     function(p) which(!usable_as_integer(p)))
+    validate(invalid,
+             "'initial' value for %s must be an integer but was not (%s)")
   }
-  ok <- apply(initial, margin, function(p) all(p <= summary$max))
-  if (any(!ok)) {
-    stop(sprintf(
-      "'initial' is greater than 'max' (%s) (chain %s)",
-      paste(summary$max, collapse = ", "),
-      paste(which(!ok), collapse = ", ")))
-  }
-  ok <- apply(initial, margin, function(p) all(is.finite(pars$prior(p))))
-  if (any(!ok)) {
-    stop(sprintf(
-      "Starting point does not have finite prior probability (chain %s)",
-      paste(which(!ok), collapse = ", ")))
-  }
+  invalid <- apply(initial, margin,
+                   function(p) which(p < summary$min))
+  validate(invalid,
+           "'initial' is less than 'min' for %s (%s)")
+
+  invalid <- apply(initial, margin,
+                   function(p) which(p > summary$max))
+  validate(invalid,
+           "'initial' is greater than 'max' for %s (%s)")
+
+  invalid <- apply(initial, margin,
+                   function(p) which(!is.finite(pars$prior(p))))
+  validate(invalid,
+           "Starting point does not have finite prior probability for %s (%s)")
   initial
+}
+
+
+usable_as_integer <- function(x) {
+  eps <- sqrt(.Machine$double.eps)
+  is.integer(x) || is.numeric(x) && (max(abs(round(x) - x)) < eps)
 }

@@ -46,8 +46,9 @@ pmcmc_parameter <- function(name, initial, min = -Inf, max = Inf,
   if (initial > max) {
     stop(sprintf("'initial' must be <= 'max' (%s)", max))
   }
-  if (integer & round(initial) != initial) {
-    stop(sprintf("'initial' must be an integer but was %s", initial))
+  if (integer) {
+    assert_scalar(initial)
+    initial <- assert_integer(initial)
   }
 
   if (is.null(prior)) {
