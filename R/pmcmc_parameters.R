@@ -46,6 +46,10 @@ pmcmc_parameter <- function(name, initial, min = -Inf, max = Inf,
   if (initial > max) {
     stop(sprintf("'initial' must be <= 'max' (%s)", max))
   }
+  if (integer) {
+    assert_scalar(initial)
+    initial <- assert_integer(initial)
+  }
 
   if (is.null(prior)) {
     prior <- function(p) 0
@@ -171,7 +175,7 @@ pmcmc_parameters <- R6::R6Class(
       private$transform <- transform
 
       private$integer <- vlapply(private$parameters, "[[", "integer",
-                                  USE.NAMES = FALSE)
+                                 USE.NAMES = FALSE)
       private$min <- vnapply(private$parameters, "[[", "min",
                              USE.NAMES = FALSE)
       private$max <- vnapply(private$parameters, "[[", "max",
@@ -257,9 +261,11 @@ pmcmc_parameters <- R6::R6Class(
                         names(private$parameters))
       base[idx_fixed] <- fixed
       base_transform <- private$transform
+
       transform <- function(p) {
         base_transform(set_into(base, idx_vary, p))
       }
+
       pmcmc_parameters$new(private$parameters[idx_vary], proposal, transform)
     }
   ))

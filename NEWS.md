@@ -1,3 +1,7 @@
+# mcstate 0.10.0
+
+* Validate initial parameters provided to pmcmc
+
 # mcstate 0.9.0
 
 * Deprecated 'discrete' argument to parameters in favour of 'integer' - affects `if2_parameter`, `pmcmc_parameter`, `pmcmc_varied_parameter`, `smc2_parameter` 

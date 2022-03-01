@@ -25,7 +25,7 @@ test_that("pmcmc_check_initial_nested - silent array initial", {
 })
 
 
-test_that("pmcmc_check_initial_nested - error array initial", {
+test_that("pmcmc_check_initial_nested validates initial array", {
   dat <- example_uniform_shared()
   expect_error(
     pmcmc_check_initial_nested(array(dim = c(4, 3, 1)), dat$pars, 2),
@@ -54,14 +54,16 @@ test_that("pmcmc_check_initial_nested - error array initial", {
             dimnames = list(letters[1:4], NULL, letters[1:2])), dat$pars, 2),
     "Expected names of dimension 3 of 'initial' to be empty")
 
+  pars <- example_infinite_prior()
+
   expect_error(
-    pmcmc_check_initial_nested(array(2, dim = c(4, 3, 2)), dat$pars, 2),
+    pmcmc_check_initial_nested(array(-1, dim = c(4, 3, 2)), pars, 2),
     "Starting point does not have finite prior probability (chain 1, 2)",
     fixed = TRUE)
 })
 
 
-test_that("pmcmc_check_initial_nested - error matrix initial", {
+test_that("pmcmc_check_initial_nested validates initial matrix", {
   dat <- example_uniform_shared()
   expect_error(
     pmcmc_check_initial_nested(matrix(0, 5, 3), dat$pars, 2),
@@ -81,8 +83,9 @@ test_that("pmcmc_check_initial_nested - error matrix initial", {
       dat$pars, 2),
     "Expected names of dimension 2 of 'initial' to match populations")
 
+  pars <- example_infinite_prior()
   expect_error(
-    pmcmc_check_initial_nested(matrix(2, 4, 3), dat$pars, 2),
+    pmcmc_check_initial_nested(matrix(-1, 4, 3), pars, 2),
     "Starting point does not have finite prior probability (chain 1, 2)",
     fixed = TRUE)
 })
