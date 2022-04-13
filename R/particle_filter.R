@@ -83,6 +83,21 @@ particle_filter <- R6::R6Class(
     last_restart_state = NULL
   ),
 
+  active = list(
+    ##' @field nested Logical, indicating if this is a nested
+    ##' (multipopulation) particle filter (read only).  If `TRUE`, then
+    ##' each call to `run` returns a vector of log-likelihoods,
+    ##' one per population.  Triggered by the `data` argument to
+    ##' the constructor.
+    nested = function(value) {
+      if (!missing(value)) {
+        stop("'nested' is read-only")
+      }
+      .Deprecated("$has_multiple_data", old = "$nested")
+      self$has_multiple_data
+    }
+  ),
+
   public = list(
     ##' @field model The dust model generator being simulated (cannot be
     ##' re-bound)
@@ -91,12 +106,11 @@ particle_filter <- R6::R6Class(
     ##' @field n_particles Number of particles used (read only)
     n_particles = NULL,
 
-    ##' @field nested Logical, indicating if this is a nested
-    ##' (multipopulation) particle filter (read only).  If `TRUE`, then
-    ##' each call to `run` returns a vector of log-likelihoods,
-    ##' one per population.  Triggered by the `data` argument to
-    ##' the constructor.
-    nested = NULL,
+    ## We don't actually need to expose most of these I think...
+    has_multiple_data = NULL,
+    has_multiple_parameters = NULL,
+    n_parameters = NULL,
+    n_data = NULL,
 
     ##' @description Create the particle filter
     ##'
@@ -170,6 +184,11 @@ particle_filter <- R6::R6Class(
     ##' simulation. Defaults to 1, and should not be set higher than the
     ##' number of cores available to the machine.
     ##'
+    ##' @param n_parameters Number of parameter sets required.  This, along
+    ##'   with `data`, controls the interpretation of how the particle
+    ##'   filter, and importantly will add an additional dimension to
+    ##'   most outputs (scalars become vectors, vectors become matrices etc).
+    ##'
     ##' @param seed Seed for the random number generator on initial
     ##' creation. Can be `NULL` (to initialise using R's random number
     ##' generator), a positive integer, or a raw vector - see [`dust::dust`]
@@ -191,6 +210,7 @@ particle_filter <- R6::R6Class(
                           index = NULL, initial = NULL,
                           constant_log_likelihood = NULL,
                           n_threads = 1L, seed = NULL,
+                          n_parameters = NULL,
                           gpu_config = NULL) {
       if (!is_dust_generator(model)) {
         stop("'model' must be a dust_generator")
@@ -212,9 +232,34 @@ particle_filter <- R6::R6Class(
       self$model <- model
       private$data <- data
 
-      self$nested <- inherits(data, "particle_filter_data_nested")
+      self$has_multiple_data <- inherits(data, "particle_filter_data_nested")
+      if (self$has_multiple_data) {
+        self$n_data <- length(attr(data, "populations"))
+      } else {
+        self$n_data <- 1L
+      }
+
+      if (is.null(n_parameters)) {
+        self$has_multiple_parameters <- self$has_multiple_data
+        self$n_parameters <- self$n_data
+      } else {
+        assert_scalar_positive_integer(n_parameters)
+        if (self$has_multiple_data && n_parameters != self$n_data) {
+          stop(sprintf(
+            "With your nested particle filter, n_parameters must be %s",
+            self$n_data))
+        }
+        self$has_multiple_parameters <- TRUE
+        self$n_parameters <- n_parameters
+      }
 
       private$steps <- attr(data, "steps")
+      ## TODO: this will need work here to cope with how to deal with
+      ## our multi-paramter, single-data case (and that does need a
+      ## tiny amount of work in dust, I think)
+      if (is.null(compare)) {
+        stop("needs work")
+      }
       private$data_split <- particle_filter_data_split(data, is.null(compare))
 
       private$compare <- compare
@@ -229,7 +274,10 @@ particle_filter <- R6::R6Class(
 
       lockBinding("model", self)
       lockBinding("n_particles", self)
-      lockBinding("nested", self)
+      lockBinding("has_multiple_data", self)
+      lockBinding("has_multiple_parameters", self)
+      lockBinding("n_data", self)
+      lockBinding("n_parameters", self)
     },
 
     ##' @description Run the particle filter
@@ -303,7 +351,8 @@ particle_filter <- R6::R6Class(
       particle_filter_state$new(
         pars, self$model, private$last_model[[1]], private$data,
         private$data_split, private$steps, self$n_particles,
-        private$n_threads, private$initial, private$index, private$compare,
+        self$has_multiple_parameters, private$n_threads,
+        private$initial, private$index, private$compare,
         private$constant_log_likelihood, private$gpu_config, private$seed,
         min_log_likelihood, save_history, save_restart)
     },
@@ -653,9 +702,9 @@ filter_current_seed <- function(model, seed) {
 filter_run <- function(self, private, pars, save_history, save_restart,
                        min_log_likelihood) {
   assert_scalar_logical(save_history)
-  if (self$nested) {
-    n_populations <- length(attr(private$data, "populations"))
-    pars <- particle_filter_pars_nested(pars, n_populations)
+  if (self$has_multiple_parameters) {
+    n_parameters <- self$n_parameters
+    pars <- particle_filter_pars_nested(pars, n_parameters) # TODO: rename
   }
   private$last_stages <-
     particle_filter_check_multistage_pars(pars, private$last_stages)

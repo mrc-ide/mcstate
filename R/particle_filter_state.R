@@ -22,6 +22,7 @@ particle_filter_state <- R6::R6Class(
     steps = NULL,
     n_particles = NULL,
     n_threads = NULL,
+    has_multiple_parameters = NULL,
     initial = NULL,
     index = NULL,
     compare = NULL,
@@ -38,7 +39,7 @@ particle_filter_state <- R6::R6Class(
 
       model <- self$model
       compare <- private$compare
-      nested <- inherits(private$data, "particle_filter_data_nested")
+      has_multiple_parameters <- private$has_multiple_parameters
 
       steps <- private$steps
       data_split <- private$data_split
@@ -75,7 +76,7 @@ particle_filter_state <- R6::R6Class(
           ## history as a flat array (or access it as such), then
           ## compute what the index would be.  If we know the product
           ## of the first dimensions, this is pretty easy really.
-          if (nested) {
+          if (has_multiple_parameters) {
             history_value[, , , t + 1L] <- model$state(save_history_index)
           } else {
             history_value[, , t + 1L] <- model$state(save_history_index)
@@ -101,7 +102,7 @@ particle_filter_state <- R6::R6Class(
         }
 
         if (save_history) {
-          if (nested) {
+          if (has_multiple_parameters) {
             history_order[, , t + 1L] <- kappa
           } else {
             history_order[, t + 1L] <- kappa
@@ -210,17 +211,19 @@ particle_filter_state <- R6::R6Class(
     ##' @param save_history Logical, indicating if we should save history
     ##' @param save_restart Vector of steps to save restart at
     initialize = function(pars, generator, model, data, data_split, steps,
-                          n_particles, n_threads, initial, index, compare,
+                          n_particles, has_multiple_parameters,
+                          n_threads, initial, index, compare,
                           constant_log_likelihood, gpu_config, seed,
                           min_log_likelihood, save_history, save_restart) {
-      nested <- inherits(data, "particle_filter_data_nested")
-      support <- particle_filter_state_support(nested)
+      has_multiple_data <- inherits(data, "particle_filter_data_nested")
+      support <- particle_filter_state_support(has_multiple_parameters,
+                                               has_multiple_data)
 
       if (is.null(model)) {
         model <- generator$new(pars = pars, step = steps[[1L]],
                                n_particles = n_particles, n_threads = n_threads,
                                seed = seed, gpu_config = gpu_config,
-                               pars_multi = nested)
+                               pars_multi = has_multiple_parameters)
         if (is.null(compare)) {
           model$set_data(data_split)
         }
@@ -277,6 +280,7 @@ particle_filter_state <- R6::R6Class(
       private$steps <- steps
       private$n_particles <- n_particles
       private$n_threads <- n_threads
+      private$has_multiple_parameters <- has_multiple_parameters
       private$initial <- initial
       private$index <- index
       private$compare <- compare
@@ -288,8 +292,9 @@ particle_filter_state <- R6::R6Class(
 
       ## Variable (see also history)
       self$model <- model
+      ## TODO: needs a check
       self$log_likelihood <- particle_filter_constant_log_likelihood(
-        pars, nested, constant_log_likelihood)
+        pars, has_multiple_parameters, constant_log_likelihood)
     },
 
     ##' @description Run the particle filter to the end of the data. This is
@@ -424,11 +429,20 @@ check_step <- function(curr, step_index, steps, name) {
 ## This helper pulls together small pieces of bookkeeping that differ
 ## strongly depending on if the particle filter is a
 ## nested/multiparameter filter or not.
-particle_filter_state_support <- function(nested) {
-  if (nested) {
-    list(initial = pfs_initial_nested,
-         index = pfs_index_nested,
-         compare = pfs_compare_nested)
+particle_filter_state_support <- function(has_multiple_parameters,
+                                          has_multiple_data) {
+  if (has_multiple_parameters) {
+    ## TODO: rewrite nested
+    if (has_multiple_data) {
+      list(initial = pfs_initial_nested,
+           index = pfs_index_nested,
+           compare = pfs_compare_nested)
+    } else {
+      list(initial = pfs_initial_nested,
+           index = pfs_index_nested,
+           ## TODO: terrible name
+           compare = pfs_compare_replicated)
+    }
   } else {
     list(initial = pfs_initial_simple,
          index = pfs_index_simple,
@@ -451,16 +465,17 @@ particle_filter_early_exit <- function(log_likelihood, min_log_likelihood) {
 }
 
 
-particle_filter_constant_log_likelihood <- function(pars, nested,
+particle_filter_constant_log_likelihood <- function(pars,
+                                                    has_multiple_parameters,
                                                     constant_log_likelihood) {
   if (is.null(constant_log_likelihood)) {
-    if (nested) {
+    if (has_multiple_parameters) {
       rep(0, length(pars))
     } else {
       0
     }
   } else {
-    if (nested) {
+    if (has_multiple_parameters) {
       vnapply(pars, constant_log_likelihood)
     } else {
       constant_log_likelihood(pars)
@@ -548,6 +563,19 @@ pfs_compare_simple <- function(state, compare, data, pars) {
 pfs_compare_nested <- function(state, compare, data, pars) {
   log_weights <- lapply(seq_len(nlayer(state)), function(i)
     compare(array_drop(state[, , i, drop = FALSE], 3), data[[i]], pars[[i]]))
+  if (all(lengths(log_weights) == 0)) {
+    return(NULL)
+  }
+
+  weights <- lapply(log_weights, scale_log_weights)
+  list(average = vnapply(weights, "[[", "average"),
+       weights = vapply(weights, function(x) x$weights, numeric(ncol(state))))
+}
+
+
+pfs_compare_replicated <- function(state, compare, data, pars) {
+  log_weights <- lapply(seq_len(nlayer(state)), function(i)
+    compare(array_drop(state[, , i, drop = FALSE], 3), data, pars[[i]]))
   if (all(lengths(log_weights) == 0)) {
     return(NULL)
   }
