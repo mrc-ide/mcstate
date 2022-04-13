@@ -1448,3 +1448,35 @@ test_that("Can run a particle filter in replicate", {
   expect_identical(ll1, ll2)
   expect_identical(p1$history(), p2$history())
 })
+
+
+test_that("Can run a particle filter in replicate with compiled compare", {
+  dat <- example_sir()
+  n_particles <- 42
+  n_parameters <- 5
+  set.seed(1)
+
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, NULL,
+                            index = dat$index, seed = 1L,
+                            n_parameters = n_parameters)
+
+  ## Bit of a faff here to set up the data to be replicated:
+  data_raw <- do.call(rbind, lapply(seq_len(n_parameters), function(i)
+    cbind(dat$data_raw, replicate = i)))
+  data_raw$replicate <- factor(data_raw$replicate)
+  data_replicated <- particle_filter_data(data_raw, "day", 4,
+                                          population = "replicate")
+  p2 <- particle_filter$new(data_replicated, dat$model, n_particles,
+                            NULL, index = dat$index, seed = 1L)
+
+  pars <- lapply(runif(n_parameters, 0.1, 0.3), function(b)
+    list(beta = b, gamma = 0.1))
+
+  set.seed(1)
+  ll1 <- p1$run(pars, save_history = TRUE)
+
+  set.seed(1)
+  ll2 <- p2$run(pars, save_history = TRUE)
+  expect_identical(ll1, ll2)
+  expect_identical(p1$history(), p2$history())
+})
