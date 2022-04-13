@@ -236,13 +236,8 @@ particle_filter <- R6::R6Class(
                          self)
 
       private$steps <- attr(data, "steps")
-      ## TODO: this will need work here to cope with how to deal with
-      ## our multi-paramter, single-data case (and that does need a
-      ## tiny amount of work in dust, I think)
-      if (is.null(compare)) {
-        stop("needs work")
-      }
-      private$data_split <- particle_filter_data_split(data, is.null(compare))
+      private$data_split <- particle_filter_data_split(data, is.null(compare),
+                                                       self$n_parameters)
 
       private$compare <- compare
       private$gpu_config <- gpu_config

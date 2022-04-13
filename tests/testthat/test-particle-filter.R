@@ -887,7 +887,7 @@ test_that("can get history with compiled particle filter on nested model", {
   set.seed(1)
 
   pars <- list(list(beta = 0.2, gamma = 0.1),
-                               list(beta = 0.3, gamma = 0.1))
+               list(beta = 0.3, gamma = 0.1))
 
   model <- dust::dust_example("sir")
   p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,

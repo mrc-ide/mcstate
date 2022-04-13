@@ -104,7 +104,8 @@ if2 <- function(pars, filter, control) {
   pars_sd <- unlist(control$pars_sd[name_order])
 
   data_split <- particle_filter_data_split(inputs$data,
-                                           compiled_compare = FALSE)
+                                           compiled_compare = FALSE,
+                                           n_parameters = 1) # ignored
 
   steps <- attr(inputs$data, "steps")
   n_steps <- nrow(steps)

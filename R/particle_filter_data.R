@@ -144,7 +144,7 @@ particle_filter_data <- function(data, time, rate, initial_time = NULL,
 }
 
 
-particle_filter_data_split <- function(data, compiled_compare) {
+particle_filter_data_split <- function(data, compiled_compare, n_parameters) {
   population <- attr(data, "population")
 
   ## Drop off lots of attributes that are just annoying after the data
@@ -158,6 +158,14 @@ particle_filter_data_split <- function(data, compiled_compare) {
   class(data) <- "data.frame"
 
   if (compiled_compare) {
+    if (is.null(population) && n_parameters > 1) {
+      ## For now at least, where we have a compiled compare function
+      ## and a non-nested data, we need to expand the data to cover
+      ## all parameter sets.  It would be nice to support this
+      ## properly in dust, but we can look at this after the basic
+      ## idea is done.
+      population <- n_parameters
+    }
     dust::dust_data(data, "step_end", population)
   } else if (is.null(population)) {
     lapply(unname(split(data, seq_len(nrow(data)))), as.list)
