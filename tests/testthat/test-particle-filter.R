@@ -1480,3 +1480,14 @@ test_that("Can run a particle filter in replicate with compiled compare", {
   expect_identical(ll1, ll2)
   expect_identical(p1$history(), p2$history())
 })
+
+
+test_that("Can run a particle filter in replicate", {
+  dat <- example_sir_shared()
+  expect_error(
+    particle_filter$new(dat$data, dat$model, 10, dat$compare,
+                        index = dat$index, n_parameters = 3),
+    paste("To match the number of populations in your data,",
+          "n_parameters must be 2 (if not NULL)"),
+    fixed = TRUE)
+})

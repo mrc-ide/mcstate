@@ -858,9 +858,8 @@ check_n_parameters <- function(n_parameters, data) {
   } else {
     assert_scalar_positive_integer(n_parameters)
     if (has_multiple_data && n_parameters != n_data) {
-      stop(sprintf(
-        "With your nested particle filter, n_parameters must be %s",
-        n_data))
+      stop(paste("To match the number of populations in your data,",
+                 sprintf("n_parameters must be %d (if not NULL)", n_data)))
     }
     has_multiple_parameters <- TRUE
     n_parameters <- n_parameters

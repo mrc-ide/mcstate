@@ -433,16 +433,9 @@ particle_filter_state_support <- function(has_multiple_parameters,
                                           has_multiple_data) {
   if (has_multiple_parameters) {
     ## TODO: rewrite nested
-    if (has_multiple_data) {
-      list(initial = pfs_initial_nested,
-           index = pfs_index_nested,
-           compare = pfs_compare_nested)
-    } else {
-      list(initial = pfs_initial_nested,
-           index = pfs_index_nested,
-           ## TODO: terrible name
-           compare = pfs_compare_replicated)
-    }
+    list(initial = pfs_initial_nested,
+         index = pfs_index_nested,
+         compare = function(...) pfs_compare_nested(has_multiple_data, ...))
   } else {
     list(initial = pfs_initial_simple,
          index = pfs_index_simple,
@@ -560,22 +553,16 @@ pfs_compare_simple <- function(state, compare, data, pars) {
 }
 
 
-pfs_compare_nested <- function(state, compare, data, pars) {
-  log_weights <- lapply(seq_len(nlayer(state)), function(i)
-    compare(array_drop(state[, , i, drop = FALSE], 3), data[[i]], pars[[i]]))
-  if (all(lengths(log_weights) == 0)) {
-    return(NULL)
+## NOTE: funny argument ordering as we'll partially apply the first
+## argument later.
+pfs_compare_nested <- function(has_multiple_data, state, compare, data, pars) {
+  if (has_multiple_data) {
+    log_weights <- lapply(seq_len(nlayer(state)), function(i)
+      compare(array_drop(state[, , i, drop = FALSE], 3), data[[i]], pars[[i]]))
+  } else {
+    log_weights <- lapply(seq_len(nlayer(state)), function(i)
+      compare(array_drop(state[, , i, drop = FALSE], 3), data, pars[[i]]))
   }
-
-  weights <- lapply(log_weights, scale_log_weights)
-  list(average = vnapply(weights, "[[", "average"),
-       weights = vapply(weights, function(x) x$weights, numeric(ncol(state))))
-}
-
-
-pfs_compare_replicated <- function(state, compare, data, pars) {
-  log_weights <- lapply(seq_len(nlayer(state)), function(i)
-    compare(array_drop(state[, , i, drop = FALSE], 3), data, pars[[i]]))
   if (all(lengths(log_weights) == 0)) {
     return(NULL)
   }

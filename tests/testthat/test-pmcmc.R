@@ -676,3 +676,18 @@ test_that("Can filter pmcmc on creation, after combining chains", {
   expect_identical(results3$pars, results2$pars)
   expect_identical(results3$pars_full, results3$pars_full)
 })
+
+
+test_that("Can't use replicated non-nested filter in pmcmc", {
+  dat <- example_sir()
+  n_particles <- 42
+  set.seed(1)
+
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, seed = 1L,
+                           n_parameters = 3)
+  control <- pmcmc_control(2, n_chains = 1)
+  expect_error(
+    pmcmc(dat$pars, p, control = control),
+    "Can't use a filter with multiple parameter sets but not multiple data")
+})
