@@ -26,17 +26,30 @@ particle_deterministic <- R6::R6Class(
     last_restart_state = NULL
   ),
 
-  public = list(
-    ##' @field model The dust model generator being simulated (cannot be
-    ##' re-bound)
-    model = NULL,
-
+  active = list(
     ##' @field nested Logical, indicating if this is a nested
     ##' (multipopulation) deterministic particle (read only).  If `TRUE`, then
     ##' each call to `run` returns a vector of log-likelihoods,
     ##' one per population.  Triggered by the `data` argument to
     ##' the constructor.
-    nested = NULL,
+    nested = function(value) {
+      if (!missing(value)) {
+        stop("'nested' is read-only")
+      }
+      .Deprecated("$has_multiple_data", old = "$nested")
+      self$has_multiple_data
+    }
+  ),
+
+  public = list(
+    ##' @field model The dust model generator being simulated (cannot be
+    ##' re-bound)
+    model = NULL,
+
+    has_multiple_data = NULL,
+    has_multiple_parameters = NULL,
+    n_data = NULL,
+    n_parameters = NULL,
 
     ##' @description Create the particle filter
     ##'
@@ -108,7 +121,8 @@ particle_deterministic <- R6::R6Class(
     ##' particle for now.
     initialize = function(data, model, compare,
                           index = NULL, initial = NULL,
-                          constant_log_likelihood = NULL, n_threads = 1L) {
+                          constant_log_likelihood = NULL, n_threads = 1L,
+                          n_parameters = NULL) {
       if (!is_dust_generator(model)) {
         stop("'model' must be a dust_generator")
       }
@@ -125,7 +139,8 @@ particle_deterministic <- R6::R6Class(
       self$model <- model
       private$data <- data
 
-      self$nested <- inherits(data, "particle_filter_data_nested")
+      copy_list_and_lock(check_n_parameters(n_parameters, data),
+                         self)
 
       private$steps <- attr(data, "steps")
       private$data_split <- particle_filter_data_split(data, is.null(compare))
@@ -138,7 +153,6 @@ particle_deterministic <- R6::R6Class(
       private$n_threads <- n_threads
 
       lockBinding("model", self)
-      lockBinding("nested", self)
     },
 
     ##' @description Run the deterministic particle filter

@@ -210,3 +210,11 @@ callr_safe_result <- function(rs, grace = 2, dt = 0.1) {
   ## process.
   rs$get_result()
 }
+
+
+copy_list_and_lock <- function(data, env) {
+  for (i in names(data)) {
+    env[[i]] <- data[[i]]
+    lockBinding(i, env)
+  }
+}

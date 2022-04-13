@@ -109,8 +109,8 @@ particle_filter <- R6::R6Class(
     ## We don't actually need to expose most of these I think...
     has_multiple_data = NULL,
     has_multiple_parameters = NULL,
-    n_parameters = NULL,
     n_data = NULL,
+    n_parameters = NULL,
 
     ##' @description Create the particle filter
     ##'
@@ -232,26 +232,8 @@ particle_filter <- R6::R6Class(
       self$model <- model
       private$data <- data
 
-      self$has_multiple_data <- inherits(data, "particle_filter_data_nested")
-      if (self$has_multiple_data) {
-        self$n_data <- length(attr(data, "populations"))
-      } else {
-        self$n_data <- 1L
-      }
-
-      if (is.null(n_parameters)) {
-        self$has_multiple_parameters <- self$has_multiple_data
-        self$n_parameters <- self$n_data
-      } else {
-        assert_scalar_positive_integer(n_parameters)
-        if (self$has_multiple_data && n_parameters != self$n_data) {
-          stop(sprintf(
-            "With your nested particle filter, n_parameters must be %s",
-            self$n_data))
-        }
-        self$has_multiple_parameters <- TRUE
-        self$n_parameters <- n_parameters
-      }
+      copy_list_and_lock(check_n_parameters(n_parameters, data),
+                         self)
 
       private$steps <- attr(data, "steps")
       ## TODO: this will need work here to cope with how to deal with
@@ -274,10 +256,6 @@ particle_filter <- R6::R6Class(
 
       lockBinding("model", self)
       lockBinding("n_particles", self)
-      lockBinding("has_multiple_data", self)
-      lockBinding("has_multiple_parameters", self)
-      lockBinding("n_data", self)
-      lockBinding("n_parameters", self)
     },
 
     ##' @description Run the particle filter
@@ -457,6 +435,11 @@ particle_filter <- R6::R6Class(
     ##' the rng if it has been used (this can be used as a seed to
     ##' restart the model).
     inputs = function() {
+      if (self$has_multiple_parameters) {
+        n_parameters <- self$n_parameters
+      } else {
+        n_parameters <- NULL
+      }
       list(data = private$data,
            model = self$model,
            n_particles = self$n_particles,
@@ -466,6 +449,7 @@ particle_filter <- R6::R6Class(
            constant_log_likelihood = private$constant_log_likelihood,
            gpu_config = private$gpu_config,
            n_threads = private$n_threads,
+           n_parameters = n_parameters,
            seed = filter_current_seed(last(private$last_model), private$seed))
     },
 
@@ -877,4 +861,32 @@ check_compare <- function(compare, model) {
   } else {
     assert_function(compare)
   }
+}
+
+
+check_n_parameters <- function(n_parameters, data) {
+  has_multiple_data <- inherits(data, "particle_filter_data_nested")
+  if (has_multiple_data) {
+    n_data <- length(attr(data, "populations"))
+  } else {
+    n_data <- 1L
+  }
+
+  if (is.null(n_parameters)) {
+    has_multiple_parameters <- has_multiple_data
+    n_parameters <- n_data
+  } else {
+    assert_scalar_positive_integer(n_parameters)
+    if (has_multiple_data && n_parameters != n_data) {
+      stop(sprintf(
+        "With your nested particle filter, n_parameters must be %s",
+        n_data))
+    }
+    has_multiple_parameters <- TRUE
+    n_parameters <- n_parameters
+  }
+  list(has_multiple_parameters = has_multiple_parameters,
+       has_multiple_data = has_multiple_data,
+       n_parameters = n_parameters,
+       n_data = n_data)
 }

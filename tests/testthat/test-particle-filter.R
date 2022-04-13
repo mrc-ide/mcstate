@@ -368,6 +368,7 @@ test_that("can return inputs", {
   expect_null(inputs$gpu_config)
   expect_equal(inputs$initial, initial)
   expect_equal(inputs$seed, 100)
+  expect_null(inputs$n_parameters)
 
   res <- p$run()
 

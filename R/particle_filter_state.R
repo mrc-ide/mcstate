@@ -357,10 +357,10 @@ particle_filter_state <- R6::R6Class(
       }
       ret <- particle_filter_state$new(
         pars, private$generator, model, private$data, private$data_split,
-        private$steps, private$n_particles, private$n_threads,
-        initial, private$index, private$compare, constant_log_likelihood,
-        gpu_config, seed, private$min_log_likelihood,
-        save_history, private$save_restart)
+        private$steps, private$n_particles, private$has_multiple_parameters,
+        private$n_threads, initial, private$index, private$compare,
+        constant_log_likelihood, gpu_config,
+        seed, private$min_log_likelihood, save_history, private$save_restart)
 
       particle_filter_update_state(transform_state, self$model, ret$model)
 
@@ -391,8 +391,8 @@ particle_filter_state <- R6::R6Class(
 
       ret <- particle_filter_state$new(
         pars, private$generator, model, private$data, private$data_split,
-        private$steps, private$n_particles, private$n_threads,
-        private$initial, private$index, private$compare,
+        private$steps, private$n_particles, private$has_multiple_parameters,
+        private$n_threads, private$initial, private$index, private$compare,
         private$constant_log_likelihood, gpu_config,
         seed, private$min_log_likelihood, save_history, private$save_restart)
 
