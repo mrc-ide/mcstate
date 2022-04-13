@@ -83,21 +83,6 @@ particle_filter <- R6::R6Class(
     last_restart_state = NULL
   ),
 
-  active = list(
-    ##' @field nested Logical, indicating if this is a nested
-    ##' (multipopulation) particle filter (read only).  If `TRUE`, then
-    ##' each call to `run` returns a vector of log-likelihoods,
-    ##' one per population.  Triggered by the `data` argument to
-    ##' the constructor.
-    nested = function(value) {
-      if (!missing(value)) {
-        stop("'nested' is read-only")
-      }
-      .Deprecated("$has_multiple_data", old = "$nested")
-      self$has_multiple_data
-    }
-  ),
-
   public = list(
     ##' @field model The dust model generator being simulated (cannot be
     ##' re-bound)
