@@ -14,11 +14,25 @@ particle deterministically.
 \item{\code{model}}{The dust model generator being simulated (cannot be
 re-bound)}
 
-\item{\code{nested}}{Logical, indicating if this is a nested
-(multipopulation) deterministic particle (read only).  If \code{TRUE}, then
-each call to \code{run} returns a vector of log-likelihoods,
-one per population.  Triggered by the \code{data} argument to
-the constructor.}
+\item{\code{has_multiple_parameters}}{Logical, indicating if the
+deterministic particle requires multiple parameter sets in a list
+as inputs, and if it it will produce a vector of likelihoods
+the same length (read only).  The parameter sets may or may
+not use the same data (see \code{has_multiple_data}).}
+
+\item{\code{has_multiple_data}}{Logical, indicating if the deterministic
+particle simultaneously calculates the likelihood for multiple
+parameter sets (read only). If \code{TRUE}, \code{has_multiple_parameters}
+will always be \code{TRUE}.}
+
+\item{\code{n_parameters}}{The number of parameter sets used by this
+deterministic particle (read only).  The returned vector of
+likelihoods will be this length, and if \code{has_multiple_parameters}
+is \code{FALSE} this will be 1.}
+
+\item{\code{n_data}}{The number of data sets used by this deterministic
+particle (read only).  This will either be 1 or the same value as
+\code{n_parameters}.}
 }
 \if{html}{\out{</div>}}
 }
@@ -48,7 +62,8 @@ Create the particle filter
   index = NULL,
   initial = NULL,
   constant_log_likelihood = NULL,
-  n_threads = 1L
+  n_threads = 1L,
+  n_parameters = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -121,6 +136,11 @@ simulation. Defaults to 1, and should not be set higher than the
 number of cores available to the machine. This currently has no
 effect as the simulation will be run in serial on a single
 particle for now.}
+
+\item{\code{n_parameters}}{Number of parameter sets required.  This, along
+with \code{data}, controls the interpretation of how the deterministic
+particle, and importantly will add an additional dimension to
+most outputs (scalars become vectors, vectors become matrices etc).}
 }
 \if{html}{\out{</div>}}
 }

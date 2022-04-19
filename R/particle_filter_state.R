@@ -200,6 +200,7 @@ particle_filter_state <- R6::R6Class(
     ##' @param data_split The same data as `data` but split by step
     ##' @param steps A matrix of step beginning and ends
     ##' @param n_particles Number of particles to use
+    ##' @param has_multiple_parameters Compute multiple likelihoods at once?
     ##' @param n_threads The number of threads to use
     ##' @param initial Initial condition function (or `NULL`)
     ##' @param index Index function (or `NULL`)

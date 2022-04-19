@@ -68,11 +68,25 @@ re-bound)}
 
 \item{\code{n_particles}}{Number of particles used (read only)}
 
-\item{\code{nested}}{Logical, indicating if this is a nested
-(multipopulation) particle filter (read only).  If \code{TRUE}, then
-each call to \code{run} returns a vector of log-likelihoods,
-one per population.  Triggered by the \code{data} argument to
-the constructor.}
+\item{\code{has_multiple_parameters}}{Logical, indicating if the
+particle filter requires multiple parameter sets in a list
+as inputs, and if it it will produce a vector of likelihoods
+the same length (read only).  The parameter sets may or may
+not use the same data (see \code{has_multiple_data}).}
+
+\item{\code{has_multiple_data}}{Logical, indicating if the particle
+filter simultaneously calculates the likelihood for multiple
+parameter sets (read only). If \code{TRUE}, \code{has_multiple_parameters}
+will always be \code{TRUE}.}
+
+\item{\code{n_parameters}}{The number of parameter sets used by this
+particle filter (read only).  The returned vector of likelihood
+will be this length, and if \code{has_multiple_parameters} is \code{FALSE}
+this will be 1.}
+
+\item{\code{n_data}}{The number of data sets used by this particle filter
+(read only).  This will either be 1 or the same value as
+\code{n_parameters}.}
 }
 \if{html}{\out{</div>}}
 }
@@ -105,6 +119,7 @@ Create the particle filter
   constant_log_likelihood = NULL,
   n_threads = 1L,
   seed = NULL,
+  n_parameters = NULL,
   gpu_config = NULL
 )}\if{html}{\out{</div>}}
 }
@@ -188,6 +203,11 @@ generator), a positive integer, or a raw vector - see \code{\link[dust:dust]{dus
 and \code{\link[dust:dust_rng]{dust::dust_rng}} for more details. Note that the random number
 stream is unrelated from R's random number generator, except for
 initialisation with \code{seed = NULL}.}
+
+\item{\code{n_parameters}}{Number of parameter sets required.  This, along
+with \code{data}, controls the interpretation of how the particle
+filter, and importantly will add an additional dimension to
+most outputs (scalars become vectors, vectors become matrices etc).}
 
 \item{\code{gpu_config}}{GPU configuration, typically an integer
 indicating the device to use, where the model has GPU support.

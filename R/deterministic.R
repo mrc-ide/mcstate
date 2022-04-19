@@ -31,10 +31,29 @@ particle_deterministic <- R6::R6Class(
     ##' re-bound)
     model = NULL,
 
-    has_multiple_data = NULL,
+    ##' @field has_multiple_parameters Logical, indicating if the
+    ##'   deterministic particle requires multiple parameter sets in a list
+    ##'   as inputs, and if it it will produce a vector of likelihoods
+    ##'   the same length (read only).  The parameter sets may or may
+    ##'   not use the same data (see `has_multiple_data`).
     has_multiple_parameters = NULL,
-    n_data = NULL,
+
+    ##' @field has_multiple_data Logical, indicating if the deterministic
+    ##'   particle simultaneously calculates the likelihood for multiple
+    ##'   parameter sets (read only). If `TRUE`, `has_multiple_parameters`
+    ##'   will always be `TRUE`.
+    has_multiple_data = NULL,
+
+    ##' @field n_parameters The number of parameter sets used by this
+    ##'   deterministic particle (read only).  The returned vector of
+    ##'   likelihoods will be this length, and if `has_multiple_parameters`
+    ##'   is `FALSE` this will be 1.
     n_parameters = NULL,
+
+    ##' @field n_data The number of data sets used by this deterministic
+    ##'   particle (read only).  This will either be 1 or the same value as
+    ##'   `n_parameters`.
+    n_data = NULL,
 
     ##' @description Create the particle filter
     ##'
@@ -104,6 +123,11 @@ particle_deterministic <- R6::R6Class(
     ##' number of cores available to the machine. This currently has no
     ##' effect as the simulation will be run in serial on a single
     ##' particle for now.
+    ##'
+    ##' @param n_parameters Number of parameter sets required.  This, along
+    ##'   with `data`, controls the interpretation of how the deterministic
+    ##'   particle, and importantly will add an additional dimension to
+    ##'   most outputs (scalars become vectors, vectors become matrices etc).
     initialize = function(data, model, compare,
                           index = NULL, initial = NULL,
                           constant_log_likelihood = NULL, n_threads = 1L,

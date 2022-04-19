@@ -91,11 +91,29 @@ particle_filter <- R6::R6Class(
     ##' @field n_particles Number of particles used (read only)
     n_particles = NULL,
 
-    ## We don't actually need to expose most of these I think...
-    has_multiple_data = NULL,
+    ##' @field has_multiple_parameters Logical, indicating if the
+    ##'   particle filter requires multiple parameter sets in a list
+    ##'   as inputs, and if it it will produce a vector of likelihoods
+    ##'   the same length (read only).  The parameter sets may or may
+    ##'   not use the same data (see `has_multiple_data`).
     has_multiple_parameters = NULL,
-    n_data = NULL,
+
+    ##' @field has_multiple_data Logical, indicating if the particle
+    ##'   filter simultaneously calculates the likelihood for multiple
+    ##'   parameter sets (read only). If `TRUE`, `has_multiple_parameters`
+    ##'   will always be `TRUE`.
+    has_multiple_data = NULL,
+
+    ##' @field n_parameters The number of parameter sets used by this
+    ##'   particle filter (read only).  The returned vector of likelihood
+    ##'   will be this length, and if `has_multiple_parameters` is `FALSE`
+    ##'   this will be 1.
     n_parameters = NULL,
+
+    ##' @field n_data The number of data sets used by this particle filter
+    ##'   (read only).  This will either be 1 or the same value as
+    ##'   `n_parameters`.
+    n_data = NULL,
 
     ##' @description Create the particle filter
     ##'
