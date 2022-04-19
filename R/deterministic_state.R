@@ -183,7 +183,8 @@ particle_deterministic_state <- R6::R6Class(
                                seed = NULL, deterministic = TRUE,
                                pars_multi = nested)
         if (is.null(compare)) {
-          model$set_data(data_split)
+          data_is_shared <- has_multiple_parameters && !has_multiple_data
+          model$set_data(data_split, data_is_shared)
         }
       } else {
         model$update_state(pars = pars, step = steps[[1]])

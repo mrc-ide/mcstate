@@ -152,8 +152,7 @@ particle_deterministic <- R6::R6Class(
                          self)
 
       private$steps <- attr(data, "steps")
-      private$data_split <- particle_filter_data_split(data, is.null(compare),
-                                                       self$n_parameters)
+      private$data_split <- particle_filter_data_split(data, is.null(compare))
 
       private$compare <- compare
       private$index <- index
