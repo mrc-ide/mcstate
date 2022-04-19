@@ -1491,3 +1491,30 @@ test_that("Validate that n_parameters when using multiple data sets", {
           "n_parameters must be 2 (if not NULL)"),
     fixed = TRUE)
 })
+
+
+test_that("can run replicated model on gpu", {
+  dat <- example_sir()
+  n_particles <- 13
+  n_pars <- 7
+  set.seed(1)
+
+  model <- dust::dust_example("sirs")
+  p_c <- particle_filter$new(dat$data, model, n_particles, NULL,
+                             index = dat$index, n_parameters = n_pars,
+                             seed = 1L)
+  p_g <- particle_filter$new(dat$data, model, n_particles, NULL,
+                             index = dat$index, gpu_config = 0,
+                             n_parameters = n_pars, seed = 1L)
+  expect_null(r6_private(p_c)$gpu_config)
+  expect_equal(r6_private(p_g)$gpu_config, 0)
+
+  pars <- replicate(n_pars, list(beta = runif(1, 0, 0.4),
+                                 gamma = runif(1, 0, 0.4),
+                                 compare = list(exp_noise = Inf)),
+                    simplify = FALSE)
+
+  ll_c <- p_c$run(pars)
+  ll_g <- p_g$run(pars)
+  expect_identical(ll_c, ll_g)
+})
