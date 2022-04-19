@@ -294,7 +294,6 @@ particle_filter_state <- R6::R6Class(
 
       ## Variable (see also history)
       self$model <- model
-      ## TODO: needs a check
       self$log_likelihood <- particle_filter_constant_log_likelihood(
         pars, has_multiple_parameters, constant_log_likelihood)
     },

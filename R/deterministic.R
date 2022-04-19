@@ -224,8 +224,8 @@ particle_deterministic <- R6::R6Class(
       }
       particle_deterministic_state$new(
         pars, self$model, private$last_model[[1]], private$data,
-        private$data_split, private$steps, private$n_threads,
-        private$initial, private$index, private$compare,
+        private$data_split, private$steps, self$has_multiple_parameters,
+        private$n_threads, private$initial, private$index, private$compare,
         private$constant_log_likelihood,
         save_history, save_restart)
     },

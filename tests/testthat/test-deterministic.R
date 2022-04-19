@@ -397,3 +397,31 @@ test_that("Can get history with compiled particle filter", {
   expect_equal(dim(p1$history(1L)), dim(p2$history(1L)))
   expect_equal(p1$history(), p2$history())
 })
+
+
+test_that("Can run a determinsitic particle in replicate", {
+  dat <- example_sir()
+  pars <- list(list(beta = 0.2, gamma = 0.1, compare = list(exp_noise = Inf)),
+               list(beta = 0.3, gamma = 0.1, compare = list(exp_noise = Inf)))
+
+  p1 <- particle_deterministic$new(dat$data, dat$model, dat$compare,
+                                   index = dat$index)
+  p2 <- particle_deterministic$new(dat$data, dat$model, dat$compare,
+                                   index = dat$index, n_parameters = 2)
+
+  expect_identical(p2$run(pars), c(p1$run(pars[[1]]), p1$run(pars[[2]])))
+})
+
+
+test_that("Can run a determinsitic particle in replicate, compiled compare", {
+  dat <- example_sir()
+  pars <- list(list(beta = 0.2, gamma = 0.1, compare = list(exp_noise = Inf)),
+               list(beta = 0.3, gamma = 0.1, compare = list(exp_noise = Inf)))
+
+  p1 <- particle_deterministic$new(dat$data, dat$model, NULL,
+                                   index = dat$index)
+  p2 <- particle_deterministic$new(dat$data, dat$model, NULL,
+                                   index = dat$index, n_parameters = 2)
+
+  expect_identical(p2$run(pars), c(p1$run(pars[[1]]), p1$run(pars[[2]])))
+})
