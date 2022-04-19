@@ -15,7 +15,6 @@ pmcmc_state <- R6::R6Class(
     history_restart = NULL,
     history_trajectories = NULL,
 
-    curr_step = NULL,
     curr_pars = NULL,
     curr_lprior = NULL,
     curr_llik = NULL,
@@ -26,6 +25,7 @@ pmcmc_state <- R6::R6Class(
 
     tick = NULL,
     update = NULL,
+    tree = NULL,
 
     update_particle_history = function() {
       if (private$deterministic) {
@@ -90,7 +90,12 @@ pmcmc_state <- R6::R6Class(
     },
 
     run_filter = function(p, min_log_likelihood = -Inf) {
-      private$filter$run(private$pars$model(p),
+      if (private$control$speculate) {
+        pars <- lapply(seq_len(nrow(p)), function(i) private$pars$model(p[i, ]))
+      } else {
+        pars <- private$pars$model(p)
+      }
+      private$filter$run(pars,
                          private$control$save_trajectories,
                          private$control$save_restart,
                          min_log_likelihood)
@@ -162,6 +167,79 @@ pmcmc_state <- R6::R6Class(
         private$curr_lpost[accept] <- prop_lpost[accept]
         private$update_particle_history()
       }
+    },
+
+    run_speculate = function() {
+      control <- private$control
+
+      curr_step <- 0L
+      while (curr_step < control$n_steps) {
+        prop_pars <- speculate_propose(private$curr_pars,
+                                       private$pars$propose,
+                                       private$tree)
+        if (curr_step == 0L) {
+          prop_pars <- rbind(unname(private$curr_pars),
+                             prop_pars[-nrow(prop_pars), , drop = FALSE],
+                             deparse.level = 0)
+        }
+        prop_llik <- private$run_filter(prop_pars)
+        prop_lprior <- apply(prop_pars, 1, pars$prior)
+        prop_lpost <- prop_lprior + prop_llik
+
+        if (curr_step == 0L) {
+          private$curr_lprior <- prop_lprior[[1L]]
+          private$curr_llik <- prop_llik[[1L]]
+          private$curr_lpost <- prop_lpost[[1L]]
+          chain <- speculate_accept(private$curr_pars, private$curr_lpost,
+                                    prop_pars, prop_llik,
+                                    speculate_tree_truncate(private$tree))
+          chain$index <- chain$index + 1L
+        } else {
+          chain <- speculate_accept(private$curr_pars, private$curr_lpost,
+                                    prop_pars, prop_llik,
+                                    private$tree)
+        }
+
+        ## At this point we would do one extraction of a set of
+        ## particle state from the filter, if wanted.  This requires
+        ## some work in dust to do efficiently and there's no point
+        ## doing that until we know that this is a worthwhile
+        ## approach.
+        len <- min(chain$length, control$n_steps - curr_step)
+        for (i in seq_len(len)) {
+          if (chain$accept[[i]]) {
+            idx <- chain$index[[i]]
+            private$curr_lprior <- prop_lprior[[idx]]
+            private$curr_llik <- prop_llik[[idx]]
+            private$curr_lpost <- prop_lpost[[idx]]
+            ## Here, we'd update particle history using the above
+            ## bulk-extracted state.
+          }
+          private$update_mcmc_history(curr_step + i)
+        }
+
+        curr_step <- curr_step + len
+        private$tick(len)
+      }
+    },
+
+    run_sequential = function() {
+      control <- private$control
+      steps <- seq(from = 1L, length.out = control$n_steps)
+      rerun <- make_rerun(control$rerun_every, control$rerun_random)
+
+      for (i in steps) {
+        private$tick()
+
+        if (rerun(i)) {
+          private$curr_llik <- private$run_filter(private$curr_pars)
+          private$curr_lpost <- private$curr_lprior + private$curr_llik
+          private$update_particle_history()
+        }
+
+        private$update(i)
+        private$update_mcmc_history(i)
+      }
     }
   ),
 
@@ -185,12 +263,24 @@ pmcmc_state <- R6::R6Class(
       private$tick <- pmcmc_progress(control$n_steps, control$progress,
                                      control$progress_simple)
 
-      private$curr_step <- 0L
       private$curr_pars <- initial
-      private$curr_lprior <- private$pars$prior(private$curr_pars)
-      private$curr_llik <- private$run_filter(private$curr_pars)
-      private$curr_lpost <- private$curr_lprior + private$curr_llik
-      private$update_particle_history()
+
+      if (control$speculate) {
+        if (private$nested) {
+          stop("Can't use a nested filter with speculative pmcmc")
+        }
+        if (private$deterministic) {
+          stop("Can't use a deterministic particle with speculative mcmc")
+        }
+        private$filter <- speculate_prepare_filter(filter, control)
+        private$tree <- speculate_tree(control$speculate_n,
+                                       control$speculate_p_accept)
+      } else {
+        private$curr_lprior <- private$pars$prior(private$curr_pars)
+        private$curr_llik <- private$run_filter(private$curr_pars)
+        private$curr_lpost <- private$curr_lprior + private$curr_llik
+        private$update_particle_history()
+      }
 
       n_steps <- control$n_steps
       n_history <- control$n_steps_retain
@@ -207,7 +297,9 @@ pmcmc_state <- R6::R6Class(
         private$history_restart <- history_collector(n_history)
       }
 
-      if (!private$nested) {
+      if (control$speculate) {
+        update <- NULL # different approach here...
+      } else if (!private$nested) {
         update <- update_single(private$update_simple)
       } else if (length(pars$names("fixed")) == 0) {
         update <- update_single(private$update_varied)
@@ -224,29 +316,11 @@ pmcmc_state <- R6::R6Class(
     },
 
     run = function() {
-      control <- private$control
-      ## TODO: simplify, then look at simplifying the rest
-      to <- min(private$curr_step + control$n_steps, control$n_steps)
-      steps <- seq(from = private$curr_step + 1L,
-                   length.out = to - private$curr_step)
-      rerun <- make_rerun(control$rerun_every, control$rerun_random)
-
-      for (i in steps) {
-        private$tick()
-
-        if (rerun(i)) {
-          private$curr_llik <- private$run_filter(private$curr_pars)
-          private$curr_lpost <- private$curr_lprior + private$curr_llik
-          private$update_particle_history()
-        }
-
-        private$update(i)
-        private$update_mcmc_history(i)
+      if (private$control$speculate) {
+        private$run_speculate()
+      } else {
+        private$run_sequential()
       }
-
-      private$curr_step <- to
-
-      list(step = to, finished = to == control$n_steps)
     },
 
     finish = function() {

@@ -151,6 +151,20 @@
 ##' @param n_steps_retain Optionally, the number of samples to retain from
 ##'   the `n_steps - n_burnin` steps.  See Details.
 ##'
+##' @param speculate_n The number of mcmc steps to speculate. The
+##'   default of 0 does a non-speculative algorithm, while any value
+##'   greater than 1 will use a speculative algorithm.  This is
+##'   experimental, and incompatible with many options - in particular
+##'   you may not use a nested pmcmc approach (multiple data), a
+##'   deterministic particle, `rerun_every` must be `Inf`, and you may
+##'   not save any state (`save_trajectories` must be `FALSE`,
+##'   `save_state` must be `FALSE` and `save_restart` must be `NULL`).
+##'
+##' @param speculate_p_accept The projected acceptance rate for your
+##'   pmcmc.  We use this to build a sensible tree for the speculation
+##'   process.  The closer this is to your real acceptance rate, the
+##'   less inefficient your process will be.
+##'
 ##' @param path Optional path to save partial pmcmc results in, when
 ##'   using workers.  If not given (or `NULL`) then a temporary
 ##'   directory is used.
@@ -183,6 +197,7 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
                           nested_step_ratio = 1, nested_update_both = FALSE,
                           filter_early_exit = FALSE,
                           n_burnin = NULL, n_steps_retain = NULL,
+                          speculate_n = NULL, speculate_p_accept = 0.1,
                           path = NULL) {
   assert_scalar_positive_integer(n_steps)
   assert_scalar_positive_integer(n_chains)
@@ -246,6 +261,27 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
 
   filter <- pmcmc_filter_on_generation(n_steps, n_burnin, n_steps_retain)
 
+  assert_scalar_positive_integer(speculate_n, allow_zero = TRUE)
+  assert_scalar(speculate_p_accept)
+  if (speculate_p_accept < 0 || speculate_p_accept > 1) {
+    stop("'speculate_p_accept' must lie in [0, 1]")
+  }
+  speculate <- speculate_n > 0
+  if (speculate) {
+    if (rerun_every < Inf) {
+      stop("Cannot use 'rerun_every' with speculative pmcmc")
+    }
+    if (save_trajectories) {
+      stop("Cannot use 'save_trajectories' with speculative pmcmc")
+    }
+    if (save_state) {
+      stop("Cannot use 'save_state' with speculative pmcmc")
+    }
+    if (!is.null(save_restart)) {
+      stop("Cannot use 'save_restart' with speculative pmcmc")
+    }
+  }
+
   ret <- list(n_steps = n_steps,
               n_chains = n_chains,
               n_workers = n_workers,
@@ -260,6 +296,9 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
               progress_simple = FALSE,
               path = path,
               filter_early_exit = filter_early_exit,
+              speculate = speculate,
+              speculate_n = speculate_n,
+              speculate_p_accept = speculate_p_accept,
               nested_update_both = nested_update_both,
               nested_step_ratio = nested_step_ratio)
   ret[names(filter)] <- filter

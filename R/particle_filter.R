@@ -489,6 +489,7 @@ particle_filter_from_inputs <- function(inputs, seed = NULL) {
       index = inputs$index,
       initial = inputs$initial,
       constant_log_likelihood = inputs$constant_log_likelihood,
+      n_parameters = inputs$n_parameters,
       n_threads = inputs$n_threads)
   } else {
     particle_filter$new(
@@ -501,6 +502,7 @@ particle_filter_from_inputs <- function(inputs, seed = NULL) {
       initial = inputs$initial,
       constant_log_likelihood = inputs$constant_log_likelihood,
       n_threads = inputs$n_threads,
+      n_parameters = inputs$n_parameters,
       seed = seed %||% inputs$seed)
   }
 }

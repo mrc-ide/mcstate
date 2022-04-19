@@ -21,6 +21,8 @@ pmcmc_control(
   filter_early_exit = FALSE,
   n_burnin = NULL,
   n_steps_retain = NULL,
+  speculate_n = NULL,
+  speculate_p_accept = 0.1,
   path = NULL
 )
 }
@@ -135,6 +137,20 @@ burnin.  This happens separately to the burnin in
 
 \item{n_steps_retain}{Optionally, the number of samples to retain from
 the \code{n_steps - n_burnin} steps.  See Details.}
+
+\item{speculate_n}{The number of mcmc steps to speculate. The
+default of 0 does a non-speculative algorithm, while any value
+greater than 1 will use a speculative algorithm.  This is
+experimental, and incompatible with many options - in particular
+you may not use a nested pmcmc approach (multiple data), a
+deterministic particle, \code{rerun_every} must be \code{Inf}, and you may
+not save any state (\code{save_trajectories} must be \code{FALSE},
+\code{save_state} must be \code{FALSE} and \code{save_restart} must be \code{NULL}).}
+
+\item{speculate_p_accept}{The projected acceptance rate for your
+pmcmc.  We use this to build a sensible tree for the speculation
+process.  The closer this is to your real acceptance rate, the
+less inefficient your process will be.}
 
 \item{path}{Optional path to save partial pmcmc results in, when
 using workers.  If not given (or \code{NULL}) then a temporary
