@@ -197,7 +197,7 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
                           nested_step_ratio = 1, nested_update_both = FALSE,
                           filter_early_exit = FALSE,
                           n_burnin = NULL, n_steps_retain = NULL,
-                          speculate_n = NULL, speculate_p_accept = 0.1,
+                          speculate_n = 0L, speculate_p_accept = 0.1,
                           path = NULL) {
   assert_scalar_positive_integer(n_steps)
   assert_scalar_positive_integer(n_chains)

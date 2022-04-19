@@ -21,7 +21,7 @@ pmcmc_control(
   filter_early_exit = FALSE,
   n_burnin = NULL,
   n_steps_retain = NULL,
-  speculate_n = NULL,
+  speculate_n = 0L,
   speculate_p_accept = 0.1,
   path = NULL
 )
