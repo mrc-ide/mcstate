@@ -429,18 +429,17 @@ check_step <- function(curr, step_index, steps, name) {
 
 ## This helper pulls together small pieces of bookkeeping that differ
 ## strongly depending on if the particle filter is a
-## nested/multiparameter filter or not.
+## single-/multi-parameter filter or not.
 particle_filter_state_support <- function(has_multiple_parameters,
                                           has_multiple_data) {
   if (has_multiple_parameters) {
-    ## TODO: rewrite nested
-    list(initial = pfs_initial_nested,
-         index = pfs_index_nested,
-         compare = function(...) pfs_compare_nested(has_multiple_data, ...))
+    list(initial = pfs_initial_multiple,
+         index = pfs_index_multiple,
+         compare = function(...) pfs_compare_multiple(has_multiple_data, ...))
   } else {
-    list(initial = pfs_initial_simple,
-         index = pfs_index_simple,
-         compare = pfs_compare_simple)
+    list(initial = pfs_initial_single,
+         index = pfs_index_single,
+         compare = pfs_compare_single)
   }
 }
 
@@ -498,8 +497,9 @@ particle_filter_update_state <- function(transform, model_old, model_new) {
 }
 
 
-## These functions are either "simple" or "nested"
-pfs_initial_simple <- function(model, initial, pars, n_particles) {
+## These functions are either "single" or "multiple" depending on the
+## number of parameters a particle filter is operating with.
+pfs_initial_single <- function(model, initial, pars, n_particles) {
   state <- initial(model$info(), n_particles, pars)
   if (is.list(state)) {
     stop("Setting 'step' from initial no longer supported")
@@ -508,7 +508,7 @@ pfs_initial_simple <- function(model, initial, pars, n_particles) {
 }
 
 
-pfs_initial_nested <- function(model, initial, pars, n_particles) {
+pfs_initial_multiple <- function(model, initial, pars, n_particles) {
   state <- Map(initial, model$info(), rep(n_particles, length(pars)), pars)
   if (all(vlapply(state, is.null))) {
     return()
@@ -528,12 +528,12 @@ pfs_initial_nested <- function(model, initial, pars, n_particles) {
 }
 
 
-pfs_index_simple <- function(model, index) {
+pfs_index_single <- function(model, index) {
   index(model$info())
 }
 
 
-pfs_index_nested <- function(model, index) {
+pfs_index_multiple <- function(model, index) {
   index_data <- lapply(model$info(), index)
 
   nok <- !all(vlapply(index_data[-1], identical, index_data[[1]]))
@@ -545,7 +545,7 @@ pfs_index_nested <- function(model, index) {
 }
 
 
-pfs_compare_simple <- function(state, compare, data, pars) {
+pfs_compare_single <- function(state, compare, data, pars) {
   log_weights <- compare(state, data, pars)
   if (is.null(log_weights)) {
     return(log_weights)
@@ -556,7 +556,8 @@ pfs_compare_simple <- function(state, compare, data, pars) {
 
 ## NOTE: funny argument ordering as we'll partially apply the first
 ## argument later.
-pfs_compare_nested <- function(has_multiple_data, state, compare, data, pars) {
+pfs_compare_multiple <- function(has_multiple_data, state, compare, data,
+                                 pars) {
   if (has_multiple_data) {
     log_weights <- lapply(seq_len(nlayer(state)), function(i)
       compare(array_drop(state[, , i, drop = FALSE], 3), data[[i]], pars[[i]]))

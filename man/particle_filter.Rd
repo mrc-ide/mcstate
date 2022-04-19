@@ -269,11 +269,11 @@ from the filter. This is primarily intended for use with
 will certainly be rejected. Only suitable for use where
 log-likelihood increments (with the \code{compare} function) are always
 negative. This is the case if you use a normalised discrete
-distribution, but not necessarily otherwise. If using a nested
-filter this can be a single number (in which case the exit is
-when the sum of log-likelihoods drops below this threshhold) or
-a vector of numbers the same length as \code{pars} (in which case exit
-occurs when all numbers drop below this threshhold).}
+distribution, but not necessarily otherwise. If using a
+multi-parameter filter this can be a single number (in which case
+the exit is when the sum of log-likelihoods drops below this
+threshold) or a vector of numbers the same length as \code{pars} (in
+which case exit occurs when all numbers drop below this threshold).}
 }
 \if{html}{\out{</div>}}
 }
@@ -352,9 +352,9 @@ incur a performance cost. This method will throw an error if
 the model has not run, or was run without \code{save_history = TRUE}. Returns a 3d array with dimensions corresponding to (1)
 model state, filtered by \code{index$run} if provided, (2)
 particle (following \code{index_particle} if provided), (3)
-time point. If nested parameters used then returns a 4d array with
-dimensions corresponding to (1) model state, (2) particle, (3)
-population, (4) time point.
+time point. If using a multi-parameter filter then returns a 4d array
+with dimensions corresponding to (1) model state, (2) particle, (3)
+parameter, (4) time point.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{particle_filter$history(index_particle = NULL)}\if{html}{\out{</div>}}
 }
@@ -363,10 +363,10 @@ population, (4) time point.
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{index_particle}}{Optional vector of particle indices to return.
-If nested parameters used then a vector will be replicated to a matrix
-with number of columns equal to number of populations, otherwise a
-matrix can be supplied.
-If \code{NULL} we return all particles' histories.}
+If using a multi-parameter filter then a vector will be replicated
+to a matrix with number of columns equal to number of parameters,
+otherwise a matrix can be supplied. If \code{NULL} we return all particles'
+histories.}
 }
 \if{html}{\out{</div>}}
 }
@@ -379,9 +379,9 @@ Return the full particle filter state at points back in time
 that were saved with the \code{save_restart} argument to
 \verb{$run()}. If available, this will return a 3d array, with
 dimensions representing (1) particle state, (2) particle index,
-(3) time point. If nested parameters are used then returns a 4d array,
+(3) time point. If multiple parameters are used then returns a 4d array,
 with dimensions representing (1) particle state, (2) particle index,
-(3) population, (4) time point. This could be quite large, especially
+(3) parameter set, (4) time point. This could be quite large, especially
 if you are using the \code{index} argument to create the particle filter
 and return a subset of all state generally. It is also
 different to the saved trajectories returned by \verb{$history()}

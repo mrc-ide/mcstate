@@ -276,9 +276,9 @@ particle_deterministic <- R6::R6Class(
     ##' that were saved with the `save_restart` argument to
     ##' `$run()`. If available, this will return a 3d array, with
     ##' dimensions representing (1) particle state, (2) particle index,
-    ##' (3) time point. If nested parameters are used then returns a 4d array,
+    ##' (3) time point. If multiple parameters are used then returns a 4d array,
     ##' with dimensions representing (1) particle state, (2) particle index,
-    ##' (3) population, (4) time point. This could be quite large, especially
+    ##' (3) parameter, (4) time point. This could be quite large, especially
     ##' if you are using the `index` argument to create the particle filter
     ##' and return a subset of all state generally. In the stochastic version,
     ##' this is different the saved trajectories returned by `$history()`

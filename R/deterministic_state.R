@@ -342,23 +342,23 @@ deterministic_steps_restart <- function(save_restart_step, step_end) {
 particle_deterministic_state_support <- function(has_multiple_parameters,
                                                  has_multiple_data) {
   if (has_multiple_parameters) {
-    list(initial = pfs_initial_nested,
-         index = pds_index_nested,
-         compare = function(...) pds_compare_nested(has_multiple_data, ...))
+    list(initial = pfs_initial_multiple,
+         index = pds_index_multiple,
+         compare = function(...) pds_compare_multiple(has_multiple_data, ...))
   } else {
-    list(initial = pfs_initial_simple,
-         index = pds_index_simple,
-         compare = pds_compare_simple)
+    list(initial = pfs_initial_single,
+         index = pds_index_single,
+         compare = pds_compare_single)
   }
 }
 
 
-pds_index_simple <- function(model, index) {
+pds_index_single <- function(model, index) {
   pds_index_process(index(model$info()))
 }
 
 
-pds_index_nested <- function(model, index) {
+pds_index_multiple <- function(model, index) {
   index_data <- lapply(model$info(), index)
 
   nok <- !all(vlapply(index_data[-1], identical, index_data[[1]]))
@@ -379,7 +379,7 @@ pds_index_process <- function(data) {
 }
 
 
-pds_compare_simple <- function(state, compare, data, pars) {
+pds_compare_single <- function(state, compare, data, pars) {
   n_data <- length(data)
   ll <- numeric(n_data)
   for (i in seq_len(n_data)) {
@@ -391,9 +391,8 @@ pds_compare_simple <- function(state, compare, data, pars) {
 }
 
 
-pds_compare_nested <- function(has_multiple_data, state, compare, data, pars) {
-  ## At this point, I really have no strong idea what is going on with
-  ## the data!
+pds_compare_multiple <- function(has_multiple_data, state, compare, data,
+                                 pars) {
   n_pars <- length(pars) # number of parameter sets
   n_data <- length(data) # number of time points in data (*not* data sets)
   ll <- array(0, c(n_data, n_pars))
