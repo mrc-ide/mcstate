@@ -1482,7 +1482,7 @@ test_that("Can run a particle filter in replicate with compiled compare", {
 })
 
 
-test_that("Can run a particle filter in replicate", {
+test_that("Validate that n_parameters when using multiple data sets", {
   dat <- example_sir_shared()
   expect_error(
     particle_filter$new(dat$data, dat$model, 10, dat$compare,
