@@ -212,6 +212,7 @@ pmcmc_state <- R6::R6Class(
             private$curr_lprior <- prop_lprior[[idx]]
             private$curr_llik <- prop_llik[[idx]]
             private$curr_lpost <- prop_lpost[[idx]]
+            private$curr_pars <- prop_pars[idx, ]
             ## Here, we'd update particle history using the above
             ## bulk-extracted state.
           }
