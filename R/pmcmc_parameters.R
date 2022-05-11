@@ -28,24 +28,28 @@
 ##'   single argument, being the value of this parameter. If given,
 ##'   then `prior(initial)` must evaluate to a finite value.
 ##'
+##' @param mean Optionally, an estimate of the mean of the
+##'   parameter. If not given, then we assume that `initial` is a
+##'   reasonable estimate.  This is used only in adaptive mcmc.
+##'
 ##' @export
 ##' @examples
 ##' pmcmc_parameter("a", 0.1)
 pmcmc_parameter <- function(name, initial, min = -Inf, max = Inf,
-                            discrete, integer = FALSE, prior = NULL) {
+                            discrete, integer = FALSE, prior = NULL,
+                            mean = NULL) {
   if (!missing(discrete)) {
     .Deprecated("integer", old = "discrete")
     integer <- discrete
   }
   assert_scalar_character(name)
   assert_scalar_logical(integer)
+  assert_in_range(initial, min, max)
 
-  if (initial < min) {
-    stop(sprintf("'initial' must be >= 'min' (%s)", min))
+  if (is.null(mean)) {
+    mean <- initial
   }
-  if (initial > max) {
-    stop(sprintf("'initial' must be <= 'max' (%s)", max))
-  }
+  assert_in_range(mean, min, max)
 
   if (is.null(prior)) {
     prior <- function(p) 0
@@ -65,7 +69,7 @@ pmcmc_parameter <- function(name, initial, min = -Inf, max = Inf,
   }
 
   ret <- list(name = name, initial = initial, min = min, max = max,
-              integer = integer, prior = prior)
+              integer = integer, prior = prior, mean = mean)
   class(ret) <- "pmcmc_parameter"
   ret
 }
@@ -115,7 +119,12 @@ pmcmc_parameters <- R6::R6Class(
     transform = NULL,
     integer = NULL,
     min = NULL,
-    max = NULL
+    max = NULL,
+
+    prepare_theta = function(theta) {
+      theta[private$integer] <- round(theta[private$integer])
+      reflect_proposal(theta, private$min, private$max)
+    }
   ),
 
   public = list(
@@ -184,6 +193,18 @@ pmcmc_parameters <- R6::R6Class(
       vnapply(private$parameters, "[[", "initial")
     },
 
+    ##' @description Return the estimate of the mean of the parameters,
+    ##'   as set when created (this is not updated by any fitting!)
+    mean = function() {
+      vnapply(private$parameters, "[[", "mean")
+    },
+
+    ##' @description Return the variance-covariance matrix used for the
+    ##'   proposal.
+    vcv = function() {
+      private$proposal_kernel
+    },
+
     ##' @description Return the names of the parameters
     names = function() {
       names(private$parameters)
@@ -222,9 +243,28 @@ pmcmc_parameters <- R6::R6Class(
     ##' points. The parameter is equivalent to a multiplicative factor
     ##' applied to the variance covariance matrix.
     propose = function(theta, scale = 1) {
-      theta <- private$proposal(theta, scale)
-      theta[private$integer] <- round(theta[private$integer])
-      reflect_proposal(theta, private$min, private$max)
+      private$prepare_theta(private$proposal(theta, scale))
+    },
+
+    ##' @description Propose a new parameter vector given a current
+    ##'   parameter vector, with the help of some second, variable,
+    ##'   variance-covariance-matrix.
+    ##'
+    ##' @param theta a parameter vector in the same order as your
+    ##'   parameters were defined in (see `$names()` for that order.
+    ##'
+    ##' @param weight Between zero and one
+    ##'
+    ##' @param vcv A variance covariance matrix of the correct size
+    propose_weighted = function(theta, weight, vcv) {
+      ## TODO: validate weight, vcv
+      ## assert_in_range(weight, 0, 1)
+      ##
+      ## TODO: don't draw from distributions in the cases where
+      ## weights don't need it
+      private$prepare_theta(
+        (1 - weight) * private$proposal(theta) +
+        weight * rmvnorm_generator(vcv)(theta))
     },
 
     ##' @description Apply the model transformation function to a parameter

@@ -676,3 +676,14 @@ test_that("Can filter pmcmc on creation, after combining chains", {
   expect_identical(results3$pars, results2$pars)
   expect_identical(results3$pars_full, results3$pars_full)
 })
+
+
+test_that("Can't use adaptive proposal with pmcmc models", {
+  dat <- example_sir()
+  p <- particle_filter$new(dat$data, dat$model, 10, dat$compare,
+                           index = dat$index)
+  control <- pmcmc_control(2, adaptive_proposal = TRUE)
+  expect_error(
+    pmcmc(dat$pars, p, control = control),
+    "Adaptive proposal only allowed in deterministic models")
+})

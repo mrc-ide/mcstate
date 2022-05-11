@@ -155,6 +155,11 @@
 ##'   using workers.  If not given (or `NULL`) then a temporary
 ##'   directory is used.
 ##'
+##' @param adaptive_proposal Optionally, control over an adaptive
+##'   proposal ([mcstate::adaptive_proposal_control]). Alternatively
+##'   `FALSE` to disable, `TRUE` to enable defaults. This is only
+##'   valid for single-population deterministic models.
+##'
 ##' @return A `pmcmc_control` object, which should not be modified
 ##'   once created.
 ##'
@@ -183,7 +188,7 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
                           nested_step_ratio = 1, nested_update_both = FALSE,
                           filter_early_exit = FALSE,
                           n_burnin = NULL, n_steps_retain = NULL,
-                          path = NULL) {
+                          adaptive_proposal = NULL, path = NULL) {
   assert_scalar_positive_integer(n_steps)
   assert_scalar_positive_integer(n_chains)
   assert_scalar_positive_integer(n_workers)
@@ -237,6 +242,15 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
                           must be an integer", nested_step_ratio))
   }
 
+  if (is.null(adaptive_proposal) || isFALSE(adaptive_proposal)) {
+    adaptive_proposal <- NULL
+  } else {
+    if (isTRUE(adaptive_proposal)) {
+      adaptive_proposal <- adaptive_proposal_control()
+    }
+    assert_is(adaptive_proposal, "adaptive_proposal_control")
+  }
+
   if (!is.null(path)) {
     assert_scalar_character(path)
     if (n_workers == 1) {
@@ -259,6 +273,7 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
               progress = progress,
               progress_simple = FALSE,
               path = path,
+              adaptive_proposal = adaptive_proposal,
               filter_early_exit = filter_early_exit,
               nested_update_both = nested_update_both,
               nested_step_ratio = nested_step_ratio)

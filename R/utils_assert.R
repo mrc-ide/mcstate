@@ -182,3 +182,15 @@ match_value <- function(arg, choices, name = deparse(substitute(arg))) {
   }
   arg
 }
+
+
+assert_in_range <- function(x, min, max, name = deparse(substitute(x))) {
+  assert_scalar(x, name) # assert_scalar_numeric(x, name)
+  if (x < min) {
+    stop(sprintf("'%s' must be >= 'min' (%s)", name, min))
+  }
+  if (x > max) {
+    stop(sprintf("'%s' must be <= 'max' (%s)", name, max))
+  }
+  invisible(x)
+}

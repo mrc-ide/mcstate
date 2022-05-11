@@ -397,3 +397,19 @@ test_that("Can get history with compiled particle filter", {
   expect_equal(dim(p1$history(1L)), dim(p2$history(1L)))
   expect_equal(p1$history(), p2$history())
 })
+
+
+test_that("Can run an adaptive proposal, increasing acceptance rate", {
+  dat <- example_sir()
+  control1 <- pmcmc_control(100, save_trajectories = TRUE,
+                            adaptive_proposal = adaptive_proposal_control(
+                              acceptance_target = 0.5))
+  control2 <- pmcmc_control(100, save_trajectories = TRUE)
+
+  p <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
+  res1 <- pmcmc(dat$pars, p, NULL, control1)
+  res2 <- pmcmc(dat$pars, p, NULL, control2)
+
+  expect_lt(coda::rejectionRate(coda::mcmc(res1$pars))[[1]],
+            coda::rejectionRate(coda::mcmc(res2$pars))[[1]])
+})

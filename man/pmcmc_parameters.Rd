@@ -40,10 +40,13 @@ pars$model(p)
 \itemize{
 \item \href{#method-new}{\code{pmcmc_parameters$new()}}
 \item \href{#method-initial}{\code{pmcmc_parameters$initial()}}
+\item \href{#method-mean}{\code{pmcmc_parameters$mean()}}
+\item \href{#method-vcv}{\code{pmcmc_parameters$vcv()}}
 \item \href{#method-names}{\code{pmcmc_parameters$names()}}
 \item \href{#method-summary}{\code{pmcmc_parameters$summary()}}
 \item \href{#method-prior}{\code{pmcmc_parameters$prior()}}
 \item \href{#method-propose}{\code{pmcmc_parameters$propose()}}
+\item \href{#method-propose_weighted}{\code{pmcmc_parameters$propose_weighted()}}
 \item \href{#method-model}{\code{pmcmc_parameters$model()}}
 \item \href{#method-fix}{\code{pmcmc_parameters$fix()}}
 }
@@ -92,6 +95,28 @@ Return the initial parameter values as a named numeric
 vector
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters$initial()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-mean"></a>}}
+\if{latex}{\out{\hypertarget{method-mean}{}}}
+\subsection{Method \code{mean()}}{
+Return the estimate of the mean of the parameters,
+as set when created (this is not updated by any fitting!)
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters$mean()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-vcv"></a>}}
+\if{latex}{\out{\hypertarget{method-vcv}{}}}
+\subsection{Method \code{vcv()}}{
+Return the variance-covariance matrix used for the
+proposal.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters$vcv()}\if{html}{\out{</div>}}
 }
 
 }
@@ -157,6 +182,30 @@ parameters were defined in (see \verb{$names()} for that order.}
 proposal distribution. This may be useful in sampling starting
 points. The parameter is equivalent to a multiplicative factor
 applied to the variance covariance matrix.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-propose_weighted"></a>}}
+\if{latex}{\out{\hypertarget{method-propose_weighted}{}}}
+\subsection{Method \code{propose_weighted()}}{
+Propose a new parameter vector given a current
+parameter vector, with the help of some second, variable,
+variance-covariance-matrix.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters$propose_weighted(theta, weight, vcv)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{theta}}{a parameter vector in the same order as your
+parameters were defined in (see \verb{$names()} for that order.}
+
+\item{\code{weight}}{Between zero and one}
+
+\item{\code{vcv}}{A variance covariance matrix of the correct size}
 }
 \if{html}{\out{</div>}}
 }
