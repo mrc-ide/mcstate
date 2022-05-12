@@ -19,7 +19,7 @@ particle deterministically."><meta property="og:image" content="/logo.png"><!-- 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.1</span>
       </span>
     </div>
 
@@ -28,7 +28,7 @@ particle deterministically."><meta property="og:image" content="/logo.png"><!-- 
   <a href="../reference/index.html">Reference</a>
 </li>
 <li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
      
     <span class="caret"></span>
@@ -92,12 +92,32 @@ particle deterministically.</p>
 re-bound)</p></dd>
 
 
-<dt><code>nested</code></dt>
-<dd><p>Logical, indicating if this is a nested
-(multipopulation) deterministic particle (read only).  If <code>TRUE</code>, then
-each call to <code>run</code> returns a vector of log-likelihoods,
-one per population.  Triggered by the <code>data</code> argument to
-the constructor.</p></dd>
+<dt><code>has_multiple_parameters</code></dt>
+<dd><p>Logical, indicating if the
+deterministic particle requires multiple parameter sets in a list
+as inputs, and if it it will produce a vector of likelihoods
+the same length (read only).  The parameter sets may or may
+not use the same data (see <code>has_multiple_data</code>).</p></dd>
+
+
+<dt><code>has_multiple_data</code></dt>
+<dd><p>Logical, indicating if the deterministic
+particle simultaneously calculates the likelihood for multiple
+parameter sets (read only). If <code>TRUE</code>, <code>has_multiple_parameters</code>
+will always be <code>TRUE</code>.</p></dd>
+
+
+<dt><code>n_parameters</code></dt>
+<dd><p>The number of parameter sets used by this
+deterministic particle (read only).  The returned vector of
+likelihoods will be this length, and if <code>has_multiple_parameters</code>
+is <code>FALSE</code> this will be 1.</p></dd>
+
+
+<dt><code>n_data</code></dt>
+<dd><p>The number of data sets used by this deterministic
+particle (read only).  This will either be 1 or the same value as
+<code>n_parameters</code>.</p></dd>
 
 
 </dl><p></p></div>
@@ -127,7 +147,8 @@ the constructor.</p></dd>
   index <span class="op">=</span> <span class="cn">NULL</span>,
   initial <span class="op">=</span> <span class="cn">NULL</span>,
   constant_log_likelihood <span class="op">=</span> <span class="cn">NULL</span>,
-  n_threads <span class="op">=</span> <span class="fl">1L</span>
+  n_threads <span class="op">=</span> <span class="fl">1L</span>,
+  n_parameters <span class="op">=</span> <span class="cn">NULL</span>
 <span class="op">)</span></code></pre></div><p></p></div>
 </div>
 
@@ -212,6 +233,13 @@ simulation. Defaults to 1, and should not be set higher than the
 number of cores available to the machine. This currently has no
 effect as the simulation will be run in serial on a single
 particle for now.</p></dd>
+
+
+<dt><code>n_parameters</code></dt>
+<dd><p>Number of parameter sets required.  This, along
+with <code>data</code>, controls the interpretation of how the deterministic
+particle, and importantly will add an additional dimension to
+most outputs (scalars become vectors, vectors become matrices etc).</p></dd>
 
 
 </dl><p></p></div>
@@ -364,9 +392,9 @@ If <code>NULL</code> we return all particles' histories.</p></dd>
 that were saved with the <code>save_restart</code> argument to
 <code>$run()</code>. If available, this will return a 3d array, with
 dimensions representing (1) particle state, (2) particle index,
-(3) time point. If nested parameters are used then returns a 4d array,
+(3) time point. If multiple parameters are used then returns a 4d array,
 with dimensions representing (1) particle state, (2) particle index,
-(3) population, (4) time point. This could be quite large, especially
+(3) parameter, (4) time point. This could be quite large, especially
 if you are using the <code>index</code> argument to create the particle filter
 and return a subset of all state generally. In the stochastic version,
 this is different the saved trajectories returned by <code>$history()</code>
@@ -438,7 +466,7 @@ requested (based on environment variables and OpenMP support).</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
 </div>
 
       </footer></div>
