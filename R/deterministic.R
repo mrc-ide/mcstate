@@ -31,12 +31,29 @@ particle_deterministic <- R6::R6Class(
     ##' re-bound)
     model = NULL,
 
-    ##' @field nested Logical, indicating if this is a nested
-    ##' (multipopulation) deterministic particle (read only).  If `TRUE`, then
-    ##' each call to `run` returns a vector of log-likelihoods,
-    ##' one per population.  Triggered by the `data` argument to
-    ##' the constructor.
-    nested = NULL,
+    ##' @field has_multiple_parameters Logical, indicating if the
+    ##'   deterministic particle requires multiple parameter sets in a list
+    ##'   as inputs, and if it it will produce a vector of likelihoods
+    ##'   the same length (read only).  The parameter sets may or may
+    ##'   not use the same data (see `has_multiple_data`).
+    has_multiple_parameters = NULL,
+
+    ##' @field has_multiple_data Logical, indicating if the deterministic
+    ##'   particle simultaneously calculates the likelihood for multiple
+    ##'   parameter sets (read only). If `TRUE`, `has_multiple_parameters`
+    ##'   will always be `TRUE`.
+    has_multiple_data = NULL,
+
+    ##' @field n_parameters The number of parameter sets used by this
+    ##'   deterministic particle (read only).  The returned vector of
+    ##'   likelihoods will be this length, and if `has_multiple_parameters`
+    ##'   is `FALSE` this will be 1.
+    n_parameters = NULL,
+
+    ##' @field n_data The number of data sets used by this deterministic
+    ##'   particle (read only).  This will either be 1 or the same value as
+    ##'   `n_parameters`.
+    n_data = NULL,
 
     ##' @description Create the particle filter
     ##'
@@ -106,9 +123,15 @@ particle_deterministic <- R6::R6Class(
     ##' number of cores available to the machine. This currently has no
     ##' effect as the simulation will be run in serial on a single
     ##' particle for now.
+    ##'
+    ##' @param n_parameters Number of parameter sets required.  This, along
+    ##'   with `data`, controls the interpretation of how the deterministic
+    ##'   particle, and importantly will add an additional dimension to
+    ##'   most outputs (scalars become vectors, vectors become matrices etc).
     initialize = function(data, model, compare,
                           index = NULL, initial = NULL,
-                          constant_log_likelihood = NULL, n_threads = 1L) {
+                          constant_log_likelihood = NULL, n_threads = 1L,
+                          n_parameters = NULL) {
       if (!is_dust_generator(model)) {
         stop("'model' must be a dust_generator")
       }
@@ -125,7 +148,8 @@ particle_deterministic <- R6::R6Class(
       self$model <- model
       private$data <- data
 
-      self$nested <- inherits(data, "particle_filter_data_nested")
+      copy_list_and_lock(check_n_parameters(n_parameters, data),
+                         self)
 
       private$steps <- attr(data, "steps")
       private$data_split <- particle_filter_data_split(data, is.null(compare))
@@ -138,7 +162,6 @@ particle_deterministic <- R6::R6Class(
       private$n_threads <- n_threads
 
       lockBinding("model", self)
-      lockBinding("nested", self)
     },
 
     ##' @description Run the deterministic particle filter
@@ -201,8 +224,8 @@ particle_deterministic <- R6::R6Class(
       }
       particle_deterministic_state$new(
         pars, self$model, private$last_model[[1]], private$data,
-        private$data_split, private$steps, private$n_threads,
-        private$initial, private$index, private$compare,
+        private$data_split, private$steps, self$has_multiple_parameters,
+        private$n_threads, private$initial, private$index, private$compare,
         private$constant_log_likelihood,
         save_history, save_restart)
     },
@@ -253,9 +276,9 @@ particle_deterministic <- R6::R6Class(
     ##' that were saved with the `save_restart` argument to
     ##' `$run()`. If available, this will return a 3d array, with
     ##' dimensions representing (1) particle state, (2) particle index,
-    ##' (3) time point. If nested parameters are used then returns a 4d array,
+    ##' (3) time point. If multiple parameters are used then returns a 4d array,
     ##' with dimensions representing (1) particle state, (2) particle index,
-    ##' (3) population, (4) time point. This could be quite large, especially
+    ##' (3) parameter, (4) time point. This could be quite large, especially
     ##' if you are using the `index` argument to create the particle filter
     ##' and return a subset of all state generally. In the stochastic version,
     ##' this is different the saved trajectories returned by `$history()`

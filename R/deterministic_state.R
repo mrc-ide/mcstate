@@ -23,6 +23,7 @@ particle_deterministic_state <- R6::R6Class(
     data_split = NULL,
     steps = NULL,
     n_threads = NULL,
+    has_multiple_parameters = NULL,
     initial = NULL,
     index = NULL,
     index_data = NULL,
@@ -159,6 +160,7 @@ particle_deterministic_state <- R6::R6Class(
     ##' @param data A [mcstate::particle_filter_data] data object
     ##' @param data_split The same data as `data` but split by step
     ##' @param steps A matrix of step beginning and ends
+    ##' @param has_multiple_parameters Compute multiple likelihoods at once?
     ##' @param n_threads The number of threads to use
     ##' @param initial Initial condition function (or `NULL`)
     ##' @param index Index function (or `NULL`)
@@ -167,11 +169,13 @@ particle_deterministic_state <- R6::R6Class(
     ##' @param save_history Logical, indicating if we should save history
     ##' @param save_restart Vector of steps to save restart at
     initialize = function(pars, generator, model, data, data_split, steps,
-                          n_threads, initial, index, compare,
+                          has_multiple_parameters, n_threads,
+                          initial, index, compare,
                           constant_log_likelihood,
                           save_history, save_restart) {
-      nested <- inherits(data, "particle_filter_data_nested")
-      support <- particle_deterministic_state_support(nested)
+      has_multiple_data <- inherits(data, "particle_filter_data_nested")
+      support <- particle_deterministic_state_support(has_multiple_parameters,
+                                                      has_multiple_data)
 
       ## This adds an extra dimension (vs using NULL), which is not
       ## amazing, but it does simplify logic in a few places and keeps
@@ -181,9 +185,10 @@ particle_deterministic_state <- R6::R6Class(
         model <- generator$new(pars = pars, step = steps[[1]],
                                n_particles = n_particles, n_threads = n_threads,
                                seed = NULL, deterministic = TRUE,
-                               pars_multi = nested)
+                               pars_multi = has_multiple_parameters)
         if (is.null(compare)) {
-          model$set_data(data_split)
+          data_is_shared <- has_multiple_parameters && !has_multiple_data
+          model$set_data(data_split, data_is_shared)
         }
       } else {
         model$update_state(pars = pars, step = steps[[1]])
@@ -235,6 +240,7 @@ particle_deterministic_state <- R6::R6Class(
       private$data <- data
       private$data_split <- data_split
       private$steps <- steps
+      private$has_multiple_parameters <- has_multiple_parameters
       private$n_threads <- n_threads
       private$initial <- initial
       private$index <- index
@@ -248,7 +254,7 @@ particle_deterministic_state <- R6::R6Class(
       ## Variable (see also history)
       self$model <- model
       self$log_likelihood <- particle_filter_constant_log_likelihood(
-        pars, nested, constant_log_likelihood)
+        pars, has_multiple_parameters, constant_log_likelihood)
     },
 
     ##' @description Run the deterministic particle to the end of the data.
@@ -297,8 +303,8 @@ particle_deterministic_state <- R6::R6Class(
       }
       ret <- particle_deterministic_state$new(
         pars, private$generator, model, private$data, private$data_split,
-        private$steps, private$n_threads, initial, private$index,
-        private$compare, constant_log_likelihood,
+        private$steps, private$has_multiple_parameters, private$n_threads,
+        initial, private$index, private$compare, constant_log_likelihood,
         save_history, private$save_restart)
 
       particle_filter_update_state(transform_state, self$model, ret$model)
@@ -333,25 +339,26 @@ deterministic_steps_restart <- function(save_restart_step, step_end) {
 }
 
 
-particle_deterministic_state_support <- function(nested) {
-  if (nested) {
-    list(initial = pfs_initial_nested,
-         index = pds_index_nested,
-         compare = pds_compare_nested)
+particle_deterministic_state_support <- function(has_multiple_parameters,
+                                                 has_multiple_data) {
+  if (has_multiple_parameters) {
+    list(initial = pfs_initial_multiple,
+         index = pds_index_multiple,
+         compare = function(...) pds_compare_multiple(has_multiple_data, ...))
   } else {
-    list(initial = pfs_initial_simple,
-         index = pds_index_simple,
-         compare = pds_compare_simple)
+    list(initial = pfs_initial_single,
+         index = pds_index_single,
+         compare = pds_compare_single)
   }
 }
 
 
-pds_index_simple <- function(model, index) {
+pds_index_single <- function(model, index) {
   pds_index_process(index(model$info()))
 }
 
 
-pds_index_nested <- function(model, index) {
+pds_index_multiple <- function(model, index) {
   index_data <- lapply(model$info(), index)
 
   nok <- !all(vlapply(index_data[-1], identical, index_data[[1]]))
@@ -372,7 +379,7 @@ pds_index_process <- function(data) {
 }
 
 
-pds_compare_simple <- function(state, compare, data, pars) {
+pds_compare_single <- function(state, compare, data, pars) {
   n_data <- length(data)
   ll <- numeric(n_data)
   for (i in seq_len(n_data)) {
@@ -384,11 +391,10 @@ pds_compare_simple <- function(state, compare, data, pars) {
 }
 
 
-pds_compare_nested <- function(state, compare, data, pars) {
-  ## At this point, I really have no strong idea what is going on with
-  ## the data!
-  n_pars <- length(pars)
-  n_data <- length(data)
+pds_compare_multiple <- function(has_multiple_data, state, compare, data,
+                                 pars) {
+  n_pars <- length(pars) # number of parameter sets
+  n_data <- length(data) # number of time points in data (*not* data sets)
   ll <- array(0, c(n_data, n_pars))
   for (i in seq_len(n_data)) {
     data_i <- data[[i]]
@@ -398,7 +404,8 @@ pds_compare_nested <- function(state, compare, data, pars) {
       ## and 2 (particle) for compatibility with the particle filter
       ## comparison functions.
       state_ij <- array_drop(state[, 1L, j, i, drop = FALSE], c(3, 4))
-      ll[i, j] <- compare(state_ij, data_i[[j]], pars[[j]])
+      data_ij <- if (has_multiple_data) data_i[[j]] else data_i
+      ll[i, j] <- compare(state_ij, data_ij, pars[[j]])
     }
   }
   colSums(ll)

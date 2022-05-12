@@ -1,3 +1,8 @@
+# mcstate 0.9.1
+
+* Allow running a particle filter with multiple parameter sets and a single data set.
+* The `nested` field on the particle filter class has been split into two logical fields: `has_multiple_parameters` and `has_multiple_data`
+
 # mcstate 0.9.0
 
 * Deprecated 'discrete' argument to parameters in favour of 'integer' - affects `if2_parameter`, `pmcmc_parameter`, `pmcmc_varied_parameter`, `smc2_parameter` 

@@ -65,6 +65,7 @@ documented.
   data_split,
   steps,
   n_particles,
+  has_multiple_parameters,
   n_threads,
   initial,
   index,
@@ -94,6 +95,8 @@ documented.
 \item{\code{steps}}{A matrix of step beginning and ends}
 
 \item{\code{n_particles}}{Number of particles to use}
+
+\item{\code{has_multiple_parameters}}{Compute multiple likelihoods at once?}
 
 \item{\code{n_threads}}{The number of threads to use}
 

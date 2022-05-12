@@ -91,12 +91,29 @@ particle_filter <- R6::R6Class(
     ##' @field n_particles Number of particles used (read only)
     n_particles = NULL,
 
-    ##' @field nested Logical, indicating if this is a nested
-    ##' (multipopulation) particle filter (read only).  If `TRUE`, then
-    ##' each call to `run` returns a vector of log-likelihoods,
-    ##' one per population.  Triggered by the `data` argument to
-    ##' the constructor.
-    nested = NULL,
+    ##' @field has_multiple_parameters Logical, indicating if the
+    ##'   particle filter requires multiple parameter sets in a list
+    ##'   as inputs, and if it it will produce a vector of likelihoods
+    ##'   the same length (read only).  The parameter sets may or may
+    ##'   not use the same data (see `has_multiple_data`).
+    has_multiple_parameters = NULL,
+
+    ##' @field has_multiple_data Logical, indicating if the particle
+    ##'   filter simultaneously calculates the likelihood for multiple
+    ##'   parameter sets (read only). If `TRUE`, `has_multiple_parameters`
+    ##'   will always be `TRUE`.
+    has_multiple_data = NULL,
+
+    ##' @field n_parameters The number of parameter sets used by this
+    ##'   particle filter (read only).  The returned vector of likelihood
+    ##'   will be this length, and if `has_multiple_parameters` is `FALSE`
+    ##'   this will be 1.
+    n_parameters = NULL,
+
+    ##' @field n_data The number of data sets used by this particle filter
+    ##'   (read only).  This will either be 1 or the same value as
+    ##'   `n_parameters`.
+    n_data = NULL,
 
     ##' @description Create the particle filter
     ##'
@@ -170,6 +187,11 @@ particle_filter <- R6::R6Class(
     ##' simulation. Defaults to 1, and should not be set higher than the
     ##' number of cores available to the machine.
     ##'
+    ##' @param n_parameters Number of parameter sets required.  This, along
+    ##'   with `data`, controls the interpretation of how the particle
+    ##'   filter, and importantly will add an additional dimension to
+    ##'   most outputs (scalars become vectors, vectors become matrices etc).
+    ##'
     ##' @param seed Seed for the random number generator on initial
     ##' creation. Can be `NULL` (to initialise using R's random number
     ##' generator), a positive integer, or a raw vector - see [`dust::dust`]
@@ -191,6 +213,7 @@ particle_filter <- R6::R6Class(
                           index = NULL, initial = NULL,
                           constant_log_likelihood = NULL,
                           n_threads = 1L, seed = NULL,
+                          n_parameters = NULL,
                           gpu_config = NULL) {
       if (!is_dust_generator(model)) {
         stop("'model' must be a dust_generator")
@@ -212,7 +235,8 @@ particle_filter <- R6::R6Class(
       self$model <- model
       private$data <- data
 
-      self$nested <- inherits(data, "particle_filter_data_nested")
+      copy_list_and_lock(check_n_parameters(n_parameters, data),
+                         self)
 
       private$steps <- attr(data, "steps")
       private$data_split <- particle_filter_data_split(data, is.null(compare))
@@ -229,7 +253,6 @@ particle_filter <- R6::R6Class(
 
       lockBinding("model", self)
       lockBinding("n_particles", self)
-      lockBinding("nested", self)
     },
 
     ##' @description Run the particle filter
@@ -263,11 +286,11 @@ particle_filter <- R6::R6Class(
     ##' will certainly be rejected. Only suitable for use where
     ##' log-likelihood increments (with the `compare` function) are always
     ##' negative. This is the case if you use a normalised discrete
-    ##' distribution, but not necessarily otherwise. If using a nested
-    ##' filter this can be a single number (in which case the exit is
-    ##' when the sum of log-likelihoods drops below this threshhold) or
-    ##' a vector of numbers the same length as `pars` (in which case exit
-    ##' occurs when all numbers drop below this threshhold).
+    ##' distribution, but not necessarily otherwise. If using a
+    ##' multi-parameter filter this can be a single number (in which case
+    ##' the exit is when the sum of log-likelihoods drops below this
+    ##' threshold) or a vector of numbers the same length as `pars` (in
+    ##' which case exit occurs when all numbers drop below this threshold).
     ##'
     ##' @return A single numeric value representing the log-likelihood
     ##' (`-Inf` if the model is impossible)
@@ -303,7 +326,8 @@ particle_filter <- R6::R6Class(
       particle_filter_state$new(
         pars, self$model, private$last_model[[1]], private$data,
         private$data_split, private$steps, self$n_particles,
-        private$n_threads, private$initial, private$index, private$compare,
+        self$has_multiple_parameters, private$n_threads,
+        private$initial, private$index, private$compare,
         private$constant_log_likelihood, private$gpu_config, private$seed,
         min_log_likelihood, save_history, save_restart)
     },
@@ -330,15 +354,15 @@ particle_filter <- R6::R6Class(
     ##' TRUE`. Returns a 3d array with dimensions corresponding to (1)
     ##' model state, filtered by `index$run` if provided, (2)
     ##' particle (following `index_particle` if provided), (3)
-    ##' time point. If nested parameters used then returns a 4d array with
-    ##' dimensions corresponding to (1) model state, (2) particle, (3)
-    ##' population, (4) time point.
+    ##' time point. If using a multi-parameter filter then returns a 4d array
+    ##' with dimensions corresponding to (1) model state, (2) particle, (3)
+    ##' parameter, (4) time point.
     ##'
     ##' @param index_particle Optional vector of particle indices to return.
-    ##' If nested parameters used then a vector will be replicated to a matrix
-    ##' with number of columns equal to number of populations, otherwise a
-    ##' matrix can be supplied.
-    ##' If `NULL` we return all particles' histories.
+    ##' If using a multi-parameter filter then a vector will be replicated
+    ##' to a matrix with number of columns equal to number of parameters,
+    ##' otherwise a matrix can be supplied. If `NULL` we return all particles'
+    ##' histories.
     history = function(index_particle = NULL) {
       if (is.null(private$last_model)) {
         stop("Model has not yet been run")
@@ -354,8 +378,8 @@ particle_filter <- R6::R6Class(
       ny <- nrow(history_value)
 
       if (length(dim(history_value)) == 4) {
-        history_nested(history_value, history_order, history_index,
-                       index_particle)
+        history_multiple(history_value, history_order, history_index,
+                         index_particle)
       } else {
         history_single(history_value, history_order, history_index,
                        index_particle)
@@ -367,9 +391,9 @@ particle_filter <- R6::R6Class(
     ##' that were saved with the `save_restart` argument to
     ##' `$run()`. If available, this will return a 3d array, with
     ##' dimensions representing (1) particle state, (2) particle index,
-    ##' (3) time point. If nested parameters are used then returns a 4d array,
+    ##' (3) time point. If multiple parameters are used then returns a 4d array,
     ##' with dimensions representing (1) particle state, (2) particle index,
-    ##' (3) population, (4) time point. This could be quite large, especially
+    ##' (3) parameter set, (4) time point. This could be quite large, especially
     ##' if you are using the `index` argument to create the particle filter
     ##' and return a subset of all state generally. It is also
     ##' different to the saved trajectories returned by `$history()`
@@ -408,6 +432,11 @@ particle_filter <- R6::R6Class(
     ##' the rng if it has been used (this can be used as a seed to
     ##' restart the model).
     inputs = function() {
+      if (self$has_multiple_parameters) {
+        n_parameters <- self$n_parameters
+      } else {
+        n_parameters <- NULL
+      }
       list(data = private$data,
            model = self$model,
            n_particles = self$n_particles,
@@ -417,6 +446,7 @@ particle_filter <- R6::R6Class(
            constant_log_likelihood = private$constant_log_likelihood,
            gpu_config = private$gpu_config,
            n_threads = private$n_threads,
+           n_parameters = n_parameters,
            seed = filter_current_seed(last(private$last_model), private$seed))
     },
 
@@ -573,13 +603,13 @@ history_single <- function(history_value, history_order, history_index,
   ret
 }
 
-## This function handles the nested/non-nested case but also the
+## This function handles the single-/multi-parameter case but also the
 ## compiled/non-compiled case. In the compiled case we already have
 ## our history nicely ordered (that is the states convered into a tree
 ## based on the history of particle sampling) and history_order is
 ## NULL.
-history_nested <- function(history_value, history_order, history_index,
-                           index_particle) {
+history_multiple <- function(history_value, history_order, history_index,
+                             index_particle) {
   ny <- nrow(history_value)
   npop <- nlayer(history_value)
 
@@ -653,9 +683,9 @@ filter_current_seed <- function(model, seed) {
 filter_run <- function(self, private, pars, save_history, save_restart,
                        min_log_likelihood) {
   assert_scalar_logical(save_history)
-  if (self$nested) {
-    n_populations <- length(attr(private$data, "populations"))
-    pars <- particle_filter_pars_nested(pars, n_populations)
+  if (self$has_multiple_parameters) {
+    n_parameters <- self$n_parameters
+    pars <- particle_filter_pars_multiple(pars, n_parameters)
   }
   private$last_stages <-
     particle_filter_check_multistage_pars(pars, private$last_stages)
@@ -733,17 +763,17 @@ filter_run_multistage <- function(self, private, pars,
 
 
 ## There are several bits of cleanup that need to happen for the
-## parameters in nested case:
+## parameters in multi-parameter case:
 ##
 ## * validate we have an unnamed list of the correct length
 ## * if multistage, then invert the nesting to convert from a list of
 ##   multistage parameter objects into a multistage parameter of lists
-particle_filter_pars_nested <- function(pars, n_populations) {
+particle_filter_pars_multiple <- function(pars, n_parameters) {
   if (!is.null(names(pars))) {
     stop("Expected an unnamed list of parameters for 'pars'")
   }
-  if (length(pars) != n_populations) {
-    stop(sprintf("'pars' must have length %d", n_populations))
+  if (length(pars) != n_parameters) {
+    stop(sprintf("'pars' must have length %d", n_parameters))
   }
 
   is_multistage <- vlapply(pars, inherits, "multistage_parameters")
@@ -828,4 +858,31 @@ check_compare <- function(compare, model) {
   } else {
     assert_function(compare)
   }
+}
+
+
+check_n_parameters <- function(n_parameters, data) {
+  has_multiple_data <- inherits(data, "particle_filter_data_nested")
+  if (has_multiple_data) {
+    n_data <- length(attr(data, "populations"))
+  } else {
+    n_data <- 1L
+  }
+
+  if (is.null(n_parameters)) {
+    has_multiple_parameters <- has_multiple_data
+    n_parameters <- n_data
+  } else {
+    assert_scalar_positive_integer(n_parameters)
+    if (has_multiple_data && n_parameters != n_data) {
+      stop(paste("To match the number of populations in your data,",
+                 sprintf("n_parameters must be %d (if not NULL)", n_data)))
+    }
+    has_multiple_parameters <- TRUE
+    n_parameters <- n_parameters
+  }
+  list(has_multiple_parameters = has_multiple_parameters,
+       has_multiple_data = has_multiple_data,
+       n_parameters = n_parameters,
+       n_data = n_data)
 }

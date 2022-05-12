@@ -57,6 +57,7 @@ documented.
   data,
   data_split,
   steps,
+  has_multiple_parameters,
   n_threads,
   initial,
   index,
@@ -81,6 +82,8 @@ documented.
 \item{\code{data_split}}{The same data as \code{data} but split by step}
 
 \item{\code{steps}}{A matrix of step beginning and ends}
+
+\item{\code{has_multiple_parameters}}{Compute multiple likelihoods at once?}
 
 \item{\code{n_threads}}{The number of threads to use}
 

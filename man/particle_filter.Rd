@@ -68,11 +68,25 @@ re-bound)}
 
 \item{\code{n_particles}}{Number of particles used (read only)}
 
-\item{\code{nested}}{Logical, indicating if this is a nested
-(multipopulation) particle filter (read only).  If \code{TRUE}, then
-each call to \code{run} returns a vector of log-likelihoods,
-one per population.  Triggered by the \code{data} argument to
-the constructor.}
+\item{\code{has_multiple_parameters}}{Logical, indicating if the
+particle filter requires multiple parameter sets in a list
+as inputs, and if it it will produce a vector of likelihoods
+the same length (read only).  The parameter sets may or may
+not use the same data (see \code{has_multiple_data}).}
+
+\item{\code{has_multiple_data}}{Logical, indicating if the particle
+filter simultaneously calculates the likelihood for multiple
+parameter sets (read only). If \code{TRUE}, \code{has_multiple_parameters}
+will always be \code{TRUE}.}
+
+\item{\code{n_parameters}}{The number of parameter sets used by this
+particle filter (read only).  The returned vector of likelihood
+will be this length, and if \code{has_multiple_parameters} is \code{FALSE}
+this will be 1.}
+
+\item{\code{n_data}}{The number of data sets used by this particle filter
+(read only).  This will either be 1 or the same value as
+\code{n_parameters}.}
 }
 \if{html}{\out{</div>}}
 }
@@ -105,6 +119,7 @@ Create the particle filter
   constant_log_likelihood = NULL,
   n_threads = 1L,
   seed = NULL,
+  n_parameters = NULL,
   gpu_config = NULL
 )}\if{html}{\out{</div>}}
 }
@@ -189,6 +204,11 @@ and \code{\link[dust:dust_rng]{dust::dust_rng}} for more details. Note that the 
 stream is unrelated from R's random number generator, except for
 initialisation with \code{seed = NULL}.}
 
+\item{\code{n_parameters}}{Number of parameter sets required.  This, along
+with \code{data}, controls the interpretation of how the particle
+filter, and importantly will add an additional dimension to
+most outputs (scalars become vectors, vectors become matrices etc).}
+
 \item{\code{gpu_config}}{GPU configuration, typically an integer
 indicating the device to use, where the model has GPU support.
 An error is thrown if the device id given is larger than those
@@ -249,11 +269,11 @@ from the filter. This is primarily intended for use with
 will certainly be rejected. Only suitable for use where
 log-likelihood increments (with the \code{compare} function) are always
 negative. This is the case if you use a normalised discrete
-distribution, but not necessarily otherwise. If using a nested
-filter this can be a single number (in which case the exit is
-when the sum of log-likelihoods drops below this threshhold) or
-a vector of numbers the same length as \code{pars} (in which case exit
-occurs when all numbers drop below this threshhold).}
+distribution, but not necessarily otherwise. If using a
+multi-parameter filter this can be a single number (in which case
+the exit is when the sum of log-likelihoods drops below this
+threshold) or a vector of numbers the same length as \code{pars} (in
+which case exit occurs when all numbers drop below this threshold).}
 }
 \if{html}{\out{</div>}}
 }
@@ -332,9 +352,9 @@ incur a performance cost. This method will throw an error if
 the model has not run, or was run without \code{save_history = TRUE}. Returns a 3d array with dimensions corresponding to (1)
 model state, filtered by \code{index$run} if provided, (2)
 particle (following \code{index_particle} if provided), (3)
-time point. If nested parameters used then returns a 4d array with
-dimensions corresponding to (1) model state, (2) particle, (3)
-population, (4) time point.
+time point. If using a multi-parameter filter then returns a 4d array
+with dimensions corresponding to (1) model state, (2) particle, (3)
+parameter, (4) time point.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{particle_filter$history(index_particle = NULL)}\if{html}{\out{</div>}}
 }
@@ -343,10 +363,10 @@ population, (4) time point.
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{index_particle}}{Optional vector of particle indices to return.
-If nested parameters used then a vector will be replicated to a matrix
-with number of columns equal to number of populations, otherwise a
-matrix can be supplied.
-If \code{NULL} we return all particles' histories.}
+If using a multi-parameter filter then a vector will be replicated
+to a matrix with number of columns equal to number of parameters,
+otherwise a matrix can be supplied. If \code{NULL} we return all particles'
+histories.}
 }
 \if{html}{\out{</div>}}
 }
@@ -359,9 +379,9 @@ Return the full particle filter state at points back in time
 that were saved with the \code{save_restart} argument to
 \verb{$run()}. If available, this will return a 3d array, with
 dimensions representing (1) particle state, (2) particle index,
-(3) time point. If nested parameters are used then returns a 4d array,
+(3) time point. If multiple parameters are used then returns a 4d array,
 with dimensions representing (1) particle state, (2) particle index,
-(3) population, (4) time point. This could be quite large, especially
+(3) parameter set, (4) time point. This could be quite large, especially
 if you are using the \code{index} argument to create the particle filter
 and return a subset of all state generally. It is also
 different to the saved trajectories returned by \verb{$history()}

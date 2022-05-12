@@ -368,6 +368,7 @@ test_that("can return inputs", {
   expect_null(inputs$gpu_config)
   expect_equal(inputs$initial, initial)
   expect_equal(inputs$seed, 100)
+  expect_null(inputs$n_parameters)
 
   res <- p$run()
 
@@ -886,7 +887,7 @@ test_that("can get history with compiled particle filter on nested model", {
   set.seed(1)
 
   pars <- list(list(beta = 0.2, gamma = 0.1),
-                               list(beta = 0.3, gamma = 0.1))
+               list(beta = 0.3, gamma = 0.1))
 
   model <- dust::dust_example("sir")
   p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
@@ -1414,4 +1415,106 @@ test_that("can save history - nested", {
                             constant_log_likelihood = constant_log_likelihood)
   ll2 <- p2$run(pars)
   expect_equal(ll2, ll1 - c(2.1, 3.2))
+})
+
+
+test_that("Can run a particle filter in replicate", {
+  dat <- example_sir()
+  n_particles <- 42
+  n_parameters <- 5
+  set.seed(1)
+
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L,
+                            n_parameters = n_parameters)
+
+  ## Bit of a faff here to set up the data to be replicated:
+  data_raw <- do.call(rbind, lapply(seq_len(n_parameters), function(i)
+    cbind(dat$data_raw, replicate = i)))
+  data_raw$replicate <- factor(data_raw$replicate)
+  data_replicated <- particle_filter_data(data_raw, "day", 4,
+                                          population = "replicate")
+  p2 <- particle_filter$new(data_replicated, dat$model, n_particles,
+                            dat$compare, index = dat$index, seed = 1L)
+
+  pars <- lapply(runif(n_parameters, 0.1, 0.3), function(b)
+    list(beta = b, gamma = 0.1))
+
+  set.seed(1)
+  ll1 <- p1$run(pars, save_history = TRUE)
+
+  set.seed(1)
+  ll2 <- p2$run(pars, save_history = TRUE)
+  expect_identical(ll1, ll2)
+  expect_identical(p1$history(), p2$history())
+})
+
+
+test_that("Can run a particle filter in replicate with compiled compare", {
+  dat <- example_sir()
+  n_particles <- 42
+  n_parameters <- 5
+  set.seed(1)
+
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, NULL,
+                            index = dat$index, seed = 1L,
+                            n_parameters = n_parameters)
+
+  ## Bit of a faff here to set up the data to be replicated:
+  data_raw <- do.call(rbind, lapply(seq_len(n_parameters), function(i)
+    cbind(dat$data_raw, replicate = i)))
+  data_raw$replicate <- factor(data_raw$replicate)
+  data_replicated <- particle_filter_data(data_raw, "day", 4,
+                                          population = "replicate")
+  p2 <- particle_filter$new(data_replicated, dat$model, n_particles,
+                            NULL, index = dat$index, seed = 1L)
+
+  pars <- lapply(runif(n_parameters, 0.1, 0.3), function(b)
+    list(beta = b, gamma = 0.1))
+
+  set.seed(1)
+  ll1 <- p1$run(pars, save_history = TRUE)
+
+  set.seed(1)
+  ll2 <- p2$run(pars, save_history = TRUE)
+  expect_identical(ll1, ll2)
+  expect_identical(p1$history(), p2$history())
+})
+
+
+test_that("Validate that n_parameters when using multiple data sets", {
+  dat <- example_sir_shared()
+  expect_error(
+    particle_filter$new(dat$data, dat$model, 10, dat$compare,
+                        index = dat$index, n_parameters = 3),
+    paste("To match the number of populations in your data,",
+          "n_parameters must be 2 (if not NULL)"),
+    fixed = TRUE)
+})
+
+
+test_that("can run replicated model on gpu", {
+  dat <- example_sir()
+  n_particles <- 13
+  n_pars <- 7
+  set.seed(1)
+
+  model <- dust::dust_example("sirs")
+  p_c <- particle_filter$new(dat$data, model, n_particles, NULL,
+                             index = dat$index, n_parameters = n_pars,
+                             seed = 1L)
+  p_g <- particle_filter$new(dat$data, model, n_particles, NULL,
+                             index = dat$index, gpu_config = 0,
+                             n_parameters = n_pars, seed = 1L)
+  expect_null(r6_private(p_c)$gpu_config)
+  expect_equal(r6_private(p_g)$gpu_config, 0)
+
+  pars <- replicate(n_pars, list(beta = runif(1, 0, 0.4),
+                                 gamma = runif(1, 0, 0.4),
+                                 compare = list(exp_noise = Inf)),
+                    simplify = FALSE)
+
+  ll_c <- p_c$run(pars)
+  ll_g <- p_g$run(pars)
+  expect_identical(ll_c, ll_g)
 })
