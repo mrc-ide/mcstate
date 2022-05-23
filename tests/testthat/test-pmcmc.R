@@ -687,3 +687,21 @@ test_that("Can't use adaptive proposal with pmcmc models", {
     pmcmc(dat$pars, p, control = control),
     "Adaptive proposal only allowed in deterministic models")
 })
+
+
+test_that("mcmc works for multivariate gaussian", {
+  testthat::skip_if_not_installed("mvtnorm")
+  dat <- example_mvnorm()
+  class(dat$filter) <- "particle_deterministic"
+  control <- pmcmc_control(1000, adaptive_proposal = TRUE,
+                           save_state = FALSE, save_trajectories = FALSE)
+  set.seed(1)
+  testthat::try_again(5, {
+    res <- pmcmc(dat$pars, dat$filter, control = control)
+    i <- seq(1, 1000, by = 20)
+    expect_s3_class(res, "mcstate_pmcmc")
+    expect_gt(ks.test(res$pars[i, "a"], "pnorm")$p.value, 0.05)
+    expect_gt(ks.test(res$pars[i, "b"], "pnorm")$p.value, 0.05)
+    expect_lt(abs(cov(res$pars)[1, 2]), 0.1)
+  })
+})
