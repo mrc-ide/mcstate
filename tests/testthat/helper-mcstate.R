@@ -187,7 +187,8 @@ example_uniform <- function(proposal_kernel = NULL) {
   }
   filter <- structure(list(run = target,
                            n_particles = 10,
-                           nested = FALSE,
+                           has_multiple_parameters = FALSE,
+                           has_multiple_data = FALSE,
                            state = function() matrix(1, 2, 10),
                            trajectories = function(i) matrix(1, 2, 10)),
                       class = "particle_filter")
@@ -224,7 +225,8 @@ example_uniform_shared <- function(varied = TRUE, fixed = TRUE,
 
 
   filter <- structure(list(run = target,
-                           nested = TRUE,
+                           has_multiple_parameters = TRUE,
+                           has_multiple_data = TRUE,
                            n_particles = 10),
                       class = "particle_filter")
 
@@ -274,7 +276,8 @@ example_mvnorm <- function() {
 
   filter <- structure(list(run = target,
                            n_particles = 10,
-                           nested = FALSE,
+                           has_multiple_parameters = FALSE,
+                           has_multiple_data = FALSE,
                            state = function() matrix(1, 2, 10),
                            trajectories = function(i) matrix(1, 2, 10)),
                       class = "particle_filter")
@@ -301,7 +304,8 @@ example_mvnorm_shared <- function(varied = TRUE, fixed = TRUE,
     n_par <- 4
   }
   filter <- structure(list(run = target,
-                           nested = TRUE,
+                           has_multiple_parameters = TRUE,
+                           has_multiple_data = TRUE,
                            n_particles = 10),
                       class = "particle_filter")
 

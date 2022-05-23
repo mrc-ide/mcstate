@@ -1,12 +1,12 @@
 test_that("Parameters handling works", {
   expect_error(
-    particle_filter_pars_nested(list(), 2),
+    particle_filter_pars_multiple(list(), 2),
     "'pars' must have length 2")
   expect_equal(
-    particle_filter_pars_nested(list(list(a = 1)), 1),
+    particle_filter_pars_multiple(list(list(a = 1)), 1),
     list(list(a = 1)))
   expect_equal(
-    particle_filter_pars_nested(list(list(a = 1), list(a = 2)), 2),
+    particle_filter_pars_multiple(list(list(a = 1), list(a = 2)), 2),
     list(list(a = 1), list(a = 2)))
 
   ## To test how things combine we need two of each types
@@ -41,20 +41,20 @@ test_that("Parameters handling works", {
 
   others <- c("start", "transform_state")
 
-  res <- particle_filter_pars_nested(list(p2a), 1)
+  res <- particle_filter_pars_multiple(list(p2a), 1)
   expect_s3_class(res, "multistage_parameters")
   expect_length(res, 1)
   expect_equal(res[[1]]$pars[[1]], p2a[[1]]$pars)
   expect_equal(res[[1]][others], p2a[[1]][others])
 
-  res <- particle_filter_pars_nested(list(p2a, p2b), 2)
+  res <- particle_filter_pars_multiple(list(p2a, p2b), 2)
   expect_s3_class(res, "multistage_parameters")
   expect_length(res, 1) # still one stage
   expect_equal(res[[1]]$pars[[1]], p2a[[1]]$pars)
   expect_equal(res[[1]]$pars[[2]], p2b[[1]]$pars)
   expect_equal(res[[1]][others], p2a[[1]][others])
 
-  res <- particle_filter_pars_nested(list(p3a, p3b), 2)
+  res <- particle_filter_pars_multiple(list(p3a, p3b), 2)
   expect_s3_class(res, "multistage_parameters")
   expect_length(res, 2)
   expect_equal(lapply(res, function(x) x$pars),
@@ -62,7 +62,7 @@ test_that("Parameters handling works", {
   expect_equal(lapply(res, function(x) x[others]),
                lapply(p3a, function(x) x[others]))
 
-  res <- particle_filter_pars_nested(list(p4a, p4b), 2)
+  res <- particle_filter_pars_multiple(list(p4a, p4b), 2)
   expect_s3_class(res, "multistage_parameters")
   expect_length(res, 2)
   expect_equal(lapply(res, function(x) x$pars),
@@ -70,7 +70,7 @@ test_that("Parameters handling works", {
   expect_equal(lapply(res, function(x) x[others]),
                lapply(p4a, function(x) x[others]))
 
-  res <- particle_filter_pars_nested(list(p5a, p5b), 2)
+  res <- particle_filter_pars_multiple(list(p5a, p5b), 2)
   expect_s3_class(res, "multistage_parameters")
   expect_length(res, 2)
   expect_equal(lapply(res, function(x) x$pars),
@@ -79,23 +79,23 @@ test_that("Parameters handling works", {
                lapply(p5a, function(x) x[others]))
 
   expect_error(
-    particle_filter_pars_nested(list(p1a, p2a), 2),
+    particle_filter_pars_multiple(list(p1a, p2a), 2),
     "'pars' must be either all multistage or all non-multistage")
   expect_error(
-    particle_filter_pars_nested(list(p2a, p3a), 2),
+    particle_filter_pars_multiple(list(p2a, p3a), 2),
     "Incompatible numbers of stages in pars: found 1, 2 stages")
 
   p_start <- multistage_parameters(list(a = 5), list(multistage_epoch(11)))
   expect_error(
-    particle_filter_pars_nested(list(p3a, p_start), 2),
+    particle_filter_pars_multiple(list(p3a, p_start), 2),
     "Incompatible 'start' time at phase 2")
 
   expect_error(
-    particle_filter_pars_nested(list(p3a, p4a), 2),
+    particle_filter_pars_multiple(list(p3a, p4a), 2),
     "Incompatible 'transform_state' at phase 2")
 
   p_no_pars <- multistage_parameters(list(a = 5), list(multistage_epoch(10)))
   expect_error(
-    particle_filter_pars_nested(list(p3a, p_no_pars), 2),
+    particle_filter_pars_multiple(list(p3a, p_no_pars), 2),
     "Incompatible 'pars' at phase 2")
 })

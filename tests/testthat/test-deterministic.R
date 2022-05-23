@@ -399,6 +399,34 @@ test_that("Can get history with compiled particle filter", {
 })
 
 
+test_that("Can run a determinsitic particle in replicate", {
+  dat <- example_sir()
+  pars <- list(list(beta = 0.2, gamma = 0.1, compare = list(exp_noise = Inf)),
+               list(beta = 0.3, gamma = 0.1, compare = list(exp_noise = Inf)))
+
+  p1 <- particle_deterministic$new(dat$data, dat$model, dat$compare,
+                                   index = dat$index)
+  p2 <- particle_deterministic$new(dat$data, dat$model, dat$compare,
+                                   index = dat$index, n_parameters = 2)
+
+  expect_identical(p2$run(pars), c(p1$run(pars[[1]]), p1$run(pars[[2]])))
+})
+
+
+test_that("Can run a determinsitic particle in replicate, compiled compare", {
+  dat <- example_sir()
+  pars <- list(list(beta = 0.2, gamma = 0.1, compare = list(exp_noise = Inf)),
+               list(beta = 0.3, gamma = 0.1, compare = list(exp_noise = Inf)))
+
+  p1 <- particle_deterministic$new(dat$data, dat$model, NULL,
+                                   index = dat$index)
+  p2 <- particle_deterministic$new(dat$data, dat$model, NULL,
+                                   index = dat$index, n_parameters = 2)
+
+  expect_identical(p2$run(pars), c(p1$run(pars[[1]]), p1$run(pars[[2]])))
+})
+
+
 test_that("Can run an adaptive proposal, increasing acceptance rate", {
   dat <- example_sir()
   control1 <- pmcmc_control(100, save_trajectories = TRUE,

@@ -184,7 +184,12 @@ pmcmc_state <- R6::R6Class(
       private$nested <- inherits(pars, "pmcmc_parameters_nested")
       private$deterministic <- inherits(filter, "particle_deterministic")
 
-      if (private$nested != filter$nested) {
+      if (filter$has_multiple_parameters && !filter$has_multiple_data) {
+        stop(paste("Can't use a filter with multiple parameter sets but not",
+                   "multiple data"))
+      }
+
+      if (private$nested != filter$has_multiple_data) {
         stop("'pars' and 'filter' disagree on nestedness")
       }
 
