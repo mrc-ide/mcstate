@@ -12,7 +12,8 @@
 ##'
 ##' @param initial_weight Initial weight
 ##'
-##' @param adaptive_contribution
+##' @param adaptive_contribution The fractional contribution of the
+##'   adaptive part of the proposal
 ##'
 ##' @export
 adaptive_proposal_control <- function(initial_scaling = 0.2,

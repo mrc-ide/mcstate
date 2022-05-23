@@ -22,7 +22,8 @@ accepted (optimally).}
 
 \item{initial_weight}{Initial weight}
 
-\item{adaptive_contribution}{}
+\item{adaptive_contribution}{The fractional contribution of the
+adaptive part of the proposal}
 }
 \description{
 Control for adaptive proposals, used in \link{pmcmc_control}
