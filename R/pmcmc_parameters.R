@@ -264,7 +264,7 @@ pmcmc_parameters <- R6::R6Class(
       ## weights don't need it
       private$prepare_theta(
         (1 - weight) * private$proposal(theta) +
-        weight * rmvnorm_generator(vcv)(theta))
+        weight * rmvnorm_generator(vcv, check = FALSE)(theta))
     },
 
     ##' @description Apply the model transformation function to a parameter
