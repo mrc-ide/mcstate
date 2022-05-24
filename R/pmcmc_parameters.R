@@ -119,12 +119,7 @@ pmcmc_parameters <- R6::R6Class(
     transform = NULL,
     integer = NULL,
     min = NULL,
-    max = NULL,
-
-    prepare_theta = function(theta) {
-      theta[private$integer] <- round(theta[private$integer])
-      reflect_proposal(theta, private$min, private$max)
-    }
+    max = NULL
   ),
 
   public = list(
@@ -242,29 +237,19 @@ pmcmc_parameters <- R6::R6Class(
     ##' proposal distribution. This may be useful in sampling starting
     ##' points. The parameter is equivalent to a multiplicative factor
     ##' applied to the variance covariance matrix.
-    propose = function(theta, scale = 1) {
-      private$prepare_theta(private$proposal(theta, scale))
-    },
-
-    ##' @description Propose a new parameter vector given a current
-    ##'   parameter vector, with the help of some second, variable,
-    ##'   variance-covariance-matrix.
     ##'
-    ##' @param theta a parameter vector in the same order as your
-    ##'   parameters were defined in (see `$names()` for that order.
-    ##'
-    ##' @param weight Between zero and one
-    ##'
-    ##' @param vcv A variance covariance matrix of the correct size
-    propose_weighted = function(theta, weight, vcv) {
-      ## TODO: validate weight, vcv
-      ## assert_in_range(weight, 0, 1)
-      ##
-      ## TODO: don't draw from distributions in the cases where
-      ## weights don't need it
-      private$prepare_theta(
-        (1 - weight) * private$proposal(theta) +
-        weight * rmvnorm_generator(vcv, check = FALSE)(theta))
+    ##' @param vcv A variance covariance matrix of the correct size,
+    ##' overriding the proposal matrix built into the parameters object.
+    ##' This will be slightly less efficient but allow a different proposal
+    ##' matrix to be used (e.g., during an adaptive MCMC)
+    propose = function(theta, scale = 1, vcv = NULL) {
+      if (is.null(vcv)) {
+        theta_new <- rmvnorm_generator(vcv, check = FALSE)(theta)
+      } else {
+        theta_new <- private$proposal(theta, scale)
+      }
+      theta_new[private$integer] <- round(theta_new[private$integer])
+      reflect_proposal(theta_new, private$min, private$max)
     },
 
     ##' @description Apply the model transformation function to a parameter

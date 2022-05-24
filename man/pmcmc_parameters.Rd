@@ -46,7 +46,6 @@ pars$model(p)
 \item \href{#method-summary}{\code{pmcmc_parameters$summary()}}
 \item \href{#method-prior}{\code{pmcmc_parameters$prior()}}
 \item \href{#method-propose}{\code{pmcmc_parameters$propose()}}
-\item \href{#method-propose_weighted}{\code{pmcmc_parameters$propose_weighted()}}
 \item \href{#method-model}{\code{pmcmc_parameters$model()}}
 \item \href{#method-fix}{\code{pmcmc_parameters$fix()}}
 }
@@ -169,7 +168,7 @@ vector and the variance-covariance matrix of your proposal
 kernel, rounds any integer values, and reflects bounded
 parameters until they lie within \code{min}:\code{max}.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters$propose(theta, scale = 1)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters$propose(theta, scale = 1, vcv = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -182,30 +181,11 @@ parameters were defined in (see \verb{$names()} for that order.}
 proposal distribution. This may be useful in sampling starting
 points. The parameter is equivalent to a multiplicative factor
 applied to the variance covariance matrix.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-propose_weighted"></a>}}
-\if{latex}{\out{\hypertarget{method-propose_weighted}{}}}
-\subsection{Method \code{propose_weighted()}}{
-Propose a new parameter vector given a current
-parameter vector, with the help of some second, variable,
-variance-covariance-matrix.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters$propose_weighted(theta, weight, vcv)}\if{html}{\out{</div>}}
-}
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{theta}}{a parameter vector in the same order as your
-parameters were defined in (see \verb{$names()} for that order.}
-
-\item{\code{weight}}{Between zero and one}
-
-\item{\code{vcv}}{A variance covariance matrix of the correct size}
+\item{\code{vcv}}{A variance covariance matrix of the correct size,
+overriding the proposal matrix built into the parameters object.
+This will be slightly less efficient but allow a different proposal
+matrix to be used (e.g., during an adaptive MCMC)}
 }
 \if{html}{\out{</div>}}
 }
