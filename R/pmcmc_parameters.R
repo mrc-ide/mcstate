@@ -244,9 +244,9 @@ pmcmc_parameters <- R6::R6Class(
     ##' matrix to be used (e.g., during an adaptive MCMC)
     propose = function(theta, scale = 1, vcv = NULL) {
       if (is.null(vcv)) {
-        theta_new <- rmvnorm_generator(vcv, check = FALSE)(theta)
-      } else {
         theta_new <- private$proposal(theta, scale)
+      } else {
+        theta_new <- rmvnorm_generator(vcv, check = FALSE)(theta)
       }
       theta_new[private$integer] <- round(theta_new[private$integer])
       reflect_proposal(theta_new, private$min, private$max)
