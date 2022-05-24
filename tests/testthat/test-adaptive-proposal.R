@@ -29,6 +29,7 @@ test_that("mean converges to weighted mean, regardless of acceptance", {
   p <- pars$mean() * 2
 
   obj <- adaptive_proposal$new(pars, control)
+  obj$proposal_was_adaptive <- TRUE
   for (i in 1:100) {
     obj$update(p, TRUE)
   }
@@ -44,6 +45,7 @@ test_that("Scaling", {
   control <- adaptive_proposal_control(initial_weight = 50)
   pars <- example_sir()$pars
   obj <- adaptive_proposal$new(pars, control)
+  obj$proposal_was_adaptive <- TRUE
   p <- pars$mean()
   for (i in 1:100) {
     obj$update(p, TRUE)
@@ -54,6 +56,7 @@ test_that("Scaling", {
     100 * (1 - control$acceptance_target) * control$scaling_increment)
 
   obj <- adaptive_proposal$new(pars, control)
+  obj$proposal_was_adaptive <- TRUE
   for (i in 1:100) {
     obj$update(p, FALSE)
   }
