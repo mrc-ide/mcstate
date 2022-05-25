@@ -77,8 +77,9 @@ adaptive_proposal <- R6::R6Class(
         self$scaling <- self$scaling +
           (1 - self$control$acceptance_target) * self$control$scaling_increment
       } else {
-        self$scaling <- self$scaling -
-          self$control$acceptance_target * self$control$scaling_increment
+        self$scaling <- max(self$scaling -
+          self$control$acceptance_target * self$control$scaling_increment,
+          self$control$scaling_increment)
       }
 
       ## Update of the autocorrelation matrix and mean of past samples
