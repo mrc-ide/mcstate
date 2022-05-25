@@ -3,14 +3,14 @@
 ##'
 ##' @title Adaptive proposal control
 ##'
-##' @param initial_scaling The initial scaling
+##' @param initial_scaling The initial scaling of the variance covariance matrix to be used as proposal for the random walk
 ##'
 ##' @param scaling_increment The scaling increment
 ##'
-##' @param acceptance_target The fraction of proposals that should be
+##' @param acceptance_target The target for the fraction of proposals that should be
 ##'   accepted (optimally).
 ##'
-##' @param initial_weight Initial weight
+##' @param initial_weight Initial weight of the variance-covariance matrix used to build the proposal of the random-walk. Higher values 
 ##'
 ##' @param adaptive_contribution The fractional contribution of the
 ##'   adaptive part of the proposal
