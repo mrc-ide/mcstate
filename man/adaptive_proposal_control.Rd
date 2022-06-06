@@ -13,14 +13,14 @@ adaptive_proposal_control(
 )
 }
 \arguments{
-\item{initial_scaling}{The initial scaling}
+\item{initial_scaling}{The initial scaling of the variance covariance matrix to be used as proposal for the random walk}
 
 \item{scaling_increment}{The scaling increment}
 
-\item{acceptance_target}{The fraction of proposals that should be
+\item{acceptance_target}{The target for the fraction of proposals that should be
 accepted (optimally).}
 
-\item{initial_weight}{Initial weight}
+\item{initial_weight}{Initial weight of the variance-covariance matrix used to build the proposal of the random-walk. Higher values}
 
 \item{adaptive_contribution}{The fractional contribution of the
 adaptive part of the proposal}
