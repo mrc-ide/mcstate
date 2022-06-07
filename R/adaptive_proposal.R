@@ -4,7 +4,7 @@
 ##' Efficient exploration of the parameter space during an MCMC might be slow in higher dimension,
 ##' especially if the probability distribution explored present a high degree of correlation
 ##' between dimensions. Adaptive schemes are used to "learn" on the fly the correlation structure
-##' by updating the proposal distributttion by recalculatting the empirical variance-covariance matrix
+##' by updating the proposal distribution by recalculating the empirical variance-covariance matrix
 ##' and rescale it at each step.
 ##' 
 ##' Our implementation of an adaptive MCMC algorithm is based on an adaptation of the "BlkAdpMul"
