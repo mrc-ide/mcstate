@@ -13,14 +13,18 @@ adaptive_proposal_control(
 )
 }
 \arguments{
-\item{initial_scaling}{The initial scaling of the variance covariance matrix to be used as proposal for the random walk}
+\item{initial_scaling}{The initial scaling of the variance covariance matrix to be used to
+generate the multivariate normal proposal for the random walk.}
 
-\item{scaling_increment}{The scaling increment}
+\item{scaling_increment}{The scaling increment which is added or substracted to the scaling factor of
+the variance-covariance after each adaptive step.}
 
 \item{acceptance_target}{The target for the fraction of proposals that should be
 accepted (optimally).}
 
-\item{initial_weight}{Initial weight of the variance-covariance matrix used to build the proposal of the random-walk. Higher values}
+\item{initial_weight}{Initial weight of the variance-covariance matrix used to build the
+proposal of the random-walk. Higher values translate into higher confidence of the initial
+variance-covariance matrix and means that update from additional samples will be slower.}
 
 \item{adaptive_contribution}{The fractional contribution of the
 adaptive part of the proposal}
@@ -28,4 +32,19 @@ adaptive part of the proposal}
 \description{
 Control for adaptive proposals, used in \link{pmcmc_control}
 for deterministic models.
+}
+\details{
+Efficient exploration of the parameter space during an MCMC might be slow in higher dimension,
+especially if the probability distribution explored present a high degree of correlation
+between dimensions. Adaptive schemes are used to "learn" on the fly the correlation structure
+by updating the proposal distribution by recalculating the empirical variance-covariance matrix
+and rescale it at each step.
+
+Our implementation of an adaptive MCMC algorithm is based on an adaptation of the "BlkAdpMul"
+algorithm in Sherlock et al. (ALGORITHM 6). The algorithm is based on a random-walk
+Metropolis-Hasting algorithm where the proposal is a multi-variate Normal distribution
+centered on the current point.
+
+Sherlock C, Fearnhead P, Roberts GO (2010) The Random Walk Metropolis: Linking Theory and
+Practice Through a Case Study. Statistical Science 25:172–190.
 }
