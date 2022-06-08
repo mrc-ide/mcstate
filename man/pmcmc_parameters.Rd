@@ -38,21 +38,21 @@ pars$model(p)
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{pmcmc_parameters$new()}}
-\item \href{#method-initial}{\code{pmcmc_parameters$initial()}}
-\item \href{#method-mean}{\code{pmcmc_parameters$mean()}}
-\item \href{#method-vcv}{\code{pmcmc_parameters$vcv()}}
-\item \href{#method-names}{\code{pmcmc_parameters$names()}}
-\item \href{#method-summary}{\code{pmcmc_parameters$summary()}}
-\item \href{#method-prior}{\code{pmcmc_parameters$prior()}}
-\item \href{#method-propose}{\code{pmcmc_parameters$propose()}}
-\item \href{#method-model}{\code{pmcmc_parameters$model()}}
-\item \href{#method-fix}{\code{pmcmc_parameters$fix()}}
+\item \href{#method-pmcmc_parameters-new}{\code{pmcmc_parameters$new()}}
+\item \href{#method-pmcmc_parameters-initial}{\code{pmcmc_parameters$initial()}}
+\item \href{#method-pmcmc_parameters-mean}{\code{pmcmc_parameters$mean()}}
+\item \href{#method-pmcmc_parameters-vcv}{\code{pmcmc_parameters$vcv()}}
+\item \href{#method-pmcmc_parameters-names}{\code{pmcmc_parameters$names()}}
+\item \href{#method-pmcmc_parameters-summary}{\code{pmcmc_parameters$summary()}}
+\item \href{#method-pmcmc_parameters-prior}{\code{pmcmc_parameters$prior()}}
+\item \href{#method-pmcmc_parameters-propose}{\code{pmcmc_parameters$propose()}}
+\item \href{#method-pmcmc_parameters-model}{\code{pmcmc_parameters$model()}}
+\item \href{#method-pmcmc_parameters-fix}{\code{pmcmc_parameters$fix()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-pmcmc_parameters-new"></a>}}
+\if{latex}{\out{\hypertarget{method-pmcmc_parameters-new}{}}}
 \subsection{Method \code{new()}}{
 Create the pmcmc_parameters object
 \subsection{Usage}{
@@ -87,8 +87,8 @@ you can do arbitrary transformations here.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-initial"></a>}}
-\if{latex}{\out{\hypertarget{method-initial}{}}}
+\if{html}{\out{<a id="method-pmcmc_parameters-initial"></a>}}
+\if{latex}{\out{\hypertarget{method-pmcmc_parameters-initial}{}}}
 \subsection{Method \code{initial()}}{
 Return the initial parameter values as a named numeric
 vector
@@ -98,8 +98,8 @@ vector
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-mean"></a>}}
-\if{latex}{\out{\hypertarget{method-mean}{}}}
+\if{html}{\out{<a id="method-pmcmc_parameters-mean"></a>}}
+\if{latex}{\out{\hypertarget{method-pmcmc_parameters-mean}{}}}
 \subsection{Method \code{mean()}}{
 Return the estimate of the mean of the parameters,
 as set when created (this is not updated by any fitting!)
@@ -109,8 +109,8 @@ as set when created (this is not updated by any fitting!)
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-vcv"></a>}}
-\if{latex}{\out{\hypertarget{method-vcv}{}}}
+\if{html}{\out{<a id="method-pmcmc_parameters-vcv"></a>}}
+\if{latex}{\out{\hypertarget{method-pmcmc_parameters-vcv}{}}}
 \subsection{Method \code{vcv()}}{
 Return the variance-covariance matrix used for the
 proposal.
@@ -120,8 +120,8 @@ proposal.
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-names"></a>}}
-\if{latex}{\out{\hypertarget{method-names}{}}}
+\if{html}{\out{<a id="method-pmcmc_parameters-names"></a>}}
+\if{latex}{\out{\hypertarget{method-pmcmc_parameters-names}{}}}
 \subsection{Method \code{names()}}{
 Return the names of the parameters
 \subsection{Usage}{
@@ -130,8 +130,8 @@ Return the names of the parameters
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-summary"></a>}}
-\if{latex}{\out{\hypertarget{method-summary}{}}}
+\if{html}{\out{<a id="method-pmcmc_parameters-summary"></a>}}
+\if{latex}{\out{\hypertarget{method-pmcmc_parameters-summary}{}}}
 \subsection{Method \code{summary()}}{
 Return a \code{data.frame} with information about
 parameters (name, min, max, and integer).
@@ -141,8 +141,8 @@ parameters (name, min, max, and integer).
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-prior"></a>}}
-\if{latex}{\out{\hypertarget{method-prior}{}}}
+\if{html}{\out{<a id="method-pmcmc_parameters-prior"></a>}}
+\if{latex}{\out{\hypertarget{method-pmcmc_parameters-prior}{}}}
 \subsection{Method \code{prior()}}{
 Compute the prior for a parameter vector
 \subsection{Usage}{
@@ -159,8 +159,8 @@ parameters were defined in (see \verb{$names()} for that order.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-propose"></a>}}
-\if{latex}{\out{\hypertarget{method-propose}{}}}
+\if{html}{\out{<a id="method-pmcmc_parameters-propose"></a>}}
+\if{latex}{\out{\hypertarget{method-pmcmc_parameters-propose}{}}}
 \subsection{Method \code{propose()}}{
 Propose a new parameter vector given a current parameter
 vector. This proposes a new parameter vector given your current
@@ -191,8 +191,8 @@ matrix to be used (e.g., during an adaptive MCMC)}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-model"></a>}}
-\if{latex}{\out{\hypertarget{method-model}{}}}
+\if{html}{\out{<a id="method-pmcmc_parameters-model"></a>}}
+\if{latex}{\out{\hypertarget{method-pmcmc_parameters-model}{}}}
 \subsection{Method \code{model()}}{
 Apply the model transformation function to a parameter
 vector.
@@ -210,8 +210,8 @@ parameters were defined in (see \verb{$names()} for that order.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-fix"></a>}}
-\if{latex}{\out{\hypertarget{method-fix}{}}}
+\if{html}{\out{<a id="method-pmcmc_parameters-fix"></a>}}
+\if{latex}{\out{\hypertarget{method-pmcmc_parameters-fix}{}}}
 \subsection{Method \code{fix()}}{
 Set some parameters to fixed values. Use this to
 reduce the dimensionality of your system.

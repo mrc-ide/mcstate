@@ -1,6 +1,6 @@
 Package: mcstate
 Title: Monte Carlo Methods for State Space Models
-Version: 0.9.2
+Version: 0.9.4
 Authors@R: c(person("Rich", "FitzJohn", role = c("aut", "cre"),
                     email = "rich.fitzjohn@gmail.com"),
              person("Marc", "Baguelin", role = "aut"),
@@ -37,7 +37,7 @@ Suggests:
     rmarkdown,
     testthat,
     withr
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.0
 Roxygen: list(markdown = TRUE)
 Remotes:
     mrc-ide/dust@mrc-3157,

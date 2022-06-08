@@ -36,15 +36,15 @@ This is a 3d array as described in \link{particle_filter}}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{particle_deterministic_state$new()}}
-\item \href{#method-run}{\code{particle_deterministic_state$run()}}
-\item \href{#method-step}{\code{particle_deterministic_state$step()}}
-\item \href{#method-fork_multistage}{\code{particle_deterministic_state$fork_multistage()}}
+\item \href{#method-particle_deterministic_state-new}{\code{particle_deterministic_state$new()}}
+\item \href{#method-particle_deterministic_state-run}{\code{particle_deterministic_state$run()}}
+\item \href{#method-particle_deterministic_state-step}{\code{particle_deterministic_state$step()}}
+\item \href{#method-particle_deterministic_state-fork_multistage}{\code{particle_deterministic_state$fork_multistage()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-particle_deterministic_state-new"></a>}}
+\if{latex}{\out{\hypertarget{method-particle_deterministic_state-new}{}}}
 \subsection{Method \code{new()}}{
 Initialise the deterministic particle state. Ordinarily
 this should not be called by users, and so arguments are barely
@@ -103,8 +103,8 @@ documented.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-run"></a>}}
-\if{latex}{\out{\hypertarget{method-run}{}}}
+\if{html}{\out{<a id="method-particle_deterministic_state-run"></a>}}
+\if{latex}{\out{\hypertarget{method-particle_deterministic_state-run}{}}}
 \subsection{Method \code{run()}}{
 Run the deterministic particle to the end of the data.
 This is a convenience function around \verb{$step()} which provides the
@@ -115,8 +115,8 @@ correct value of \code{step_index}
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-step"></a>}}
-\if{latex}{\out{\hypertarget{method-step}{}}}
+\if{html}{\out{<a id="method-particle_deterministic_state-step"></a>}}
+\if{latex}{\out{\hypertarget{method-particle_deterministic_state-step}{}}}
 \subsection{Method \code{step()}}{
 Take a step with the deterministic particle. This moves
 the system forward one step within the \emph{data} (which
@@ -139,8 +139,8 @@ the end of the data.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-fork_multistage"></a>}}
-\if{latex}{\out{\hypertarget{method-fork_multistage}{}}}
+\if{html}{\out{<a id="method-particle_deterministic_state-fork_multistage"></a>}}
+\if{latex}{\out{\hypertarget{method-particle_deterministic_state-fork_multistage}{}}}
 \subsection{Method \code{fork_multistage()}}{
 Create a new \code{deterministic_particle_state} object based
 on this one (same model, position in time within the data) but with

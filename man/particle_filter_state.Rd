@@ -42,16 +42,16 @@ last call to \verb{$step()}.}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{particle_filter_state$new()}}
-\item \href{#method-run}{\code{particle_filter_state$run()}}
-\item \href{#method-step}{\code{particle_filter_state$step()}}
-\item \href{#method-fork_multistage}{\code{particle_filter_state$fork_multistage()}}
-\item \href{#method-fork_smc2}{\code{particle_filter_state$fork_smc2()}}
+\item \href{#method-particle_filter_state-new}{\code{particle_filter_state$new()}}
+\item \href{#method-particle_filter_state-run}{\code{particle_filter_state$run()}}
+\item \href{#method-particle_filter_state-step}{\code{particle_filter_state$step()}}
+\item \href{#method-particle_filter_state-fork_multistage}{\code{particle_filter_state$fork_multistage()}}
+\item \href{#method-particle_filter_state-fork_smc2}{\code{particle_filter_state$fork_smc2()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-particle_filter_state-new"></a>}}
+\if{latex}{\out{\hypertarget{method-particle_filter_state-new}{}}}
 \subsection{Method \code{new()}}{
 Initialise the particle filter state. Ordinarily
 this should not be called by users, and so arguments are barely
@@ -122,8 +122,8 @@ documented.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-run"></a>}}
-\if{latex}{\out{\hypertarget{method-run}{}}}
+\if{html}{\out{<a id="method-particle_filter_state-run"></a>}}
+\if{latex}{\out{\hypertarget{method-particle_filter_state-run}{}}}
 \subsection{Method \code{run()}}{
 Run the particle filter to the end of the data. This is
 a convenience function around \verb{$step()} which provides the correct
@@ -134,8 +134,8 @@ value of \code{step_index}
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-step"></a>}}
-\if{latex}{\out{\hypertarget{method-step}{}}}
+\if{html}{\out{<a id="method-particle_filter_state-step"></a>}}
+\if{latex}{\out{\hypertarget{method-particle_filter_state-step}{}}}
 \subsection{Method \code{step()}}{
 Take a step with the particle filter. This moves
 the particle filter forward one step within the \emph{data} (which
@@ -161,8 +161,8 @@ likelihood, due to this step, rather than the full likelihood so far.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-fork_multistage"></a>}}
-\if{latex}{\out{\hypertarget{method-fork_multistage}{}}}
+\if{html}{\out{<a id="method-particle_filter_state-fork_multistage"></a>}}
+\if{latex}{\out{\hypertarget{method-particle_filter_state-fork_multistage}{}}}
 \subsection{Method \code{fork_multistage()}}{
 Create a new \code{particle_filter_state} object based on
 this one (same model, position in time within the data) but with
@@ -190,8 +190,8 @@ from the old to the new parameter set.  See
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-fork_smc2"></a>}}
-\if{latex}{\out{\hypertarget{method-fork_smc2}{}}}
+\if{html}{\out{<a id="method-particle_filter_state-fork_smc2"></a>}}
+\if{latex}{\out{\hypertarget{method-particle_filter_state-fork_smc2}{}}}
 \subsection{Method \code{fork_smc2()}}{
 Create a new \code{particle_filter_state} object based
 on this one (same model, position in time within the data) but

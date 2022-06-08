@@ -43,19 +43,19 @@ pars$model(p_mat)
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{if2_parameters$new()}}
-\item \href{#method-initial}{\code{if2_parameters$initial()}}
-\item \href{#method-walk_initialise}{\code{if2_parameters$walk_initialise()}}
-\item \href{#method-walk}{\code{if2_parameters$walk()}}
-\item \href{#method-names}{\code{if2_parameters$names()}}
-\item \href{#method-summary}{\code{if2_parameters$summary()}}
-\item \href{#method-prior}{\code{if2_parameters$prior()}}
-\item \href{#method-model}{\code{if2_parameters$model()}}
+\item \href{#method-if2_parameters-new}{\code{if2_parameters$new()}}
+\item \href{#method-if2_parameters-initial}{\code{if2_parameters$initial()}}
+\item \href{#method-if2_parameters-walk_initialise}{\code{if2_parameters$walk_initialise()}}
+\item \href{#method-if2_parameters-walk}{\code{if2_parameters$walk()}}
+\item \href{#method-if2_parameters-names}{\code{if2_parameters$names()}}
+\item \href{#method-if2_parameters-summary}{\code{if2_parameters$summary()}}
+\item \href{#method-if2_parameters-prior}{\code{if2_parameters$prior()}}
+\item \href{#method-if2_parameters-model}{\code{if2_parameters$model()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-if2_parameters-new"></a>}}
+\if{latex}{\out{\hypertarget{method-if2_parameters-new}{}}}
 \subsection{Method \code{new()}}{
 Create the if2_parameters object
 \subsection{Usage}{
@@ -82,8 +82,8 @@ you can do arbitrary transformations here.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-initial"></a>}}
-\if{latex}{\out{\hypertarget{method-initial}{}}}
+\if{html}{\out{<a id="method-if2_parameters-initial"></a>}}
+\if{latex}{\out{\hypertarget{method-if2_parameters-initial}{}}}
 \subsection{Method \code{initial()}}{
 Return the initial parameter values as a named numeric
 vector
@@ -93,8 +93,8 @@ vector
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-walk_initialise"></a>}}
-\if{latex}{\out{\hypertarget{method-walk_initialise}{}}}
+\if{html}{\out{<a id="method-if2_parameters-walk_initialise"></a>}}
+\if{latex}{\out{\hypertarget{method-if2_parameters-walk_initialise}{}}}
 \subsection{Method \code{walk_initialise()}}{
 Set up a parameter walk
 \subsection{Usage}{
@@ -114,8 +114,8 @@ of each parameter}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-walk"></a>}}
-\if{latex}{\out{\hypertarget{method-walk}{}}}
+\if{html}{\out{<a id="method-if2_parameters-walk"></a>}}
+\if{latex}{\out{\hypertarget{method-if2_parameters-walk}{}}}
 \subsection{Method \code{walk()}}{
 Propose a new parameter matrix given a current matrix
 and walk standard deviation vector.
@@ -136,8 +136,8 @@ of each parameter}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-names"></a>}}
-\if{latex}{\out{\hypertarget{method-names}{}}}
+\if{html}{\out{<a id="method-if2_parameters-names"></a>}}
+\if{latex}{\out{\hypertarget{method-if2_parameters-names}{}}}
 \subsection{Method \code{names()}}{
 Return the names of the parameters
 \subsection{Usage}{
@@ -146,8 +146,8 @@ Return the names of the parameters
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-summary"></a>}}
-\if{latex}{\out{\hypertarget{method-summary}{}}}
+\if{html}{\out{<a id="method-if2_parameters-summary"></a>}}
+\if{latex}{\out{\hypertarget{method-if2_parameters-summary}{}}}
 \subsection{Method \code{summary()}}{
 Return a \code{\link{data.frame}} with information about
 parameters (name, min, max, and integer).
@@ -157,8 +157,8 @@ parameters (name, min, max, and integer).
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-prior"></a>}}
-\if{latex}{\out{\hypertarget{method-prior}{}}}
+\if{html}{\out{<a id="method-if2_parameters-prior"></a>}}
+\if{latex}{\out{\hypertarget{method-if2_parameters-prior}{}}}
 \subsection{Method \code{prior()}}{
 Compute the prior for a parameter vector
 \subsection{Usage}{
@@ -174,8 +174,8 @@ Compute the prior for a parameter vector
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-model"></a>}}
-\if{latex}{\out{\hypertarget{method-model}{}}}
+\if{html}{\out{<a id="method-if2_parameters-model"></a>}}
+\if{latex}{\out{\hypertarget{method-if2_parameters-model}{}}}
 \subsection{Method \code{model()}}{
 Apply the model transformation function to a parameter
 vector. Output is a list for lists, suitable for use with a dust
