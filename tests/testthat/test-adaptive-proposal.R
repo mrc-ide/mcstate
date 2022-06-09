@@ -41,7 +41,7 @@ test_that("mean converges to weighted mean, regardless of acceptance", {
 })
 
 
-test_that("Scaling", {
+test_that("Scaling converges to expected limits", {
   control <- adaptive_proposal_control(initial_weight = 50)
   pars <- example_sir()$pars
   obj <- adaptive_proposal$new(pars, control)
@@ -62,6 +62,5 @@ test_that("Scaling", {
   }
   expect_equal(
     obj$scaling,
-    control$initial_scaling -
-    100 * control$acceptance_target * control$scaling_increment)
+    control$scaling_increment)
 })
