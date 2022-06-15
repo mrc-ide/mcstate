@@ -20,7 +20,7 @@ the order of the arguments may change in future."><meta property="og:image" cont
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.4</span>
       </span>
     </div>
 
@@ -94,23 +94,36 @@ the order of the arguments may change in future.</p>
     <h2>Arguments</h2>
     <dl><dt>pars_sd</dt>
 <dd><p>The initial standard deviation of parameter walks.</p></dd>
+
+
 <dt>iterations</dt>
 <dd><p>The number of IF2 iterations to run, across which
 the cooling is performed</p></dd>
+
+
 <dt>n_par_sets</dt>
 <dd><p>The number of parameter sets to walk (c.f. the
 population size)</p></dd>
+
+
 <dt>cooling_target</dt>
 <dd><p>A factor &lt; 1 multiplying pars_sd, which will be
 reached by the end of the iterations, and approached geometrically</p></dd>
+
+
 <dt>progress</dt>
 <dd><p>Logical, indicating if a progress bar should be
 displayed, using <code><a href="https://rdrr.io/pkg/progress/man/progress_bar.html" class="external-link">progress::progress_bar</a></code>.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>An <code>if2_control</code> object, which should not be modified once
+    
+
+<p>An <code>if2_control</code> object, which should not be modified once
 created. Pass this into <code><a href="if2.html">if2()</a></code></p>
+
+
     </div>
 
     <div id="ref-examples">
@@ -152,7 +165,7 @@ created. Pass this into <code><a href="if2.html">if2()</a></code></p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

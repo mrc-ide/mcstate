@@ -21,7 +21,7 @@ used."><meta property="og:image" content="/logo.png"><!-- mathjax --><script src
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.4</span>
       </span>
     </div>
 
@@ -95,15 +95,17 @@ used.</p>
 <div class="section">
 <h3 id="public-methods">Public methods<a class="anchor" aria-label="anchor" href="#public-methods"></a></h3>
 
-<ul><li><p><a href="#method-new"><code>pmcmc_parameters$new()</code></a></p></li>
-<li><p><a href="#method-initial"><code>pmcmc_parameters$initial()</code></a></p></li>
-<li><p><a href="#method-names"><code>pmcmc_parameters$names()</code></a></p></li>
-<li><p><a href="#method-summary"><code>pmcmc_parameters$summary()</code></a></p></li>
-<li><p><a href="#method-prior"><code>pmcmc_parameters$prior()</code></a></p></li>
-<li><p><a href="#method-propose"><code>pmcmc_parameters$propose()</code></a></p></li>
-<li><p><a href="#method-model"><code>pmcmc_parameters$model()</code></a></p></li>
-<li><p><a href="#method-fix"><code>pmcmc_parameters$fix()</code></a></p></li>
-</ul></div><p></p><hr><a id="method-new"></a><div class="section">
+<ul><li><p><a href="#method-pmcmc_parameters-new"><code>pmcmc_parameters$new()</code></a></p></li>
+<li><p><a href="#method-pmcmc_parameters-initial"><code>pmcmc_parameters$initial()</code></a></p></li>
+<li><p><a href="#method-pmcmc_parameters-mean"><code>pmcmc_parameters$mean()</code></a></p></li>
+<li><p><a href="#method-pmcmc_parameters-vcv"><code>pmcmc_parameters$vcv()</code></a></p></li>
+<li><p><a href="#method-pmcmc_parameters-names"><code>pmcmc_parameters$names()</code></a></p></li>
+<li><p><a href="#method-pmcmc_parameters-summary"><code>pmcmc_parameters$summary()</code></a></p></li>
+<li><p><a href="#method-pmcmc_parameters-prior"><code>pmcmc_parameters$prior()</code></a></p></li>
+<li><p><a href="#method-pmcmc_parameters-propose"><code>pmcmc_parameters$propose()</code></a></p></li>
+<li><p><a href="#method-pmcmc_parameters-model"><code>pmcmc_parameters$model()</code></a></p></li>
+<li><p><a href="#method-pmcmc_parameters-fix"><code>pmcmc_parameters$fix()</code></a></p></li>
+</ul></div><p></p><hr><a id="method-pmcmc_parameters-new"></a><div class="section">
 <h3 id="method-new-">Method <code>new()</code><a class="anchor" aria-label="anchor" href="#method-new-"></a></h3>
 <p>Create the pmcmc_parameters object</p><div class="section">
 <h4 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a></h4>
@@ -142,7 +144,7 @@ you can do arbitrary transformations here.</p></dd>
 </dl><p></p></div>
 </div>
 
-</div><p></p><hr><a id="method-initial"></a><div class="section">
+</div><p></p><hr><a id="method-pmcmc_parameters-initial"></a><div class="section">
 <h3 id="method-initial-">Method <code>initial()</code><a class="anchor" aria-label="anchor" href="#method-initial-"></a></h3>
 <p>Return the initial parameter values as a named numeric
 vector</p><div class="section">
@@ -151,27 +153,45 @@ vector</p><div class="section">
 </div>
 
 
-</div><p></p><hr><a id="method-names"></a><div class="section">
+</div><p></p><hr><a id="method-pmcmc_parameters-mean"></a><div class="section">
+<h3 id="method-mean-">Method <code><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean()</a></code><a class="anchor" aria-label="anchor" href="#method-mean-"></a></h3>
+<p>Return the estimate of the mean of the parameters,
+as set when created (this is not updated by any fitting!)</p><div class="section">
+<h4 id="usage-2">Usage<a class="anchor" aria-label="anchor" href="#usage-2"></a></h4>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">mean</span><span class="op">(</span><span class="op">)</span></code></pre></div><p></p></div>
+</div>
+
+
+</div><p></p><hr><a id="method-pmcmc_parameters-vcv"></a><div class="section">
+<h3 id="method-vcv-">Method <code>vcv()</code><a class="anchor" aria-label="anchor" href="#method-vcv-"></a></h3>
+<p>Return the variance-covariance matrix used for the
+proposal.</p><div class="section">
+<h4 id="usage-3">Usage<a class="anchor" aria-label="anchor" href="#usage-3"></a></h4>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">vcv</span><span class="op">(</span><span class="op">)</span></code></pre></div><p></p></div>
+</div>
+
+
+</div><p></p><hr><a id="method-pmcmc_parameters-names"></a><div class="section">
 <h3 id="method-names-">Method <code><a href="https://rdrr.io/r/base/names.html" class="external-link">names()</a></code><a class="anchor" aria-label="anchor" href="#method-names-"></a></h3>
 <p>Return the names of the parameters</p><div class="section">
-<h4 id="usage-2">Usage<a class="anchor" aria-label="anchor" href="#usage-2"></a></h4>
+<h4 id="usage-4">Usage<a class="anchor" aria-label="anchor" href="#usage-4"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">names</span><span class="op">(</span><span class="op">)</span></code></pre></div><p></p></div>
 </div>
 
 
-</div><p></p><hr><a id="method-summary"></a><div class="section">
+</div><p></p><hr><a id="method-pmcmc_parameters-summary"></a><div class="section">
 <h3 id="method-summary-">Method <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code><a class="anchor" aria-label="anchor" href="#method-summary-"></a></h3>
 <p>Return a <code>data.frame</code> with information about
 parameters (name, min, max, and integer).</p><div class="section">
-<h4 id="usage-3">Usage<a class="anchor" aria-label="anchor" href="#usage-3"></a></h4>
+<h4 id="usage-5">Usage<a class="anchor" aria-label="anchor" href="#usage-5"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span><span class="op">)</span></code></pre></div><p></p></div>
 </div>
 
 
-</div><p></p><hr><a id="method-prior"></a><div class="section">
+</div><p></p><hr><a id="method-pmcmc_parameters-prior"></a><div class="section">
 <h3 id="method-prior-">Method <code>prior()</code><a class="anchor" aria-label="anchor" href="#method-prior-"></a></h3>
 <p>Compute the prior for a parameter vector</p><div class="section">
-<h4 id="usage-4">Usage<a class="anchor" aria-label="anchor" href="#usage-4"></a></h4>
+<h4 id="usage-6">Usage<a class="anchor" aria-label="anchor" href="#usage-6"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">prior</span><span class="op">(</span><span class="va">theta</span><span class="op">)</span></code></pre></div><p></p></div>
 </div>
 
@@ -185,15 +205,15 @@ parameters were defined in (see <code>$names()</code> for that order.</p></dd>
 </dl><p></p></div>
 </div>
 
-</div><p></p><hr><a id="method-propose"></a><div class="section">
+</div><p></p><hr><a id="method-pmcmc_parameters-propose"></a><div class="section">
 <h3 id="method-propose-">Method <code>propose()</code><a class="anchor" aria-label="anchor" href="#method-propose-"></a></h3>
 <p>Propose a new parameter vector given a current parameter
 vector. This proposes a new parameter vector given your current
 vector and the variance-covariance matrix of your proposal
 kernel, rounds any integer values, and reflects bounded
 parameters until they lie within <code>min</code>:<code>max</code>.</p><div class="section">
-<h4 id="usage-5">Usage<a class="anchor" aria-label="anchor" href="#usage-5"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">propose</span><span class="op">(</span><span class="va">theta</span>, scale <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></code></pre></div><p></p></div>
+<h4 id="usage-7">Usage<a class="anchor" aria-label="anchor" href="#usage-7"></a></h4>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">propose</span><span class="op">(</span><span class="va">theta</span>, scale <span class="op">=</span> <span class="fl">1</span>, vcv <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -210,14 +230,21 @@ points. The parameter is equivalent to a multiplicative factor
 applied to the variance covariance matrix.</p></dd>
 
 
+<dt><code>vcv</code></dt>
+<dd><p>A variance covariance matrix of the correct size,
+overriding the proposal matrix built into the parameters object.
+This will be slightly less efficient but allow a different proposal
+matrix to be used (e.g., during an adaptive MCMC)</p></dd>
+
+
 </dl><p></p></div>
 </div>
 
-</div><p></p><hr><a id="method-model"></a><div class="section">
+</div><p></p><hr><a id="method-pmcmc_parameters-model"></a><div class="section">
 <h3 id="method-model-">Method <code>model()</code><a class="anchor" aria-label="anchor" href="#method-model-"></a></h3>
 <p>Apply the model transformation function to a parameter
 vector.</p><div class="section">
-<h4 id="usage-6">Usage<a class="anchor" aria-label="anchor" href="#usage-6"></a></h4>
+<h4 id="usage-8">Usage<a class="anchor" aria-label="anchor" href="#usage-8"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">model</span><span class="op">(</span><span class="va">theta</span><span class="op">)</span></code></pre></div><p></p></div>
 </div>
 
@@ -231,11 +258,11 @@ parameters were defined in (see <code>$names()</code> for that order.</p></dd>
 </dl><p></p></div>
 </div>
 
-</div><p></p><hr><a id="method-fix"></a><div class="section">
+</div><p></p><hr><a id="method-pmcmc_parameters-fix"></a><div class="section">
 <h3 id="method-fix-">Method <code><a href="https://rdrr.io/r/utils/fix.html" class="external-link">fix()</a></code><a class="anchor" aria-label="anchor" href="#method-fix-"></a></h3>
 <p>Set some parameters to fixed values. Use this to
 reduce the dimensionality of your system.</p><div class="section">
-<h4 id="usage-7">Usage<a class="anchor" aria-label="anchor" href="#usage-7"></a></h4>
+<h4 id="usage-9">Usage<a class="anchor" aria-label="anchor" href="#usage-9"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">fix</span><span class="op">(</span><span class="va">fixed</span><span class="op">)</span></code></pre></div><p></p></div>
 </div>
 
@@ -270,7 +297,7 @@ reduce the dimensionality of your system.</p><div class="section">
 <span class="r-in"><span class="co"># Propose a new parameter point</span></span>
 <span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">propose</span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          a          b </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  0.5075114 -0.2293594 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  0.5246372 -0.6061751 </span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># Information about parameters:</span></span>
 <span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">names</span><span class="op">(</span><span class="op">)</span></span>
@@ -306,7 +333,7 @@ reduce the dimensionality of your system.</p><div class="section">
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

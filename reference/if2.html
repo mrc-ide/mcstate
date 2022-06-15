@@ -18,7 +18,7 @@ inference."><meta property="og:image" content="/logo.png"><!-- mathjax --><scrip
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.4</span>
       </span>
     </div>
 
@@ -94,6 +94,8 @@ inference.</p>
 <dd><p>An <a href="if2_parameters.html">if2_parameters</a> object, describing the
 parameters that will be varied in the simulation, and the method
 of transformation into model parameters.</p></dd>
+
+
 <dt>filter</dt>
 <dd><p>A <a href="particle_filter.html">particle_filter</a> object. We don't use
 the particle filter directly (except for sampling with
@@ -101,17 +103,26 @@ the particle filter directly (except for sampling with
 it's convenient.  Be sure to set things like the seed and number
 of threads here if you want to use anything other than the
 default.</p></dd>
+
+
 <dt>control</dt>
 <dd><p>An <code><a href="if2_control.html">if2_control()</a></code> object</p></dd>
+
+
 <dt>obj</dt>
 <dd><p>An object of class <code>if2_fit</code>, returned by <code>mcstate::if2()</code></p></dd>
+
+
 <dt>n_particles</dt>
 <dd><p>The number of particles to simulate, for each
 IF2 parameter set</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>An object of class <code>if2_fit</code>, which contains the sampled
+    
+
+<p>An object of class <code>if2_fit</code>, which contains the sampled
 parameters (over time) and their log-likelihoods</p>
     </div>
     <div id="details">
@@ -199,7 +210,7 @@ PNAS, 112(3), 719–724. https://doi.org/10.1073/pnas.1410597112.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

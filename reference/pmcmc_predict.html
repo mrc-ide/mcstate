@@ -19,7 +19,7 @@ the object, using R's S3 dispatch."><meta property="og:image" content="/logo.png
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.4</span>
       </span>
     </div>
 
@@ -100,19 +100,27 @@ the object, using R's S3 dispatch.</p>
 <dd><p>The results of running <code><a href="pmcmc.html">pmcmc()</a></code> with
 <code>return_state = TRUE</code> (without this extra information,
 prediction is not possible)</p></dd>
+
+
 <dt>steps</dt>
 <dd><p>A vector of time steps to return predictions for. The
 first value must be the final value run in your simulation. An
 error will be thrown if you get this value wrong, look in
 <code>object$predict$step</code> (or the error message) for the
 correct value.</p></dd>
+
+
 <dt>prepend_trajectories</dt>
 <dd><p>Prepend trajectories from the particle
 filter to the predictions created here.</p></dd>
+
+
 <dt>n_threads</dt>
 <dd><p>The number of threads used in the simulation. If
 not given, we default to the value used in the particle filter
 that was used in the pmcmc.</p></dd>
+
+
 <dt>seed</dt>
 <dd><p>The random number seed (see <code><a href="particle_filter.html">particle_filter</a></code>). The
 default value of <code>NULL</code> will seed the dust random number
@@ -124,6 +132,7 @@ will be identical. If you do want to call predict with this
 state multiple times you should create a persistant rng state
 object (e.g., with <a href="https://rdrr.io/pkg/dust/man/dust_rng.html" class="external-link">dust::dust_rng</a> and perform a "long jump"
 between each call.</p></dd>
+
 </dl></div>
 
   </div>
@@ -138,7 +147,7 @@ between each call.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

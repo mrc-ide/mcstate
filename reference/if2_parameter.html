@@ -20,7 +20,7 @@ these together for use with if2()."><meta property="og:image" content="/logo.png
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.4</span>
       </span>
     </div>
 
@@ -102,27 +102,40 @@ these together for use with <code><a href="if2.html">if2()</a></code>.</p>
     <h2>Arguments</h2>
     <dl><dt>name</dt>
 <dd><p>Name for the parameter (a string)</p></dd>
+
+
 <dt>initial</dt>
 <dd><p>Initial value of the parameter</p></dd>
+
+
 <dt>min</dt>
 <dd><p>Optional minimum value for the parameter (otherwise
 <code>-Inf</code>). If given, then <code>initial</code> must be at least this
 value.</p></dd>
+
+
 <dt>max</dt>
 <dd><p>Optional max value for the parameter (otherwise
 <code>Inf</code>). If given, then <code>initial</code> must be at most this
 value.</p></dd>
+
+
 <dt>discrete</dt>
 <dd><p>Deprecated; use <code>integer</code> instead.</p></dd>
+
+
 <dt>integer</dt>
 <dd><p>Logical, indicating if this parameter is
 integer. If <code>TRUE</code> then the parameter will be rounded
 after a new parameter is proposed.</p></dd>
+
+
 <dt>prior</dt>
 <dd><p>A prior function (if not given an improper flat prior
 is used - be careful!). It must be a function that takes a
 single argument, being the value of this parameter. If given,
 then <code>prior(initial)</code> must evaluate to a finite value.</p></dd>
+
 </dl></div>
 
     <div id="ref-examples">
@@ -146,8 +159,8 @@ then <code>prior(initial)</code> must evaluate to a finite value.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $prior</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> function (p) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;bytecode: 0x7ffda247a5f8&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x7ffda2562f68&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;bytecode: 0x7f90bf5e8e00&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x7f90bc931788&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "if2_parameter"</span>
@@ -165,7 +178,7 @@ then <code>prior(initial)</code> must evaluate to a finite value.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

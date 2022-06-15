@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.4</span>
       </span>
     </div>
 
@@ -92,11 +92,15 @@ These must correspond to time points with data.  The model will
 complete the step to this time point, then change parameters,
 then continue (so <code>start</code> represents the time point we move from
 with these parameters)</p></dd>
+
+
 <dt>pars</dt>
 <dd><p>Optional parameter object, replacing the model
 parameters at this point.  If <code>NULL</code> then the model parameters
 are not changed, and it is assumed that you will be changing
 model state via <code>transform_state</code>.</p></dd>
+
+
 <dt>transform_state</dt>
 <dd><p>Optional parameter transformation function.
 This could be used in two cases (1) arbitrary change to the
@@ -113,6 +117,7 @@ result of the <code>$info()</code> method for the new model that was
 created with <code>pars</code> which will be run from this point.  Future
 versions of this interface may allow passing the parameters in
 too.</p></dd>
+
 </dl></div>
 
   </div>
@@ -127,7 +132,7 @@ too.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

@@ -24,7 +24,7 @@ them, but don't)."><meta property="og:image" content="/logo.png"><!-- mathjax --
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.4</span>
       </span>
     </div>
 
@@ -129,11 +129,11 @@ This is a 3d array as described in <a href="particle_filter.html">particle_filte
 <div class="section">
 <h3 id="public-methods">Public methods<a class="anchor" aria-label="anchor" href="#public-methods"></a></h3>
 
-<ul><li><p><a href="#method-new"><code>particle_deterministic_state$new()</code></a></p></li>
-<li><p><a href="#method-run"><code>particle_deterministic_state$run()</code></a></p></li>
-<li><p><a href="#method-step"><code>particle_deterministic_state$step()</code></a></p></li>
-<li><p><a href="#method-fork_multistage"><code>particle_deterministic_state$fork_multistage()</code></a></p></li>
-</ul></div><p></p><hr><a id="method-new"></a><div class="section">
+<ul><li><p><a href="#method-particle_deterministic_state-new"><code>particle_deterministic_state$new()</code></a></p></li>
+<li><p><a href="#method-particle_deterministic_state-run"><code>particle_deterministic_state$run()</code></a></p></li>
+<li><p><a href="#method-particle_deterministic_state-step"><code>particle_deterministic_state$step()</code></a></p></li>
+<li><p><a href="#method-particle_deterministic_state-fork_multistage"><code>particle_deterministic_state$fork_multistage()</code></a></p></li>
+</ul></div><p></p><hr><a id="method-particle_deterministic_state-new"></a><div class="section">
 <h3 id="method-new-">Method <code>new()</code><a class="anchor" aria-label="anchor" href="#method-new-"></a></h3>
 <p>Initialise the deterministic particle state. Ordinarily
 this should not be called by users, and so arguments are barely
@@ -218,7 +218,7 @@ documented.</p><div class="section">
 </dl><p></p></div>
 </div>
 
-</div><p></p><hr><a id="method-run"></a><div class="section">
+</div><p></p><hr><a id="method-particle_deterministic_state-run"></a><div class="section">
 <h3 id="method-run-">Method <code>run()</code><a class="anchor" aria-label="anchor" href="#method-run-"></a></h3>
 <p>Run the deterministic particle to the end of the data.
 This is a convenience function around <code>$step()</code> which provides the
@@ -228,7 +228,7 @@ correct value of <code>step_index</code></p><div class="section">
 </div>
 
 
-</div><p></p><hr><a id="method-step"></a><div class="section">
+</div><p></p><hr><a id="method-particle_deterministic_state-step"></a><div class="section">
 <h3 id="method-step-">Method <code><a href="https://rdrr.io/r/stats/step.html" class="external-link">step()</a></code><a class="anchor" aria-label="anchor" href="#method-step-"></a></h3>
 <p>Take a step with the deterministic particle. This moves
 the system forward one step within the <em>data</em> (which
@@ -251,7 +251,7 @@ the end of the data.</p></dd>
 </dl><p></p></div>
 </div>
 
-</div><p></p><hr><a id="method-fork_multistage"></a><div class="section">
+</div><p></p><hr><a id="method-particle_deterministic_state-fork_multistage"></a><div class="section">
 <h3 id="method-fork-multistage-">Method <code>fork_multistage()</code><a class="anchor" aria-label="anchor" href="#method-fork-multistage-"></a></h3>
 <p>Create a new <code>deterministic_particle_state</code> object based
 on this one (same model, position in time within the data) but with
@@ -295,7 +295,7 @@ from the old to the new parameter set.  See
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

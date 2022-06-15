@@ -19,7 +19,7 @@ distribute chains over (say) the nodes of an HPC system."><meta property="og:ima
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.4</span>
       </span>
     </div>
 
@@ -101,15 +101,23 @@ distribute chains over (say) the nodes of an HPC system.</p>
 can use a temporary directory or a different path (relative or
 absolute).  Several rds files will be created.  It is strongly
 recommended not to use <code>.</code></p></dd>
+
+
 <dt>pars</dt>
 <dd><p>A <code><a href="pmcmc_parameters.html">pmcmc_parameters</a></code> object containing
 information about parameters (ranges, priors, proposal kernel,
 translation functions for use with the particle filter).</p></dd>
+
+
 <dt>filter</dt>
 <dd><p>A <code><a href="particle_filter.html">particle_filter</a></code> object</p></dd>
+
+
 <dt>control</dt>
 <dd><p>A <a href="pmcmc_control.html">pmcmc_control</a> object which will
 control how the MCMC runs, including the number of steps etc.</p></dd>
+
+
 <dt>initial</dt>
 <dd><p>Optional initial starting point. If given, it must
 be compatible with the parameters given in <code>pars</code>, and must be
@@ -118,23 +126,28 @@ initial conditions saved in your <code>pars</code> object. You can provide
 either a vector of initial conditions, or a matrix with
 <code>n_chains</code> columns to use a different starting point for each
 chain.</p></dd>
+
+
 <dt>chain_id</dt>
 <dd><p>The integer identifier of the chain to run</p></dd>
+
+
 <dt>n_threads</dt>
 <dd><p>Optional thread count, overriding the number set
 in the <code>control</code>.  This will be useful where preparing the
 threads on a machine with one level of resource and running it
 on another.</p></dd>
+
 </dl></div>
     <div id="details">
     <h2>Details</h2>
-    <p>Basic usage will look like</p><div class="sourceCode"><pre><code><span class="va">path</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_chains.html">pmcmc_chains_prepare</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span>, <span class="va">pars</span>, <span class="va">filter</span>, <span class="va">control</span><span class="op">)</span>
-<span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">control</span><span class="op">$</span><span class="va">n_chains</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span>
-  <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_chains.html">pmcmc_chains_run</a></span><span class="op">(</span><span class="va">i</span>, <span class="va">path</span><span class="op">)</span>
-<span class="op">}</span>
-<span class="va">samples</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_chains.html">pmcmc_chains_collect</a></span><span class="op">(</span><span class="va">path</span><span class="op">)</span>
-<span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_chains.html">pmcmc_chains_cleanup</a></span><span class="op">(</span><span class="va">path</span><span class="op">)</span></code></pre></div>
-
+    <p>Basic usage will look like</p>
+<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1"></a>path &lt;-<span class="st"> </span>mcstate<span class="op">::</span><span class="kw">pmcmc_chains_prepare</span>(<span class="kw">tempfile</span>(), pars, filter, control)</span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="kw">seq_len</span>(control<span class="op">$</span>n_chains)) {</span>
+<span id="cb1-3"><a href="#cb1-3"></a>  mcstate<span class="op">::</span><span class="kw">pmcmc_chains_run</span>(i, path)</span>
+<span id="cb1-4"><a href="#cb1-4"></a>}</span>
+<span id="cb1-5"><a href="#cb1-5"></a>samples &lt;-<span class="st"> </span>mcstate<span class="op">::</span><span class="kw">pmcmc_chains_collect</span>(path)</span>
+<span id="cb1-6"><a href="#cb1-6"></a>mcstate<span class="op">::</span><span class="kw">pmcmc_chains_cleanup</span>(path)</span></code></pre><p></p></div>
 <p>You can safely parallelise (or not) however you like at the point
 where the loop is (even across other machines) and get the same
 outputs regardless.</p>
@@ -152,7 +165,7 @@ outputs regardless.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

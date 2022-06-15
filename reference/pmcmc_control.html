@@ -21,7 +21,7 @@ as the order of the arguments may change in future."><meta property="og:image" c
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.4</span>
       </span>
     </div>
 
@@ -106,6 +106,7 @@ as the order of the arguments may change in future.</p>
   filter_early_exit <span class="op">=</span> <span class="cn">FALSE</span>,
   n_burnin <span class="op">=</span> <span class="cn">NULL</span>,
   n_steps_retain <span class="op">=</span> <span class="cn">NULL</span>,
+  adaptive_proposal <span class="op">=</span> <span class="cn">NULL</span>,
   path <span class="op">=</span> <span class="cn">NULL</span>
 <span class="op">)</span></code></pre></div>
     </div>
@@ -115,12 +116,16 @@ as the order of the arguments may change in future.</p>
     <dl><dt>n_steps</dt>
 <dd><p>Number of MCMC steps to run. This is the only
 required argument.</p></dd>
+
+
 <dt>n_chains</dt>
 <dd><p>Optional integer, indicating the number of chains
 to run. If more than one then we run a series of chains and
 merge them with <code><a href="pmcmc_combine.html">pmcmc_combine()</a></code>. Chains are run in series,
 with the same filter if <code>n_workers</code> is 1, or run in parallel
 otherwise.</p></dd>
+
+
 <dt>n_threads_total</dt>
 <dd><p>The total number of threads (i.e., cores)
 the total number of threads/cores to use. If <code>n_workers</code> is
@@ -131,12 +136,16 @@ of <code>n_workers</code> we will try and allocate the leftover threads
 evenly across the last wave of chains.  This value must be
 provided if <code>n_workers</code> is given, but is optional otherwise - if
 given it overrides the value in the particle filter.</p></dd>
+
+
 <dt>n_workers</dt>
 <dd><p>Number of "worker" processes to use to run chains
 in parallel. This must be at most <code>n_chains</code> and is recommended
 to be a divisor of <code>n_chains</code>. If <code>n_workers</code> is 1, then chains
 are run in series (i.e., one chain after the other). See the
 parallel vignette (<code><a href="../articles/parallelisation.html">vignette("parallelisation", package = "mcstate")</a></code>) for more details about this approach.</p></dd>
+
+
 <dt>rerun_every</dt>
 <dd><p>Optional integer giving the frequency at which
 we should rerun the particle filter on the current "accepted"
@@ -145,6 +154,8 @@ point, but if you set to 100, then every 100 steps we run the
 particle filter on both the proposed <em>and</em> previously accepted
 point before doing the comparison.  This may help "unstick"
 chains, at the cost of some bias in the results.</p></dd>
+
+
 <dt>rerun_random</dt>
 <dd><p>Logical, controlling the behaviour of
 rerunning (when <code>rerun_every</code> is finite). The default value of
@@ -152,12 +163,16 @@ rerunning (when <code>rerun_every</code> is finite). The default value of
 number of iterations (given by <code>rerun_every</code>). If <code>TRUE</code>, then
 we stochastically rerun each step with probability of <code>1 / rerun_every</code>. This gives the same expected number of MCMC steps
 between reruns but a different pattern.</p></dd>
+
+
 <dt>use_parallel_seed</dt>
 <dd><p>Logical, indicating if seeds should be
 configured in the same way as when running workers in parallel
 (with <code>n_workers &gt; 1</code>).  Set this to <code>TRUE</code> to ensure
 reproducibility if you use this option sometimes (but not
 always). This option only has an effect if <code>n_workers</code> is 1.</p></dd>
+
+
 <dt>save_state</dt>
 <dd><p>Logical, indicating if the state should be saved
 at the end of the simulation. If <code>TRUE</code>, then a single
@@ -171,6 +186,8 @@ cause <code>n_state</code> * <code>n_steps</code> of data to be output
 alongside your results. Set this argument to <code>FALSE</code> to
 save space, or use <code><a href="pmcmc_thin.html">pmcmc_thin()</a></code> after running the
 MCMC.</p></dd>
+
+
 <dt>save_restart</dt>
 <dd><p>An integer vector of time points to save
 restart information for; this is in addition to <code>save_state</code>
@@ -182,6 +199,8 @@ in order to actually restart the pmcmc or the particle filter
 from this state. The integers correspond to the <em>time</em> variable
 in your filter (see <a href="particle_filter.html">particle_filter</a> for more
 information).</p></dd>
+
+
 <dt>save_trajectories</dt>
 <dd><p>Logical, indicating if the particle
 trajectories should be saved during the simulation. If <code>TRUE</code>,
@@ -190,9 +209,13 @@ collected at the end of each MCMC step.  This is the filtered
 state (i.e., using the <code>state</code> component of <code>index</code> provided to
 the particle filter).  If <code>save_state</code> is <code>TRUE</code> the same
 particle will be selected for each.</p></dd>
+
+
 <dt>progress</dt>
 <dd><p>Logical, indicating if a progress bar should be
 displayed, using <code><a href="https://rdrr.io/pkg/progress/man/progress_bar.html" class="external-link">progress::progress_bar</a></code>.</p></dd>
+
+
 <dt>nested_step_ratio</dt>
 <dd><p>Either integer or 1/integer, which specifies the
 ratio of fixed:varied steps in a nested pMCMC. For example <code>3</code> would run
@@ -203,12 +226,16 @@ iterations updating the fixed and varied parameters. Sensible choices
 of this parameter may depend on the true ratio of fixed:varied parameters
 or on desired run-time, for example updating fixed parameters is
 quicker so more varied steps could be more efficient.</p></dd>
+
+
 <dt>nested_update_both</dt>
 <dd><p>If <code>FALSE</code> (default) then alternates
 between proposing fixed and varied parameter updates according
 to the ratio in <code>nested_step_ratio</code>. If <code>TRUE</code> then proposes
 fixed and varied parameters simultaneously and collectively
 accepts/rejects them, <code>nested_step_ratio</code> is ignored.</p></dd>
+
+
 <dt>filter_early_exit</dt>
 <dd><p>Logical, indicating if we should allow
 the particle filter to exit early for points that will not be
@@ -216,21 +243,37 @@ accepted. Only use this if your log-likelihood never increases
 between steps. This will the the case where your likelihood
 calculation is a sum of discrete normalised probability
 distributions, but may not be for continuous distributions!</p></dd>
+
+
 <dt>n_burnin</dt>
 <dd><p>Optionally, the number of points to discard as
 burnin.  This happens separately to the burnin in
 <a href="pmcmc_thin.html">pmcmc_thin</a> or <a href="pmcmc_thin.html">pmcmc_sample</a>.  See Details.</p></dd>
+
+
 <dt>n_steps_retain</dt>
 <dd><p>Optionally, the number of samples to retain from
 the <code>n_steps - n_burnin</code> steps.  See Details.</p></dd>
+
+
+<dt>adaptive_proposal</dt>
+<dd><p>Optionally, control over an adaptive
+proposal (<a href="adaptive_proposal_control.html">adaptive_proposal_control</a>). Alternatively
+<code>FALSE</code> to disable, <code>TRUE</code> to enable defaults. This is only
+valid for single-population deterministic models.</p></dd>
+
+
 <dt>path</dt>
 <dd><p>Optional path to save partial pmcmc results in, when
 using workers.  If not given (or <code>NULL</code>) then a temporary
 directory is used.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>A <code>pmcmc_control</code> object, which should not be modified
+    
+
+<p>A <code>pmcmc_control</code> object, which should not be modified
 once created.</p>
     </div>
     <div id="details">
@@ -308,6 +351,9 @@ relate to the filtered samples.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $path</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $adaptive_proposal</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $filter_early_exit</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -370,6 +416,9 @@ relate to the filtered samples.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $path</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $adaptive_proposal</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $filter_early_exit</span>
@@ -438,6 +487,9 @@ relate to the filtered samples.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $path</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $adaptive_proposal</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $filter_early_exit</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -472,7 +524,7 @@ relate to the filtered samples.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

@@ -21,7 +21,7 @@ position as the order of the arguments may change in future."><meta property="og
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.4</span>
       </span>
     </div>
 
@@ -103,23 +103,34 @@ position as the order of the arguments may change in future.</p>
     <dl><dt>n_parameter_sets</dt>
 <dd><p>The number of replicate parameter sets to
 simulate at once.</p></dd>
+
+
 <dt>degeneracy_threshold</dt>
 <dd><p>The degeneracy threshold. Once the
 effective sample size drops below <code>degeneracy_threshold * n_parameter_sets</code> the algorithm will rerun simulations from the
 beginning of the data and use these to replenish the particles.</p></dd>
+
+
 <dt>covariance_scaling</dt>
 <dd><p>A scaling factor to update variance
 covariance matrix of sampled parameters by</p></dd>
+
+
 <dt>progress</dt>
 <dd><p>Logical, indicating if a progress bar should be
 displayed, using <code><a href="https://rdrr.io/pkg/progress/man/progress_bar.html" class="external-link">progress::progress_bar</a></code>.</p></dd>
+
+
 <dt>save_trajectories</dt>
 <dd><p>Logical, indicating if particle
 trajectories should be saved during the simulation.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>A <code>smc2_control</code> object, which should not be modified once created.</p>
+    
+
+<p>A <code>smc2_control</code> object, which should not be modified once created.</p>
     </div>
 
     <div id="ref-examples">
@@ -156,7 +167,7 @@ trajectories should be saved during the simulation.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>
