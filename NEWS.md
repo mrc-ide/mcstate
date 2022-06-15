@@ -1,3 +1,7 @@
+# mcstate 0.9.2
+
+* Support for adaptive proposals for deterministic models
+
 # mcstate 0.9.1
 
 * Allow running a particle filter with multiple parameter sets and a single data set.

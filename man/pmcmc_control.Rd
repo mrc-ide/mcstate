@@ -21,6 +21,7 @@ pmcmc_control(
   filter_early_exit = FALSE,
   n_burnin = NULL,
   n_steps_retain = NULL,
+  adaptive_proposal = NULL,
   path = NULL
 )
 }
@@ -135,6 +136,11 @@ burnin.  This happens separately to the burnin in
 
 \item{n_steps_retain}{Optionally, the number of samples to retain from
 the \code{n_steps - n_burnin} steps.  See Details.}
+
+\item{adaptive_proposal}{Optionally, control over an adaptive
+proposal (\link{adaptive_proposal_control}). Alternatively
+\code{FALSE} to disable, \code{TRUE} to enable defaults. This is only
+valid for single-population deterministic models.}
 
 \item{path}{Optional path to save partial pmcmc results in, when
 using workers.  If not given (or \code{NULL}) then a temporary

@@ -26,6 +26,7 @@ pmcmc_state <- R6::R6Class(
 
     tick = NULL,
     update = NULL,
+    adaptive = NULL,
 
     update_particle_history = function() {
       if (private$deterministic) {
@@ -97,7 +98,13 @@ pmcmc_state <- R6::R6Class(
     },
 
     update_simple = function() {
-      prop_pars <- private$pars$propose(private$curr_pars)
+      is_adaptive <- !is.null(private$adaptive)
+      if (is_adaptive) {
+        prop_pars <- private$adaptive$propose(private$curr_pars)
+      } else {
+        prop_pars <- private$pars$propose(private$curr_pars)
+      }
+
       prop_lprior <- private$pars$prior(prop_pars)
 
       u <- runif(1)
@@ -113,6 +120,10 @@ pmcmc_state <- R6::R6Class(
         private$curr_llik <- prop_llik
         private$curr_lpost <- prop_lpost
         private$update_particle_history()
+      }
+
+      if (is_adaptive) {
+        private$adaptive$update(private$curr_pars, accept)
       }
     },
 
@@ -180,6 +191,17 @@ pmcmc_state <- R6::R6Class(
 
       if (private$nested != filter$has_multiple_data) {
         stop("'pars' and 'filter' disagree on nestedness")
+      }
+
+      if (!is.null(control$adaptive_proposal)) {
+        if (!private$deterministic) {
+          stop("Adaptive proposal only allowed in deterministic models")
+        }
+        if (private$nested) {
+          stop("Can't yet use adaptive proposal with nested mcmc")
+        }
+        private$adaptive <- adaptive_proposal$new(pars,
+                                                  control$adaptive_proposal)
       }
 
       private$tick <- pmcmc_progress(control$n_steps, control$progress,

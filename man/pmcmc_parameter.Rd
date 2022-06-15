@@ -11,7 +11,8 @@ pmcmc_parameter(
   max = Inf,
   discrete,
   integer = FALSE,
-  prior = NULL
+  prior = NULL,
+  mean = NULL
 )
 }
 \arguments{
@@ -37,6 +38,10 @@ after a new parameter is proposed.}
 is used - be careful!). It must be a function that takes a
 single argument, being the value of this parameter. If given,
 then \code{prior(initial)} must evaluate to a finite value.}
+
+\item{mean}{Optionally, an estimate of the mean of the
+parameter. If not given, then we assume that \code{initial} is a
+reasonable estimate.  This is used only in adaptive mcmc.}
 }
 \description{
 Describe a single parameter for use within the pmcmc. Note that

@@ -87,3 +87,15 @@ test_that("Can run an mcmc on a nested model", {
   expect_equal(dim(res$trajectories$state), c(3, 2, 30, 101))
   expect_equal(dim(res$restart$state), c(5, 2, 30, 1))
 })
+
+
+test_that("Can't use adaptive proposal with nested models", {
+  dat <- example_sir_shared()
+
+  p <- particle_deterministic$new(dat$data, dat$model, dat$compare,
+                                  dat$index)
+  control <- pmcmc_control(30, adaptive_proposal = TRUE)
+  expect_error(
+    pmcmc(dat$pars, p, control = control),
+    "Can't yet use adaptive proposal with nested mcmc")
+})

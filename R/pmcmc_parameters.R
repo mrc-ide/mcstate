@@ -28,24 +28,28 @@
 ##'   single argument, being the value of this parameter. If given,
 ##'   then `prior(initial)` must evaluate to a finite value.
 ##'
+##' @param mean Optionally, an estimate of the mean of the
+##'   parameter. If not given, then we assume that `initial` is a
+##'   reasonable estimate.  This is used only in adaptive mcmc.
+##'
 ##' @export
 ##' @examples
 ##' pmcmc_parameter("a", 0.1)
 pmcmc_parameter <- function(name, initial, min = -Inf, max = Inf,
-                            discrete, integer = FALSE, prior = NULL) {
+                            discrete, integer = FALSE, prior = NULL,
+                            mean = NULL) {
   if (!missing(discrete)) {
     .Deprecated("integer", old = "discrete")
     integer <- discrete
   }
   assert_scalar_character(name)
   assert_scalar_logical(integer)
+  assert_in_range(initial, min, max)
 
-  if (initial < min) {
-    stop(sprintf("'initial' must be >= 'min' (%s)", min))
+  if (is.null(mean)) {
+    mean <- initial
   }
-  if (initial > max) {
-    stop(sprintf("'initial' must be <= 'max' (%s)", max))
-  }
+  assert_in_range(mean, min, max)
 
   if (is.null(prior)) {
     prior <- function(p) 0
@@ -65,7 +69,7 @@ pmcmc_parameter <- function(name, initial, min = -Inf, max = Inf,
   }
 
   ret <- list(name = name, initial = initial, min = min, max = max,
-              integer = integer, prior = prior)
+              integer = integer, prior = prior, mean = mean)
   class(ret) <- "pmcmc_parameter"
   ret
 }
@@ -184,6 +188,18 @@ pmcmc_parameters <- R6::R6Class(
       vnapply(private$parameters, "[[", "initial")
     },
 
+    ##' @description Return the estimate of the mean of the parameters,
+    ##'   as set when created (this is not updated by any fitting!)
+    mean = function() {
+      vnapply(private$parameters, "[[", "mean")
+    },
+
+    ##' @description Return the variance-covariance matrix used for the
+    ##'   proposal.
+    vcv = function() {
+      private$proposal_kernel
+    },
+
     ##' @description Return the names of the parameters
     names = function() {
       names(private$parameters)
@@ -221,10 +237,19 @@ pmcmc_parameters <- R6::R6Class(
     ##' proposal distribution. This may be useful in sampling starting
     ##' points. The parameter is equivalent to a multiplicative factor
     ##' applied to the variance covariance matrix.
-    propose = function(theta, scale = 1) {
-      theta <- private$proposal(theta, scale)
-      theta[private$integer] <- round(theta[private$integer])
-      reflect_proposal(theta, private$min, private$max)
+    ##'
+    ##' @param vcv A variance covariance matrix of the correct size,
+    ##' overriding the proposal matrix built into the parameters object.
+    ##' This will be slightly less efficient but allow a different proposal
+    ##' matrix to be used (e.g., during an adaptive MCMC)
+    propose = function(theta, scale = 1, vcv = NULL) {
+      if (is.null(vcv)) {
+        theta_new <- private$proposal(theta, scale)
+      } else {
+        theta_new <- rmvnorm_generator(vcv, check = FALSE)(theta)
+      }
+      theta_new[private$integer] <- round(theta_new[private$integer])
+      reflect_proposal(theta_new, private$min, private$max)
     },
 
     ##' @description Apply the model transformation function to a parameter

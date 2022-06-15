@@ -425,3 +425,19 @@ test_that("Can run a determinsitic particle in replicate, compiled compare", {
 
   expect_identical(p2$run(pars), c(p1$run(pars[[1]]), p1$run(pars[[2]])))
 })
+
+
+test_that("Can run an adaptive proposal, increasing acceptance rate", {
+  dat <- example_sir()
+  control1 <- pmcmc_control(100, save_trajectories = TRUE,
+                            adaptive_proposal = adaptive_proposal_control(
+                              acceptance_target = 0.5))
+  control2 <- pmcmc_control(100, save_trajectories = TRUE)
+
+  p <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
+  res1 <- pmcmc(dat$pars, p, NULL, control1)
+  res2 <- pmcmc(dat$pars, p, NULL, control2)
+
+  expect_lt(coda::rejectionRate(coda::mcmc(res1$pars))[[1]],
+            coda::rejectionRate(coda::mcmc(res2$pars))[[1]])
+})

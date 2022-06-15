@@ -34,9 +34,9 @@ data_frame <- function(...) {
 
 
 ##' @importFrom stats rnorm
-rmvnorm_generator <- function(vcv) {
+rmvnorm_generator <- function(vcv, check = TRUE) {
   vcv <- unname(vcv)
-  if (!isSymmetric(vcv, tol = sqrt(.Machine$double.eps))) {
+  if (check && !isSymmetric(vcv, tol = sqrt(.Machine$double.eps))) {
     stop("vcv must be symmetric")
   }
 

@@ -123,3 +123,18 @@ test_that("check vector names", {
   expect_equal(assert_dimnames(unname(x), list(nms)), x)
   expect_equal(assert_dimnames(unname(x), list(NULL)), unname(x))
 })
+
+
+test_that("check range", {
+  value <- 1
+  expect_silent(assert_in_range(value, 0, 2))
+  expect_silent(assert_in_range(value, 1, 2))
+  expect_silent(assert_in_range(value, 0, 1))
+
+  expect_error(
+    assert_in_range(value, 2, 3),
+    "'value' must be >= 'min' (2)", fixed = TRUE)
+  expect_error(
+    assert_in_range(value, -2, 0),
+    "'value' must be <= 'max' (0)", fixed = TRUE)
+})
