@@ -19,7 +19,7 @@ particle_filter_state <- R6::R6Class(
     pars = NULL,
     data = NULL,
     data_split = NULL,
-    steps = NULL,
+    times = NULL,
     n_particles = NULL,
     n_threads = NULL,
     has_multiple_parameters = NULL,
@@ -33,15 +33,15 @@ particle_filter_state <- R6::R6Class(
     support = NULL,
 
     step_r = function(step_index, partial = FALSE) {
-      steps <- private$steps
+      times <- private$times
       curr <- self$current_step_index
-      check_step(curr, step_index, private$steps, "Particle filter")
+      check_step(curr, step_index, private$times, "Particle filter")
 
       model <- self$model
       compare <- private$compare
       has_multiple_parameters <- private$has_multiple_parameters
 
-      steps <- private$steps
+      times <- private$times
       data_split <- private$data_split
       pars <- private$pars
 
@@ -60,10 +60,9 @@ particle_filter_state <- R6::R6Class(
 
       min_log_likelihood <- private$min_log_likelihood
       support <- private$support
-
       for (t in seq(curr + 1L, step_index)) {
-        step_end <- steps[t, 2L]
-        state <- model$run(step_end)
+        time_end <- times[t, 2L]
+        state <- model$run(time_end)
 
         if (save_history) {
           ## NOTE: There are two places here (and for the order below)
@@ -110,7 +109,7 @@ particle_filter_state <- R6::R6Class(
         }
 
         if (save_restart) {
-          i_restart <- match(step_end, save_restart_step)
+          i_restart <- match(time_end, save_restart_step)
           if (!is.na(i_restart)) {
             array_last_dimension(restart_state, i_restart) <- model$state()
           }
@@ -141,8 +140,8 @@ particle_filter_state <- R6::R6Class(
         stop("'partial' not supported with compiled compare")
       }
       curr <- self$current_step_index
-      check_step(curr, step_index, private$steps, "Particle filter")
-      step <- private$steps[step_index, 2]
+      check_step(curr, step_index, private$times, "Particle filter")
+      step <- private$times[step_index, 2]
 
       model <- self$model
 
@@ -198,7 +197,7 @@ particle_filter_state <- R6::R6Class(
     ##' @param model If the generator has previously been initialised
     ##' @param data A [mcstate::particle_filter_data] data object
     ##' @param data_split The same data as `data` but split by step
-    ##' @param steps A matrix of step beginning and ends
+    ##' @param times A matrix of step beginning and ends
     ##' @param n_particles Number of particles to use
     ##' @param has_multiple_parameters Compute multiple likelihoods at once?
     ##' @param n_threads The number of threads to use
@@ -210,27 +209,44 @@ particle_filter_state <- R6::R6Class(
     ##' @param seed Initial RNG seed
     ##' @param min_log_likelihood Early termination control
     ##' @param save_history Logical, indicating if we should save history
-    ##' @param save_restart Vector of steps to save restart at
-    initialize = function(pars, generator, model, data, data_split, steps,
+    ##' @param save_restart Vector of times to save restart at
+    ##' @param save_restart Vector of times to perform stochastic updates
+    initialize = function(pars, generator, model, data, data_split, times,
                           n_particles, has_multiple_parameters,
                           n_threads, initial, index, compare,
                           constant_log_likelihood, gpu_config, seed,
-                          min_log_likelihood, save_history, save_restart) {
+                          min_log_likelihood, save_history, save_restart,
+                          stochastic_schedule) {
       has_multiple_data <- inherits(data, "particle_filter_data_nested")
+      is_continuous <- inherits(data, "particle_filter_data_continuous")
+      # TODO also check that the models match the time type
       support <- particle_filter_state_support(has_multiple_parameters,
                                                has_multiple_data)
 
       if (is.null(model)) {
-        model <- generator$new(pars = pars, step = steps[[1L]],
-                               n_particles = n_particles, n_threads = n_threads,
-                               seed = seed, gpu_config = gpu_config,
-                               pars_multi = has_multiple_parameters)
+        if (is_continuous) {
+          model <- generator$new(pars = pars, time = times[[1L]],
+                                 n_particles = n_particles,
+                                 n_threads = n_threads,
+                                 seed = seed)
+          model$set_stochastic_schedule(stochastic_schedule)
+        } else {
+          model <- generator$new(pars = pars, step = times[[1L]],
+                                 n_particles = n_particles,
+                                 n_threads = n_threads,
+                                 seed = seed, gpu_config = gpu_config,
+                                 pars_multi = has_multiple_parameters)
+        }
         if (is.null(compare)) {
           data_is_shared <- has_multiple_parameters && !has_multiple_data
           model$set_data(data_split, data_is_shared)
         }
       } else {
-        model$update_state(pars = pars, step = steps[[1L]])
+        if (is_continuous) {
+          model$update_state(pars = pars, time = times[[1L]])
+        } else {
+          model$update_state(pars = pars, step = times[[1L]])
+        }
       }
 
       if (!is.null(initial)) {
@@ -250,10 +266,14 @@ particle_filter_state <- R6::R6Class(
       }
 
       ## The model shape is [n_particles, <any multi-par structure>]
-      shape <- model$shape()
+      if (is_continuous) {
+        shape <- model$n_particles()
+      } else {
+        shape <- model$shape()
+      }
 
       if (save_history) {
-        len <- nrow(steps) + 1L
+        len <- nrow(times) + 1L
         state <- model$state(index_data$state)
         history_value <- array(NA_real_, c(dim(state), len))
         array_last_dimension(history_value, 1) <- state
@@ -268,6 +288,7 @@ particle_filter_state <- R6::R6Class(
 
       save_restart_step <- check_save_restart(save_restart, data)
       if (length(save_restart_step) > 0) {
+        stopifnot(!is_continuous)
         self$restart_state <-
           array(NA_real_, c(model$n_state(), shape, length(save_restart)))
       } else {
@@ -279,7 +300,7 @@ particle_filter_state <- R6::R6Class(
       private$pars <- pars
       private$data <- data
       private$data_split <- data_split
-      private$steps <- steps
+      private$times <- times
       private$n_particles <- n_particles
       private$n_threads <- n_threads
       private$has_multiple_parameters <- has_multiple_parameters
@@ -302,7 +323,7 @@ particle_filter_state <- R6::R6Class(
     ##' a convenience function around `$step()` which provides the correct
     ##' value of `step_index`
     run = function() {
-      self$step(nrow(private$steps))
+      self$step(nrow(private$times))
     },
 
     ##' @description Take a step with the particle filter. This moves
@@ -358,7 +379,7 @@ particle_filter_state <- R6::R6Class(
       }
       ret <- particle_filter_state$new(
         pars, private$generator, model, private$data, private$data_split,
-        private$steps, private$n_particles, private$has_multiple_parameters,
+        private$times, private$n_particles, private$has_multiple_parameters,
         private$n_threads, initial, private$index, private$compare,
         constant_log_likelihood, gpu_config,
         seed, private$min_log_likelihood, save_history, private$save_restart)
@@ -392,7 +413,7 @@ particle_filter_state <- R6::R6Class(
 
       ret <- particle_filter_state$new(
         pars, private$generator, model, private$data, private$data_split,
-        private$steps, private$n_particles, private$has_multiple_parameters,
+        private$times, private$n_particles, private$has_multiple_parameters,
         private$n_threads, private$initial, private$index, private$compare,
         private$constant_log_likelihood, gpu_config,
         seed, private$min_log_likelihood, save_history, private$save_restart)
@@ -410,19 +431,19 @@ particle_filter_state <- R6::R6Class(
 
 
 ## Used for both the normal and deterministic particle filter
-check_step <- function(curr, step_index, steps, name) {
-  n_steps <- nrow(steps)
-  if (curr >= n_steps) {
+check_step <- function(curr, step_index, times, name) {
+  n_times <- nrow(times)
+  if (curr >= n_times) {
     stop(sprintf("%s has reached the end of the data", name))
   }
-  if (step_index > n_steps) {
+  if (step_index > n_times) {
     stop(sprintf("step_index %d is beyond the length of the data (max %d)",
-                 step_index, n_steps))
+                 step_index, n_times))
   }
   if (step_index <= curr) {
     stop(sprintf(
       "%s has already run step index %d (to model step %d)",
-      name, step_index, steps[step_index, 2]))
+      name, step_index, times[step_index, 2]))
   }
 }
 

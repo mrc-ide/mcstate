@@ -183,3 +183,17 @@ test_that("particle_filter_data for continuous time", {
       "data.frame"),
     exact = TRUE)
 })
+
+
+test_that("particle_filter_data for continuous time by month", {
+  d <- data.frame(day = seq(30, by = 30, length.out = 10),
+                  data = runif(10),
+                  stringsAsFactors = FALSE)
+
+  res <- particle_filter_data(d, "day", NULL, initial_time = 0)
+
+  expect_equal(res$day_start, d$day - 30)
+  expect_equal(res$day_end, d$day)
+  expect_equal(res$time_start, res$day_start)
+  expect_equal(res$time_end, res$day_end)
+})

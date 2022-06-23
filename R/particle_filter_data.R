@@ -116,21 +116,22 @@ particle_filter_data <- function(data, time, rate, initial_time = NULL,
                  time_end[[1L]]))
   }
 
-  time_start <- time_end - 1L
   if (is.null(initial_time)) {
     if (is_continuous) {
       stop("'initial_time' must be given for continuous models")
     }
+    initial_time <- time_end[[1L]] - 1
   } else {
     initial_time <- assert_integer(initial_time)
     if (initial_time < 0) {
       stop("'initial_time' must be non-negative")
     }
-    if (initial_time > time_start[[1L]]) {
-      stop(sprintf("'initial_time' must be <= %d", time_start[[1L]]))
+    if (initial_time > time_end[[1L]] - 1) {
+      stop(sprintf("'initial_time' must be <= %d", time_end[[1L]] - 1))
     }
-    time_start[[1L]] <- initial_time
   }
+
+  time_start <- c(initial_time, time_end[-length(time_end)])
 
   times <- cbind(time_start, time_end, deparse.level = 0)
   if (is_continuous) {
