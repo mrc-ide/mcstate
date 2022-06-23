@@ -62,7 +62,10 @@ test_that("particle filter data creates data", {
   expect_equal(attr(res, "steps"), attr(res, "times") * 10)
   expect_s3_class(
     res,
-    c("particle_filter_data_single", "particle_filter_data", "data.frame"),
+    c("particle_filter_data_single",
+      "particle_filter_data_discrete",
+      "particle_filter_data",
+      "data.frame"),
     exact = TRUE)
 })
 
@@ -81,7 +84,9 @@ test_that("particle filter can offset initial data", {
   attr(cmp, "time") <- "hour"
   attr(cmp, "times") <- cbind(c(1, 11:19), 11:20)
   attr(cmp, "steps") <- attr(cmp, "times") * 4
-  class(cmp) <- c("particle_filter_data_single", "particle_filter_data",
+  class(cmp) <- c("particle_filter_data_single",
+                  "particle_filter_data_discrete",
+                  "particle_filter_data",
                   "data.frame")
   expect_equal(res, cmp)
 })
@@ -150,4 +155,31 @@ test_that("particle_filter_data_multi - errors", {
   expect_error(
     particle_filter_data(d, "day", 1, population = "group"),
     "Column 'group' must be a factor")
+})
+
+
+test_that("particle_filter_data for continuous time", {
+  d <- data.frame(month = 4:24,
+                  data = runif(21),
+                  stringsAsFactors = FALSE)
+
+  res <- particle_filter_data(d, "month", NULL, initial_time = 0)
+  expect_setequal(
+    names(res),
+    c("month_start", "month_end", "time_start", "time_end", "data"))
+  expect_equal(res$month_start, c(0, 4:23))
+  expect_equal(res$month_end, 4:24)
+  expect_equal(res$time_start, res$month_start)
+  expect_equal(res$time_end, res$month_end)
+  expect_equal(res$data, d$data)
+  expect_equal(attr(res, "rate"), NULL)
+  expect_equal(attr(res, "time"), "month")
+  expect_equal(attr(res, "times"), cbind(c(0, 4:23), 4:24, deparse.level = 0))
+  expect_s3_class(
+    res,
+    c("particle_filter_data_single",
+      "particle_filter_data_continuous",
+      "particle_filter_data",
+      "data.frame"),
+    exact = TRUE)
 })
