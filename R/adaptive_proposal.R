@@ -49,7 +49,7 @@
 adaptive_proposal_control <- function(initial_scaling = 0.2,
                                       scaling_increment = 0.01,
                                       acceptance_target = 0.234,
-                                      initial_weight = 1000,
+                                      initial_weight = 100,
                                       adaptive_contribution = 0.95) {
   ret <- list(initial_scaling = initial_scaling,
               scaling_increment = scaling_increment,
