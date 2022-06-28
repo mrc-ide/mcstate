@@ -188,3 +188,23 @@ test_that("thread allocation", {
 
   expect_equal(pmcmc_parallel_threads(21, 3, 8), c(rep(7, 6), 10, 11))
 })
+
+
+test_that("Can use workers on non-package models", {
+  path <- system.file("examples/sir.cpp", package = "dust", mustWork = TRUE)
+  tmp <- tempfile()
+  writeLines(c("// [[dust::name(walk2)]]", readLines(path)), tmp)
+  model <- dust::dust(tmp)
+
+  dat <- example_sir()
+
+  control <- pmcmc_control(10, n_chains = 2,
+                           n_workers = 2, n_threads_total = 2,
+                           progress = FALSE, use_parallel_seed = TRUE)
+  filter <- particle_filter$new(dat$data, model, 42, dat$compare,
+                                n_threads = 1, index = dat$index, seed = 1L)
+  ans <- pmcmc(dat$pars, filter, control = control)
+  ## It's sufficient to check that this does not error, previously we
+  ## failed to load the model.
+  expect_s3_class("mcstate_pmcmc")
+})

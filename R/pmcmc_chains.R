@@ -75,6 +75,8 @@ pmcmc_chains_run <- function(chain_id, path, n_threads = NULL) {
   inputs <- readRDS(path$inputs)
   assert_is(inputs, "pmcmc_inputs")
 
+  dust::dust_repair_environment(inputs$filter$model)
+
   control <- inputs$control
   if (chain_id < 1 || chain_id > control$n_chains) {
     stop(sprintf("'chain_id' must be an integer in 1..%d",
