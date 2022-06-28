@@ -194,7 +194,7 @@ test_that("Can use workers on non-package models", {
   path <- system.file("examples/sir.cpp", package = "dust", mustWork = TRUE)
   tmp <- tempfile()
   writeLines(c("// [[dust::name(walk2)]]", readLines(path)), tmp)
-  model <- dust::dust(tmp)
+  model <- dust::dust(tmp, quiet = TRUE)
 
   dat <- example_sir()
 
@@ -206,5 +206,5 @@ test_that("Can use workers on non-package models", {
   ans <- pmcmc(dat$pars, filter, control = control)
   ## It's sufficient to check that this does not error, previously we
   ## failed to load the model.
-  expect_s3_class("mcstate_pmcmc")
+  expect_s3_class(ans, "mcstate_pmcmc")
 })
