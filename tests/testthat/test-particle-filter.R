@@ -343,6 +343,7 @@ test_that("can return inputs", {
   expect_equal(inputs$initial, initial)
   expect_equal(inputs$seed, 100)
   expect_null(inputs$n_parameters)
+  expect_null(inputs$stochastic_schedule)
 
   res <- p$run()
 
@@ -1518,6 +1519,10 @@ test_that("run particle filter on continuous model", {
 
 test_that("can provide stochastic schedule for continuous model", {
   dat <- example_continuous()
+  pars <- list(init_Ih = 0.8,
+               init_Sv = 100,
+               init_Iv = 1,
+               nrates = 15)
   mod <- dat$model$new(pars, 0, 1, seed = 1L)
 
   p <- particle_filter$new(dat$data, dat$model, 1, dat$compare,

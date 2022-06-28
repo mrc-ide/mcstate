@@ -458,6 +458,7 @@ particle_filter <- R6::R6Class(
            gpu_config = private$gpu_config,
            n_threads = private$n_threads,
            n_parameters = n_parameters,
+           stochastic_schedule = private$stochastic_schedule,
            seed = filter_current_seed(last(private$last_model), private$seed))
     },
 
