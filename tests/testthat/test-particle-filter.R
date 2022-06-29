@@ -1513,7 +1513,7 @@ test_that("run particle filter on continuous model", {
 
   state <- p$state()
   expect_is(state, "matrix")
-  #expect_equal(dim(state), c(len, n_particles))
+  expect_equal(dim(state), c(len, n_particles))
 })
 
 

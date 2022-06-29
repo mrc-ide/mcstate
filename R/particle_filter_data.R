@@ -21,8 +21,8 @@
 ##'   integer-like
 ##'
 ##' @param rate The number of model "steps" that occur between each
-##'   time point (in `time`).  This must also be integer-like for discrete time models
-##'   and must be `NULL` for continuous time models.
+##'   time point (in `time`).  This must also be integer-like for discrete
+##'   time models and must be `NULL` for continuous time models.
 ##'
 ##' @param initial_time Optionally, an initial time to start the model
 ##'   from.  Provide this if you need to burn the model in, or if
