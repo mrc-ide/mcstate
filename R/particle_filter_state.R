@@ -219,7 +219,7 @@ particle_filter_state <- R6::R6Class(
                           stochastic_schedule) {
       has_multiple_data <- inherits(data, "particle_filter_data_nested")
       is_continuous <- inherits(data, "particle_filter_data_continuous")
-      # TODO also check that the models match the time type
+
       support <- particle_filter_state_support(has_multiple_parameters,
                                                has_multiple_data)
 

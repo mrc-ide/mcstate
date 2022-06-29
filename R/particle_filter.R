@@ -241,11 +241,26 @@ particle_filter <- R6::R6Class(
                          self)
 
       is_continuous <- inherits(data, "particle_filter_data_continuous")
+      has_multiple_data <- inherits(data, "particle_filter_data_nested")
+
+      if (is_continuous && has_multiple_data) {
+        stop("nested data not supported for continuous models")
+      }
+
       if (!is_continuous && !is.null(stochastic_schedule)) {
         stop(paste("'stochastic_schedule' provided but 'model' does not",
          "support this"))
       } else {
         private$stochastic_schedule <- stochastic_schedule
+      }
+
+      if (identical(attr(model, which = "name", exact = TRUE),
+                    "mode_generator") != is_continuous) {
+        mod_type <- if (identical(attr(model, which = "name", exact = TRUE),
+                           "mode_generator")) "continuous" else "discrete"
+        stop(sprintf("'model' is %s but 'data' is of type '%s'",
+                     mod_type,
+                     class(data)[2]))
       }
 
       private$times <- attr(data, if (is_continuous) "times" else "steps")

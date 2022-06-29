@@ -1543,3 +1543,43 @@ test_that("cannot provide stochastic schedule for discrete model", {
                            index = dat$index, stochastic_schedule = 1:10),
   "'stochastic_schedule' provided but 'model' does not support this")
 })
+
+
+test_that("cannot provide nested data for continuous model", {
+  dat <- example_continuous()
+  data_raw <- read.csv("malaria/casedata_monthly.csv",
+                       stringsAsFactors = FALSE)
+  data_raw$population <- as.factor("A")
+  data <- particle_filter_data(data_raw, time = "day", initial_time = 0,
+                               rate = NULL, population = "population")
+  expect_error(particle_filter$new(data,
+                           dat$model,
+                           1,
+                           dat$compare,
+                           index = dat$index),
+               "nested data not supported for continuous models")
+})
+
+
+test_that("continuous data given iff model is continuous", {
+  dat <- example_continuous()
+  sir <- example_sir_shared()
+
+  e <- paste("'model' is discrete but 'data' is of",
+             "type 'particle_filter_data_continuous'")
+  expect_error(particle_filter$new(dat$data,
+                           sir$model,
+                           1,
+                           dat$compare,
+                           index = dat$index),
+               e)
+
+  e <- paste("'model' is continuous but 'data' is of",
+             "type 'particle_filter_data_discrete'")
+  expect_error(particle_filter$new(sir$data,
+                           dat$model,
+                           1,
+                           dat$compare,
+                           index = dat$index),
+               e)
+})
