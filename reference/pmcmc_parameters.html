@@ -21,7 +21,7 @@ used."><meta property="og:image" content="/logo.png"><!-- mathjax --><script src
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.5</span>
       </span>
     </div>
 
@@ -109,7 +109,7 @@ used.</p>
 <h3 id="method-new-">Method <code>new()</code><a class="anchor" aria-label="anchor" href="#method-new-"></a></h3>
 <p>Create the pmcmc_parameters object</p><div class="section">
 <h4 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va"><a href="../reference/pmcmc_parameters.html">pmcmc_parameters</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">parameters</span>, <span class="va">proposal</span>, transform <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va"><a href="../reference/pmcmc_parameters.html">pmcmc_parameters</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">parameters</span>, <span class="va">proposal</span>, transform <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -149,7 +149,7 @@ you can do arbitrary transformations here.</p></dd>
 <p>Return the initial parameter values as a named numeric
 vector</p><div class="section">
 <h4 id="usage-1">Usage<a class="anchor" aria-label="anchor" href="#usage-1"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">initial</span><span class="op">(</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">initial</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 
@@ -158,7 +158,7 @@ vector</p><div class="section">
 <p>Return the estimate of the mean of the parameters,
 as set when created (this is not updated by any fitting!)</p><div class="section">
 <h4 id="usage-2">Usage<a class="anchor" aria-label="anchor" href="#usage-2"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">mean</span><span class="op">(</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">mean</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 
@@ -167,7 +167,7 @@ as set when created (this is not updated by any fitting!)</p><div class="section
 <p>Return the variance-covariance matrix used for the
 proposal.</p><div class="section">
 <h4 id="usage-3">Usage<a class="anchor" aria-label="anchor" href="#usage-3"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">vcv</span><span class="op">(</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">vcv</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 
@@ -175,7 +175,7 @@ proposal.</p><div class="section">
 <h3 id="method-names-">Method <code><a href="https://rdrr.io/r/base/names.html" class="external-link">names()</a></code><a class="anchor" aria-label="anchor" href="#method-names-"></a></h3>
 <p>Return the names of the parameters</p><div class="section">
 <h4 id="usage-4">Usage<a class="anchor" aria-label="anchor" href="#usage-4"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">names</span><span class="op">(</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">names</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 
@@ -184,7 +184,7 @@ proposal.</p><div class="section">
 <p>Return a <code>data.frame</code> with information about
 parameters (name, min, max, and integer).</p><div class="section">
 <h4 id="usage-5">Usage<a class="anchor" aria-label="anchor" href="#usage-5"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 
@@ -192,7 +192,7 @@ parameters (name, min, max, and integer).</p><div class="section">
 <h3 id="method-prior-">Method <code>prior()</code><a class="anchor" aria-label="anchor" href="#method-prior-"></a></h3>
 <p>Compute the prior for a parameter vector</p><div class="section">
 <h4 id="usage-6">Usage<a class="anchor" aria-label="anchor" href="#usage-6"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">prior</span><span class="op">(</span><span class="va">theta</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">prior</span><span class="op">(</span><span class="va">theta</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -213,7 +213,7 @@ vector and the variance-covariance matrix of your proposal
 kernel, rounds any integer values, and reflects bounded
 parameters until they lie within <code>min</code>:<code>max</code>.</p><div class="section">
 <h4 id="usage-7">Usage<a class="anchor" aria-label="anchor" href="#usage-7"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">propose</span><span class="op">(</span><span class="va">theta</span>, scale <span class="op">=</span> <span class="fl">1</span>, vcv <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">propose</span><span class="op">(</span><span class="va">theta</span>, scale <span class="op">=</span> <span class="fl">1</span>, vcv <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -245,7 +245,7 @@ matrix to be used (e.g., during an adaptive MCMC)</p></dd>
 <p>Apply the model transformation function to a parameter
 vector.</p><div class="section">
 <h4 id="usage-8">Usage<a class="anchor" aria-label="anchor" href="#usage-8"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">model</span><span class="op">(</span><span class="va">theta</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">model</span><span class="op">(</span><span class="va">theta</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -263,7 +263,7 @@ parameters were defined in (see <code>$names()</code> for that order.</p></dd>
 <p>Set some parameters to fixed values. Use this to
 reduce the dimensionality of your system.</p><div class="section">
 <h4 id="usage-9">Usage<a class="anchor" aria-label="anchor" href="#usage-9"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">fix</span><span class="op">(</span><span class="va">fixed</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">fix</span><span class="op">(</span><span class="va">fixed</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -281,38 +281,38 @@ reduce the dimensionality of your system.</p><div class="section">
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co"># Construct an object with two parameters:</span></span>
-<span class="r-in"><span class="va">pars</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span></span>
-<span class="r-in">  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="pmcmc_parameter.html">pmcmc_parameter</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="fl">0.1</span>, min <span class="op">=</span> <span class="fl">0</span>, max <span class="op">=</span> <span class="fl">1</span>,</span>
-<span class="r-in">                                prior <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">a</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">a</span><span class="op">)</span><span class="op">)</span>,</span>
-<span class="r-in">       <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="pmcmc_parameter.html">pmcmc_parameter</a></span><span class="op">(</span><span class="st">"b"</span>, <span class="fl">0</span>, prior <span class="op">=</span> <span class="va">dnorm</span><span class="op">)</span><span class="op">)</span>,</span>
-<span class="r-in">  <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0.5</span>, <span class="fl">0.5</span>, <span class="fl">2</span><span class="op">)</span>, <span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># Initial parameters</span></span>
-<span class="r-in"><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">pars</span><span class="op">$</span><span class="fu">initial</span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">p</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Construct an object with two parameters:</span></span></span>
+<span class="r-in"><span><span class="va">pars</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="pmcmc_parameter.html">pmcmc_parameter</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="fl">0.1</span>, min <span class="op">=</span> <span class="fl">0</span>, max <span class="op">=</span> <span class="fl">1</span>,</span></span>
+<span class="r-in"><span>                                prior <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">a</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">a</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>       <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="pmcmc_parameter.html">pmcmc_parameter</a></span><span class="op">(</span><span class="st">"b"</span>, <span class="fl">0</span>, prior <span class="op">=</span> <span class="va">dnorm</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0.5</span>, <span class="fl">0.5</span>, <span class="fl">2</span><span class="op">)</span>, <span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Initial parameters</span></span></span>
+<span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">pars</span><span class="op">$</span><span class="fu">initial</span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">p</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   a   b </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 0.1 0.0 </span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># Propose a new parameter point</span></span>
-<span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">propose</span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Propose a new parameter point</span></span></span>
+<span class="r-in"><span><span class="va">pars</span><span class="op">$</span><span class="fu">propose</span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          a          b </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  0.5246372 -0.6061751 </span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># Information about parameters:</span></span>
-<span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">names</span><span class="op">(</span><span class="op">)</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  0.6283429 -0.3056437 </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Information about parameters:</span></span></span>
+<span class="r-in"><span><span class="va">pars</span><span class="op">$</span><span class="fu">names</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "a" "b"</span>
-<span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span><span class="op">)</span></span>
+<span class="r-in"><span><span class="va">pars</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   name  min max discrete integer</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1    a    0   1    FALSE   FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2    b -Inf Inf    FALSE   FALSE</span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># Compute prior</span></span>
-<span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">prior</span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Compute prior</span></span></span>
+<span class="r-in"><span><span class="va">pars</span><span class="op">$</span><span class="fu">prior</span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] -1.903643</span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># Transform data for your model</span></span>
-<span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">model</span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Transform data for your model</span></span></span>
+<span class="r-in"><span><span class="va">pars</span><span class="op">$</span><span class="fu">model</span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $a</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -333,7 +333,7 @@ reduce the dimensionality of your system.</p><div class="section">
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
       </footer></div>

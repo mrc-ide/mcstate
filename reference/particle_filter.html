@@ -19,7 +19,7 @@ interface will be implemented later."><meta property="og:image" content="/logo.p
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.5</span>
       </span>
     </div>
 
@@ -144,19 +144,19 @@ this will be 1.</p></dd>
 <h3 id="method-new-">Method <code>new()</code><a class="anchor" aria-label="anchor" href="#method-new-"></a></h3>
 <p>Create the particle filter</p><div class="section">
 <h4 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va"><a href="../reference/particle_filter.html">particle_filter</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>
-  <span class="va">data</span>,
-  <span class="va">model</span>,
-  <span class="va">n_particles</span>,
-  <span class="va">compare</span>,
-  index <span class="op">=</span> <span class="cn">NULL</span>,
-  initial <span class="op">=</span> <span class="cn">NULL</span>,
-  constant_log_likelihood <span class="op">=</span> <span class="cn">NULL</span>,
-  n_threads <span class="op">=</span> <span class="fl">1L</span>,
-  seed <span class="op">=</span> <span class="cn">NULL</span>,
-  n_parameters <span class="op">=</span> <span class="cn">NULL</span>,
-  gpu_config <span class="op">=</span> <span class="cn">NULL</span>
-<span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va"><a href="../reference/particle_filter.html">particle_filter</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span></span>
+<span>  <span class="va">data</span>,</span>
+<span>  <span class="va">model</span>,</span>
+<span>  <span class="va">n_particles</span>,</span>
+<span>  <span class="va">compare</span>,</span>
+<span>  index <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  initial <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  constant_log_likelihood <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  n_threads <span class="op">=</span> <span class="fl">1L</span>,</span>
+<span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  n_parameters <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  gpu_config <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -283,12 +283,12 @@ list will be added in a future version!</p></dd>
 <h3 id="method-run-">Method <code>run()</code><a class="anchor" aria-label="anchor" href="#method-run-"></a></h3>
 <p>Run the particle filter</p><div class="section">
 <h4 id="usage-1">Usage<a class="anchor" aria-label="anchor" href="#usage-1"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">particle_filter</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span>
-  pars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,
-  save_history <span class="op">=</span> <span class="cn">FALSE</span>,
-  save_restart <span class="op">=</span> <span class="cn">NULL</span>,
-  min_log_likelihood <span class="op">=</span> <span class="cn">NULL</span>
-<span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">particle_filter</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span></span>
+<span>  pars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  save_history <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  save_restart <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  min_log_likelihood <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -352,12 +352,12 @@ want to use <code>$run()</code> which provides a user-facing wrapper around
 this function. Once created with <code>$run_begin()</code>, you should take
 as many steps as needed with <code>$step()</code>.</p><div class="section">
 <h4 id="usage-2">Usage<a class="anchor" aria-label="anchor" href="#usage-2"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">particle_filter</span><span class="op">$</span><span class="fu">run_begin</span><span class="op">(</span>
-  pars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,
-  save_history <span class="op">=</span> <span class="cn">FALSE</span>,
-  save_restart <span class="op">=</span> <span class="cn">NULL</span>,
-  min_log_likelihood <span class="op">=</span> <span class="cn">NULL</span>
-<span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">particle_filter</span><span class="op">$</span><span class="fu">run_begin</span><span class="op">(</span></span>
+<span>  pars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  save_history <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  save_restart <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  min_log_likelihood <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -390,14 +390,14 @@ smallest likelihood we are interested in. See <code>$run()</code> for details.</
 </div>
 
 </div><p></p><hr><a id="method-particle_filter-state"></a><div class="section">
-<h3 id="method-state-">Method <code><a href="https://rdrr.io/r/datasets/state.html" class="external-link">state()</a></code><a class="anchor" aria-label="anchor" href="#method-state-"></a></h3>
+<h3 id="method-state-">Method <code>state()</code><a class="anchor" aria-label="anchor" href="#method-state-"></a></h3>
 <p>Extract the current model state, optionally filtering.
 If the model has not yet been run, then this method will throw an
 error. Returns a matrix with the number of rows being the number of
 model states, and the number of columns being the number of
 particles.</p><div class="section">
 <h4 id="usage-3">Usage<a class="anchor" aria-label="anchor" href="#usage-3"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">particle_filter</span><span class="op">$</span><span class="fu">state</span><span class="op">(</span>index_state <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">particle_filter</span><span class="op">$</span><span class="fu">state</span><span class="op">(</span>index_state <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -421,7 +421,7 @@ time point. If using a multi-parameter filter then returns a 4d array
 with dimensions corresponding to (1) model state, (2) particle, (3)
 parameter, (4) time point.</p><div class="section">
 <h4 id="usage-4">Usage<a class="anchor" aria-label="anchor" href="#usage-4"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">particle_filter</span><span class="op">$</span><span class="fu">history</span><span class="op">(</span>index_particle <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">particle_filter</span><span class="op">$</span><span class="fu">history</span><span class="op">(</span>index_particle <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -456,7 +456,7 @@ particles at the requested point, regardless if they appear in
 the set of particles that make it to the end of the
 simulation).</p><div class="section">
 <h4 id="usage-5">Usage<a class="anchor" aria-label="anchor" href="#usage-5"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">particle_filter</span><span class="op">$</span><span class="fu">restart_state</span><span class="op">(</span>index_particle <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">particle_filter</span><span class="op">$</span><span class="fu">restart_state</span><span class="op">(</span>index_particle <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -478,7 +478,7 @@ argument with the exception of <code>seed</code>, which is the state of
 the rng if it has been used (this can be used as a seed to
 restart the model).</p><div class="section">
 <h4 id="usage-6">Usage<a class="anchor" aria-label="anchor" href="#usage-6"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">particle_filter</span><span class="op">$</span><span class="fu">inputs</span><span class="op">(</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">particle_filter</span><span class="op">$</span><span class="fu">inputs</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 
@@ -489,7 +489,7 @@ model) after creation. This can be used to allocate additional
 (or subtract excess) computing power from a particle filter.
 Returns (invisibly) the previous value.</p><div class="section">
 <h4 id="usage-7">Usage<a class="anchor" aria-label="anchor" href="#usage-7"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">particle_filter</span><span class="op">$</span><span class="fu">set_n_threads</span><span class="op">(</span><span class="va">n_threads</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">particle_filter</span><span class="op">$</span><span class="fu">set_n_threads</span><span class="op">(</span><span class="va">n_threads</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -510,57 +510,57 @@ requested (based on environment variables and OpenMP support).</p></dd>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co"># A basic SIR model included in the dust package</span></span>
-<span class="r-in"><span class="va">gen</span> <span class="op">&lt;-</span> <span class="fu">dust</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/dust/man/dust_example.html" class="external-link">dust_example</a></span><span class="op">(</span><span class="st">"sir"</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># Some data that we will fit to, using 1 particle:</span></span>
-<span class="r-in"><span class="va">sir</span> <span class="op">&lt;-</span> <span class="va">gen</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>pars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>, step <span class="op">=</span> <span class="fl">0</span>, n_particles <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">dt</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">4</span></span>
-<span class="r-in"><span class="va">day</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">100</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">incidence</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="cn">NA</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">day</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">true_history</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/array.html" class="external-link">array</a></span><span class="op">(</span><span class="cn">NA_real_</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">1</span>, <span class="fl">101</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">true_history</span><span class="op">[</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">sir</span><span class="op">$</span><span class="fu">state</span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"><span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="va">day</span><span class="op">)</span> <span class="op">{</span></span>
-<span class="r-in">  <span class="va">state_start</span> <span class="op">&lt;-</span> <span class="va">sir</span><span class="op">$</span><span class="fu">state</span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in">  <span class="va">sir</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="va">i</span> <span class="op">/</span> <span class="va">dt</span><span class="op">)</span></span>
-<span class="r-in">  <span class="va">state_end</span> <span class="op">&lt;-</span> <span class="va">sir</span><span class="op">$</span><span class="fu">state</span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in">  <span class="va">true_history</span><span class="op">[</span>, <span class="fl">1</span>, <span class="va">i</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">state_end</span></span>
-<span class="r-in">  <span class="co"># Reduction in S</span></span>
-<span class="r-in">  <span class="va">incidence</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">state_start</span><span class="op">[</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">-</span> <span class="va">state_end</span><span class="op">[</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">]</span></span>
-<span class="r-in"><span class="op">}</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># Convert this into our required format:</span></span>
-<span class="r-in"><span class="va">data_raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>day <span class="op">=</span> <span class="va">day</span>, incidence <span class="op">=</span> <span class="va">incidence</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="particle_filter_data.html">particle_filter_data</a></span><span class="op">(</span><span class="va">data_raw</span>, <span class="st">"day"</span>, <span class="fl">4</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># A comparison function</span></span>
-<span class="r-in"><span class="va">compare</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">state</span>, <span class="va">observed</span>, <span class="va">pars</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span></span>
-<span class="r-in">  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">pars</span><span class="op">$</span><span class="va">exp_noise</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span class="r-in">    <span class="va">exp_noise</span> <span class="op">&lt;-</span> <span class="fl">1e6</span></span>
-<span class="r-in">  <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
-<span class="r-in">    <span class="va">exp_noise</span> <span class="op">&lt;-</span> <span class="va">pars</span><span class="op">$</span><span class="va">exp_noise</span></span>
-<span class="r-in">  <span class="op">}</span></span>
-<span class="r-in">  <span class="va">incidence_modelled</span> <span class="op">&lt;-</span> <span class="va">state</span><span class="op">[</span><span class="fl">1</span>,<span class="op">]</span></span>
-<span class="r-in">  <span class="va">incidence_observed</span> <span class="op">&lt;-</span> <span class="va">observed</span><span class="op">$</span><span class="va">incidence</span></span>
-<span class="r-in">  <span class="va">lambda</span> <span class="op">&lt;-</span> <span class="va">incidence_modelled</span> <span class="op">+</span></span>
-<span class="r-in">    <span class="fu"><a href="https://rdrr.io/r/stats/Exponential.html" class="external-link">rexp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">incidence_modelled</span><span class="op">)</span>, <span class="va">exp_noise</span><span class="op">)</span></span>
-<span class="r-in">  <span class="fu"><a href="https://rdrr.io/r/stats/Poisson.html" class="external-link">dpois</a></span><span class="op">(</span><span class="va">incidence_observed</span>, <span class="va">lambda</span>, log <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-in"><span class="op">}</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># Construct the particle_filter object with 100 particles</span></span>
-<span class="r-in"><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">particle_filter</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">data</span>, <span class="va">gen</span>, <span class="fl">100</span>, <span class="va">compare</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">p</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span>save_history <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -18833.09</span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># Our simulated trajectories, with the "real" data superimposed</span></span>
-<span class="r-in"><span class="va">history</span> <span class="op">&lt;-</span> <span class="va">p</span><span class="op">$</span><span class="fu">history</span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html" class="external-link">matplot</a></span><span class="op">(</span><span class="va">data_raw</span><span class="op">$</span><span class="va">day</span>, <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">history</span><span class="op">[</span><span class="fl">1</span>, , <span class="op">-</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"l"</span>,</span>
-<span class="r-in">        xlab <span class="op">=</span> <span class="st">"Time"</span>, ylab <span class="op">=</span> <span class="st">"State"</span>,</span>
-<span class="r-in">        col <span class="op">=</span> <span class="st">"#ff000022"</span>, lty <span class="op">=</span> <span class="fl">1</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">history</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html" class="external-link">matlines</a></span><span class="op">(</span><span class="va">data_raw</span><span class="op">$</span><span class="va">day</span>, <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">history</span><span class="op">[</span><span class="fl">2</span>, , <span class="op">-</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#ffff0022"</span>, lty <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html" class="external-link">matlines</a></span><span class="op">(</span><span class="va">data_raw</span><span class="op">$</span><span class="va">day</span>, <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">history</span><span class="op">[</span><span class="fl">3</span>, , <span class="op">-</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#0000ff22"</span>, lty <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html" class="external-link">matpoints</a></span><span class="op">(</span><span class="va">data_raw</span><span class="op">$</span><span class="va">day</span>, <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">true_history</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, , <span class="op">-</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>, pch <span class="op">=</span> <span class="fl">19</span>,</span>
-<span class="r-in">          col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"red"</span>, <span class="st">"yellow"</span>, <span class="st">"blue"</span><span class="op">)</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># A basic SIR model included in the dust package</span></span></span>
+<span class="r-in"><span><span class="va">gen</span> <span class="op">&lt;-</span> <span class="fu">dust</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/dust/man/dust_example.html" class="external-link">dust_example</a></span><span class="op">(</span><span class="st">"sir"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Some data that we will fit to, using 1 particle:</span></span></span>
+<span class="r-in"><span><span class="va">sir</span> <span class="op">&lt;-</span> <span class="va">gen</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>pars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>, step <span class="op">=</span> <span class="fl">0</span>, n_particles <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">dt</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">4</span></span></span>
+<span class="r-in"><span><span class="va">day</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">100</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">incidence</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="cn">NA</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">day</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">true_history</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/array.html" class="external-link">array</a></span><span class="op">(</span><span class="cn">NA_real_</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">1</span>, <span class="fl">101</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">true_history</span><span class="op">[</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">sir</span><span class="op">$</span><span class="fu">state</span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="va">day</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="va">state_start</span> <span class="op">&lt;-</span> <span class="va">sir</span><span class="op">$</span><span class="fu">state</span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">sir</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="va">i</span> <span class="op">/</span> <span class="va">dt</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">state_end</span> <span class="op">&lt;-</span> <span class="va">sir</span><span class="op">$</span><span class="fu">state</span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">true_history</span><span class="op">[</span>, <span class="fl">1</span>, <span class="va">i</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">state_end</span></span></span>
+<span class="r-in"><span>  <span class="co"># Reduction in S</span></span></span>
+<span class="r-in"><span>  <span class="va">incidence</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">state_start</span><span class="op">[</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">-</span> <span class="va">state_end</span><span class="op">[</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Convert this into our required format:</span></span></span>
+<span class="r-in"><span><span class="va">data_raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>day <span class="op">=</span> <span class="va">day</span>, incidence <span class="op">=</span> <span class="va">incidence</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="particle_filter_data.html">particle_filter_data</a></span><span class="op">(</span><span class="va">data_raw</span>, <span class="st">"day"</span>, <span class="fl">4</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># A comparison function</span></span></span>
+<span class="r-in"><span><span class="va">compare</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">state</span>, <span class="va">observed</span>, <span class="va">pars</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">pars</span><span class="op">$</span><span class="va">exp_noise</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>    <span class="va">exp_noise</span> <span class="op">&lt;-</span> <span class="fl">1e6</span></span></span>
+<span class="r-in"><span>  <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>    <span class="va">exp_noise</span> <span class="op">&lt;-</span> <span class="va">pars</span><span class="op">$</span><span class="va">exp_noise</span></span></span>
+<span class="r-in"><span>  <span class="op">}</span></span></span>
+<span class="r-in"><span>  <span class="va">incidence_modelled</span> <span class="op">&lt;-</span> <span class="va">state</span><span class="op">[</span><span class="fl">1</span>,<span class="op">]</span></span></span>
+<span class="r-in"><span>  <span class="va">incidence_observed</span> <span class="op">&lt;-</span> <span class="va">observed</span><span class="op">$</span><span class="va">incidence</span></span></span>
+<span class="r-in"><span>  <span class="va">lambda</span> <span class="op">&lt;-</span> <span class="va">incidence_modelled</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/stats/Exponential.html" class="external-link">rexp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">incidence_modelled</span><span class="op">)</span>, <span class="va">exp_noise</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/stats/Poisson.html" class="external-link">dpois</a></span><span class="op">(</span><span class="va">incidence_observed</span>, <span class="va">lambda</span>, log <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Construct the particle_filter object with 100 particles</span></span></span>
+<span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">particle_filter</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">data</span>, <span class="va">gen</span>, <span class="fl">100</span>, <span class="va">compare</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">p</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span>save_history <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -17484.05</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Our simulated trajectories, with the "real" data superimposed</span></span></span>
+<span class="r-in"><span><span class="va">history</span> <span class="op">&lt;-</span> <span class="va">p</span><span class="op">$</span><span class="fu">history</span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html" class="external-link">matplot</a></span><span class="op">(</span><span class="va">data_raw</span><span class="op">$</span><span class="va">day</span>, <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">history</span><span class="op">[</span><span class="fl">1</span>, , <span class="op">-</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"l"</span>,</span></span>
+<span class="r-in"><span>        xlab <span class="op">=</span> <span class="st">"Time"</span>, ylab <span class="op">=</span> <span class="st">"State"</span>,</span></span>
+<span class="r-in"><span>        col <span class="op">=</span> <span class="st">"#ff000022"</span>, lty <span class="op">=</span> <span class="fl">1</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">history</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html" class="external-link">matlines</a></span><span class="op">(</span><span class="va">data_raw</span><span class="op">$</span><span class="va">day</span>, <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">history</span><span class="op">[</span><span class="fl">2</span>, , <span class="op">-</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#ffff0022"</span>, lty <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html" class="external-link">matlines</a></span><span class="op">(</span><span class="va">data_raw</span><span class="op">$</span><span class="va">day</span>, <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">history</span><span class="op">[</span><span class="fl">3</span>, , <span class="op">-</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#0000ff22"</span>, lty <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html" class="external-link">matpoints</a></span><span class="op">(</span><span class="va">data_raw</span><span class="op">$</span><span class="va">day</span>, <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">true_history</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, , <span class="op">-</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>, pch <span class="op">=</span> <span class="fl">19</span>,</span></span>
+<span class="r-in"><span>          col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"red"</span>, <span class="st">"yellow"</span>, <span class="st">"blue"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="particle_filter-1.png" alt="" width="700" height="433"></span>
 </code></pre></div>
     </div>
@@ -576,7 +576,7 @@ requested (based on environment variables and OpenMP support).</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
       </footer></div>

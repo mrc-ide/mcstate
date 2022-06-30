@@ -19,7 +19,7 @@ particle deterministically."><meta property="og:image" content="/logo.png"><!-- 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.5</span>
       </span>
     </div>
 
@@ -140,16 +140,16 @@ particle (read only).  This will either be 1 or the same value as
 <h3 id="method-new-">Method <code>new()</code><a class="anchor" aria-label="anchor" href="#method-new-"></a></h3>
 <p>Create the particle filter</p><div class="section">
 <h4 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va"><a href="../reference/particle_deterministic.html">particle_deterministic</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>
-  <span class="va">data</span>,
-  <span class="va">model</span>,
-  <span class="va">compare</span>,
-  index <span class="op">=</span> <span class="cn">NULL</span>,
-  initial <span class="op">=</span> <span class="cn">NULL</span>,
-  constant_log_likelihood <span class="op">=</span> <span class="cn">NULL</span>,
-  n_threads <span class="op">=</span> <span class="fl">1L</span>,
-  n_parameters <span class="op">=</span> <span class="cn">NULL</span>
-<span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va"><a href="../reference/particle_deterministic.html">particle_deterministic</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span></span>
+<span>  <span class="va">data</span>,</span>
+<span>  <span class="va">model</span>,</span>
+<span>  <span class="va">compare</span>,</span>
+<span>  index <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  initial <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  constant_log_likelihood <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  n_threads <span class="op">=</span> <span class="fl">1L</span>,</span>
+<span>  n_parameters <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -249,12 +249,12 @@ most outputs (scalars become vectors, vectors become matrices etc).</p></dd>
 <h3 id="method-run-">Method <code>run()</code><a class="anchor" aria-label="anchor" href="#method-run-"></a></h3>
 <p>Run the deterministic particle filter</p><div class="section">
 <h4 id="usage-1">Usage<a class="anchor" aria-label="anchor" href="#usage-1"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">particle_deterministic</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span>
-  pars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,
-  save_history <span class="op">=</span> <span class="cn">FALSE</span>,
-  save_restart <span class="op">=</span> <span class="cn">NULL</span>,
-  min_log_likelihood <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>
-<span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">particle_deterministic</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span></span>
+<span>  pars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  save_history <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  save_restart <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  min_log_likelihood <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span></span>
+<span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -304,12 +304,12 @@ which provides a user-facing wrapper around
 this function. Once created with <code>$run_begin()</code>, you should take
 as many steps as needed with <code>$step()</code>.</p><div class="section">
 <h4 id="usage-2">Usage<a class="anchor" aria-label="anchor" href="#usage-2"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">particle_deterministic</span><span class="op">$</span><span class="fu">run_begin</span><span class="op">(</span>
-  <span class="va">pars</span>,
-  save_history <span class="op">=</span> <span class="cn">FALSE</span>,
-  save_restart <span class="op">=</span> <span class="cn">NULL</span>,
-  min_log_likelihood <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>
-<span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">particle_deterministic</span><span class="op">$</span><span class="fu">run_begin</span><span class="op">(</span></span>
+<span>  <span class="va">pars</span>,</span>
+<span>  save_history <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  save_restart <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  min_log_likelihood <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span></span>
+<span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -344,14 +344,14 @@ larger than -Inf will cause an error.</p></dd>
 </div>
 
 </div><p></p><hr><a id="method-particle_deterministic-state"></a><div class="section">
-<h3 id="method-state-">Method <code><a href="https://rdrr.io/r/datasets/state.html" class="external-link">state()</a></code><a class="anchor" aria-label="anchor" href="#method-state-"></a></h3>
+<h3 id="method-state-">Method <code>state()</code><a class="anchor" aria-label="anchor" href="#method-state-"></a></h3>
 <p>Extract the current model state, optionally filtering.
 If the model has not yet been run, then this method will throw an
 error. Returns a matrix with the number of rows being the number of
 model states, and the number of columns being the number of
 particles.</p><div class="section">
 <h4 id="usage-3">Usage<a class="anchor" aria-label="anchor" href="#usage-3"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">particle_deterministic</span><span class="op">$</span><span class="fu">state</span><span class="op">(</span>index_state <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">particle_deterministic</span><span class="op">$</span><span class="fu">state</span><span class="op">(</span>index_state <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -373,7 +373,7 @@ model state, filtered by <code>index$run</code> if provided, (2)
 particle (following <code>index_particle</code> if provided), (3)
 time point.</p><div class="section">
 <h4 id="usage-4">Usage<a class="anchor" aria-label="anchor" href="#usage-4"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">particle_deterministic</span><span class="op">$</span><span class="fu">history</span><span class="op">(</span>index_particle <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">particle_deterministic</span><span class="op">$</span><span class="fu">history</span><span class="op">(</span>index_particle <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -402,7 +402,7 @@ because earlier saved state is not filtered by later filtering,
 but in the deterministic model we run with a single particle so it
 <em>is</em> the same.</p><div class="section">
 <h4 id="usage-5">Usage<a class="anchor" aria-label="anchor" href="#usage-5"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">particle_deterministic</span><span class="op">$</span><span class="fu">restart_state</span><span class="op">(</span>index_particle <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">particle_deterministic</span><span class="op">$</span><span class="fu">restart_state</span><span class="op">(</span>index_particle <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -424,7 +424,7 @@ interface.</p></dd>
 filter. These correspond directly to the argument names for the
 constructor and are the same as the input arguments.</p><div class="section">
 <h4 id="usage-6">Usage<a class="anchor" aria-label="anchor" href="#usage-6"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">particle_deterministic</span><span class="op">$</span><span class="fu">inputs</span><span class="op">(</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">particle_deterministic</span><span class="op">$</span><span class="fu">inputs</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 
@@ -435,7 +435,7 @@ model) after creation. This can be used to allocate additional
 (or subtract excess) computing power from the deterministic filter
 Returns (invisibly) the previous value.</p><div class="section">
 <h4 id="usage-7">Usage<a class="anchor" aria-label="anchor" href="#usage-7"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">particle_deterministic</span><span class="op">$</span><span class="fu">set_n_threads</span><span class="op">(</span><span class="va">n_threads</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">particle_deterministic</span><span class="op">$</span><span class="fu">set_n_threads</span><span class="op">(</span><span class="va">n_threads</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -466,7 +466,7 @@ requested (based on environment variables and OpenMP support).</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
       </footer></div>

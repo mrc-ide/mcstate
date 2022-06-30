@@ -20,7 +20,7 @@ dropped."><meta property="og:image" content="/logo.png"><!-- mathjax --><script 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.5</span>
       </span>
     </div>
 
@@ -87,7 +87,7 @@ dropped.</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">array_drop</span><span class="op">(</span><span class="va">x</span>, <span class="va">i</span><span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">array_drop</span><span class="op">(</span><span class="va">x</span>, <span class="va">i</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -109,38 +109,38 @@ dropped.</p>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"></span>
-<span class="r-in"><span class="co"># Suppose we have an array with a redundant 2nd dimension</span></span>
-<span class="r-in"><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/array.html" class="external-link">array</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">25</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">1</span>, <span class="fl">5</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># commonly we might drop this with</span></span>
-<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/base/drop.html" class="external-link">drop</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Suppose we have an array with a redundant 2nd dimension</span></span></span>
+<span class="r-in"><span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/array.html" class="external-link">array</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">25</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">1</span>, <span class="fl">5</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># commonly we might drop this with</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/drop.html" class="external-link">drop</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      [,1] [,2] [,3] [,4] [,5]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1,]    1    6   11   16   21</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [2,]    2    7   12   17   22</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [3,]    3    8   13   18   23</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [4,]    4    9   14   19   24</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [5,]    5   10   15   20   25</span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># in this case, array_drop is the same:</span></span>
-<span class="r-in"><span class="fu">mcstate</span><span class="fu">::</span><span class="fu">array_drop</span><span class="op">(</span><span class="va">m</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># in this case, array_drop is the same:</span></span></span>
+<span class="r-in"><span><span class="fu">mcstate</span><span class="fu">::</span><span class="fu">array_drop</span><span class="op">(</span><span class="va">m</span>, <span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      [,1] [,2] [,3] [,4] [,5]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1,]    1    6   11   16   21</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [2,]    2    7   12   17   22</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [3,]    3    8   13   18   23</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [4,]    4    9   14   19   24</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [5,]    5   10   15   20   25</span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># However, suppose that our matrix had, in this case, a first</span></span>
-<span class="r-in"><span class="co"># dimension that was also 1 but we did not want to drop it:</span></span>
-<span class="r-in"><span class="va">m2</span> <span class="op">&lt;-</span> <span class="va">m</span><span class="op">[</span><span class="fl">1</span>, , , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># Here, drop(m2) returns just a vector, discarding our first dimension</span></span>
-<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/base/drop.html" class="external-link">drop</a></span><span class="op">(</span><span class="va">m2</span><span class="op">)</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># However, suppose that our matrix had, in this case, a first</span></span></span>
+<span class="r-in"><span><span class="co"># dimension that was also 1 but we did not want to drop it:</span></span></span>
+<span class="r-in"><span><span class="va">m2</span> <span class="op">&lt;-</span> <span class="va">m</span><span class="op">[</span><span class="fl">1</span>, , , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Here, drop(m2) returns just a vector, discarding our first dimension</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/drop.html" class="external-link">drop</a></span><span class="op">(</span><span class="va">m2</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1]  1  6 11 16 21</span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># However, array_drop will preserve that dimension</span></span>
-<span class="r-in"><span class="fu">mcstate</span><span class="fu">::</span><span class="fu">array_drop</span><span class="op">(</span><span class="va">m2</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># However, array_drop will preserve that dimension</span></span></span>
+<span class="r-in"><span><span class="fu">mcstate</span><span class="fu">::</span><span class="fu">array_drop</span><span class="op">(</span><span class="va">m2</span>, <span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      [,1] [,2] [,3] [,4] [,5]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1,]    1    6   11   16   21</span>
 </code></pre></div>
@@ -157,7 +157,7 @@ dropped.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
       </footer></div>

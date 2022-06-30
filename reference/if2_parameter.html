@@ -20,7 +20,7 @@ these together for use with if2()."><meta property="og:image" content="/logo.png
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.5</span>
       </span>
     </div>
 
@@ -87,15 +87,15 @@ these together for use with <code><a href="if2.html">if2()</a></code>.</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">if2_parameter</span><span class="op">(</span>
-  <span class="va">name</span>,
-  <span class="va">initial</span>,
-  min <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>,
-  max <span class="op">=</span> <span class="cn">Inf</span>,
-  <span class="va">discrete</span>,
-  integer <span class="op">=</span> <span class="cn">FALSE</span>,
-  prior <span class="op">=</span> <span class="cn">NULL</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">if2_parameter</span><span class="op">(</span></span>
+<span>  <span class="va">name</span>,</span>
+<span>  <span class="va">initial</span>,</span>
+<span>  min <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>,</span>
+<span>  max <span class="op">=</span> <span class="cn">Inf</span>,</span>
+<span>  <span class="va">discrete</span>,</span>
+<span>  integer <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  prior <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -140,7 +140,7 @@ then <code>prior(initial)</code> must evaluate to a finite value.</p></dd>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="fu">mcstate</span><span class="fu">::</span><span class="fu">if2_parameter</span><span class="op">(</span><span class="st">"a"</span>, <span class="fl">0.1</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">mcstate</span><span class="fu">::</span><span class="fu">if2_parameter</span><span class="op">(</span><span class="st">"a"</span>, <span class="fl">0.1</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $name</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "a"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -159,8 +159,8 @@ then <code>prior(initial)</code> must evaluate to a finite value.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $prior</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> function (p) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;bytecode: 0x7f90bf5e8e00&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x7f90bc931788&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;bytecode: 0x7fd5a61d3698&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x7fd5a4aad8e8&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "if2_parameter"</span>
@@ -178,7 +178,7 @@ then <code>prior(initial)</code> must evaluate to a finite value.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
       </footer></div>

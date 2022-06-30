@@ -40,7 +40,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.5</span>
       </span>
     </div>
 
@@ -190,162 +190,163 @@
 <span id="cb1-74"><a href="#cb1-74"></a>}</span></code></pre></div>
 <p>This is a <a href="https://mrc-ide.github.io/dust" class="external-link"><code>dust</code></a> model; refer to the documentation there for details. This file can be compiled with <code><a href="https://rdrr.io/pkg/dust/man/dust.html" class="external-link">dust::dust</a></code>, but here we use the version bundled with <code>dust</code></p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">volatility</span> <span class="op">&lt;-</span> <span class="fu">dust</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/dust/man/dust_example.html" class="external-link">dust_example</a></span><span class="op">(</span><span class="st">"volatility"</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">volatility</span> <span class="op">&lt;-</span> <span class="fu">dust</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/dust/man/dust_example.html" class="external-link">dust_example</a></span><span class="op">(</span><span class="st">"volatility"</span><span class="op">)</span></span></code></pre></div>
 <p>We can simulate some data from the model:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span>
-<span class="co">#&gt;   step    value</span>
-<span class="co">#&gt; 1    1 1.617881</span>
-<span class="co">#&gt; 2    2 2.464819</span>
-<span class="co">#&gt; 3    3 0.909651</span>
-<span class="co">#&gt; 4    4 1.167090</span>
-<span class="co">#&gt; 5    5 1.411948</span>
-<span class="co">#&gt; 6    6 2.368076</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">value</span> <span class="op">~</span> <span class="va">step</span>, <span class="va">data</span>, type <span class="op">=</span> <span class="st">"o"</span>, pch <span class="op">=</span> <span class="fl">19</span>, las <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   step      value</span></span>
+<span><span class="co">#&gt; 1    1 -1.2846907</span></span>
+<span><span class="co">#&gt; 2    2 -0.9906491</span></span>
+<span><span class="co">#&gt; 3    3 -0.3375167</span></span>
+<span><span class="co">#&gt; 4    4  0.6681482</span></span>
+<span><span class="co">#&gt; 5    5 -0.2269489</span></span>
+<span><span class="co">#&gt; 6    6 -1.6817219</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">value</span> <span class="op">~</span> <span class="va">step</span>, <span class="va">data</span>, type <span class="op">=</span> <span class="st">"o"</span>, pch <span class="op">=</span> <span class="fl">19</span>, las <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
 <p><img src="kalman_files/figure-html/volatility_data_show-1.png" width="672"></p>
 <p>In order to estimate the parameters of the process that might have generated this dataset, we need, in addition to our model, an observation/comparison function. In this case, given that we observe some <code>state</code>:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">volatility_compare</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">state</span>, <span class="va">observed</span>, <span class="va">pars</span><span class="op">)</span> <span class="op">{</span>
-  <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">dnorm</a></span><span class="op">(</span><span class="va">observed</span><span class="op">$</span><span class="va">value</span>, <span class="va">pars</span><span class="op">$</span><span class="va">gamma</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/drop.html" class="external-link">drop</a></span><span class="op">(</span><span class="va">state</span><span class="op">)</span>, <span class="va">pars</span><span class="op">$</span><span class="va">tau</span>, log <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
-<span class="op">}</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">volatility_compare</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">state</span>, <span class="va">observed</span>, <span class="va">pars</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">dnorm</a></span><span class="op">(</span><span class="va">observed</span><span class="op">$</span><span class="va">value</span>, <span class="va">pars</span><span class="op">$</span><span class="va">gamma</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/drop.html" class="external-link">drop</a></span><span class="op">(</span><span class="va">state</span><span class="op">)</span>, <span class="va">pars</span><span class="op">$</span><span class="va">tau</span>, log <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
 <p>We also model the initialisation process:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">volatility_initial</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">info</span>, <span class="va">n_particles</span>, <span class="va">pars</span><span class="op">)</span> <span class="op">{</span>
-  <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_particles</span>, <span class="fl">0</span>, <span class="va">pars</span><span class="op">$</span><span class="va">sd</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span>
-<span class="op">}</span>
-
-<span class="va">pars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>
-  <span class="co"># Generation process</span>
-  alpha <span class="op">=</span> <span class="fl">0.91</span>,
-  sigma <span class="op">=</span> <span class="fl">1</span>,
-  <span class="co"># Observation process</span>
-  gamma <span class="op">=</span> <span class="fl">1</span>,
-  tau <span class="op">=</span> <span class="fl">1</span>,
-  <span class="co"># Initial condition</span>
-  sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">volatility_initial</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">info</span>, <span class="va">n_particles</span>, <span class="va">pars</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_particles</span>, <span class="fl">0</span>, <span class="va">pars</span><span class="op">$</span><span class="va">sd</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="va">pars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  <span class="co"># Generation process</span></span>
+<span>  alpha <span class="op">=</span> <span class="fl">0.91</span>,</span>
+<span>  sigma <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  <span class="co"># Observation process</span></span>
+<span>  gamma <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  tau <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  <span class="co"># Initial condition</span></span>
+<span>  sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
 <p>and preprocess the data into the correct format:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">volatility_data</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/particle_filter_data.html">particle_filter_data</a></span><span class="op">(</span><span class="va">data</span>, <span class="st">"step"</span>, <span class="fl">1</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">volatility_data</span><span class="op">)</span>
-<span class="co">#&gt;   step_start step_end step_start step_end    value</span>
-<span class="co">#&gt; 1          0        1          0        1 1.617881</span>
-<span class="co">#&gt; 2          1        2          1        2 2.464819</span>
-<span class="co">#&gt; 3          2        3          2        3 0.909651</span>
-<span class="co">#&gt; 4          3        4          3        4 1.167090</span>
-<span class="co">#&gt; 5          4        5          4        5 1.411948</span>
-<span class="co">#&gt; 6          5        6          5        6 2.368076</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">volatility_data</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/particle_filter_data.html">particle_filter_data</a></span><span class="op">(</span><span class="va">data</span>, <span class="st">"step"</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">volatility_data</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   step_start step_end step_start step_end      value</span></span>
+<span><span class="co">#&gt; 1          0        1          0        1 -1.2846907</span></span>
+<span><span class="co">#&gt; 2          1        2          1        2 -0.9906491</span></span>
+<span><span class="co">#&gt; 3          2        3          2        3 -0.3375167</span></span>
+<span><span class="co">#&gt; 4          3        4          3        4  0.6681482</span></span>
+<span><span class="co">#&gt; 5          4        5          4        5 -0.2269489</span></span>
+<span><span class="co">#&gt; 6          5        6          5        6 -1.6817219</span></span></code></pre></div>
 <p>The particle filter can run with more or fewer particles - this will trade-off runtime with the variance in the estimate, though in a fairly non-linear manner:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">n_particles</span> <span class="op">&lt;-</span> <span class="fl">1000</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">n_particles</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span></code></pre></div>
 <p>With all these pieces we can create our particle filter object with 1000 particles</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">filter</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="va"><a href="../reference/particle_filter.html">particle_filter</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">volatility_data</span>, <span class="va">volatility</span>, <span class="va">n_particles</span>,
-                                       compare <span class="op">=</span> <span class="va">volatility_compare</span>,
-                                       initial <span class="op">=</span> <span class="va">volatility_initial</span><span class="op">)</span>
-<span class="va">filter</span>
-<span class="co">#&gt; &lt;particle_filter&gt;</span>
-<span class="co">#&gt;   Public:</span>
-<span class="co">#&gt;     has_multiple_data: FALSE</span>
-<span class="co">#&gt;     has_multiple_parameters: FALSE</span>
-<span class="co">#&gt;     history: function (index_particle = NULL) </span>
-<span class="co">#&gt;     initialize: function (data, model, n_particles, compare, index = NULL, initial = NULL, </span>
-<span class="co">#&gt;     inputs: function () </span>
-<span class="co">#&gt;     model: dust_generator, R6ClassGenerator</span>
-<span class="co">#&gt;     n_data: 1</span>
-<span class="co">#&gt;     n_parameters: 1</span>
-<span class="co">#&gt;     n_particles: 1000</span>
-<span class="co">#&gt;     restart_state: function (index_particle = NULL) </span>
-<span class="co">#&gt;     run: function (pars = list(), save_history = FALSE, save_restart = NULL, </span>
-<span class="co">#&gt;     run_begin: function (pars = list(), save_history = FALSE, save_restart = NULL, </span>
-<span class="co">#&gt;     set_n_threads: function (n_threads) </span>
-<span class="co">#&gt;     state: function (index_state = NULL) </span>
-<span class="co">#&gt;   Private:</span>
-<span class="co">#&gt;     compare: function (state, observed, pars) </span>
-<span class="co">#&gt;     constant_log_likelihood: NULL</span>
-<span class="co">#&gt;     data: particle_filter_data_single, particle_filter_data, data.frame</span>
-<span class="co">#&gt;     data_split: list</span>
-<span class="co">#&gt;     gpu_config: NULL</span>
-<span class="co">#&gt;     index: NULL</span>
-<span class="co">#&gt;     initial: function (info, n_particles, pars) </span>
-<span class="co">#&gt;     last_history: NULL</span>
-<span class="co">#&gt;     last_model: NULL</span>
-<span class="co">#&gt;     last_restart_state: NULL</span>
-<span class="co">#&gt;     last_stages: NULL</span>
-<span class="co">#&gt;     last_state: NULL</span>
-<span class="co">#&gt;     n_threads: 1</span>
-<span class="co">#&gt;     seed: NULL</span>
-<span class="co">#&gt;     steps: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21  ...</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">filter</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="va"><a href="../reference/particle_filter.html">particle_filter</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">volatility_data</span>, <span class="va">volatility</span>, <span class="va">n_particles</span>,</span>
+<span>                                       compare <span class="op">=</span> <span class="va">volatility_compare</span>,</span>
+<span>                                       initial <span class="op">=</span> <span class="va">volatility_initial</span><span class="op">)</span></span>
+<span><span class="va">filter</span></span>
+<span><span class="co">#&gt; &lt;particle_filter&gt;</span></span>
+<span><span class="co">#&gt;   Public:</span></span>
+<span><span class="co">#&gt;     has_multiple_data: FALSE</span></span>
+<span><span class="co">#&gt;     has_multiple_parameters: FALSE</span></span>
+<span><span class="co">#&gt;     history: function (index_particle = NULL) </span></span>
+<span><span class="co">#&gt;     initialize: function (data, model, n_particles, compare, index = NULL, initial = NULL, </span></span>
+<span><span class="co">#&gt;     inputs: function () </span></span>
+<span><span class="co">#&gt;     model: dust_generator, R6ClassGenerator</span></span>
+<span><span class="co">#&gt;     n_data: 1</span></span>
+<span><span class="co">#&gt;     n_parameters: 1</span></span>
+<span><span class="co">#&gt;     n_particles: 1000</span></span>
+<span><span class="co">#&gt;     restart_state: function (index_particle = NULL) </span></span>
+<span><span class="co">#&gt;     run: function (pars = list(), save_history = FALSE, save_restart = NULL, </span></span>
+<span><span class="co">#&gt;     run_begin: function (pars = list(), save_history = FALSE, save_restart = NULL, </span></span>
+<span><span class="co">#&gt;     set_n_threads: function (n_threads) </span></span>
+<span><span class="co">#&gt;     state: function (index_state = NULL) </span></span>
+<span><span class="co">#&gt;   Private:</span></span>
+<span><span class="co">#&gt;     compare: function (state, observed, pars) </span></span>
+<span><span class="co">#&gt;     constant_log_likelihood: NULL</span></span>
+<span><span class="co">#&gt;     data: particle_filter_data_single, particle_filter_data_discrete, particle_filter_data, data.frame</span></span>
+<span><span class="co">#&gt;     data_split: list</span></span>
+<span><span class="co">#&gt;     gpu_config: NULL</span></span>
+<span><span class="co">#&gt;     index: NULL</span></span>
+<span><span class="co">#&gt;     initial: function (info, n_particles, pars) </span></span>
+<span><span class="co">#&gt;     last_history: NULL</span></span>
+<span><span class="co">#&gt;     last_model: NULL</span></span>
+<span><span class="co">#&gt;     last_restart_state: NULL</span></span>
+<span><span class="co">#&gt;     last_stages: NULL</span></span>
+<span><span class="co">#&gt;     last_state: NULL</span></span>
+<span><span class="co">#&gt;     n_threads: 1</span></span>
+<span><span class="co">#&gt;     seed: NULL</span></span>
+<span><span class="co">#&gt;     stochastic_schedule: NULL</span></span>
+<span><span class="co">#&gt;     times: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21  ...</span></span></code></pre></div>
 <p>Running the particle filter simulates the process on all <span class="math inline">\(10^3\)</span> particles and compares at each timestep the simulated data with your observed data using the provided comparison function. It returns the log-likelihood:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">filter</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="va">pars</span><span class="op">)</span>
-<span class="co">#&gt; [1] -188.8073</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">filter</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="va">pars</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] -180.8167</span></span></code></pre></div>
 <p>This is stochastic and each time you run it, the estimate will differ:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">filter</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="va">pars</span><span class="op">)</span>
-<span class="co">#&gt; [1] -190.045</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">filter</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="va">pars</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] -180.6743</span></span></code></pre></div>
 <p>In this case the model is simple enough that we can use a <a href="https://en.wikipedia.org/wiki/Kalman_filter" class="external-link">Kalman Filter</a> to calculate the likelihood exactly:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">kalman_filter</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">alpha</span>, <span class="va">sigma</span>, <span class="va">gamma</span>, <span class="va">tau</span>, <span class="va">data</span><span class="op">)</span> <span class="op">{</span>
-  <span class="va">y</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">$</span><span class="va">value</span>
-
-  <span class="va">mu</span> <span class="op">&lt;-</span> <span class="fl">0</span>
-  <span class="va">s</span> <span class="op">&lt;-</span> <span class="fl">1</span>
-  <span class="va">log_likelihood</span> <span class="op">&lt;-</span> <span class="fl">0</span>
-
-  <span class="kw">for</span> <span class="op">(</span><span class="va">t</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span>
-    <span class="va">mu</span> <span class="op">&lt;-</span> <span class="va">alpha</span> <span class="op">*</span> <span class="va">mu</span>
-    <span class="va">s</span> <span class="op">&lt;-</span> <span class="va">alpha</span><span class="op">^</span><span class="fl">2</span> <span class="op">*</span> <span class="va">s</span> <span class="op">+</span> <span class="va">sigma</span><span class="op">^</span><span class="fl">2</span>
-    <span class="va">m</span> <span class="op">&lt;-</span> <span class="va">gamma</span> <span class="op">*</span> <span class="va">mu</span>
-
-    <span class="va">S</span> <span class="op">&lt;-</span> <span class="va">gamma</span><span class="op">^</span><span class="fl">2</span> <span class="op">*</span> <span class="va">s</span> <span class="op">+</span> <span class="va">tau</span><span class="op">^</span><span class="fl">2</span>
-    <span class="va">K</span> <span class="op">&lt;-</span> <span class="va">gamma</span> <span class="op">*</span> <span class="va">s</span> <span class="op">/</span> <span class="va">S</span>
-
-    <span class="va">mu</span> <span class="op">&lt;-</span> <span class="va">mu</span> <span class="op">+</span> <span class="va">K</span> <span class="op">*</span> <span class="op">(</span><span class="va">y</span><span class="op">[</span><span class="va">t</span><span class="op">]</span> <span class="op">-</span> <span class="va">m</span><span class="op">)</span>
-    <span class="va">s</span> <span class="op">&lt;-</span> <span class="va">s</span> <span class="op">-</span> <span class="va">gamma</span> <span class="op">*</span> <span class="va">K</span> <span class="op">*</span> <span class="va">s</span>
-
-    <span class="va">log_likelihood</span> <span class="op">&lt;-</span> <span class="va">log_likelihood</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">dnorm</a></span><span class="op">(</span><span class="va">y</span><span class="op">[</span><span class="va">t</span><span class="op">]</span>, <span class="va">m</span>, <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">S</span><span class="op">)</span>, log <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
-  <span class="op">}</span>
-
-  <span class="va">log_likelihood</span>
-<span class="op">}</span>
-<span class="va">ll_k</span> <span class="op">&lt;-</span> <span class="fu">kalman_filter</span><span class="op">(</span><span class="va">pars</span><span class="op">$</span><span class="va">alpha</span>, <span class="va">pars</span><span class="op">$</span><span class="va">sigma</span>, <span class="va">pars</span><span class="op">$</span><span class="va">gamma</span>, <span class="va">pars</span><span class="op">$</span><span class="va">tau</span>,
-                      <span class="va">volatility_data</span><span class="op">)</span>
-<span class="va">ll_k</span>
-<span class="co">#&gt; [1] -188.927</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">kalman_filter</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">alpha</span>, <span class="va">sigma</span>, <span class="va">gamma</span>, <span class="va">tau</span>, <span class="va">data</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">y</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">$</span><span class="va">value</span></span>
+<span></span>
+<span>  <span class="va">mu</span> <span class="op">&lt;-</span> <span class="fl">0</span></span>
+<span>  <span class="va">s</span> <span class="op">&lt;-</span> <span class="fl">1</span></span>
+<span>  <span class="va">log_likelihood</span> <span class="op">&lt;-</span> <span class="fl">0</span></span>
+<span></span>
+<span>  <span class="kw">for</span> <span class="op">(</span><span class="va">t</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">mu</span> <span class="op">&lt;-</span> <span class="va">alpha</span> <span class="op">*</span> <span class="va">mu</span></span>
+<span>    <span class="va">s</span> <span class="op">&lt;-</span> <span class="va">alpha</span><span class="op">^</span><span class="fl">2</span> <span class="op">*</span> <span class="va">s</span> <span class="op">+</span> <span class="va">sigma</span><span class="op">^</span><span class="fl">2</span></span>
+<span>    <span class="va">m</span> <span class="op">&lt;-</span> <span class="va">gamma</span> <span class="op">*</span> <span class="va">mu</span></span>
+<span></span>
+<span>    <span class="va">S</span> <span class="op">&lt;-</span> <span class="va">gamma</span><span class="op">^</span><span class="fl">2</span> <span class="op">*</span> <span class="va">s</span> <span class="op">+</span> <span class="va">tau</span><span class="op">^</span><span class="fl">2</span></span>
+<span>    <span class="va">K</span> <span class="op">&lt;-</span> <span class="va">gamma</span> <span class="op">*</span> <span class="va">s</span> <span class="op">/</span> <span class="va">S</span></span>
+<span></span>
+<span>    <span class="va">mu</span> <span class="op">&lt;-</span> <span class="va">mu</span> <span class="op">+</span> <span class="va">K</span> <span class="op">*</span> <span class="op">(</span><span class="va">y</span><span class="op">[</span><span class="va">t</span><span class="op">]</span> <span class="op">-</span> <span class="va">m</span><span class="op">)</span></span>
+<span>    <span class="va">s</span> <span class="op">&lt;-</span> <span class="va">s</span> <span class="op">-</span> <span class="va">gamma</span> <span class="op">*</span> <span class="va">K</span> <span class="op">*</span> <span class="va">s</span></span>
+<span></span>
+<span>    <span class="va">log_likelihood</span> <span class="op">&lt;-</span> <span class="va">log_likelihood</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">dnorm</a></span><span class="op">(</span><span class="va">y</span><span class="op">[</span><span class="va">t</span><span class="op">]</span>, <span class="va">m</span>, <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">S</span><span class="op">)</span>, log <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
+<span></span>
+<span>  <span class="va">log_likelihood</span></span>
+<span><span class="op">}</span></span>
+<span><span class="va">ll_k</span> <span class="op">&lt;-</span> <span class="fu">kalman_filter</span><span class="op">(</span><span class="va">pars</span><span class="op">$</span><span class="va">alpha</span>, <span class="va">pars</span><span class="op">$</span><span class="va">sigma</span>, <span class="va">pars</span><span class="op">$</span><span class="va">gamma</span>, <span class="va">pars</span><span class="op">$</span><span class="va">tau</span>,</span>
+<span>                      <span class="va">volatility_data</span><span class="op">)</span></span>
+<span><span class="va">ll_k</span></span>
+<span><span class="co">#&gt; [1] -180.9654</span></span></code></pre></div>
 <p>Unlike the particle filter the Kalman filter is deterministic:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu">kalman_filter</span><span class="op">(</span><span class="va">pars</span><span class="op">$</span><span class="va">alpha</span>, <span class="va">pars</span><span class="op">$</span><span class="va">sigma</span>, <span class="va">pars</span><span class="op">$</span><span class="va">gamma</span>, <span class="va">pars</span><span class="op">$</span><span class="va">tau</span>, <span class="va">volatility_data</span><span class="op">)</span>
-<span class="co">#&gt; [1] -188.927</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">kalman_filter</span><span class="op">(</span><span class="va">pars</span><span class="op">$</span><span class="va">alpha</span>, <span class="va">pars</span><span class="op">$</span><span class="va">sigma</span>, <span class="va">pars</span><span class="op">$</span><span class="va">gamma</span>, <span class="va">pars</span><span class="op">$</span><span class="va">tau</span>, <span class="va">volatility_data</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] -180.9654</span></span></code></pre></div>
 <p>However, the particle filter, run multiple times, will create a distribution centred on this likelihood:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">n_replicates</span> <span class="op">&lt;-</span> <span class="fl">200</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">n_replicates</span> <span class="op">&lt;-</span> <span class="fl">200</span></span></code></pre></div>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">ll</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">replicate</a></span><span class="op">(</span><span class="va">n_replicates</span>, <span class="va">filter</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="va">pars</span><span class="op">)</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="va">ll</span>, col <span class="op">=</span> <span class="st">"steelblue3"</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>v <span class="op">=</span> <span class="va">ll_k</span>, col <span class="op">=</span> <span class="st">"red"</span>, lty <span class="op">=</span> <span class="fl">2</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">ll</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">replicate</a></span><span class="op">(</span><span class="va">n_replicates</span>, <span class="va">filter</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="va">pars</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="va">ll</span>, col <span class="op">=</span> <span class="st">"steelblue3"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>v <span class="op">=</span> <span class="va">ll_k</span>, col <span class="op">=</span> <span class="st">"red"</span>, lty <span class="op">=</span> <span class="fl">2</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 <p><img src="kalman_files/figure-html/unnamed-chunk-11-1.png" width="672"></p>
 <p>As the number of particles used changes, the variance of this estimate will change</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">filter2</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="va"><a href="../reference/particle_filter.html">particle_filter</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">volatility_data</span>, <span class="va">volatility</span>,
-                                        <span class="va">n_particles</span> <span class="op">/</span> <span class="fl">10</span>,
-                                        compare <span class="op">=</span> <span class="va">volatility_compare</span>,
-                                        initial <span class="op">=</span> <span class="va">volatility_initial</span><span class="op">)</span>
-<span class="va">ll2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">replicate</a></span><span class="op">(</span><span class="va">n_replicates</span>, <span class="va">filter2</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="va">pars</span><span class="op">)</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="va">ll2</span>, col <span class="op">=</span> <span class="st">"steelblue3"</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>v <span class="op">=</span> <span class="va">ll_k</span>, col <span class="op">=</span> <span class="st">"red"</span>, lty <span class="op">=</span> <span class="fl">2</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>v <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">ll</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"orange"</span>, lty <span class="op">=</span> <span class="fl">3</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">filter2</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="va"><a href="../reference/particle_filter.html">particle_filter</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">volatility_data</span>, <span class="va">volatility</span>,</span>
+<span>                                        <span class="va">n_particles</span> <span class="op">/</span> <span class="fl">10</span>,</span>
+<span>                                        compare <span class="op">=</span> <span class="va">volatility_compare</span>,</span>
+<span>                                        initial <span class="op">=</span> <span class="va">volatility_initial</span><span class="op">)</span></span>
+<span><span class="va">ll2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">replicate</a></span><span class="op">(</span><span class="va">n_replicates</span>, <span class="va">filter2</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="va">pars</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="va">ll2</span>, col <span class="op">=</span> <span class="st">"steelblue3"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>v <span class="op">=</span> <span class="va">ll_k</span>, col <span class="op">=</span> <span class="st">"red"</span>, lty <span class="op">=</span> <span class="fl">2</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>v <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">ll</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"orange"</span>, lty <span class="op">=</span> <span class="fl">3</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 <p><img src="kalman_files/figure-html/unnamed-chunk-12-1.png" width="672"></p>
 <p>If you run a particle filter with <code>save_history = TRUE</code>, it will record the (filtered) trajectories:s</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">filter</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="va">pars</span>, save_history <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
-<span class="co">#&gt; [1] -189.7379</span>
-<span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">filter</span><span class="op">$</span><span class="fu">history</span><span class="op">(</span><span class="op">)</span><span class="op">)</span>
-<span class="co">#&gt; [1]    1 1000  101</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">filter</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="va">pars</span>, save_history <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] -180.9135</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">filter</span><span class="op">$</span><span class="fu">history</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1]    1 1000  101</span></span></code></pre></div>
 <p>This is a <em>N</em> state (here 1) x <em>N</em> particles (1000) x <em>N</em> time steps (100) 3d array, but we will drop the first rank of this for plotting</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html" class="external-link">matplot</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">100</span>, <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/drop.html" class="external-link">drop</a></span><span class="op">(</span><span class="va">filter</span><span class="op">$</span><span class="fu">history</span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>, xlab <span class="op">=</span> <span class="st">"Step"</span>, ylab <span class="op">=</span> <span class="st">"Value"</span>,
-        las <span class="op">=</span> <span class="fl">1</span>, type <span class="op">=</span> <span class="st">"l"</span>, lty <span class="op">=</span> <span class="fl">1</span>, col <span class="op">=</span> <span class="st">"#00000002"</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/points.html" class="external-link">points</a></span><span class="op">(</span><span class="va">value</span> <span class="op">~</span> <span class="va">step</span>, <span class="va">data</span>, col <span class="op">=</span> <span class="st">"steelblue3"</span>, pch <span class="op">=</span> <span class="fl">19</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html" class="external-link">matplot</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">100</span>, <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/drop.html" class="external-link">drop</a></span><span class="op">(</span><span class="va">filter</span><span class="op">$</span><span class="fu">history</span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>, xlab <span class="op">=</span> <span class="st">"Step"</span>, ylab <span class="op">=</span> <span class="st">"Value"</span>,</span>
+<span>        las <span class="op">=</span> <span class="fl">1</span>, type <span class="op">=</span> <span class="st">"l"</span>, lty <span class="op">=</span> <span class="fl">1</span>, col <span class="op">=</span> <span class="st">"#00000002"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/points.html" class="external-link">points</a></span><span class="op">(</span><span class="va">value</span> <span class="op">~</span> <span class="va">step</span>, <span class="va">data</span>, col <span class="op">=</span> <span class="st">"steelblue3"</span>, pch <span class="op">=</span> <span class="fl">19</span><span class="op">)</span></span></code></pre></div>
 <p><img src="kalman_files/figure-html/unnamed-chunk-14-1.png" width="672"></p>
   </div>
 
@@ -364,7 +365,7 @@
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
       </footer>

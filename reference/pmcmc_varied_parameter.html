@@ -20,7 +20,7 @@ these together for use with pmcmc()."><meta property="og:image" content="/logo.p
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.5</span>
       </span>
     </div>
 
@@ -87,16 +87,16 @@ these together for use with <code><a href="pmcmc.html">pmcmc()</a></code>.</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">pmcmc_varied_parameter</span><span class="op">(</span>
-  <span class="va">name</span>,
-  <span class="va">populations</span>,
-  <span class="va">initial</span>,
-  min <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>,
-  max <span class="op">=</span> <span class="cn">Inf</span>,
-  <span class="va">discrete</span>,
-  integer <span class="op">=</span> <span class="cn">FALSE</span>,
-  prior <span class="op">=</span> <span class="cn">NULL</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">pmcmc_varied_parameter</span><span class="op">(</span></span>
+<span>  <span class="va">name</span>,</span>
+<span>  <span class="va">populations</span>,</span>
+<span>  <span class="va">initial</span>,</span>
+<span>  min <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>,</span>
+<span>  max <span class="op">=</span> <span class="cn">Inf</span>,</span>
+<span>  <span class="va">discrete</span>,</span>
+<span>  integer <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  prior <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -152,14 +152,14 @@ populations.</p></dd>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="fu">mcstate</span><span class="fu">::</span><span class="fu">pmcmc_varied_parameter</span><span class="op">(</span></span>
-<span class="r-in">  name <span class="op">=</span> <span class="st">"size"</span>,</span>
-<span class="r-in">  populations <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Europe"</span>, <span class="st">"America"</span><span class="op">)</span>,</span>
-<span class="r-in">  initial <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">200</span><span class="op">)</span>,</span>
-<span class="r-in">  min <span class="op">=</span> <span class="fl">0</span>,</span>
-<span class="r-in">  max <span class="op">=</span> <span class="cn">Inf</span>,</span>
-<span class="r-in">  integer <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span class="r-in">  prior <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">dnorm</span>, <span class="va">dexp</span><span class="op">)</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">mcstate</span><span class="fu">::</span><span class="fu">pmcmc_varied_parameter</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  name <span class="op">=</span> <span class="st">"size"</span>,</span></span>
+<span class="r-in"><span>  populations <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Europe"</span>, <span class="st">"America"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  initial <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">200</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  min <span class="op">=</span> <span class="fl">0</span>,</span></span>
+<span class="r-in"><span>  max <span class="op">=</span> <span class="cn">Inf</span>,</span></span>
+<span class="r-in"><span>  integer <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>  prior <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">dnorm</span>, <span class="va">dexp</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $Europe</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $name</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "size"</span>
@@ -179,7 +179,7 @@ populations.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $prior</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> function (x, mean = 0, sd = 1, log = FALSE) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> .Call(C_dnorm, x, mean, sd, log)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;bytecode: 0x7f90bc935040&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;bytecode: 0x7fd5a29adfd0&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: namespace:stats&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $mean</span>
@@ -207,7 +207,7 @@ populations.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $prior</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> function (x, rate = 1, log = FALSE) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> .Call(C_dexp, x, 1/rate, log)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;bytecode: 0x7f90c35c2690&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;bytecode: 0x7fd5ac43cdb0&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: namespace:stats&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $mean</span>
@@ -232,7 +232,7 @@ populations.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
       </footer></div>

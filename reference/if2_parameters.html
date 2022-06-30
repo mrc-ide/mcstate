@@ -21,7 +21,7 @@ used."><meta property="og:image" content="/logo.png"><!-- mathjax --><script src
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.5</span>
       </span>
     </div>
 
@@ -107,7 +107,7 @@ used.</p>
 <h3 id="method-new-">Method <code>new()</code><a class="anchor" aria-label="anchor" href="#method-new-"></a></h3>
 <p>Create the if2_parameters object</p><div class="section">
 <h4 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va"><a href="../reference/if2_parameters.html">if2_parameters</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">parameters</span>, transform <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va"><a href="../reference/if2_parameters.html">if2_parameters</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">parameters</span>, transform <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -137,7 +137,7 @@ you can do arbitrary transformations here.</p></dd>
 <p>Return the initial parameter values as a named numeric
 vector</p><div class="section">
 <h4 id="usage-1">Usage<a class="anchor" aria-label="anchor" href="#usage-1"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">if2_parameters</span><span class="op">$</span><span class="fu">initial</span><span class="op">(</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">if2_parameters</span><span class="op">$</span><span class="fu">initial</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 
@@ -145,7 +145,7 @@ vector</p><div class="section">
 <h3 id="method-walk-initialise-">Method <code>walk_initialise()</code><a class="anchor" aria-label="anchor" href="#method-walk-initialise-"></a></h3>
 <p>Set up a parameter walk</p><div class="section">
 <h4 id="usage-2">Usage<a class="anchor" aria-label="anchor" href="#usage-2"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">if2_parameters</span><span class="op">$</span><span class="fu">walk_initialise</span><span class="op">(</span><span class="va">n_par_sets</span>, <span class="va">pars_sd</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">if2_parameters</span><span class="op">$</span><span class="fu">walk_initialise</span><span class="op">(</span><span class="va">n_par_sets</span>, <span class="va">pars_sd</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -168,7 +168,7 @@ of each parameter</p></dd>
 <p>Propose a new parameter matrix given a current matrix
 and walk standard deviation vector.</p><div class="section">
 <h4 id="usage-3">Usage<a class="anchor" aria-label="anchor" href="#usage-3"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">if2_parameters</span><span class="op">$</span><span class="fu">walk</span><span class="op">(</span><span class="va">pars</span>, <span class="va">pars_sd</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">if2_parameters</span><span class="op">$</span><span class="fu">walk</span><span class="op">(</span><span class="va">pars</span>, <span class="va">pars_sd</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -190,7 +190,7 @@ of each parameter</p></dd>
 <h3 id="method-names-">Method <code><a href="https://rdrr.io/r/base/names.html" class="external-link">names()</a></code><a class="anchor" aria-label="anchor" href="#method-names-"></a></h3>
 <p>Return the names of the parameters</p><div class="section">
 <h4 id="usage-4">Usage<a class="anchor" aria-label="anchor" href="#usage-4"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">if2_parameters</span><span class="op">$</span><span class="fu">names</span><span class="op">(</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">if2_parameters</span><span class="op">$</span><span class="fu">names</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 
@@ -199,7 +199,7 @@ of each parameter</p></dd>
 <p>Return a <code><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></code> with information about
 parameters (name, min, max, and integer).</p><div class="section">
 <h4 id="usage-5">Usage<a class="anchor" aria-label="anchor" href="#usage-5"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">if2_parameters</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">if2_parameters</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 
@@ -207,7 +207,7 @@ parameters (name, min, max, and integer).</p><div class="section">
 <h3 id="method-prior-">Method <code>prior()</code><a class="anchor" aria-label="anchor" href="#method-prior-"></a></h3>
 <p>Compute the prior for a parameter vector</p><div class="section">
 <h4 id="usage-6">Usage<a class="anchor" aria-label="anchor" href="#usage-6"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">if2_parameters</span><span class="op">$</span><span class="fu">prior</span><span class="op">(</span><span class="va">pars</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">if2_parameters</span><span class="op">$</span><span class="fu">prior</span><span class="op">(</span><span class="va">pars</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -225,7 +225,7 @@ parameters (name, min, max, and integer).</p><div class="section">
 vector. Output is a list for lists, suitable for use with a dust
 object with <code>pars_multi = TRUE</code></p><div class="section">
 <h4 id="usage-7">Usage<a class="anchor" aria-label="anchor" href="#usage-7"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span class="va">if2_parameters</span><span class="op">$</span><span class="fu">model</span><span class="op">(</span><span class="va">pars</span><span class="op">)</span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">if2_parameters</span><span class="op">$</span><span class="fu">model</span><span class="op">(</span><span class="va">pars</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -243,85 +243,85 @@ object with <code>pars_multi = TRUE</code></p><div class="section">
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co"># Construct an object with two parameters:</span></span>
-<span class="r-in"><span class="va">pars</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="va">if2_parameters</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span></span>
-<span class="r-in">  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="if2_parameter.html">if2_parameter</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="fl">0.1</span>, min <span class="op">=</span> <span class="fl">0</span>, max <span class="op">=</span> <span class="fl">1</span>,</span>
-<span class="r-in">                                prior <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">a</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">a</span><span class="op">)</span><span class="op">)</span>,</span>
-<span class="r-in">       <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="if2_parameter.html">if2_parameter</a></span><span class="op">(</span><span class="st">"b"</span>, <span class="fl">0</span>, prior <span class="op">=</span> <span class="va">dnorm</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># Initial parameters</span></span>
-<span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">initial</span><span class="op">(</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Construct an object with two parameters:</span></span></span>
+<span class="r-in"><span><span class="va">pars</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="va">if2_parameters</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="if2_parameter.html">if2_parameter</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="fl">0.1</span>, min <span class="op">=</span> <span class="fl">0</span>, max <span class="op">=</span> <span class="fl">1</span>,</span></span>
+<span class="r-in"><span>                                prior <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">a</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">a</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>       <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="if2_parameter.html">if2_parameter</a></span><span class="op">(</span><span class="st">"b"</span>, <span class="fl">0</span>, prior <span class="op">=</span> <span class="va">dnorm</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Initial parameters</span></span></span>
+<span class="r-in"><span><span class="va">pars</span><span class="op">$</span><span class="fu">initial</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   a   b </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 0.1 0.0 </span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># Create the initial parameter set</span></span>
-<span class="r-in"><span class="va">n_par_sets</span> <span class="op">&lt;-</span> <span class="fl">5</span></span>
-<span class="r-in"><span class="va">pars_sd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"a"</span> <span class="op">=</span> <span class="fl">0.02</span>, <span class="st">"b"</span> <span class="op">=</span> <span class="fl">0.02</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">p_mat</span> <span class="op">&lt;-</span> <span class="va">pars</span><span class="op">$</span><span class="fu">walk_initialise</span><span class="op">(</span><span class="va">n_par_sets</span>, <span class="va">pars_sd</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">p_mat</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         [,1]       [,2]       [,3]        [,4]        [,5]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> a 0.10248989 0.11382063 0.10992705  0.12312880  0.09132677</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> b 0.01395381 0.01535719 0.01933669 -0.01354182 -0.02616495</span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># Propose a new parameter set</span></span>
-<span class="r-in"><span class="va">p_mat</span> <span class="op">&lt;-</span> <span class="va">pars</span><span class="op">$</span><span class="fu">walk</span><span class="op">(</span><span class="va">p_mat</span>, <span class="va">pars_sd</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">p_mat</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          [,1]        [,2]       [,3]         [,4]        [,5]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> a 0.090499018 0.135830035 0.12248106  0.128494689  0.09862605</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> b 0.009760014 0.006938032 0.01975506 -0.003669085 -0.05596315</span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># Information about parameters:</span></span>
-<span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">names</span><span class="op">(</span><span class="op">)</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Create the initial parameter set</span></span></span>
+<span class="r-in"><span><span class="va">n_par_sets</span> <span class="op">&lt;-</span> <span class="fl">5</span></span></span>
+<span class="r-in"><span><span class="va">pars_sd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"a"</span> <span class="op">=</span> <span class="fl">0.02</span>, <span class="st">"b"</span> <span class="op">=</span> <span class="fl">0.02</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">p_mat</span> <span class="op">&lt;-</span> <span class="va">pars</span><span class="op">$</span><span class="fu">walk_initialise</span><span class="op">(</span><span class="va">n_par_sets</span>, <span class="va">pars_sd</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">p_mat</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         [,1]       [,2]       [,3]         [,4]        [,5]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> a 0.12144890 0.08486315 0.09252663  0.114825621  0.10415298</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> b 0.02756449 0.03354555 0.01090567 -0.007910183 -0.01247559</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Propose a new parameter set</span></span></span>
+<span class="r-in"><span><span class="va">p_mat</span> <span class="op">&lt;-</span> <span class="va">pars</span><span class="op">$</span><span class="fu">walk</span><span class="op">(</span><span class="va">p_mat</span>, <span class="va">pars_sd</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">p_mat</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         [,1]       [,2]       [,3]         [,4]        [,5]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> a 0.13854755 0.11484075 0.05233694  0.094547779  0.10652750</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> b 0.01340395 0.02304288 0.02363029 -0.006653052 -0.05003593</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Information about parameters:</span></span></span>
+<span class="r-in"><span><span class="va">pars</span><span class="op">$</span><span class="fu">names</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "a" "b"</span>
-<span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span><span class="op">)</span></span>
+<span class="r-in"><span><span class="va">pars</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   name  min max discrete integer</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1    a    0   1    FALSE   FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2    b -Inf Inf    FALSE   FALSE</span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># Compute prior</span></span>
-<span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">prior</span><span class="op">(</span><span class="va">p_mat</span><span class="op">)</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -2.003493 -1.597418 -1.700934 -1.652928 -1.918102</span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># Transform data for your model</span></span>
-<span class="r-in"><span class="va">pars</span><span class="op">$</span><span class="fu">model</span><span class="op">(</span><span class="va">p_mat</span><span class="op">)</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Compute prior</span></span></span>
+<span class="r-in"><span><span class="va">pars</span><span class="op">$</span><span class="fu">prior</span><span class="op">(</span><span class="va">p_mat</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -1.577635 -1.765372 -2.551222 -1.959717 -1.840909</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Transform data for your model</span></span></span>
+<span class="r-in"><span><span class="va">pars</span><span class="op">$</span><span class="fu">model</span><span class="op">(</span><span class="va">p_mat</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]$a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.09049902</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.1385475</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]$b</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.009760014</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.01340395</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[2]]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[2]]$a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.13583</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.1148408</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[2]]$b</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.006938032</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.02304288</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[3]]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[3]]$a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.1224811</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.05233694</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[3]]$b</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.01975506</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.02363029</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[4]]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[4]]$a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.1284947</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.09454778</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[4]]$b</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.003669085</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.006653052</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[5]]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[5]]$a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.09862605</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.1065275</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[5]]$b</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.05596315</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.05003593</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 </code></pre></div>
@@ -338,7 +338,7 @@ object with <code>pars_multi = TRUE</code></p><div class="section">
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
       </footer></div>

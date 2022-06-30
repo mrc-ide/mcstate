@@ -21,7 +21,7 @@ as the order of the arguments may change in future."><meta property="og:image" c
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.5</span>
       </span>
     </div>
 
@@ -89,26 +89,26 @@ as the order of the arguments may change in future.</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">pmcmc_control</span><span class="op">(</span>
-  <span class="va">n_steps</span>,
-  n_chains <span class="op">=</span> <span class="fl">1L</span>,
-  n_threads_total <span class="op">=</span> <span class="cn">NULL</span>,
-  n_workers <span class="op">=</span> <span class="fl">1L</span>,
-  rerun_every <span class="op">=</span> <span class="cn">Inf</span>,
-  rerun_random <span class="op">=</span> <span class="cn">FALSE</span>,
-  use_parallel_seed <span class="op">=</span> <span class="cn">FALSE</span>,
-  save_state <span class="op">=</span> <span class="cn">TRUE</span>,
-  save_restart <span class="op">=</span> <span class="cn">NULL</span>,
-  save_trajectories <span class="op">=</span> <span class="cn">FALSE</span>,
-  progress <span class="op">=</span> <span class="cn">FALSE</span>,
-  nested_step_ratio <span class="op">=</span> <span class="fl">1</span>,
-  nested_update_both <span class="op">=</span> <span class="cn">FALSE</span>,
-  filter_early_exit <span class="op">=</span> <span class="cn">FALSE</span>,
-  n_burnin <span class="op">=</span> <span class="cn">NULL</span>,
-  n_steps_retain <span class="op">=</span> <span class="cn">NULL</span>,
-  adaptive_proposal <span class="op">=</span> <span class="cn">NULL</span>,
-  path <span class="op">=</span> <span class="cn">NULL</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">pmcmc_control</span><span class="op">(</span></span>
+<span>  <span class="va">n_steps</span>,</span>
+<span>  n_chains <span class="op">=</span> <span class="fl">1L</span>,</span>
+<span>  n_threads_total <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  n_workers <span class="op">=</span> <span class="fl">1L</span>,</span>
+<span>  rerun_every <span class="op">=</span> <span class="cn">Inf</span>,</span>
+<span>  rerun_random <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  use_parallel_seed <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  save_state <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  save_restart <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  save_trajectories <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  progress <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  nested_step_ratio <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  nested_update_both <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  filter_early_exit <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  n_burnin <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  n_steps_retain <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  adaptive_proposal <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  path <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -311,7 +311,7 @@ relate to the filtered samples.</p>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="fu">mcstate</span><span class="fu">::</span><span class="fu">pmcmc_control</span><span class="op">(</span><span class="fl">1000</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">mcstate</span><span class="fu">::</span><span class="fu">pmcmc_control</span><span class="op">(</span><span class="fl">1000</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $n_steps</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -374,11 +374,11 @@ relate to the filtered samples.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "pmcmc_control"</span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># Suppose we have a fairly large node with 16 cores and we want to</span></span>
-<span class="r-in"><span class="co"># run 8 chains. We can use all cores for a single chain and run</span></span>
-<span class="r-in"><span class="co"># the chains sequentially like this:</span></span>
-<span class="r-in"><span class="fu">mcstate</span><span class="fu">::</span><span class="fu">pmcmc_control</span><span class="op">(</span><span class="fl">1000</span>, n_chains <span class="op">=</span> <span class="fl">8</span>, n_threads_total <span class="op">=</span> <span class="fl">16</span><span class="op">)</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Suppose we have a fairly large node with 16 cores and we want to</span></span></span>
+<span class="r-in"><span><span class="co"># run 8 chains. We can use all cores for a single chain and run</span></span></span>
+<span class="r-in"><span><span class="co"># the chains sequentially like this:</span></span></span>
+<span class="r-in"><span><span class="fu">mcstate</span><span class="fu">::</span><span class="fu">pmcmc_control</span><span class="op">(</span><span class="fl">1000</span>, n_chains <span class="op">=</span> <span class="fl">8</span>, n_threads_total <span class="op">=</span> <span class="fl">16</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $n_steps</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -441,13 +441,13 @@ relate to the filtered samples.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "pmcmc_control"</span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># However, on some platforms (e.g., Windows) this may only realise</span></span>
-<span class="r-in"><span class="co"># a 50% total CPU use, in which case you might benefit from</span></span>
-<span class="r-in"><span class="co"># splitting these chains over different worker processes (2-4</span></span>
-<span class="r-in"><span class="co"># workers is likely the largest useful number).</span></span>
-<span class="r-in"><span class="fu">mcstate</span><span class="fu">::</span><span class="fu">pmcmc_control</span><span class="op">(</span><span class="fl">1000</span>, n_chains <span class="op">=</span> <span class="fl">8</span>, n_threads_total <span class="op">=</span> <span class="fl">16</span>,</span>
-<span class="r-in">                       n_workers <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># However, on some platforms (e.g., Windows) this may only realise</span></span></span>
+<span class="r-in"><span><span class="co"># a 50% total CPU use, in which case you might benefit from</span></span></span>
+<span class="r-in"><span><span class="co"># splitting these chains over different worker processes (2-4</span></span></span>
+<span class="r-in"><span><span class="co"># workers is likely the largest useful number).</span></span></span>
+<span class="r-in"><span><span class="fu">mcstate</span><span class="fu">::</span><span class="fu">pmcmc_control</span><span class="op">(</span><span class="fl">1000</span>, n_chains <span class="op">=</span> <span class="fl">8</span>, n_threads_total <span class="op">=</span> <span class="fl">16</span>,</span></span>
+<span class="r-in"><span>                       n_workers <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $n_steps</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -524,7 +524,7 @@ relate to the filtered samples.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
       </footer></div>

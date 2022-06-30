@@ -21,7 +21,7 @@ measure of "time".  We need to convert this time into model steps.'><meta proper
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.5</span>
       </span>
     </div>
 
@@ -89,7 +89,7 @@ measure of "time".  We need to convert this time into model steps.</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">particle_filter_data</span><span class="op">(</span><span class="va">data</span>, <span class="va">time</span>, <span class="va">rate</span>, initial_time <span class="op">=</span> <span class="cn">NULL</span>, population <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">particle_filter_data</span><span class="op">(</span><span class="va">data</span>, <span class="va">time</span>, <span class="va">rate</span>, initial_time <span class="op">=</span> <span class="cn">NULL</span>, population <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -149,84 +149,84 @@ the data in the first column is recorded at the end of a period of
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>day <span class="op">=</span> <span class="fl">5</span><span class="op">:</span><span class="fl">20</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">16</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">mcstate</span><span class="fu">::</span><span class="fu">particle_filter_data</span><span class="op">(</span><span class="va">d</span>, <span class="st">"day"</span>, <span class="fl">4</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>day <span class="op">=</span> <span class="fl">5</span><span class="op">:</span><span class="fl">20</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">16</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">mcstate</span><span class="fu">::</span><span class="fu">particle_filter_data</span><span class="op">(</span><span class="va">d</span>, <span class="st">"day"</span>, <span class="fl">4</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    day_start day_end step_start step_end          y</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1          4       5         16       20 0.63181910</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2          5       6         20       24 0.12071656</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3          6       7         24       28 0.26792656</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4          7       8         28       32 0.94852467</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5          8       9         32       36 0.43949321</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6          9      10         36       40 0.02478927</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7         10      11         40       44 0.17444819</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8         11      12         44       48 0.83686991</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9         12      13         48       52 0.50240320</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10        13      14         52       56 0.56235056</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11        14      15         56       60 0.67631849</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12        15      16         60       64 0.91002238</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13        16      17         64       68 0.16885164</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14        17      18         68       72 0.10817098</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15        18      19         72       76 0.43134460</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16        19      20         76       80 0.13670745</span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># If providing an initial day, then the first epoch of simulation</span></span>
-<span class="r-in"><span class="co"># will be longer (see the first row)</span></span>
-<span class="r-in"><span class="fu">mcstate</span><span class="fu">::</span><span class="fu">particle_filter_data</span><span class="op">(</span><span class="va">d</span>, <span class="st">"day"</span>, <span class="fl">4</span>, <span class="fl">0</span><span class="op">)</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1          4       5         16       20 0.98596289</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2          5       6         20       24 0.06711335</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3          6       7         24       28 0.75440938</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4          7       8         28       32 0.47582729</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5          8       9         32       36 0.19391524</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6          9      10         36       40 0.24853847</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7         10      11         40       44 0.06466349</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8         11      12         44       48 0.48859005</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9         12      13         48       52 0.63049549</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10        13      14         52       56 0.37351806</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11        14      15         56       60 0.07102123</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12        15      16         60       64 0.62776774</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13        16      17         64       68 0.84382444</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14        17      18         68       72 0.94623909</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15        18      19         72       76 0.92913529</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16        19      20         76       80 0.06794844</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># If providing an initial day, then the first epoch of simulation</span></span></span>
+<span class="r-in"><span><span class="co"># will be longer (see the first row)</span></span></span>
+<span class="r-in"><span><span class="fu">mcstate</span><span class="fu">::</span><span class="fu">particle_filter_data</span><span class="op">(</span><span class="va">d</span>, <span class="st">"day"</span>, <span class="fl">4</span>, <span class="fl">0</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    day_start day_end step_start step_end          y</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1          0       5          0       20 0.63181910</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2          5       6         20       24 0.12071656</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3          6       7         24       28 0.26792656</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4          7       8         28       32 0.94852467</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5          8       9         32       36 0.43949321</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6          9      10         36       40 0.02478927</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7         10      11         40       44 0.17444819</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8         11      12         44       48 0.83686991</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9         12      13         48       52 0.50240320</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10        13      14         52       56 0.56235056</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11        14      15         56       60 0.67631849</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12        15      16         60       64 0.91002238</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13        16      17         64       68 0.16885164</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14        17      18         68       72 0.10817098</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15        18      19         72       76 0.43134460</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16        19      20         76       80 0.13670745</span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># If including populations:</span></span>
-<span class="r-in"><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>day <span class="op">=</span> <span class="fl">5</span><span class="op">:</span><span class="fl">20</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">16</span><span class="op">)</span>,</span>
-<span class="r-in">                population <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">letters</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span>, each <span class="op">=</span> <span class="fl">16</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">mcstate</span><span class="fu">::</span><span class="fu">particle_filter_data</span><span class="op">(</span><span class="va">d</span>, <span class="st">"day"</span>, <span class="fl">4</span>, <span class="fl">0</span>, <span class="st">"population"</span><span class="op">)</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    day_start day_end step_start step_end         y population</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1          0       5          0       20 0.9354923          a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2          5       6         20       24 0.6072448          a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3          6       7         24       28 0.2987511          a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4          7       8         28       32 0.8465849          a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5          8       9         32       36 0.4674230          a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6          9      10         36       40 0.5690385          a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7         10      11         40       44 0.5705942          a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8         11      12         44       48 0.2027457          a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9         12      13         48       52 0.3103949          a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10        13      14         52       56 0.7564188          a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11        14      15         56       60 0.9611418          a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12        15      16         60       64 0.4177194          a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13        16      17         64       68 0.3718927          a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14        17      18         68       72 0.3542322          a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15        18      19         72       76 0.1745552          a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16        19      20         76       80 0.5938196          a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17         0       5          0       20 0.9354923          b</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18         5       6         20       24 0.6072448          b</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19         6       7         24       28 0.2987511          b</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20         7       8         28       32 0.8465849          b</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21         8       9         32       36 0.4674230          b</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 22         9      10         36       40 0.5690385          b</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 23        10      11         40       44 0.5705942          b</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24        11      12         44       48 0.2027457          b</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25        12      13         48       52 0.3103949          b</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 26        13      14         52       56 0.7564188          b</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 27        14      15         56       60 0.9611418          b</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 28        15      16         60       64 0.4177194          b</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 29        16      17         64       68 0.3718927          b</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 30        17      18         68       72 0.3542322          b</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 31        18      19         72       76 0.1745552          b</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 32        19      20         76       80 0.5938196          b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1          0       5          0       20 0.98596289</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2          5       6         20       24 0.06711335</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3          6       7         24       28 0.75440938</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4          7       8         28       32 0.47582729</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5          8       9         32       36 0.19391524</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6          9      10         36       40 0.24853847</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7         10      11         40       44 0.06466349</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8         11      12         44       48 0.48859005</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9         12      13         48       52 0.63049549</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10        13      14         52       56 0.37351806</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11        14      15         56       60 0.07102123</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12        15      16         60       64 0.62776774</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13        16      17         64       68 0.84382444</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14        17      18         68       72 0.94623909</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15        18      19         72       76 0.92913529</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16        19      20         76       80 0.06794844</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># If including populations:</span></span></span>
+<span class="r-in"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>day <span class="op">=</span> <span class="fl">5</span><span class="op">:</span><span class="fl">20</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">16</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                population <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">letters</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span>, each <span class="op">=</span> <span class="fl">16</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">mcstate</span><span class="fu">::</span><span class="fu">particle_filter_data</span><span class="op">(</span><span class="va">d</span>, <span class="st">"day"</span>, <span class="fl">4</span>, <span class="fl">0</span>, <span class="st">"population"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    day_start day_end step_start step_end          y population</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1          0       5          0       20 0.64213803          a</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2          5       6         20       24 0.79052887          a</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3          6       7         24       28 0.34881319          a</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4          7       8         28       32 0.50892437          a</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5          8       9         32       36 0.60425858          a</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6          9      10         36       40 0.43820358          a</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7         10      11         40       44 0.46031847          a</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8         11      12         44       48 0.74583932          a</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9         12      13         48       52 0.07365563          a</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10        13      14         52       56 0.52130864          a</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11        14      15         56       60 0.19990381          a</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12        15      16         60       64 0.65618106          a</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13        16      17         64       68 0.64539474          a</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14        17      18         68       72 0.80127958          a</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15        18      19         72       76 0.58328185          a</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16        19      20         76       80 0.39588122          a</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17         0       5          0       20 0.64213803          b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18         5       6         20       24 0.79052887          b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19         6       7         24       28 0.34881319          b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20         7       8         28       32 0.50892437          b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21         8       9         32       36 0.60425858          b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22         9      10         36       40 0.43820358          b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23        10      11         40       44 0.46031847          b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24        11      12         44       48 0.74583932          b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25        12      13         48       52 0.07365563          b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26        13      14         52       56 0.52130864          b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27        14      15         56       60 0.19990381          b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28        15      16         60       64 0.65618106          b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29        16      17         64       68 0.64539474          b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 30        17      18         68       72 0.80127958          b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 31        18      19         72       76 0.58328185          b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 32        19      20         76       80 0.39588122          b</span>
 </code></pre></div>
     </div>
   </div>
@@ -241,7 +241,7 @@ the data in the first column is recorded at the end of a period of
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
       </footer></div>

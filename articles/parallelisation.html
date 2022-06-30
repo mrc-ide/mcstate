@@ -40,7 +40,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.5</span>
       </span>
     </div>
 
@@ -119,22 +119,22 @@
 </h2>
 <p>Because <code>mcstate</code> uses <code>dust</code>, it can run each particle in parallel, between the timesteps that you have data for. For this to be possible, <code>openmp</code> must be enabled in the compilation step, which you can check by using the <code>has_openmp()</code> method on your model:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">model</span><span class="op">$</span><span class="va">public_methods</span><span class="op">$</span><span class="fu">has_openmp</span><span class="op">(</span><span class="op">)</span>
-<span class="co">#&gt; [1] FALSE</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">model</span><span class="op">$</span><span class="va">public_methods</span><span class="op">$</span><span class="fu">has_openmp</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] FALSE</span></span></code></pre></div>
 <p>When constructing the particle filter object, you must specify the <code>n_threads</code> argument, for example to use 4 threads:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">filter</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="va"><a href="../reference/particle_filter.html">particle_filter</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>data <span class="op">=</span> <span class="va">data</span>,
-                                       model <span class="op">=</span> <span class="va">model</span>,
-                                       n_particles <span class="op">=</span> <span class="fl">100</span>,
-                                       compare <span class="op">=</span> <span class="va">compare</span>,
-                                       n_threads <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">filter</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="va"><a href="../reference/particle_filter.html">particle_filter</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>data <span class="op">=</span> <span class="va">data</span>,</span>
+<span>                                       model <span class="op">=</span> <span class="va">model</span>,</span>
+<span>                                       n_particles <span class="op">=</span> <span class="fl">100</span>,</span>
+<span>                                       compare <span class="op">=</span> <span class="va">compare</span>,</span>
+<span>                                       n_threads <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></code></pre></div>
 <p>When you pass this filter object through to <code>mcstate::mcmc</code>, the particle filter will then run using 4 threads.</p>
 <p>You can wrap this <code>n_threads</code> argument with <code><a href="https://rdrr.io/pkg/dust/man/dust_openmp_threads.html" class="external-link">dust::dust_openmp_threads</a></code>, for example</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu">dust</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/dust/man/dust_openmp_threads.html" class="external-link">dust_openmp_threads</a></span><span class="op">(</span><span class="fl">100</span>, action <span class="op">=</span> <span class="st">"fix"</span><span class="op">)</span>
-<span class="co">#&gt; Requested number of threads '100' exceeds a limit of '1'</span>
-<span class="co">#&gt;  See dust::dust_openmp_threads() for details</span>
-<span class="co">#&gt; [1] 1</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">dust</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/dust/man/dust_openmp_threads.html" class="external-link">dust_openmp_threads</a></span><span class="op">(</span><span class="fl">100</span>, action <span class="op">=</span> <span class="st">"fix"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Requested number of threads '100' exceeds a limit of '1'</span></span>
+<span><span class="co">#&gt;  See dust::dust_openmp_threads() for details</span></span>
+<span><span class="co">#&gt; [1] 1</span></span></code></pre></div>
 <p>which will adjust the number of threads used (alternative actions include “message” or “error”).</p>
 </div>
 <div class="section level2">
@@ -145,12 +145,12 @@
 <p>In this case, the number of threads used to create the particle filter is <em>ignored</em> (because the particle filter will be created on each process) and the total number of threads to use should be provided by the <code>n_threads_total</code> argument to <code><a href="../reference/pmcmc_control.html">mcstate::pmcmc_control</a></code>.</p>
 <p>For example, if you had 16 cores available, running 4 chains over 2 workers, each using 8 cores you might write:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">control</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_control.html">pmcmc_control</a></span><span class="op">(</span><span class="fl">1000</span>, n_chains <span class="op">=</span> <span class="fl">4</span>, n_workers <span class="op">=</span> <span class="fl">2</span>,
-                                  n_threads_total <span class="op">=</span> <span class="fl">16</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">control</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_control.html">pmcmc_control</a></span><span class="op">(</span><span class="fl">1000</span>, n_chains <span class="op">=</span> <span class="fl">4</span>, n_workers <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>                                  n_threads_total <span class="op">=</span> <span class="fl">16</span><span class="op">)</span></span></code></pre></div>
 <p>or, if your system does not support OpenMP you could use 4 workers for these chains:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">control</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_control.html">pmcmc_control</a></span><span class="op">(</span><span class="fl">1000</span>, n_chains <span class="op">=</span> <span class="fl">4</span>, n_workers <span class="op">=</span> <span class="fl">4</span>,
-                                  n_threads_total <span class="op">=</span> <span class="fl">16</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">control</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_control.html">pmcmc_control</a></span><span class="op">(</span><span class="fl">1000</span>, n_chains <span class="op">=</span> <span class="fl">4</span>, n_workers <span class="op">=</span> <span class="fl">4</span>,</span>
+<span>                                  n_threads_total <span class="op">=</span> <span class="fl">16</span><span class="op">)</span></span></code></pre></div>
 <p>If your system <em>does</em> support OpenMP, then once chains start finishing their threads will be allocated to the ongoing chains.</p>
 <p>The random numbers are configured in such a way that the final result will be dependent only on the seed to create your <code>filter</code> object and not the number of worker processes or threads used. However, the algorithm does differ slightly by default to that used without workers. To use this parallel behaviour even when <code>n_workers</code> is 1, set <code>use_parallel_seed = TRUE</code> within <code><a href="../reference/pmcmc_control.html">mcstate::pmcmc_control</a></code>.</p>
 </div>
@@ -179,7 +179,7 @@
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
       </footer>
