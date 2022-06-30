@@ -98,6 +98,7 @@ pmcmc_state <- R6::R6Class(
     },
 
     update_simple = function() {
+      browser()
       is_adaptive <- !is.null(private$adaptive)
       if (is_adaptive) {
         prop_pars <- private$adaptive$propose(private$curr_pars)
@@ -128,7 +129,12 @@ pmcmc_state <- R6::R6Class(
     },
 
     update_combined = function(type) {
-      prop_pars <- private$pars$propose(private$curr_pars, type = type)
+      is_adaptive <- !is.null(private$adaptive)
+      if (is_adaptive) {
+        prop_pars <- private$adaptive$propose(private$curr_pars, type = type)
+      } else {
+        prop_pars <- private$pars$propose(private$curr_pars, type = type)
+      }
       prop_lprior <- private$pars$prior(prop_pars)
 
       u <- runif(1)
@@ -145,6 +151,10 @@ pmcmc_state <- R6::R6Class(
         private$curr_lpost <- prop_lpost
         private$update_particle_history()
       }
+
+      if (is_adaptive) {
+        private$adaptive$update(private$curr_pars, type = type, accept)
+      }
     },
 
     update_fixed = function() {
@@ -156,7 +166,13 @@ pmcmc_state <- R6::R6Class(
     },
 
     update_varied = function() {
-      prop_pars <- private$pars$propose(private$curr_pars, type = "varied")
+      type <- "varied"
+      is_adaptive <- !is.null(private$adaptive)
+      if (is_adaptive) {
+        prop_pars <- private$adaptive$propose(private$curr_pars, type = type)
+      } else {
+        prop_pars <- private$pars$propose(private$curr_pars, type = type)
+      }
       prop_lprior <- private$pars$prior(prop_pars)
 
       u <- runif(length(prop_lprior))
@@ -173,11 +189,15 @@ pmcmc_state <- R6::R6Class(
         private$curr_lpost[accept] <- prop_lpost[accept]
         private$update_particle_history()
       }
+
+      if (is_adaptive) {
+        private$adaptive$update(private$curr_pars, type = type, accept)
+      }
     }
   ),
 
   public = list(
-    initialize = function(pars, initial, filter, control) {
+     initialize = function(pars, initial, filter, control) {
       private$filter <- filter
       private$pars <- pars
       private$control <- control
@@ -198,10 +218,12 @@ pmcmc_state <- R6::R6Class(
           stop("Adaptive proposal only allowed in deterministic models")
         }
         if (private$nested) {
-          stop("Can't yet use adaptive proposal with nested mcmc")
+          private$adaptive <- adaptive_proposal_nested$new(
+            pars, control$adaptive_proposal)
+        } else {
+          private$adaptive <- adaptive_proposal$new(
+            pars, control$adaptive_proposal)
         }
-        private$adaptive <- adaptive_proposal$new(pars,
-                                                  control$adaptive_proposal)
       }
 
       private$tick <- pmcmc_progress(control$n_steps, control$progress,

@@ -203,6 +203,30 @@ pmcmc_parameters_nested <- R6::R6Class(
       ret
     },
 
+    ##' @description Return the estimate of the mean of the parameters,
+    ##'   as set when created (this is not updated by any fitting!)
+    mean = function(type) {
+      if (type == "varied") {
+        lapply(private$inner$varied, function(p) p$mean())
+      } else if (type == "fixed") {
+        private$inner$fixed$mean()
+      } else if (type == "both") {
+        stop("type = 'both' not supported by mean()")
+      }
+    },
+
+    ##' @description Return the variance-covariance matrix used for the
+    ##'   proposal.
+    vcv = function(type) {
+      if (type == "varied") {
+        lapply(private$inner$varied, function(p) p$vcv())
+      } else if (type == "fixed") {
+        private$inner$fixed$vcv()
+      } else if (type == "both") {
+        stop("type = 'both' not supported by mean()")
+      }
+    },
+
     ##' @description Compute the prior(s) for a parameter matrix. Returns a
     ##' named vector with names corresponding to populations.
     ##'

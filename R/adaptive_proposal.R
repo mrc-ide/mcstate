@@ -75,14 +75,18 @@ adaptive_proposal <- R6::R6Class(
     proposal_was_adaptive = NULL,
 
     initialize = function(pars, control) {
+      assert_is(pars, "pmcmc_parameters")
       self$pars <- pars
       self$control <- control
 
       self$scaling <- control$initial_scaling
       self$weight <- control$initial_weight
 
+      vcv <- pars$vcv()
+      # self$zero <- apply(vcv == 0, 1, all)
+
       self$mean <- pars$mean()
-      self$autocorrelation <- pars$vcv() +
+      self$autocorrelation <- vcv +
         self$weight / (self$weight - 1) * qp(self$mean)
     },
 
@@ -124,6 +128,92 @@ adaptive_proposal <- R6::R6Class(
   ))
 
 
+adaptive_proposal_nested <- R6::R6Class(
+  "adaptive_proposal",
+
+  public = list(
+    pars = NULL,
+    control = NULL,
+
+    mean = NULL,
+    autocorrelation = NULL,
+    weight = NULL,
+    scaling = NULL,
+    proposal_was_adaptive = NULL,
+
+    initialize = function(pars, control) {
+      assert_is(pars, "pmcmc_parameters_nested")
+      self$pars <- pars
+      self$control <- control
+
+      browser()
+
+      n_varied <- length(pars$names("varied"))
+      n_populations <- length(pars$populations())
+
+      self$scaling <- list(fixed = control$initial_scaling,
+                           varied = rep(control$initial_scaling, n_populations))
+      self$weight <- list(fixed = control$initial_weight,
+                          varied = rep(control$initial_weight, n_populations))
+
+      vcv <- list(fixed = pars$vcv("fixed"),
+                  varied = pars$vcv("varied"))
+
+      self$mean <- list(fixed = pars$mean("fixed"),
+                        varied = pars$mean("varied"))
+
+      self$autocorrelation <- list(
+        fixed = initial_autocorrelation(vcv$fixed, self$weight$fixed,
+                                        self$mean$fixed),
+        varied = Map(initial_autocorrelation, vcv$varied, self$weight$varied,
+                     self$mean$varied))
+    },
+
+    propose = function(theta, type) {
+      ## For varied, if one is adaptive all are adaptive
+      self$proposal_was_adaptive <-
+        runif(1) < self$control$adaptive_contribution
+      if (self$proposal_was_adaptive) {
+        vcv <- self$scaling * (
+          self$autocorrelation -
+          self$weight / (self$weight - 1) * qp(self$mean))
+        self$pars$propose(theta, vcv = vcv)
+      } else {
+        self$pars$propose(theta)
+      }
+    },
+
+    update = function(theta, type, accept) {
+      if (!self$proposal_was_adaptive) {
+        return(invisible())
+      }
+      if (accept) {
+        self$scaling <- self$scaling +
+          (1 - self$control$acceptance_target) * self$control$scaling_increment
+      } else {
+        self$scaling <- max(self$scaling -
+          self$control$acceptance_target * self$control$scaling_increment,
+          self$control$scaling_increment)
+      }
+
+      ## Update of the autocorrelation matrix and mean of past samples
+      self$weight <- self$weight + 1
+      self$autocorrelation <-
+        (1 - 1 / (self$weight - 1)) * self$autocorrelation +
+        1 / (self$weight - 1) * qp(theta)
+      self$mean <-
+        (1 - 1 / self$weight) * self$mean +
+        1 / self$weight * theta
+    }
+  ))
+
+
+
 qp <- function(x) {
   outer(x, x)
+}
+
+
+initial_autocorrelation <- function(vcv, weight, mean) {
+  vcv + weight / (weight - 1) * qp(mean)
 }

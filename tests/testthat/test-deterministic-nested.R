@@ -95,6 +95,8 @@ test_that("Can't use adaptive proposal with nested models", {
   p <- particle_deterministic$new(dat$data, dat$model, dat$compare,
                                   dat$index)
   control <- pmcmc_control(30, adaptive_proposal = TRUE)
+  pmcmc(dat$pars, p, control = control)
+
   expect_error(
     pmcmc(dat$pars, p, control = control),
     "Can't yet use adaptive proposal with nested mcmc")
