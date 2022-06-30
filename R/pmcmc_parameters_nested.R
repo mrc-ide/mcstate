@@ -270,21 +270,26 @@ pmcmc_parameters_nested <- R6::R6Class(
     ##' proposal distribution. This may be useful in sampling starting
     ##' points. The parameter is equivalent to a multiplicative factor
     ##' applied to the variance covariance matrix.
-    propose = function(theta, type, scale = 1) {
+    propose = function(theta, type, scale = 1, vcv = NULL) {
       theta <- self$validate(theta)
       type <- match_value(type, c("both", "varied", "fixed"))
+
+      if (!is.null(vcv) && type == "both") {
+        stop("Can't provide a variance covariance matrix with type = 'both'")
+      }
 
       nms_fixed <- self$names("fixed")
       if (type %in% c("fixed", "both") && length(nms_fixed) > 0) {
         theta[nms_fixed, ] <-
-          private$inner$fixed$propose(theta[nms_fixed, 1], scale)
+          private$inner$fixed$propose(theta[nms_fixed, 1], scale, vcv)
       }
 
       nms_varied <- self$names("varied")
       if (type %in% c("varied", "both") && length(nms_varied) > 0) {
         theta[nms_varied, ] <-
-          vapply(self$populations(), function(x)
-            private$inner$varied[[x]]$propose(theta[nms_varied, x], scale),
+          vapply(seq_along(self$populations()), function(i)
+            private$inner$varied[[i]]$propose(theta[nms_varied, i], scale,
+                                              vcv[[i]]),
             numeric(length(nms_varied)))
       }
 
