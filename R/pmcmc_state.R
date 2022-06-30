@@ -98,7 +98,6 @@ pmcmc_state <- R6::R6Class(
     },
 
     update_simple = function() {
-      browser()
       is_adaptive <- !is.null(private$adaptive)
       if (is_adaptive) {
         prop_pars <- private$adaptive$propose(private$curr_pars)
@@ -166,6 +165,7 @@ pmcmc_state <- R6::R6Class(
     },
 
     update_varied = function() {
+      browser()
       type <- "varied"
       is_adaptive <- !is.null(private$adaptive)
       if (is_adaptive) {

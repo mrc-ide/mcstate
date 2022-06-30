@@ -34,12 +34,19 @@ data_frame <- function(...) {
 
 
 ##' @importFrom stats rnorm
-rmvnorm_generator <- function(vcv, check = TRUE) {
+rmvnorm_generator <- function(vcv, check = TRUE,
+                              eps = sqrt(.Machine$double.eps)) {
   vcv <- unname(vcv)
-  if (check && !isSymmetric(vcv, tol = sqrt(.Machine$double.eps))) {
+  if (check && !isSymmetric(vcv, tol = eps)) {
     stop("vcv must be symmetric")
   }
 
+  ## I think that we can change this to:
+  ##
+  ## > i_include <- !apply(abs(vcv) < eps, 1, all)
+  ##
+  ## and satisfy the wandering parameter problem, but I need a test of
+  ## this showing the pathology first.
   i_include <- !apply(vcv == 0, 1, all)
 
   if (!all(i_include)) {
