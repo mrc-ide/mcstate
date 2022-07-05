@@ -441,3 +441,17 @@ test_that("Can run an adaptive proposal, increasing acceptance rate", {
   expect_lt(coda::rejectionRate(coda::mcmc(res1$pars))[[1]],
             coda::rejectionRate(coda::mcmc(res2$pars))[[1]])
 })
+
+
+test_that("Can run an adaptive proposal with multiple chains", {
+  dat <- example_sir()
+  control <- pmcmc_control(100, n_chains = 2, save_trajectories = TRUE,
+                            adaptive_proposal = adaptive_proposal_control(
+                              acceptance_target = 0.5))
+
+  p <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
+  res <- pmcmc(dat$pars, p, NULL, control)
+
+  expect_lt(coda::rejectionRate(coda::mcmc(res1$pars))[[1]],
+            coda::rejectionRate(coda::mcmc(res2$pars))[[1]])
+})

@@ -48,7 +48,8 @@ rmvnorm_generator <- function(vcv, check = TRUE) {
 
   ev <- eigen(vcv, symmetric = TRUE)
   if (!all(ev$values >= -sqrt(.Machine$double.eps) * abs(ev$values[1]))) {
-    stop("vcv must be positive definite")
+    ## TODO: Do not merge with this commented out!
+    ## stop("vcv must be positive definite")
   }
   n <- nrow(vcv)
   res <- t(ev$vectors %*% (t(ev$vectors) * sqrt(pmax(ev$values, 0))))

@@ -74,6 +74,8 @@ adaptive_proposal <- R6::R6Class(
     scaling = NULL,
     proposal_was_adaptive = NULL,
 
+    ## history = NULL,
+
     initialize = function(pars, control) {
       self$pars <- pars
       self$control <- control
@@ -84,6 +86,8 @@ adaptive_proposal <- R6::R6Class(
       self$mean <- pars$mean()
       self$autocorrelation <- pars$vcv() +
         self$weight / (self$weight - 1) * qp(self$mean)
+
+      ## self$history <- list()
     },
 
     propose = function(theta) {
@@ -93,6 +97,11 @@ adaptive_proposal <- R6::R6Class(
         vcv <- self$scaling * (
           self$autocorrelation -
           self$weight / (self$weight - 1) * qp(self$mean))
+
+        ## self$history[[length(self$history) + 1]] <-
+        ##   list(autocorrelation = self$autocorrelation,
+        ##        weight = self$weight,
+        ##        mean = self$mean)
         self$pars$propose(theta, vcv = vcv)
       } else {
         self$pars$propose(theta)
@@ -120,6 +129,13 @@ adaptive_proposal <- R6::R6Class(
       self$mean <-
         (1 - 1 / self$weight) * self$mean +
         1 / self$weight * theta
+    },
+
+    state = function() {
+      list(weight = self$weight,
+           scaling = self$scaling,
+           mean = self$mean,
+           autocorrelation = self$autocorrelation)
     }
   ))
 

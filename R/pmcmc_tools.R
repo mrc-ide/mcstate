@@ -110,6 +110,7 @@ pmcmc_combine <- function(..., samples = list(...)) {
   state <- lapply(samples, "[[", "state")
   trajectories <- lapply(samples, "[[", "trajectories")
   restart <- lapply(samples, "[[", "restart")
+  adaptive <- lapply(samples, "[[", "adaptive")
 
   check_combine(samples, iteration, state, trajectories, restart)
 
@@ -144,7 +145,7 @@ pmcmc_combine <- function(..., samples = list(...)) {
   predict <- last(samples)$predict
 
   mcstate_pmcmc(iteration, pars, probabilities, state, trajectories,
-                restart, predict, chain)
+                restart, predict, chain, adaptive)
 }
 
 check_combine <- function(samples, iteration, state, trajectories, restart) {

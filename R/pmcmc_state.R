@@ -343,8 +343,15 @@ pmcmc_state <- R6::R6Class(
       iteration <- seq(private$control$n_burnin + 1,
                        by = private$control$n_steps_every,
                        length.out = private$control$n_steps_retain)
+
+      adaptive <- NULL
+      if (!is.null(private$adaptive)) {
+        adaptive <- private$adaptive$state()
+      }
+
       mcstate_pmcmc(iteration, pars, probabilities, state,
-                    trajectories, restart, predict)
+                    trajectories, restart, predict,
+                    adaptive = adaptive)
     }
   ))
 

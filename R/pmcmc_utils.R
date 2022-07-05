@@ -1,5 +1,6 @@
 mcstate_pmcmc <- function(iteration, pars, probabilities, state,
-                          trajectories, restart, predict, chain = NULL) {
+                          trajectories, restart, predict, chain = NULL,
+                          adaptive = NULL) {
   nested <- length(dim(pars)) == 3
 
   ## So the option here would be to either store the full
@@ -26,7 +27,8 @@ mcstate_pmcmc <- function(iteration, pars, probabilities, state,
               trajectories = trajectories,
               restart = restart,
               predict = predict,
-              pars_index = pars_index)
+              pars_index = pars_index,
+              adaptive = adaptive)
   class(ret) <- "mcstate_pmcmc"
   ret
 }
