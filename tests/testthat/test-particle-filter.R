@@ -93,32 +93,6 @@ test_that("stop simulation when likelihood is impossible", {
 })
 
 
-test_that("Validate steps", {
-  steps <- cbind(0:10 * 10, 1:11 * 10)
-  expect_identical(particle_steps(steps, NULL), steps)
-  expect_identical(particle_steps(steps, 0), steps)
-  res <- particle_steps(steps, 5)
-  expect_identical(res[-1], steps[-1])
-  expect_identical(res[[1]], 5)
-
-  res[1] <- 10L
-  expect_identical(particle_steps(steps, 10), res)
-
-  expect_error(
-    particle_steps(steps, -5),
-    "'step_start' must be >= 0 (the first value of data$step_start)",
-    fixed = TRUE)
-  expect_error(
-    particle_steps(steps, 11),
-    "'step_start' must be <= 10 (the first value of data$step_end)",
-    fixed = TRUE)
-  expect_error(
-    particle_steps(steps, 20),
-    "'step_start' must be <= 10 (the first value of data$step_end)",
-    fixed = TRUE)
-})
-
-
 test_that("Control the comparison function", {
   dat <- example_sir()
   n_particles <- 42
@@ -369,6 +343,7 @@ test_that("can return inputs", {
   expect_equal(inputs$initial, initial)
   expect_equal(inputs$seed, 100)
   expect_null(inputs$n_parameters)
+  expect_null(inputs$stochastic_schedule)
 
   res <- p$run()
 
@@ -1517,4 +1492,94 @@ test_that("can run replicated model on gpu", {
   ll_c <- p_c$run(pars)
   ll_g <- p_g$run(pars)
   expect_identical(ll_c, ll_g)
+})
+
+
+test_that("run particle filter on continuous model", {
+  dat <- example_continuous()
+  n_particles <- 42
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, seed = 1L,
+                           stochastic_schedule = dat$stochastic_schedule)
+  pars <- list(init_Ih = 0.8,
+               init_Sv = 100,
+               init_Iv = 1,
+               nrates = 15)
+  res <- p$run(pars)
+  expect_is(res, "numeric")
+
+  mod <- dat$model$new(pars, 0, 1, seed = 1L)
+  len <- mod$info()$len
+
+  state <- p$state()
+  expect_is(state, "matrix")
+  expect_equal(dim(state), c(len, n_particles))
+})
+
+
+test_that("can provide stochastic schedule for continuous model", {
+  dat <- example_continuous()
+  pars <- list(init_Ih = 0.8,
+               init_Sv = 100,
+               init_Iv = 1,
+               nrates = 15)
+  mod <- dat$model$new(pars, 0, 1, seed = 1L)
+
+  p <- particle_filter$new(dat$data, dat$model, 1, dat$compare,
+                           index = dat$index, seed = 1L,
+                           stochastic_schedule = dat$stochastic_schedule)
+  p$run(pars)
+  beta <- mod$info()$index$beta
+
+  mod$set_stochastic_schedule(dat$stochastic_schedule)
+  res <- mod$run(dat$stochastic_schedule[length(dat$stochastic_schedule)])
+  expect_equal(p$state(beta), mod$state(beta))
+})
+
+
+test_that("cannot provide stochastic schedule for discrete model", {
+  dat <- example_sir()
+  expect_error(particle_filter$new(dat$data, dat$model, 1, dat$compare,
+                           index = dat$index, stochastic_schedule = 1:10),
+  "'stochastic_schedule' provided but 'model' does not support this")
+})
+
+
+test_that("cannot provide nested data for continuous model", {
+  dat <- example_continuous()
+  data_raw <- read.csv("malaria/casedata_monthly.csv",
+                       stringsAsFactors = FALSE)
+  data_raw$population <- as.factor("A")
+  data <- particle_filter_data(data_raw, time = "day", initial_time = 0,
+                               rate = NULL, population = "population")
+  expect_error(particle_filter$new(data,
+                           dat$model,
+                           1,
+                           dat$compare,
+                           index = dat$index),
+               "nested data not supported for continuous models")
+})
+
+
+test_that("continuous data given iff model is continuous", {
+  dat <- example_continuous()
+  sir <- example_sir_shared()
+
+  e <- paste("'model' is discrete but 'data' is of",
+             "type 'particle_filter_data_continuous'")
+  expect_error(particle_filter$new(dat$data,
+                           sir$model,
+                           1,
+                           dat$compare,
+                           index = dat$index),
+               e)
+
+  e <- paste("'model' is continuous but 'data' is of",
+             "type 'particle_filter_data_discrete'")
+  expect_error(particle_filter$new(sir$data,
+                           dat$model,
+                           1,
+                           dat$compare,
+                           index = dat$index),
+               e)
 })

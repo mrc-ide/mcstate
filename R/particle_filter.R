@@ -65,7 +65,7 @@ particle_filter <- R6::R6Class(
     ## Control over the data
     data = NULL,
     data_split = NULL,
-    steps = NULL,
+    times = NULL,
     ## Functions used for initial conditions, data comparisons and indices
     index = NULL,
     initial = NULL,
@@ -80,7 +80,8 @@ particle_filter <- R6::R6Class(
     last_model = NULL,
     last_state = NULL,
     last_history = NULL,
-    last_restart_state = NULL
+    last_restart_state = NULL,
+    stochastic_schedule = NULL
   ),
 
   public = list(
@@ -214,7 +215,8 @@ particle_filter <- R6::R6Class(
                           constant_log_likelihood = NULL,
                           n_threads = 1L, seed = NULL,
                           n_parameters = NULL,
-                          gpu_config = NULL) {
+                          gpu_config = NULL,
+                          stochastic_schedule = NULL) {
       if (!is_dust_generator(model)) {
         stop("'model' must be a dust_generator")
       }
@@ -238,7 +240,30 @@ particle_filter <- R6::R6Class(
       copy_list_and_lock(check_n_parameters(n_parameters, data),
                          self)
 
-      private$steps <- attr(data, "steps")
+      is_continuous <- inherits(data, "particle_filter_data_continuous")
+      has_multiple_data <- inherits(data, "particle_filter_data_nested")
+
+      if (is_continuous && has_multiple_data) {
+        stop("nested data not supported for continuous models")
+      }
+
+      if (!is_continuous && !is.null(stochastic_schedule)) {
+        stop(paste("'stochastic_schedule' provided but 'model' does not",
+         "support this"))
+      } else {
+        private$stochastic_schedule <- stochastic_schedule
+      }
+
+      if (identical(attr(model, which = "name", exact = TRUE),
+                    "mode_generator") != is_continuous) {
+        mod_type <- if (identical(attr(model, which = "name", exact = TRUE),
+                           "mode_generator")) "continuous" else "discrete"
+        stop(sprintf("'model' is %s but 'data' is of type '%s'",
+                     mod_type,
+                     class(data)[2]))
+      }
+
+      private$times <- attr(data, if (is_continuous) "times" else "steps")
       private$data_split <- particle_filter_data_split(data, is.null(compare))
 
       private$compare <- compare
@@ -325,11 +350,12 @@ particle_filter <- R6::R6Class(
       min_log_likelihood <- min_log_likelihood %||% -Inf
       particle_filter_state$new(
         pars, self$model, private$last_model[[1]], private$data,
-        private$data_split, private$steps, self$n_particles,
+        private$data_split, private$times, self$n_particles,
         self$has_multiple_parameters, private$n_threads,
         private$initial, private$index, private$compare,
         private$constant_log_likelihood, private$gpu_config, private$seed,
-        min_log_likelihood, save_history, save_restart)
+        min_log_likelihood, save_history, save_restart,
+        private$stochastic_schedule)
     },
 
     ##' @description Extract the current model state, optionally filtering.
@@ -447,6 +473,7 @@ particle_filter <- R6::R6Class(
            gpu_config = private$gpu_config,
            n_threads = private$n_threads,
            n_parameters = n_parameters,
+           stochastic_schedule = private$stochastic_schedule,
            seed = filter_current_seed(last(private$last_model), private$seed))
     },
 
@@ -526,28 +553,10 @@ scale_log_weights <- function(log_weights) {
 }
 
 
-particle_steps <- function(steps, step_start) {
-  if (!is.null(step_start)) {
-    assert_integer(step_start)
-    if (min(step_start) < steps[1, 1, drop = TRUE]) {
-      stop(sprintf(
-        "'step_start' must be >= %d (the first value of data$step_start)",
-        steps[1, 1, drop = TRUE]))
-    }
-    if (max(step_start) > steps[1, 2, drop = TRUE]) {
-      stop(sprintf(
-        "'step_start' must be <= %d (the first value of data$step_end)",
-        steps[1, 2, drop = TRUE]))
-    }
-    steps[1, 1] <- max(step_start)
-  }
-  steps
-}
-
-
 is_dust_generator <- function(x) {
   inherits(x, "R6ClassGenerator") &&
-    identical(attr(x, which = "name", exact = TRUE), "dust_generator")
+    (identical(attr(x, which = "name", exact = TRUE), "dust_generator") ||
+      identical(attr(x, which = "name", exact = TRUE), "mode_generator"))
 }
 
 
@@ -673,7 +682,7 @@ history_multiple <- function(history_value, history_order, history_index,
 
 
 filter_current_seed <- function(model, seed) {
-  if (!is.null(model)) {
+  if (!is.null(model) && !is.null(model$rng_state)) {
     seed <- model$rng_state(first_only = TRUE)
   }
   seed
