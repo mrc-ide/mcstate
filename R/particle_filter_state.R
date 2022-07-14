@@ -211,13 +211,13 @@ particle_filter_state <- R6::R6Class(
     ##' @param save_history Logical, indicating if we should save history
     ##' @param save_restart Vector of times to save restart at
     ##' @param stochastic_schedule Vector of times to perform stochastic updates
-    ##' @param control Tuning control for stepper
+    ##' @param ode_control Tuning control for stepper
     initialize = function(pars, generator, model, data, data_split, times,
                           n_particles, has_multiple_parameters,
                           n_threads, initial, index, compare,
                           constant_log_likelihood, gpu_config, seed,
                           min_log_likelihood, save_history, save_restart,
-                          stochastic_schedule, control) {
+                          stochastic_schedule, ode_control) {
       has_multiple_data <- inherits(data, "particle_filter_data_nested")
       is_continuous <- inherits(data, "particle_filter_data_continuous")
 
@@ -230,7 +230,7 @@ particle_filter_state <- R6::R6Class(
                                  n_particles = n_particles,
                                  n_threads = n_threads,
                                  seed = seed,
-                                 control = control)
+                                 control = ode_control)
           model$set_stochastic_schedule(stochastic_schedule)
         } else {
           model <- generator$new(pars = pars, step = times[[1L]],

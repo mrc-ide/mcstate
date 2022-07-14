@@ -344,6 +344,7 @@ test_that("can return inputs", {
   expect_equal(inputs$seed, 100)
   expect_null(inputs$n_parameters)
   expect_null(inputs$stochastic_schedule)
+  expect_null(inputs$ode_control)
 
   res <- p$run()
 
@@ -1545,7 +1546,7 @@ test_that("cannot provide stochastic schedule for discrete model", {
 })
 
 
-test_that("can provide stepper control for continuous model", {
+test_that("can provide ode_control for continuous model", {
   dat <- example_continuous()
   pars <- list(init_Ih = 0.8,
                init_Sv = 100,
@@ -1554,17 +1555,17 @@ test_that("can provide stepper control for continuous model", {
   ctl <- mode::mode_control(max_steps = 1, atol = 1e-2, rtol = 1e-2)
   p <- particle_filter$new(dat$data, dat$model, 1, dat$compare,
                            index = dat$index, seed = 1L,
-                           control = ctl)
+                           ode_control = ctl)
   expect_error(p$run(pars), "too many steps")
 })
 
 
-test_that("cannot provide control for discrete model", {
+test_that("cannot provide ode_control for discrete model", {
   dat <- example_sir()
   ctl <- mode::mode_control(max_steps = 100000, atol = 1e-2, rtol = 1e-2)
   expect_error(particle_filter$new(dat$data, dat$model, 1, dat$compare,
-                                   index = dat$index, control = ctl),
-               "'control' provided but 'model' does not support this")
+                                   index = dat$index, ode_control = ctl),
+               "'ode_control' provided but 'model' does not support this")
 })
 
 
