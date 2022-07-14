@@ -47,21 +47,21 @@ pars$model(p)
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-pmcmc_parameters_nested-new}{\code{pmcmc_parameters_nested$new()}}
-\item \href{#method-pmcmc_parameters_nested-names}{\code{pmcmc_parameters_nested$names()}}
-\item \href{#method-pmcmc_parameters_nested-populations}{\code{pmcmc_parameters_nested$populations()}}
-\item \href{#method-pmcmc_parameters_nested-validate}{\code{pmcmc_parameters_nested$validate()}}
-\item \href{#method-pmcmc_parameters_nested-summary}{\code{pmcmc_parameters_nested$summary()}}
-\item \href{#method-pmcmc_parameters_nested-initial}{\code{pmcmc_parameters_nested$initial()}}
-\item \href{#method-pmcmc_parameters_nested-prior}{\code{pmcmc_parameters_nested$prior()}}
-\item \href{#method-pmcmc_parameters_nested-propose}{\code{pmcmc_parameters_nested$propose()}}
-\item \href{#method-pmcmc_parameters_nested-model}{\code{pmcmc_parameters_nested$model()}}
-\item \href{#method-pmcmc_parameters_nested-fix}{\code{pmcmc_parameters_nested$fix()}}
+\item \href{#method-new}{\code{pmcmc_parameters_nested$new()}}
+\item \href{#method-names}{\code{pmcmc_parameters_nested$names()}}
+\item \href{#method-populations}{\code{pmcmc_parameters_nested$populations()}}
+\item \href{#method-validate}{\code{pmcmc_parameters_nested$validate()}}
+\item \href{#method-summary}{\code{pmcmc_parameters_nested$summary()}}
+\item \href{#method-initial}{\code{pmcmc_parameters_nested$initial()}}
+\item \href{#method-prior}{\code{pmcmc_parameters_nested$prior()}}
+\item \href{#method-propose}{\code{pmcmc_parameters_nested$propose()}}
+\item \href{#method-model}{\code{pmcmc_parameters_nested$model()}}
+\item \href{#method-fix}{\code{pmcmc_parameters_nested$fix()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-pmcmc_parameters_nested-new"></a>}}
-\if{latex}{\out{\hypertarget{method-pmcmc_parameters_nested-new}{}}}
+\if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 Create the pmcmc_parameters object
 \subsection{Usage}{
@@ -108,8 +108,8 @@ you can do arbitrary transformations here.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-pmcmc_parameters_nested-names"></a>}}
-\if{latex}{\out{\hypertarget{method-pmcmc_parameters_nested-names}{}}}
+\if{html}{\out{<a id="method-names"></a>}}
+\if{latex}{\out{\hypertarget{method-names}{}}}
 \subsection{Method \code{names()}}{
 Return the names of the parameters
 \subsection{Usage}{
@@ -127,8 +127,8 @@ Return the names of the parameters
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-pmcmc_parameters_nested-populations"></a>}}
-\if{latex}{\out{\hypertarget{method-pmcmc_parameters_nested-populations}{}}}
+\if{html}{\out{<a id="method-populations"></a>}}
+\if{latex}{\out{\hypertarget{method-populations}{}}}
 \subsection{Method \code{populations()}}{
 Return the names of the populations
 \subsection{Usage}{
@@ -137,8 +137,8 @@ Return the names of the populations
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-pmcmc_parameters_nested-validate"></a>}}
-\if{latex}{\out{\hypertarget{method-pmcmc_parameters_nested-validate}{}}}
+\if{html}{\out{<a id="method-validate"></a>}}
+\if{latex}{\out{\hypertarget{method-validate}{}}}
 \subsection{Method \code{validate()}}{
 Validate a parameter matrix.  This method
 checks that your matrix has the expected size (rows according
@@ -158,8 +158,8 @@ fixed parameters are same across all populations.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-pmcmc_parameters_nested-summary"></a>}}
-\if{latex}{\out{\hypertarget{method-pmcmc_parameters_nested-summary}{}}}
+\if{html}{\out{<a id="method-summary"></a>}}
+\if{latex}{\out{\hypertarget{method-summary}{}}}
 \subsection{Method \code{summary()}}{
 Return a \code{data.frame} with information about
 parameters (name, min, max, integer, type (fixed or varied)
@@ -170,8 +170,8 @@ and population)
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-pmcmc_parameters_nested-initial"></a>}}
-\if{latex}{\out{\hypertarget{method-pmcmc_parameters_nested-initial}{}}}
+\if{html}{\out{<a id="method-initial"></a>}}
+\if{latex}{\out{\hypertarget{method-initial}{}}}
 \subsection{Method \code{initial()}}{
 Return the initial parameter values as a named matrix with
 rows corresponding to parameters and columns to populations.
@@ -181,8 +181,8 @@ rows corresponding to parameters and columns to populations.
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-pmcmc_parameters_nested-prior"></a>}}
-\if{latex}{\out{\hypertarget{method-pmcmc_parameters_nested-prior}{}}}
+\if{html}{\out{<a id="method-prior"></a>}}
+\if{latex}{\out{\hypertarget{method-prior}{}}}
 \subsection{Method \code{prior()}}{
 Compute the prior(s) for a parameter matrix. Returns a
 named vector with names corresponding to populations.
@@ -200,8 +200,8 @@ named vector with names corresponding to populations.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-pmcmc_parameters_nested-propose"></a>}}
-\if{latex}{\out{\hypertarget{method-pmcmc_parameters_nested-propose}{}}}
+\if{html}{\out{<a id="method-propose"></a>}}
+\if{latex}{\out{\hypertarget{method-propose}{}}}
 \subsection{Method \code{propose()}}{
 This proposes a new parameter matrix given your current
 matrix and the variance-covariance matrices of the proposal
@@ -233,8 +233,8 @@ applied to the variance covariance matrix.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-pmcmc_parameters_nested-model"></a>}}
-\if{latex}{\out{\hypertarget{method-pmcmc_parameters_nested-model}{}}}
+\if{html}{\out{<a id="method-model"></a>}}
+\if{latex}{\out{\hypertarget{method-model}{}}}
 \subsection{Method \code{model()}}{
 Apply the model transformation function to a parameter
 matrix.
@@ -252,8 +252,8 @@ matrix.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-pmcmc_parameters_nested-fix"></a>}}
-\if{latex}{\out{\hypertarget{method-pmcmc_parameters_nested-fix}{}}}
+\if{html}{\out{<a id="method-fix"></a>}}
+\if{latex}{\out{\hypertarget{method-fix}{}}}
 \subsection{Method \code{fix()}}{
 Set some parameters to fixed values. Use this to
 reduce the dimensionality of your system.  Note that this function

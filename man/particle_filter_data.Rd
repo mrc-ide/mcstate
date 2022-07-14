@@ -14,7 +14,8 @@ represents your measure of time.  This column must be
 integer-like}
 
 \item{rate}{The number of model "steps" that occur between each
-time point (in \code{time}).  This must also be integer-like}
+time point (in \code{time}).  This must also be integer-like for discrete
+time models and must be \code{NULL} for continuous time models.}
 
 \item{initial_time}{Optionally, an initial time to start the model
 from.  Provide this if you need to burn the model in, or if

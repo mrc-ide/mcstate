@@ -212,6 +212,8 @@ particle_filter <- R6::R6Class(
     ##' For additional control, provide a list with elements `device_id`
     ##' and `run_block_size`. Further options (and validation) of this
     ##' list will be added in a future version!
+    ##' @param stochastic_schedule Vector of times to perform stochastic updates
+    ##' @param control Tuning control for stepper
     initialize = function(data, model, n_particles, compare,
                           index = NULL, initial = NULL,
                           constant_log_likelihood = NULL,
