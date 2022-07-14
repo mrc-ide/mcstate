@@ -253,11 +253,11 @@ particle_filter <- R6::R6Class(
       }
 
       if (!is_continuous) {
-        if (!is.null(stochastic_schedule)){
+        if (!is.null(stochastic_schedule)) {
           stop(paste("'stochastic_schedule' provided but 'model' does not",
            "support this"))
         }
-        if (!is.null(control)){
+        if (!is.null(control)) {
           stop(paste("'control' provided but 'model' does not",
                      "support this"))
         }
