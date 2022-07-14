@@ -77,7 +77,7 @@ documented.
   save_history,
   save_restart,
   stochastic_schedule,
-  control
+  ode_control
 )}\if{html}{\out{</div>}}
 }
 
@@ -122,7 +122,7 @@ documented.
 
 \item{\code{stochastic_schedule}}{Vector of times to perform stochastic updates}
 
-\item{\code{control}}{Tuning control for stepper}
+\item{\code{ode_control}}{Tuning control for stepper}
 }
 \if{html}{\out{</div>}}
 }

@@ -122,7 +122,7 @@ Create the particle filter
   n_parameters = NULL,
   gpu_config = NULL,
   stochastic_schedule = NULL,
-  control = NULL
+  ode_control = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -224,7 +224,7 @@ list will be added in a future version!}
 
 \item{\code{stochastic_schedule}}{Vector of times to perform stochastic updates}
 
-\item{\code{control}}{Tuning control for stepper}
+\item{\code{ode_control}}{Tuning control for stepper}
 }
 \if{html}{\out{</div>}}
 }
