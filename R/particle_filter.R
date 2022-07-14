@@ -75,13 +75,15 @@ particle_filter <- R6::R6Class(
     ## Control for dust
     seed = NULL,
     n_threads = NULL,
+    ## Control for mode
+    control = NULL,
+    stochastic_schedule = NULL,
     ## Updated when the model is run
     last_stages = NULL,
     last_model = NULL,
     last_state = NULL,
     last_history = NULL,
-    last_restart_state = NULL,
-    stochastic_schedule = NULL
+    last_restart_state = NULL
   ),
 
   public = list(
@@ -216,7 +218,8 @@ particle_filter <- R6::R6Class(
                           n_threads = 1L, seed = NULL,
                           n_parameters = NULL,
                           gpu_config = NULL,
-                          stochastic_schedule = NULL) {
+                          stochastic_schedule = NULL,
+                          control = NULL) {
       if (!is_dust_generator(model)) {
         stop("'model' must be a dust_generator")
       }
@@ -247,11 +250,18 @@ particle_filter <- R6::R6Class(
         stop("nested data not supported for continuous models")
       }
 
-      if (!is_continuous && !is.null(stochastic_schedule)) {
-        stop(paste("'stochastic_schedule' provided but 'model' does not",
-         "support this"))
+      if (!is_continuous) {
+        if (!is.null(stochastic_schedule)){
+          stop(paste("'stochastic_schedule' provided but 'model' does not",
+           "support this"))
+        }
+        if (!is.null(control)){
+          stop(paste("'control' provided but 'model' does not",
+                     "support this"))
+        }
       } else {
         private$stochastic_schedule <- stochastic_schedule
+        private$control <- control
       }
 
       if (identical(attr(model, which = "name", exact = TRUE),
@@ -355,7 +365,8 @@ particle_filter <- R6::R6Class(
         private$initial, private$index, private$compare,
         private$constant_log_likelihood, private$gpu_config, private$seed,
         min_log_likelihood, save_history, save_restart,
-        private$stochastic_schedule)
+        private$stochastic_schedule,
+        private$control)
     },
 
     ##' @description Extract the current model state, optionally filtering.
@@ -474,6 +485,7 @@ particle_filter <- R6::R6Class(
            n_threads = private$n_threads,
            n_parameters = n_parameters,
            stochastic_schedule = private$stochastic_schedule,
+           control = private$control,
            seed = filter_current_seed(last(private$last_model), private$seed))
     },
 

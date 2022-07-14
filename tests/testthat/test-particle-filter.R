@@ -1545,6 +1545,29 @@ test_that("cannot provide stochastic schedule for discrete model", {
 })
 
 
+test_that("can provide stepper control for continuous model", {
+  dat <- example_continuous()
+  pars <- list(init_Ih = 0.8,
+               init_Sv = 100,
+               init_Iv = 1,
+               nrates = 15)
+  ctl <- mode::mode_control(max_steps = 1, atol = 1e-2, rtol = 1e-2)
+  p <- particle_filter$new(dat$data, dat$model, 1, dat$compare,
+                           index = dat$index, seed = 1L,
+                           control = ctl)
+  expect_error(p$run(pars), "too many steps")
+})
+
+
+test_that("cannot provide control for discrete model", {
+  dat <- example_sir()
+  ctl <- mode::mode_control(max_steps = 100000, atol = 1e-2, rtol = 1e-2)
+  expect_error(particle_filter$new(dat$data, dat$model, 1, dat$compare,
+                                   index = dat$index, control = ctl),
+               "'control' provided but 'model' does not support this")
+})
+
+
 test_that("cannot provide nested data for continuous model", {
   dat <- example_continuous()
   data_raw <- read.csv("malaria/casedata_monthly.csv",
