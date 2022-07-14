@@ -262,7 +262,7 @@ particle_filter <- R6::R6Class(
                      "support this"))
         }
       } else {
-        assert_is(ode_control, "mode_control")
+        assert_is_or_null(ode_control, "mode_control")
         private$stochastic_schedule <- stochastic_schedule
         private$ode_control <- ode_control
       }

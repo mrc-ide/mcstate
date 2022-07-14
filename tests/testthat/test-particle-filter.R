@@ -1560,6 +1560,18 @@ test_that("can provide ode_control for continuous model", {
 })
 
 
+test_that("ovide ode_control must be of type mode_control", {
+  dat <- example_continuous()
+  pars <- list(init_Ih = 0.8,
+               init_Sv = 100,
+               init_Iv = 1,
+               nrates = 15)
+  expect_error(particle_filter$new(dat$data, dat$model, 1, dat$compare,
+                                   index = dat$index, ode_control = c(1, 2, 3)),
+               "'ode_control' must be a mode_control")
+})
+
+
 test_that("cannot provide ode_control for discrete model", {
   dat <- example_sir()
   ctl <- mode::mode_control(max_steps = 100000, atol = 1e-2, rtol = 1e-2)

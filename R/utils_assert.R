@@ -7,6 +7,15 @@ assert_is <- function(x, what, name = deparse(substitute(x))) {
 }
 
 
+assert_is_or_null <- function(x, what, name = deparse(substitute(x))) {
+  if (!is.null(x) && !inherits(x, what)) {
+    stop(sprintf("'%s' must be a %s", name,
+                 paste(what, collapse = " / ")), call. = FALSE)
+  }
+  invisible(x)
+}
+
+
 ## Special version of above to cope with classed functions
 assert_function <- function(x, name = deparse(substitute(x))) {
   if (!is.function(x)) {
