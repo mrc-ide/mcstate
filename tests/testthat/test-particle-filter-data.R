@@ -197,3 +197,11 @@ test_that("particle_filter_data for continuous time by month", {
   expect_equal(res$time_start, res$day_start)
   expect_equal(res$time_end, res$day_end)
 })
+
+test_that("particle_filter_data for continuous time requires initial time", {
+  d <- data.frame(month = 4:24,
+                  data = runif(21),
+                  stringsAsFactors = FALSE)
+  expect_error(particle_filter_data(d, "month", NULL),
+               "'initial_time' must be given for continuous models")
+})

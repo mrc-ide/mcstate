@@ -1508,6 +1508,7 @@ test_that("run particle filter on continuous model", {
                nrates = 15)
   res <- p$run(pars)
   expect_is(res, "numeric")
+  expect_false(res == p$run(pars))
 
   mod <- dat$model$new(pars, 0, 1, seed = 1L)
   len <- mod$info()$len
