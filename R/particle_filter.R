@@ -75,13 +75,15 @@ particle_filter <- R6::R6Class(
     ## Control for dust
     seed = NULL,
     n_threads = NULL,
+    ## Control for mode
+    ode_control = NULL,
+    stochastic_schedule = NULL,
     ## Updated when the model is run
     last_stages = NULL,
     last_model = NULL,
     last_state = NULL,
     last_history = NULL,
-    last_restart_state = NULL,
-    stochastic_schedule = NULL
+    last_restart_state = NULL
   ),
 
   public = list(
@@ -210,13 +212,16 @@ particle_filter <- R6::R6Class(
     ##' For additional control, provide a list with elements `device_id`
     ##' and `run_block_size`. Further options (and validation) of this
     ##' list will be added in a future version!
+    ##' @param stochastic_schedule Vector of times to perform stochastic updates
+    ##' @param ode_control Tuning control for stepper
     initialize = function(data, model, n_particles, compare,
                           index = NULL, initial = NULL,
                           constant_log_likelihood = NULL,
                           n_threads = 1L, seed = NULL,
                           n_parameters = NULL,
                           gpu_config = NULL,
-                          stochastic_schedule = NULL) {
+                          stochastic_schedule = NULL,
+                          ode_control = NULL) {
       if (!is_dust_generator(model)) {
         stop("'model' must be a dust_generator")
       }
@@ -247,11 +252,19 @@ particle_filter <- R6::R6Class(
         stop("nested data not supported for continuous models")
       }
 
-      if (!is_continuous && !is.null(stochastic_schedule)) {
-        stop(paste("'stochastic_schedule' provided but 'model' does not",
-         "support this"))
+      if (!is_continuous) {
+        if (!is.null(stochastic_schedule)) {
+          stop(paste("'stochastic_schedule' provided but 'model' does not",
+           "support this"))
+        }
+        if (!is.null(ode_control)) {
+          stop(paste("'ode_control' provided but 'model' does not",
+                     "support this"))
+        }
       } else {
+        assert_is_or_null(ode_control, "mode_control")
         private$stochastic_schedule <- stochastic_schedule
+        private$ode_control <- ode_control
       }
 
       if (identical(attr(model, which = "name", exact = TRUE),
@@ -355,7 +368,8 @@ particle_filter <- R6::R6Class(
         private$initial, private$index, private$compare,
         private$constant_log_likelihood, private$gpu_config, private$seed,
         min_log_likelihood, save_history, save_restart,
-        private$stochastic_schedule)
+        private$stochastic_schedule,
+        private$ode_control)
     },
 
     ##' @description Extract the current model state, optionally filtering.
@@ -474,6 +488,7 @@ particle_filter <- R6::R6Class(
            n_threads = private$n_threads,
            n_parameters = n_parameters,
            stochastic_schedule = private$stochastic_schedule,
+           ode_control = private$ode_control,
            seed = filter_current_seed(last(private$last_model), private$seed))
     },
 

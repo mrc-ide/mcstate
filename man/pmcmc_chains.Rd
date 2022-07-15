@@ -51,15 +51,13 @@ execution of the chains yourself. Use this if you want to
 distribute chains over (say) the nodes of an HPC system.
 }
 \details{
-Basic usage will look like
-
-\if{html}{\out{<div class="sourceCode">}}\preformatted{path <- mcstate::pmcmc_chains_prepare(tempfile(), pars, filter, control)
+Basic usage will look like\preformatted{path <- mcstate::pmcmc_chains_prepare(tempfile(), pars, filter, control)
 for (i in seq_len(control$n_chains)) \{
   mcstate::pmcmc_chains_run(i, path)
 \}
 samples <- mcstate::pmcmc_chains_collect(path)
 mcstate::pmcmc_chains_cleanup(path)
-}\if{html}{\out{</div>}}
+}
 
 You can safely parallelise (or not) however you like at the point
 where the loop is (even across other machines) and get the same

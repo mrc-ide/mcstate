@@ -344,6 +344,7 @@ test_that("can return inputs", {
   expect_equal(inputs$seed, 100)
   expect_null(inputs$n_parameters)
   expect_null(inputs$stochastic_schedule)
+  expect_null(inputs$ode_control)
 
   res <- p$run()
 
@@ -1542,6 +1543,41 @@ test_that("cannot provide stochastic schedule for discrete model", {
   expect_error(particle_filter$new(dat$data, dat$model, 1, dat$compare,
                            index = dat$index, stochastic_schedule = 1:10),
   "'stochastic_schedule' provided but 'model' does not support this")
+})
+
+
+test_that("can provide ode_control for continuous model", {
+  dat <- example_continuous()
+  pars <- list(init_Ih = 0.8,
+               init_Sv = 100,
+               init_Iv = 1,
+               nrates = 15)
+  ctl <- mode::mode_control(max_steps = 1, atol = 1e-2, rtol = 1e-2)
+  p <- particle_filter$new(dat$data, dat$model, 1, dat$compare,
+                           index = dat$index, seed = 1L,
+                           ode_control = ctl)
+  expect_error(p$run(pars), "too many steps")
+})
+
+
+test_that("ovide ode_control must be of type mode_control", {
+  dat <- example_continuous()
+  pars <- list(init_Ih = 0.8,
+               init_Sv = 100,
+               init_Iv = 1,
+               nrates = 15)
+  expect_error(particle_filter$new(dat$data, dat$model, 1, dat$compare,
+                                   index = dat$index, ode_control = c(1, 2, 3)),
+               "'ode_control' must be a mode_control")
+})
+
+
+test_that("cannot provide ode_control for discrete model", {
+  dat <- example_sir()
+  ctl <- mode::mode_control(max_steps = 100000, atol = 1e-2, rtol = 1e-2)
+  expect_error(particle_filter$new(dat$data, dat$model, 1, dat$compare,
+                                   index = dat$index, ode_control = ctl),
+               "'ode_control' provided but 'model' does not support this")
 })
 
 

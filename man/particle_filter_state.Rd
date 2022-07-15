@@ -42,16 +42,16 @@ last call to \verb{$step()}.}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-particle_filter_state-new}{\code{particle_filter_state$new()}}
-\item \href{#method-particle_filter_state-run}{\code{particle_filter_state$run()}}
-\item \href{#method-particle_filter_state-step}{\code{particle_filter_state$step()}}
-\item \href{#method-particle_filter_state-fork_multistage}{\code{particle_filter_state$fork_multistage()}}
-\item \href{#method-particle_filter_state-fork_smc2}{\code{particle_filter_state$fork_smc2()}}
+\item \href{#method-new}{\code{particle_filter_state$new()}}
+\item \href{#method-run}{\code{particle_filter_state$run()}}
+\item \href{#method-step}{\code{particle_filter_state$step()}}
+\item \href{#method-fork_multistage}{\code{particle_filter_state$fork_multistage()}}
+\item \href{#method-fork_smc2}{\code{particle_filter_state$fork_smc2()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-particle_filter_state-new"></a>}}
-\if{latex}{\out{\hypertarget{method-particle_filter_state-new}{}}}
+\if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 Initialise the particle filter state. Ordinarily
 this should not be called by users, and so arguments are barely
@@ -63,7 +63,7 @@ documented.
   model,
   data,
   data_split,
-  steps,
+  times,
   n_particles,
   has_multiple_parameters,
   n_threads,
@@ -75,7 +75,9 @@ documented.
   seed,
   min_log_likelihood,
   save_history,
-  save_restart
+  save_restart,
+  stochastic_schedule,
+  ode_control
 )}\if{html}{\out{</div>}}
 }
 
@@ -92,7 +94,7 @@ documented.
 
 \item{\code{data_split}}{The same data as \code{data} but split by step}
 
-\item{\code{steps}}{A matrix of step beginning and ends}
+\item{\code{times}}{A matrix of step beginning and ends}
 
 \item{\code{n_particles}}{Number of particles to use}
 
@@ -116,14 +118,18 @@ documented.
 
 \item{\code{save_history}}{Logical, indicating if we should save history}
 
-\item{\code{save_restart}}{Vector of steps to save restart at}
+\item{\code{save_restart}}{Vector of times to save restart at}
+
+\item{\code{stochastic_schedule}}{Vector of times to perform stochastic updates}
+
+\item{\code{ode_control}}{Tuning control for stepper}
 }
 \if{html}{\out{</div>}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-particle_filter_state-run"></a>}}
-\if{latex}{\out{\hypertarget{method-particle_filter_state-run}{}}}
+\if{html}{\out{<a id="method-run"></a>}}
+\if{latex}{\out{\hypertarget{method-run}{}}}
 \subsection{Method \code{run()}}{
 Run the particle filter to the end of the data. This is
 a convenience function around \verb{$step()} which provides the correct
@@ -134,8 +140,8 @@ value of \code{step_index}
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-particle_filter_state-step"></a>}}
-\if{latex}{\out{\hypertarget{method-particle_filter_state-step}{}}}
+\if{html}{\out{<a id="method-step"></a>}}
+\if{latex}{\out{\hypertarget{method-step}{}}}
 \subsection{Method \code{step()}}{
 Take a step with the particle filter. This moves
 the particle filter forward one step within the \emph{data} (which
@@ -161,8 +167,8 @@ likelihood, due to this step, rather than the full likelihood so far.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-particle_filter_state-fork_multistage"></a>}}
-\if{latex}{\out{\hypertarget{method-particle_filter_state-fork_multistage}{}}}
+\if{html}{\out{<a id="method-fork_multistage"></a>}}
+\if{latex}{\out{\hypertarget{method-fork_multistage}{}}}
 \subsection{Method \code{fork_multistage()}}{
 Create a new \code{particle_filter_state} object based on
 this one (same model, position in time within the data) but with
@@ -190,8 +196,8 @@ from the old to the new parameter set.  See
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-particle_filter_state-fork_smc2"></a>}}
-\if{latex}{\out{\hypertarget{method-particle_filter_state-fork_smc2}{}}}
+\if{html}{\out{<a id="method-fork_smc2"></a>}}
+\if{latex}{\out{\hypertarget{method-fork_smc2}{}}}
 \subsection{Method \code{fork_smc2()}}{
 Create a new \code{particle_filter_state} object based
 on this one (same model, position in time within the data) but
