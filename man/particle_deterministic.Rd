@@ -39,19 +39,19 @@ particle (read only).  This will either be 1 or the same value as
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{particle_deterministic$new()}}
-\item \href{#method-run}{\code{particle_deterministic$run()}}
-\item \href{#method-run_begin}{\code{particle_deterministic$run_begin()}}
-\item \href{#method-state}{\code{particle_deterministic$state()}}
-\item \href{#method-history}{\code{particle_deterministic$history()}}
-\item \href{#method-restart_state}{\code{particle_deterministic$restart_state()}}
-\item \href{#method-inputs}{\code{particle_deterministic$inputs()}}
-\item \href{#method-set_n_threads}{\code{particle_deterministic$set_n_threads()}}
+\item \href{#method-particle_deterministic-new}{\code{particle_deterministic$new()}}
+\item \href{#method-particle_deterministic-run}{\code{particle_deterministic$run()}}
+\item \href{#method-particle_deterministic-run_begin}{\code{particle_deterministic$run_begin()}}
+\item \href{#method-particle_deterministic-state}{\code{particle_deterministic$state()}}
+\item \href{#method-particle_deterministic-history}{\code{particle_deterministic$history()}}
+\item \href{#method-particle_deterministic-restart_state}{\code{particle_deterministic$restart_state()}}
+\item \href{#method-particle_deterministic-inputs}{\code{particle_deterministic$inputs()}}
+\item \href{#method-particle_deterministic-set_n_threads}{\code{particle_deterministic$set_n_threads()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-particle_deterministic-new"></a>}}
+\if{latex}{\out{\hypertarget{method-particle_deterministic-new}{}}}
 \subsection{Method \code{new()}}{
 Create the particle filter
 \subsection{Usage}{
@@ -146,8 +146,8 @@ most outputs (scalars become vectors, vectors become matrices etc).}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-run"></a>}}
-\if{latex}{\out{\hypertarget{method-run}{}}}
+\if{html}{\out{<a id="method-particle_deterministic-run"></a>}}
+\if{latex}{\out{\hypertarget{method-particle_deterministic-run}{}}}
 \subsection{Method \code{run()}}{
 Run the deterministic particle filter
 \subsection{Usage}{
@@ -191,8 +191,8 @@ A single numeric value representing the log-likelihood
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-run_begin"></a>}}
-\if{latex}{\out{\hypertarget{method-run_begin}{}}}
+\if{html}{\out{<a id="method-particle_deterministic-run_begin"></a>}}
+\if{latex}{\out{\hypertarget{method-particle_deterministic-run_begin}{}}}
 \subsection{Method \code{run_begin()}}{
 Begin a deterministic run. This is part of the
 "advanced" interface; typically you will want to use \verb{$run()}
@@ -232,8 +232,8 @@ An object of class \code{particle_deterministic_state}, with methods
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-state"></a>}}
-\if{latex}{\out{\hypertarget{method-state}{}}}
+\if{html}{\out{<a id="method-particle_deterministic-state"></a>}}
+\if{latex}{\out{\hypertarget{method-particle_deterministic-state}{}}}
 \subsection{Method \code{state()}}{
 Extract the current model state, optionally filtering.
 If the model has not yet been run, then this method will throw an
@@ -253,8 +253,8 @@ particles.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-history"></a>}}
-\if{latex}{\out{\hypertarget{method-history}{}}}
+\if{html}{\out{<a id="method-particle_deterministic-history"></a>}}
+\if{latex}{\out{\hypertarget{method-particle_deterministic-history}{}}}
 \subsection{Method \code{history()}}{
 Extract the particle trajectories. Requires that
 the model was run with \code{save_history = TRUE}, which does
@@ -277,8 +277,8 @@ If \code{NULL} we return all particles' histories.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-restart_state"></a>}}
-\if{latex}{\out{\hypertarget{method-restart_state}{}}}
+\if{html}{\out{<a id="method-particle_deterministic-restart_state"></a>}}
+\if{latex}{\out{\hypertarget{method-particle_deterministic-restart_state}{}}}
 \subsection{Method \code{restart_state()}}{
 Return the full particle filter state at points back in time
 that were saved with the \code{save_restart} argument to
@@ -310,8 +310,8 @@ interface.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-inputs"></a>}}
-\if{latex}{\out{\hypertarget{method-inputs}{}}}
+\if{html}{\out{<a id="method-particle_deterministic-inputs"></a>}}
+\if{latex}{\out{\hypertarget{method-particle_deterministic-inputs}{}}}
 \subsection{Method \code{inputs()}}{
 Return a list of inputs used to configure the deterministic particle
 filter. These correspond directly to the argument names for the
@@ -322,8 +322,8 @@ constructor and are the same as the input arguments.
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-set_n_threads"></a>}}
-\if{latex}{\out{\hypertarget{method-set_n_threads}{}}}
+\if{html}{\out{<a id="method-particle_deterministic-set_n_threads"></a>}}
+\if{latex}{\out{\hypertarget{method-particle_deterministic-set_n_threads}{}}}
 \subsection{Method \code{set_n_threads()}}{
 Set the number of threads used by the particle filter (and dust
 model) after creation. This can be used to allocate additional

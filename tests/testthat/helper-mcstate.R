@@ -61,7 +61,7 @@ example_sir <- function() {
 }
 
 example_continuous <- function() {
-  model <- odin.dust::odin_dust("malaria/malariamodel.R", verbose = TRUE)
+  model <- odin.dust::odin_dust("malaria/malariamodel.R", verbose = FALSE)
 
   compare <- function(state, observed, pars = NULL) {
     dbinom(x = observed$positive,

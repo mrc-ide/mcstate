@@ -427,6 +427,23 @@ particle_filter <- R6::R6Class(
     },
 
     ##' @description
+    ##' Fetch statistics about steps taken during the integration, by
+    ##' calling through to the `$statistics()` method of the underlying
+    ##' model. This is only available for continuous time (ODE) models,
+    ##' and will error if used with discrete time models.
+    statistics = function() {
+      if (!inherits(private$data, "particle_filter_data_continuous")) {
+        stop("Statistics are only available for continuous (ODE) models")
+      }
+      if (is.null(private$last_model)) {
+        stop("Model has not yet been run")
+      }
+      ## when/if we support multistage models, more care will be
+      ## needed here.
+      private$last_model[[1]]$statistics()
+    },
+
+    ##' @description
     ##' Return the full particle filter state at points back in time
     ##' that were saved with the `save_restart` argument to
     ##' `$run()`. If available, this will return a 3d array, with
