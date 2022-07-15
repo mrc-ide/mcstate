@@ -25,7 +25,7 @@ them, but don't)."><meta property="og:image" content="/logo.png"><!-- mathjax --
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.6</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.7</span>
       </span>
     </div>
 
@@ -138,12 +138,12 @@ last call to <code>$step()</code>.</p></dd>
 <div class="section">
 <h3 id="public-methods">Public methods<a class="anchor" aria-label="anchor" href="#public-methods"></a></h3>
 
-<ul><li><p><a href="#method-particle_filter_state-new"><code>particle_filter_state$new()</code></a></p></li>
-<li><p><a href="#method-particle_filter_state-run"><code>particle_filter_state$run()</code></a></p></li>
-<li><p><a href="#method-particle_filter_state-step"><code>particle_filter_state$step()</code></a></p></li>
-<li><p><a href="#method-particle_filter_state-fork_multistage"><code>particle_filter_state$fork_multistage()</code></a></p></li>
-<li><p><a href="#method-particle_filter_state-fork_smc2"><code>particle_filter_state$fork_smc2()</code></a></p></li>
-</ul></div><p></p><hr><a id="method-particle_filter_state-new"></a><div class="section">
+<ul><li><p><a href="#method-new"><code>particle_filter_state$new()</code></a></p></li>
+<li><p><a href="#method-run"><code>particle_filter_state$run()</code></a></p></li>
+<li><p><a href="#method-step"><code>particle_filter_state$step()</code></a></p></li>
+<li><p><a href="#method-fork_multistage"><code>particle_filter_state$fork_multistage()</code></a></p></li>
+<li><p><a href="#method-fork_smc2"><code>particle_filter_state$fork_smc2()</code></a></p></li>
+</ul></div><p></p><hr><a id="method-new"></a><div class="section">
 <h3 id="method-new-">Method <code>new()</code><a class="anchor" aria-label="anchor" href="#method-new-"></a></h3>
 <p>Initialise the particle filter state. Ordinarily
 this should not be called by users, and so arguments are barely
@@ -155,7 +155,7 @@ documented.</p><div class="section">
 <span>  <span class="va">model</span>,</span>
 <span>  <span class="va">data</span>,</span>
 <span>  <span class="va">data_split</span>,</span>
-<span>  <span class="va">steps</span>,</span>
+<span>  <span class="va">times</span>,</span>
 <span>  <span class="va">n_particles</span>,</span>
 <span>  <span class="va">has_multiple_parameters</span>,</span>
 <span>  <span class="va">n_threads</span>,</span>
@@ -167,7 +167,9 @@ documented.</p><div class="section">
 <span>  <span class="va">seed</span>,</span>
 <span>  <span class="va">min_log_likelihood</span>,</span>
 <span>  <span class="va">save_history</span>,</span>
-<span>  <span class="va">save_restart</span></span>
+<span>  <span class="va">save_restart</span>,</span>
+<span>  <span class="va">stochastic_schedule</span>,</span>
+<span>  <span class="va">ode_control</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -193,7 +195,7 @@ documented.</p><div class="section">
 <dd><p>The same data as <code>data</code> but split by step</p></dd>
 
 
-<dt><code>steps</code></dt>
+<dt><code>times</code></dt>
 <dd><p>A matrix of step beginning and ends</p></dd>
 
 
@@ -242,13 +244,21 @@ documented.</p><div class="section">
 
 
 <dt><code>save_restart</code></dt>
-<dd><p>Vector of steps to save restart at</p></dd>
+<dd><p>Vector of times to save restart at</p></dd>
+
+
+<dt><code>stochastic_schedule</code></dt>
+<dd><p>Vector of times to perform stochastic updates</p></dd>
+
+
+<dt><code>ode_control</code></dt>
+<dd><p>Tuning control for stepper</p></dd>
 
 
 </dl><p></p></div>
 </div>
 
-</div><p></p><hr><a id="method-particle_filter_state-run"></a><div class="section">
+</div><p></p><hr><a id="method-run"></a><div class="section">
 <h3 id="method-run-">Method <code>run()</code><a class="anchor" aria-label="anchor" href="#method-run-"></a></h3>
 <p>Run the particle filter to the end of the data. This is
 a convenience function around <code>$step()</code> which provides the correct
@@ -258,7 +268,7 @@ value of <code>step_index</code></p><div class="section">
 </div>
 
 
-</div><p></p><hr><a id="method-particle_filter_state-step"></a><div class="section">
+</div><p></p><hr><a id="method-step"></a><div class="section">
 <h3 id="method-step-">Method <code><a href="https://rdrr.io/r/stats/step.html" class="external-link">step()</a></code><a class="anchor" aria-label="anchor" href="#method-step-"></a></h3>
 <p>Take a step with the particle filter. This moves
 the particle filter forward one step within the <em>data</em> (which
@@ -286,7 +296,7 @@ likelihood, due to this step, rather than the full likelihood so far.</p></dd>
 </dl><p></p></div>
 </div>
 
-</div><p></p><hr><a id="method-particle_filter_state-fork_multistage"></a><div class="section">
+</div><p></p><hr><a id="method-fork_multistage"></a><div class="section">
 <h3 id="method-fork-multistage-">Method <code>fork_multistage()</code><a class="anchor" aria-label="anchor" href="#method-fork-multistage-"></a></h3>
 <p>Create a new <code>particle_filter_state</code> object based on
 this one (same model, position in time within the data) but with
@@ -318,7 +328,7 @@ from the old to the new parameter set.  See
 </dl><p></p></div>
 </div>
 
-</div><p></p><hr><a id="method-particle_filter_state-fork_smc2"></a><div class="section">
+</div><p></p><hr><a id="method-fork_smc2"></a><div class="section">
 <h3 id="method-fork-smc-">Method <code>fork_smc2()</code><a class="anchor" aria-label="anchor" href="#method-fork-smc-"></a></h3>
 <p>Create a new <code>particle_filter_state</code> object based
 on this one (same model, position in time within the data) but
