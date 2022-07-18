@@ -22,7 +22,7 @@ how it can be used."><meta property="og:image" content="/logo.png"><!-- mathjax 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.8</span>
       </span>
     </div>
 
@@ -97,17 +97,17 @@ how it can be used.</p>
 <div class="section">
 <h3 id="public-methods">Public methods<a class="anchor" aria-label="anchor" href="#public-methods"></a></h3>
 
-<ul><li><p><a href="#method-new"><code>pmcmc_parameters_nested$new()</code></a></p></li>
-<li><p><a href="#method-names"><code>pmcmc_parameters_nested$names()</code></a></p></li>
-<li><p><a href="#method-populations"><code>pmcmc_parameters_nested$populations()</code></a></p></li>
-<li><p><a href="#method-validate"><code>pmcmc_parameters_nested$validate()</code></a></p></li>
-<li><p><a href="#method-summary"><code>pmcmc_parameters_nested$summary()</code></a></p></li>
-<li><p><a href="#method-initial"><code>pmcmc_parameters_nested$initial()</code></a></p></li>
-<li><p><a href="#method-prior"><code>pmcmc_parameters_nested$prior()</code></a></p></li>
-<li><p><a href="#method-propose"><code>pmcmc_parameters_nested$propose()</code></a></p></li>
-<li><p><a href="#method-model"><code>pmcmc_parameters_nested$model()</code></a></p></li>
-<li><p><a href="#method-fix"><code>pmcmc_parameters_nested$fix()</code></a></p></li>
-</ul></div><p></p><hr><a id="method-new"></a><div class="section">
+<ul><li><p><a href="#method-pmcmc_parameters_nested-new"><code>pmcmc_parameters_nested$new()</code></a></p></li>
+<li><p><a href="#method-pmcmc_parameters_nested-names"><code>pmcmc_parameters_nested$names()</code></a></p></li>
+<li><p><a href="#method-pmcmc_parameters_nested-populations"><code>pmcmc_parameters_nested$populations()</code></a></p></li>
+<li><p><a href="#method-pmcmc_parameters_nested-validate"><code>pmcmc_parameters_nested$validate()</code></a></p></li>
+<li><p><a href="#method-pmcmc_parameters_nested-summary"><code>pmcmc_parameters_nested$summary()</code></a></p></li>
+<li><p><a href="#method-pmcmc_parameters_nested-initial"><code>pmcmc_parameters_nested$initial()</code></a></p></li>
+<li><p><a href="#method-pmcmc_parameters_nested-prior"><code>pmcmc_parameters_nested$prior()</code></a></p></li>
+<li><p><a href="#method-pmcmc_parameters_nested-propose"><code>pmcmc_parameters_nested$propose()</code></a></p></li>
+<li><p><a href="#method-pmcmc_parameters_nested-model"><code>pmcmc_parameters_nested$model()</code></a></p></li>
+<li><p><a href="#method-pmcmc_parameters_nested-fix"><code>pmcmc_parameters_nested$fix()</code></a></p></li>
+</ul></div><p></p><hr><a id="method-pmcmc_parameters_nested-new"></a><div class="section">
 <h3 id="method-new-">Method <code>new()</code><a class="anchor" aria-label="anchor" href="#method-new-"></a></h3>
 <p>Create the pmcmc_parameters object</p><div class="section">
 <h4 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a></h4>
@@ -160,7 +160,7 @@ you can do arbitrary transformations here.</p></dd>
 </dl><p></p></div>
 </div>
 
-</div><p></p><hr><a id="method-names"></a><div class="section">
+</div><p></p><hr><a id="method-pmcmc_parameters_nested-names"></a><div class="section">
 <h3 id="method-names-">Method <code><a href="https://rdrr.io/r/base/names.html" class="external-link">names()</a></code><a class="anchor" aria-label="anchor" href="#method-names-"></a></h3>
 <p>Return the names of the parameters</p><div class="section">
 <h4 id="usage-1">Usage<a class="anchor" aria-label="anchor" href="#usage-1"></a></h4>
@@ -178,7 +178,7 @@ you can do arbitrary transformations here.</p></dd>
 </dl><p></p></div>
 </div>
 
-</div><p></p><hr><a id="method-populations"></a><div class="section">
+</div><p></p><hr><a id="method-pmcmc_parameters_nested-populations"></a><div class="section">
 <h3 id="method-populations-">Method <code>populations()</code><a class="anchor" aria-label="anchor" href="#method-populations-"></a></h3>
 <p>Return the names of the populations</p><div class="section">
 <h4 id="usage-2">Usage<a class="anchor" aria-label="anchor" href="#usage-2"></a></h4>
@@ -186,7 +186,7 @@ you can do arbitrary transformations here.</p></dd>
 </div>
 
 
-</div><p></p><hr><a id="method-validate"></a><div class="section">
+</div><p></p><hr><a id="method-pmcmc_parameters_nested-validate"></a><div class="section">
 <h3 id="method-validate-">Method <code>validate()</code><a class="anchor" aria-label="anchor" href="#method-validate-"></a></h3>
 <p>Validate a parameter matrix.  This method
 checks that your matrix has the expected size (rows according
@@ -206,7 +206,7 @@ fixed parameters are same across all populations.</p><div class="section">
 </dl><p></p></div>
 </div>
 
-</div><p></p><hr><a id="method-summary"></a><div class="section">
+</div><p></p><hr><a id="method-pmcmc_parameters_nested-summary"></a><div class="section">
 <h3 id="method-summary-">Method <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code><a class="anchor" aria-label="anchor" href="#method-summary-"></a></h3>
 <p>Return a <code>data.frame</code> with information about
 parameters (name, min, max, integer, type (fixed or varied)
@@ -216,7 +216,7 @@ and population)</p><div class="section">
 </div>
 
 
-</div><p></p><hr><a id="method-initial"></a><div class="section">
+</div><p></p><hr><a id="method-pmcmc_parameters_nested-initial"></a><div class="section">
 <h3 id="method-initial-">Method <code>initial()</code><a class="anchor" aria-label="anchor" href="#method-initial-"></a></h3>
 <p>Return the initial parameter values as a named matrix with
 rows corresponding to parameters and columns to populations.</p><div class="section">
@@ -225,7 +225,7 @@ rows corresponding to parameters and columns to populations.</p><div class="sect
 </div>
 
 
-</div><p></p><hr><a id="method-prior"></a><div class="section">
+</div><p></p><hr><a id="method-pmcmc_parameters_nested-prior"></a><div class="section">
 <h3 id="method-prior-">Method <code>prior()</code><a class="anchor" aria-label="anchor" href="#method-prior-"></a></h3>
 <p>Compute the prior(s) for a parameter matrix. Returns a
 named vector with names corresponding to populations.</p><div class="section">
@@ -243,7 +243,7 @@ named vector with names corresponding to populations.</p><div class="section">
 </dl><p></p></div>
 </div>
 
-</div><p></p><hr><a id="method-propose"></a><div class="section">
+</div><p></p><hr><a id="method-pmcmc_parameters_nested-propose"></a><div class="section">
 <h3 id="method-propose-">Method <code>propose()</code><a class="anchor" aria-label="anchor" href="#method-propose-"></a></h3>
 <p>This proposes a new parameter matrix given your current
 matrix and the variance-covariance matrices of the proposal
@@ -279,7 +279,7 @@ applied to the variance covariance matrix.</p></dd>
 </dl><p></p></div>
 </div>
 
-</div><p></p><hr><a id="method-model"></a><div class="section">
+</div><p></p><hr><a id="method-pmcmc_parameters_nested-model"></a><div class="section">
 <h3 id="method-model-">Method <code>model()</code><a class="anchor" aria-label="anchor" href="#method-model-"></a></h3>
 <p>Apply the model transformation function to a parameter
 matrix.</p><div class="section">
@@ -297,7 +297,7 @@ matrix.</p><div class="section">
 </dl><p></p></div>
 </div>
 
-</div><p></p><hr><a id="method-fix"></a><div class="section">
+</div><p></p><hr><a id="method-pmcmc_parameters_nested-fix"></a><div class="section">
 <h3 id="method-fix-">Method <code><a href="https://rdrr.io/r/utils/fix.html" class="external-link">fix()</a></code><a class="anchor" aria-label="anchor" href="#method-fix-"></a></h3>
 <p>Set some parameters to fixed values. Use this to
 reduce the dimensionality of your system.  Note that this function
@@ -347,21 +347,21 @@ be set to a single value and no longer used in inference.</p><div class="section
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Propose a new parameter point</span></span></span>
 <span class="r-in"><span><span class="va">pars</span><span class="op">$</span><span class="fu">propose</span><span class="op">(</span><span class="va">p</span>, type <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          p1        p2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> a  1.609799 0.4342059</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> b -1.120250 0.5168448</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> c  3.663828 3.6638279</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> d  4.160104 4.1601042</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          p1       p2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> a 2.3342052 3.681715</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> b 0.9698426 2.899113</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> c 3.1581309 3.158131</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> d 4.8290321 4.829032</span>
 <span class="r-in"><span><span class="va">pars</span><span class="op">$</span><span class="fu">propose</span><span class="op">(</span><span class="va">p</span>, type <span class="op">=</span> <span class="st">"fixed"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         p1       p2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> a 2.000000 2.000000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> b 2.000000 2.000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> c 3.095645 3.095645</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> d 2.985924 2.985924</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> c 3.858418 3.858418</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> d 3.847655 3.847655</span>
 <span class="r-in"><span><span class="va">pars</span><span class="op">$</span><span class="fu">propose</span><span class="op">(</span><span class="va">p</span>, type <span class="op">=</span> <span class="st">"varied"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         p1       p2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> a 1.919654 5.346569</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> b 3.585681 4.047557</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> a 2.438492 3.426906</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> b 2.475556 2.892371</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> c 3.000000 3.000000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> d 4.000000 4.000000</span>
 <span class="r-in"><span></span></span>
@@ -432,7 +432,7 @@ be set to a single value and no longer used in inference.</p><div class="section
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

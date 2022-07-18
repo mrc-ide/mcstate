@@ -19,7 +19,7 @@ particle deterministically."><meta property="og:image" content="/logo.png"><!-- 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.8</span>
       </span>
     </div>
 
@@ -128,15 +128,15 @@ particle (read only).  This will either be 1 or the same value as
 <div class="section">
 <h3 id="public-methods">Public methods<a class="anchor" aria-label="anchor" href="#public-methods"></a></h3>
 
-<ul><li><p><a href="#method-new"><code>particle_deterministic$new()</code></a></p></li>
-<li><p><a href="#method-run"><code>particle_deterministic$run()</code></a></p></li>
-<li><p><a href="#method-run_begin"><code>particle_deterministic$run_begin()</code></a></p></li>
-<li><p><a href="#method-state"><code>particle_deterministic$state()</code></a></p></li>
-<li><p><a href="#method-history"><code>particle_deterministic$history()</code></a></p></li>
-<li><p><a href="#method-restart_state"><code>particle_deterministic$restart_state()</code></a></p></li>
-<li><p><a href="#method-inputs"><code>particle_deterministic$inputs()</code></a></p></li>
-<li><p><a href="#method-set_n_threads"><code>particle_deterministic$set_n_threads()</code></a></p></li>
-</ul></div><p></p><hr><a id="method-new"></a><div class="section">
+<ul><li><p><a href="#method-particle_deterministic-new"><code>particle_deterministic$new()</code></a></p></li>
+<li><p><a href="#method-particle_deterministic-run"><code>particle_deterministic$run()</code></a></p></li>
+<li><p><a href="#method-particle_deterministic-run_begin"><code>particle_deterministic$run_begin()</code></a></p></li>
+<li><p><a href="#method-particle_deterministic-state"><code>particle_deterministic$state()</code></a></p></li>
+<li><p><a href="#method-particle_deterministic-history"><code>particle_deterministic$history()</code></a></p></li>
+<li><p><a href="#method-particle_deterministic-restart_state"><code>particle_deterministic$restart_state()</code></a></p></li>
+<li><p><a href="#method-particle_deterministic-inputs"><code>particle_deterministic$inputs()</code></a></p></li>
+<li><p><a href="#method-particle_deterministic-set_n_threads"><code>particle_deterministic$set_n_threads()</code></a></p></li>
+</ul></div><p></p><hr><a id="method-particle_deterministic-new"></a><div class="section">
 <h3 id="method-new-">Method <code>new()</code><a class="anchor" aria-label="anchor" href="#method-new-"></a></h3>
 <p>Create the particle filter</p><div class="section">
 <h4 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a></h4>
@@ -245,7 +245,7 @@ most outputs (scalars become vectors, vectors become matrices etc).</p></dd>
 </dl><p></p></div>
 </div>
 
-</div><p></p><hr><a id="method-run"></a><div class="section">
+</div><p></p><hr><a id="method-particle_deterministic-run"></a><div class="section">
 <h3 id="method-run-">Method <code>run()</code><a class="anchor" aria-label="anchor" href="#method-run-"></a></h3>
 <p>Run the deterministic particle filter</p><div class="section">
 <h4 id="usage-1">Usage<a class="anchor" aria-label="anchor" href="#usage-1"></a></h4>
@@ -296,7 +296,7 @@ larger than -Inf will cause an error.</p></dd>
 (<code>-Inf</code> if the model is impossible)</p>
 </div>
 
-</div><p></p><hr><a id="method-run_begin"></a><div class="section">
+</div><p></p><hr><a id="method-particle_deterministic-run_begin"></a><div class="section">
 <h3 id="method-run-begin-">Method <code>run_begin()</code><a class="anchor" aria-label="anchor" href="#method-run-begin-"></a></h3>
 <p>Begin a deterministic run. This is part of the
 "advanced" interface; typically you will want to use <code>$run()</code>
@@ -343,7 +343,7 @@ larger than -Inf will cause an error.</p></dd>
 <code>step</code> and <code>end</code>. This interface is still subject to change.</p>
 </div>
 
-</div><p></p><hr><a id="method-state"></a><div class="section">
+</div><p></p><hr><a id="method-particle_deterministic-state"></a><div class="section">
 <h3 id="method-state-">Method <code>state()</code><a class="anchor" aria-label="anchor" href="#method-state-"></a></h3>
 <p>Extract the current model state, optionally filtering.
 If the model has not yet been run, then this method will throw an
@@ -363,7 +363,7 @@ particles.</p><div class="section">
 </dl><p></p></div>
 </div>
 
-</div><p></p><hr><a id="method-history"></a><div class="section">
+</div><p></p><hr><a id="method-particle_deterministic-history"></a><div class="section">
 <h3 id="method-history-">Method <code><a href="https://rdrr.io/r/utils/savehistory.html" class="external-link">history()</a></code><a class="anchor" aria-label="anchor" href="#method-history-"></a></h3>
 <p>Extract the particle trajectories. Requires that
 the model was run with <code>save_history = TRUE</code>, which does
@@ -386,7 +386,7 @@ If <code>NULL</code> we return all particles' histories.</p></dd>
 </dl><p></p></div>
 </div>
 
-</div><p></p><hr><a id="method-restart_state"></a><div class="section">
+</div><p></p><hr><a id="method-particle_deterministic-restart_state"></a><div class="section">
 <h3 id="method-restart-state-">Method <code>restart_state()</code><a class="anchor" aria-label="anchor" href="#method-restart-state-"></a></h3>
 <p>Return the full particle filter state at points back in time
 that were saved with the <code>save_restart</code> argument to
@@ -418,7 +418,7 @@ interface.</p></dd>
 </dl><p></p></div>
 </div>
 
-</div><p></p><hr><a id="method-inputs"></a><div class="section">
+</div><p></p><hr><a id="method-particle_deterministic-inputs"></a><div class="section">
 <h3 id="method-inputs-">Method <code>inputs()</code><a class="anchor" aria-label="anchor" href="#method-inputs-"></a></h3>
 <p>Return a list of inputs used to configure the deterministic particle
 filter. These correspond directly to the argument names for the
@@ -428,7 +428,7 @@ constructor and are the same as the input arguments.</p><div class="section">
 </div>
 
 
-</div><p></p><hr><a id="method-set_n_threads"></a><div class="section">
+</div><p></p><hr><a id="method-particle_deterministic-set_n_threads"></a><div class="section">
 <h3 id="method-set-n-threads-">Method <code>set_n_threads()</code><a class="anchor" aria-label="anchor" href="#method-set-n-threads-"></a></h3>
 <p>Set the number of threads used by the particle filter (and dust
 model) after creation. This can be used to allocate additional
@@ -466,7 +466,7 @@ requested (based on environment variables and OpenMP support).</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>
