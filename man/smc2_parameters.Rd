@@ -13,18 +13,18 @@ used.
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{smc2_parameters$new()}}
-\item \href{#method-sample}{\code{smc2_parameters$sample()}}
-\item \href{#method-names}{\code{smc2_parameters$names()}}
-\item \href{#method-summary}{\code{smc2_parameters$summary()}}
-\item \href{#method-prior}{\code{smc2_parameters$prior()}}
-\item \href{#method-propose}{\code{smc2_parameters$propose()}}
-\item \href{#method-model}{\code{smc2_parameters$model()}}
+\item \href{#method-smc2_parameters-new}{\code{smc2_parameters$new()}}
+\item \href{#method-smc2_parameters-sample}{\code{smc2_parameters$sample()}}
+\item \href{#method-smc2_parameters-names}{\code{smc2_parameters$names()}}
+\item \href{#method-smc2_parameters-summary}{\code{smc2_parameters$summary()}}
+\item \href{#method-smc2_parameters-prior}{\code{smc2_parameters$prior()}}
+\item \href{#method-smc2_parameters-propose}{\code{smc2_parameters$propose()}}
+\item \href{#method-smc2_parameters-model}{\code{smc2_parameters$model()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-smc2_parameters-new"></a>}}
+\if{latex}{\out{\hypertarget{method-smc2_parameters-new}{}}}
 \subsection{Method \code{new()}}{
 Create the smc2_parameters object
 \subsection{Usage}{
@@ -51,8 +51,8 @@ you can do arbitrary transformations here.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-sample"></a>}}
-\if{latex}{\out{\hypertarget{method-sample}{}}}
+\if{html}{\out{<a id="method-smc2_parameters-sample"></a>}}
+\if{latex}{\out{\hypertarget{method-smc2_parameters-sample}{}}}
 \subsection{Method \code{sample()}}{
 Create \code{n} independent random parameter vectors (as a
 matrix with \code{n} rows)
@@ -69,8 +69,8 @@ matrix with \code{n} rows)
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-names"></a>}}
-\if{latex}{\out{\hypertarget{method-names}{}}}
+\if{html}{\out{<a id="method-smc2_parameters-names"></a>}}
+\if{latex}{\out{\hypertarget{method-smc2_parameters-names}{}}}
 \subsection{Method \code{names()}}{
 Return the names of the parameters
 \subsection{Usage}{
@@ -79,8 +79,8 @@ Return the names of the parameters
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-summary"></a>}}
-\if{latex}{\out{\hypertarget{method-summary}{}}}
+\if{html}{\out{<a id="method-smc2_parameters-summary"></a>}}
+\if{latex}{\out{\hypertarget{method-smc2_parameters-summary}{}}}
 \subsection{Method \code{summary()}}{
 Return a \code{data.frame} with information about
 parameters (name, min, max, and integer).
@@ -90,8 +90,8 @@ parameters (name, min, max, and integer).
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-prior"></a>}}
-\if{latex}{\out{\hypertarget{method-prior}{}}}
+\if{html}{\out{<a id="method-smc2_parameters-prior"></a>}}
+\if{latex}{\out{\hypertarget{method-smc2_parameters-prior}{}}}
 \subsection{Method \code{prior()}}{
 Compute the prior for a parameter vector
 \subsection{Usage}{
@@ -108,8 +108,8 @@ parameters were defined in (see \verb{$names()} for that order.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-propose"></a>}}
-\if{latex}{\out{\hypertarget{method-propose}{}}}
+\if{html}{\out{<a id="method-smc2_parameters-propose"></a>}}
+\if{latex}{\out{\hypertarget{method-smc2_parameters-propose}{}}}
 \subsection{Method \code{propose()}}{
 Propose a new parameter vector given a current parameter
 vector and variance covariance matrix. After proposal, this rounds
@@ -133,8 +133,8 @@ number of parameters, in the same order as \code{theta}.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-model"></a>}}
-\if{latex}{\out{\hypertarget{method-model}{}}}
+\if{html}{\out{<a id="method-smc2_parameters-model"></a>}}
+\if{latex}{\out{\hypertarget{method-smc2_parameters-model}{}}}
 \subsection{Method \code{model()}}{
 Apply the model transformation function to a parameter
 vector.

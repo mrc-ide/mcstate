@@ -136,6 +136,9 @@ particle_filter_data <- function(data, time, rate, initial_time = NULL,
   times <- cbind(time_start, time_end, deparse.level = 0)
   if (is_continuous) {
     steps <- NULL
+    time_start <- as.numeric(time_start)
+    time_end <- as.numeric(time_end)
+    storage.mode(times) <- "numeric"
     ret <- data.frame(time_start = time_start,
                       time_end = time_end,
                       time_start = time_start,

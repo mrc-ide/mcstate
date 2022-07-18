@@ -93,19 +93,20 @@ this will be 1.}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{particle_filter$new()}}
-\item \href{#method-run}{\code{particle_filter$run()}}
-\item \href{#method-run_begin}{\code{particle_filter$run_begin()}}
-\item \href{#method-state}{\code{particle_filter$state()}}
-\item \href{#method-history}{\code{particle_filter$history()}}
-\item \href{#method-restart_state}{\code{particle_filter$restart_state()}}
-\item \href{#method-inputs}{\code{particle_filter$inputs()}}
-\item \href{#method-set_n_threads}{\code{particle_filter$set_n_threads()}}
+\item \href{#method-particle_filter-new}{\code{particle_filter$new()}}
+\item \href{#method-particle_filter-run}{\code{particle_filter$run()}}
+\item \href{#method-particle_filter-run_begin}{\code{particle_filter$run_begin()}}
+\item \href{#method-particle_filter-state}{\code{particle_filter$state()}}
+\item \href{#method-particle_filter-history}{\code{particle_filter$history()}}
+\item \href{#method-particle_filter-statistics}{\code{particle_filter$statistics()}}
+\item \href{#method-particle_filter-restart_state}{\code{particle_filter$restart_state()}}
+\item \href{#method-particle_filter-inputs}{\code{particle_filter$inputs()}}
+\item \href{#method-particle_filter-set_n_threads}{\code{particle_filter$set_n_threads()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-particle_filter-new"></a>}}
+\if{latex}{\out{\hypertarget{method-particle_filter-new}{}}}
 \subsection{Method \code{new()}}{
 Create the particle filter
 \subsection{Usage}{
@@ -230,8 +231,8 @@ list will be added in a future version!}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-run"></a>}}
-\if{latex}{\out{\hypertarget{method-run}{}}}
+\if{html}{\out{<a id="method-particle_filter-run"></a>}}
+\if{latex}{\out{\hypertarget{method-particle_filter-run}{}}}
 \subsection{Method \code{run()}}{
 Run the particle filter
 \subsection{Usage}{
@@ -289,8 +290,8 @@ A single numeric value representing the log-likelihood
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-run_begin"></a>}}
-\if{latex}{\out{\hypertarget{method-run_begin}{}}}
+\if{html}{\out{<a id="method-particle_filter-run_begin"></a>}}
+\if{latex}{\out{\hypertarget{method-particle_filter-run_begin}{}}}
 \subsection{Method \code{run_begin()}}{
 Begin a particle filter run. This is part of the
 "advanced" interface for the particle filter; typically you will
@@ -328,8 +329,8 @@ An object of class \code{particle_filter_state}, with methods
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-state"></a>}}
-\if{latex}{\out{\hypertarget{method-state}{}}}
+\if{html}{\out{<a id="method-particle_filter-state"></a>}}
+\if{latex}{\out{\hypertarget{method-particle_filter-state}{}}}
 \subsection{Method \code{state()}}{
 Extract the current model state, optionally filtering.
 If the model has not yet been run, then this method will throw an
@@ -349,8 +350,8 @@ particles.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-history"></a>}}
-\if{latex}{\out{\hypertarget{method-history}{}}}
+\if{html}{\out{<a id="method-particle_filter-history"></a>}}
+\if{latex}{\out{\hypertarget{method-particle_filter-history}{}}}
 \subsection{Method \code{history()}}{
 Extract the particle trajectories. Requires that
 the model was run with \code{save_history = TRUE}, which does
@@ -378,8 +379,21 @@ histories.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-restart_state"></a>}}
-\if{latex}{\out{\hypertarget{method-restart_state}{}}}
+\if{html}{\out{<a id="method-particle_filter-statistics"></a>}}
+\if{latex}{\out{\hypertarget{method-particle_filter-statistics}{}}}
+\subsection{Method \code{statistics()}}{
+Fetch statistics about steps taken during the integration, by
+calling through to the \verb{$statistics()} method of the underlying
+model. This is only available for continuous time (ODE) models,
+and will error if used with discrete time models.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter$statistics()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-particle_filter-restart_state"></a>}}
+\if{latex}{\out{\hypertarget{method-particle_filter-restart_state}{}}}
 \subsection{Method \code{restart_state()}}{
 Return the full particle filter state at points back in time
 that were saved with the \code{save_restart} argument to
@@ -411,8 +425,8 @@ If \code{NULL} we return all particles' states.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-inputs"></a>}}
-\if{latex}{\out{\hypertarget{method-inputs}{}}}
+\if{html}{\out{<a id="method-particle_filter-inputs"></a>}}
+\if{latex}{\out{\hypertarget{method-particle_filter-inputs}{}}}
 \subsection{Method \code{inputs()}}{
 Return a list of inputs used to configure the particle
 filter. These correspond directly to the argument names for the
@@ -426,8 +440,8 @@ restart the model).
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-set_n_threads"></a>}}
-\if{latex}{\out{\hypertarget{method-set_n_threads}{}}}
+\if{html}{\out{<a id="method-particle_filter-set_n_threads"></a>}}
+\if{latex}{\out{\hypertarget{method-particle_filter-set_n_threads}{}}}
 \subsection{Method \code{set_n_threads()}}{
 Set the number of threads used by the particle filter (and dust
 model) after creation. This can be used to allocate additional

@@ -1508,6 +1508,7 @@ test_that("run particle filter on continuous model", {
                nrates = 15)
   res <- p$run(pars)
   expect_is(res, "numeric")
+  expect_false(res == p$run(pars))
 
   mod <- dat$model$new(pars, 0, 1, seed = 1L)
   len <- mod$info()$len
@@ -1618,4 +1619,40 @@ test_that("continuous data given iff model is continuous", {
                            dat$compare,
                            index = dat$index),
                e)
+})
+
+
+test_that("Can fetch statistics from continuous model", {
+  dat <- example_continuous()
+  n_particles <- 42
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, seed = 1L,
+                           stochastic_schedule = dat$stochastic_schedule)
+  pars <- list(init_Ih = 0.8,
+               init_Sv = 100,
+               init_Iv = 1,
+               nrates = 15)
+  expect_error(p$statistics(),
+               "Model has not yet been run")
+  res <- p$run(pars)
+  s <- p$statistics()
+  expect_s3_class(s, "mode_statistics")
+})
+
+
+test_that("Can't fetch statistics from discrete model", {
+  dat <- example_sir()
+  n_particles <- 42
+  set.seed(1)
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, seed = 1L)
+  expect_error(
+    p$statistics(),
+    "Statistics are only available for continuous (ODE) models",
+    fixed = TRUE)
+  res <- p$run()
+  expect_error(
+    p$statistics(),
+    "Statistics are only available for continuous (ODE) models",
+    fixed = TRUE)
 })
