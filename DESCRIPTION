@@ -32,8 +32,9 @@ Suggests:
     fs,
     knitr,
     mockery,
+    mode (>= 0.1.6)
     mvtnorm,
-    odin.dust (>= 0.2.14),
+    odin.dust (>= 0.2.20),
     rmarkdown,
     testthat,
     withr

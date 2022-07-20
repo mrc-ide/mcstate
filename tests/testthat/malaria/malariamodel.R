@@ -46,11 +46,11 @@ initial(Iv) <- init_Iv
 # User Input #
 ##############
 init_Sh <- 1 - init_Ih
-init_Ih <- user()
-init_Sv <- user()
-init_Iv <- user()
+init_Ih <- user(0.8)
+init_Sv <- user(100)
+init_Iv <- user(1)
 
-nrates <- user()
+nrates <- user(15)
 dim(Ev) <- nrates
 
 # Ratio mosquitoes:humans

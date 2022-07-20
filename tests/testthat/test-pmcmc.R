@@ -719,3 +719,69 @@ test_that("mcmc works for multivariate gaussian", {
     expect_lt(abs(cov(res$pars)[1, 2]), 0.1)
   })
 })
+
+
+test_that("can run pmcmc for ode models", {
+  dat <- example_continuous()
+  n_particles <- 20
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L,
+                            stochastic_schedule = dat$stochastic_schedule)
+  p2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L,
+                            stochastic_schedule = dat$stochastic_schedule)
+
+  pars <- pmcmc_parameters$new(
+    list(pmcmc_parameter("bh", 0.05, min = 0.01, max = 0.1),
+         pmcmc_parameter("bv", 0.05, min = 0.01, max = 0.1)),
+    proposal = diag(2) * 0.005)
+
+  control1 <- pmcmc_control(10, save_trajectories = TRUE, save_state = TRUE)
+  control2 <- pmcmc_control(10, save_trajectories = FALSE, save_state = FALSE)
+  set.seed(1)
+  results1 <- pmcmc(pars, p1, control = control1)
+  set.seed(1)
+  results2 <- pmcmc(pars, p2, control = control2)
+
+  expect_s3_class(results1, "mcstate_pmcmc")
+
+  ## Including or not the history does not change the mcmc trajectory:
+  expect_identical(names(results1), names(results2))
+  expect_equal(results1$pars, results2$pars)
+  expect_equal(results1$probabilities, results2$probabilities)
+
+  ## We did mix
+  expect_true(all(acceptance_rate(results1$pars) > 0))
+
+  ## Parameters and probabilities have the expected shape
+  expect_equal(dim(results1$pars), c(10, 2))
+  expect_equal(colnames(results1$pars), c("bh", "bv"))
+
+  expect_equal(dim(results1$probabilities), c(10, 3))
+  expect_equal(colnames(results1$probabilities),
+               c("log_prior", "log_likelihood", "log_posterior"))
+
+  ## History, if returned, has the correct shape
+  expect_equal(dim(results1$state), c(23, 10)) # state, mcmc
+
+  ## Trajectories, if returned, have the same shape
+  expect_s3_class(results1$trajectories, "mcstate_trajectories")
+  expect_equal(dim(results1$trajectories$state), c(2, 10, 61))
+  ## expect_equal(
+  ##   results1$trajectories$state[, , dim(results1$trajectories$state)[3]],
+  ##   results1$state[1:3, ])
+
+  ## TODO: some work here to do:
+  expect_equal(results1$trajectories$step, seq(0, 400, by = 4))
+  expect_equal(results1$trajectories$rate, 4)
+
+  ## Additional information required to predict
+  expect_setequal(
+    names(results1$predict),
+    c("transform", "index", "rate", "step", "filter"))
+  expect_identical(results1$predict$transform, as.list)
+  expect_equal(results1$predict$index, c(Ih = 2, Sh = 1))
+  expect_null(results1$predict$rate)
+  ## expect_equal(results1$predict$step, last(dat$data$step_end))
+  expect_identical(results1$predict$filter, p1$inputs())
+})

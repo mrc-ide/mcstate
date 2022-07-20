@@ -1502,6 +1502,7 @@ test_that("run particle filter on continuous model", {
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index, seed = 1L,
                            stochastic_schedule = dat$stochastic_schedule)
+
   pars <- list(init_Ih = 0.8,
                init_Sv = 100,
                init_Iv = 1,

@@ -302,12 +302,21 @@ pmcmc_state <- R6::R6Class(
         ##
         ## Do we *definitely* need step and rate here?
         data <- private$filter$inputs()$data
-        predict <- list(
-          transform = r6_private(private$pars)$transform,
-          index = r6_private(private$filter)$last_history$index,
-          step = last(data$step_end),
-          rate = attr(data, "rate", exact = TRUE),
-          filter = private$filter$inputs())
+        is_continuous <- inherits(data, "particle_filter_data_continuous")
+        if (is_continuous) {
+          predict <- list(
+            transform = r6_private(private$pars)$transform,
+            index = r6_private(private$filter)$last_history$index,
+            time = last(data$time_end),
+            filter = private$filter$inputs())
+        } else {
+          predict <- list(
+            transform = r6_private(private$pars)$transform,
+            index = r6_private(private$filter)$last_history$index,
+            step = last(data$step_end),
+            rate = attr(data, "rate", exact = TRUE),
+            filter = private$filter$inputs())
+        }
       }
 
       if (private$control$save_state) {
@@ -333,8 +342,18 @@ pmcmc_state <- R6::R6Class(
         if (private$nested) {
           colnames(trajectories_state) <- private$pars$populations()
         }
-        steps <- attr(private$filter$inputs()$data, "steps")
-        step <- c(steps[[1]], steps[, 2])
+        ## This needs a small amount of work; but it's not totally
+        ## clear what uses it. I think that there's a good case for
+        ## filling in nicely the requested bits - see sircovid's
+        ## helper-lancelot-pmcmc.R which does this, and similar code
+        ## in spimalot.
+        browser()
+        if (is_continuous) {
+
+        } else {
+          steps <- attr(private$filter$inputs()$data, "steps")
+          step <- c(steps[[1]], steps[, 2])
+        }
         trajectories <- mcstate_trajectories(step, predict$rate,
                                              trajectories_state,
                                              predicted = FALSE)

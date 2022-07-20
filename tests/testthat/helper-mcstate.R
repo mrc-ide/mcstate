@@ -80,9 +80,17 @@ example_continuous <- function() {
                    Sh = info$index$Sh))
   }
 
+  pars <- pmcmc_parameters$new(
+    list(pmcmc_parameter("bh", 0.05, min = 0.01, max = 0.1),
+         pmcmc_parameter("bv", 0.05, min = 0.01, max = 0.1)),
+    proposal = diag(2) * 0.005)
+
+  stochastic_schedule <- seq(from = 30, by = 30, to = 1800)
+
   list(model = model, compare = compare,
        data_raw = data_raw, data = data,
-       index = index, stochastic_schedule  = seq(from = 30, by = 30, to = 1800))
+       index = index, pars = pars,
+       stochastic_schedule = stochastic_schedule)
 }
 
 
