@@ -38,6 +38,9 @@ pmcmc_predict <- function(object, steps, prepend_trajectories = FALSE,
   if (is.null(object$predict)) {
     stop("mcmc was run with return_state = FALSE, can't predict")
   }
+  if (isTRUE(object$predict$is_continuous)) {
+    stop("predict not (yet) possible with continuous models (mrc-3453)")
+  }
   if (length(steps) < 2) {
     stop("At least two steps required for predict")
   }

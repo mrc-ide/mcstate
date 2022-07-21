@@ -767,21 +767,22 @@ test_that("can run pmcmc for ode models", {
   ## Trajectories, if returned, have the same shape
   expect_s3_class(results1$trajectories, "mcstate_trajectories")
   expect_equal(dim(results1$trajectories$state), c(2, 10, 61))
-  ## expect_equal(
-  ##   results1$trajectories$state[, , dim(results1$trajectories$state)[3]],
-  ##   results1$state[1:3, ])
+  expect_equal(
+    unname(
+      results1$trajectories$state[, , dim(results1$trajectories$state)[3]]),
+    results1$state[2:1, ])
 
-  ## TODO: some work here to do:
-  expect_equal(results1$trajectories$step, seq(0, 400, by = 4))
-  expect_equal(results1$trajectories$rate, 4)
+  expect_equal(results1$trajectories$time, seq(0, 1800, by = 30))
+  expect_null(results1$trajectories$step)
+  expect_null(results1$trajectories$rate)
 
   ## Additional information required to predict
   expect_setequal(
     names(results1$predict),
-    c("transform", "index", "rate", "step", "filter"))
+    c("is_continuous", "transform", "index", "rate", "step", "time", "filter"))
   expect_identical(results1$predict$transform, as.list)
   expect_equal(results1$predict$index, c(Ih = 2, Sh = 1))
   expect_null(results1$predict$rate)
-  ## expect_equal(results1$predict$step, last(dat$data$step_end))
+  expect_equal(results1$predict$time, last(dat$data$time_end))
   expect_identical(results1$predict$filter, p1$inputs())
 })
