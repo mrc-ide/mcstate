@@ -1,3 +1,7 @@
+# mcstate 0.9.9
+
+* Basic inference now working with continuous time (ODE) models, via `particle_filter` and `pmcmc`
+
 # mcstate 0.9.2
 
 * Support for adaptive proposals for deterministic models
