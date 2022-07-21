@@ -14,7 +14,7 @@ mcstate_trajectories_discrete <- function(step, rate, state, predicted) {
 ## parallel class here.
 mcstate_trajectories_continuous <- function(time, state, predicted) {
   if (length(predicted) == 1L) {
-    predicted <- rep_len(predicted, length(step))
+    predicted <- rep_len(predicted, length(time))
   }
   if (any(predicted)) {
     stop("predicted continuous trajectories not supported (mrc-3452, mrc-3453)")

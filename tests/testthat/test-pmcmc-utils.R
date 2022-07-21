@@ -155,8 +155,8 @@ test_that("deprecation warnings on old interface", {
 
 
 test_that("disallow predicted in continuous trajectories", {
-  dat <- example_sir_pmcmc()$pmcmc$base
+  dat <- example_sir_pmcmc()$pmcmc$trajectories
   expect_error(
     mcstate_trajectories_continuous(dat$step * dat$rate, dat$state, TRUE),
-    "predicted trajectories not supported")
+    "predicted continuous trajectories not supported")
 })
