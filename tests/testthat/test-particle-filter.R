@@ -1657,3 +1657,20 @@ test_that("Can't fetch statistics from discrete model", {
     "Statistics are only available for continuous (ODE) models",
     fixed = TRUE)
 })
+
+
+test_that("Can reconstruct a continuous time filter", {
+  dat <- example_continuous()
+  n_particles <- 42
+  ode_control <- mode::mode_control(atol = 1e-4, rtol = 1e-4)
+  p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, seed = 1L,
+                           stochastic_schedule = dat$stochastic_schedule,
+                           ode_control = ode_control)
+  inputs <- p1$inputs()
+  expect_equal(inputs$stochastic_schedule, dat$stochastic_schedule)
+  expect_equal(inputs$ode_control, ode_control)
+
+  p2 <- particle_filter_from_inputs(inputs)
+  expect_equal(p2$inputs(), inputs)
+})
