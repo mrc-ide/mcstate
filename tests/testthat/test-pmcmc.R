@@ -731,17 +731,12 @@ test_that("can run pmcmc for ode models", {
                             index = dat$index, seed = 1L,
                             stochastic_schedule = dat$stochastic_schedule)
 
-  pars <- pmcmc_parameters$new(
-    list(pmcmc_parameter("bh", 0.05, min = 0.01, max = 0.1),
-         pmcmc_parameter("bv", 0.05, min = 0.01, max = 0.1)),
-    proposal = diag(2) * 0.005)
-
   control1 <- pmcmc_control(10, save_trajectories = TRUE, save_state = TRUE)
   control2 <- pmcmc_control(10, save_trajectories = FALSE, save_state = FALSE)
   set.seed(1)
-  results1 <- pmcmc(pars, p1, control = control1)
+  results1 <- pmcmc(dat$pars, p1, control = control1)
   set.seed(1)
-  results2 <- pmcmc(pars, p2, control = control2)
+  results2 <- pmcmc(dat$pars, p2, control = control2)
 
   expect_s3_class(results1, "mcstate_pmcmc")
 
