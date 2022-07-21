@@ -166,3 +166,22 @@ test_that("can run a prediction from a nested mcmc run", {
 
   expect_silent(pmcmc_predict(results, steps, prepend_trajectories = TRUE))
 })
+
+
+test_that("Can't predict from a continuous pmcmc", {
+  dat <- example_continuous()
+  n_particles <- 20
+  p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                           index = dat$index, seed = 1L,
+                           stochastic_schedule = dat$stochastic_schedule)
+  pars <- pmcmc_parameters$new(
+    list(pmcmc_parameter("bh", 0.05, min = 0.01, max = 0.1),
+         pmcmc_parameter("bv", 0.05, min = 0.01, max = 0.1)),
+    proposal = diag(2) * 0.005)
+  control <- pmcmc_control(10, save_trajectories = TRUE, save_state = TRUE)
+  results <- pmcmc(pars, p, control = control)
+  expect_error(
+    pmcmc_predict(results, seq(1800, length.out = 10, by = 30)),
+    "predict not (yet) possible with continuous models (mrc-3453)",
+    fixed = TRUE)
+})
