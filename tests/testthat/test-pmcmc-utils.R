@@ -131,3 +131,24 @@ test_that("progress bar creates progress_bar when progress = TRUE", {
     p(),
     "Finished 3 steps in [0-9.]+ secs")
 })
+
+
+test_that("deprecation warnings on old interface", {
+  results <- example_sir_pmcmc()$pmcmc
+  base <- results$trajectories
+
+  expect_warning(
+    res <- mcstate_trajectories(base$step, base$rate, base$state,
+                                base$predicted),
+    "deprecated")
+  expect_identical(res, base)
+
+  steps <- seq(results$predict$step, by = 4, length.out = 26)
+  prediction <- pmcmc_predict(results, steps, seed = 1L)
+
+  expect_warning(
+    res <- bind_mcstate_trajectories(base, prediction),
+    "deprecated")
+  expect_identical(res,
+                   bind_mcstate_trajectories_discrete(base, prediction))
+})

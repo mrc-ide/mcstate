@@ -41,7 +41,7 @@ bind_mcstate_trajectories_discrete <- function(a, b) {
   rownames(state) <- rownames(b$state) %||% rownames(a$state)
   predicted <- c(a$predicted, b$predicted[-1])
 
-  mcstate_trajectories(step, a$rate, state, predicted)
+  mcstate_trajectories_discrete(step, a$rate, state, predicted)
 }
 
 

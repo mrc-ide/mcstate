@@ -78,10 +78,10 @@ pmcmc_predict <- function(object, steps, prepend_trajectories = FALSE,
   }
   y <- mod$simulate(steps)
 
-  res <- mcstate_trajectories(steps, object$predict$rate, y, TRUE)
+  res <- mcstate_trajectories_discrete(steps, object$predict$rate, y, TRUE)
 
   if (prepend_trajectories) {
-    res <- bind_mcstate_trajectories(object$trajectories, res)
+    res <- bind_mcstate_trajectories_discrete(object$trajectories, res)
   }
 
   res

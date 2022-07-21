@@ -308,7 +308,7 @@ pmcmc_state <- R6::R6Class(
           rate <- NULL
           time <- last(data$time_end)
         } else {
-          step <- last(date$step_end)
+          step <- last(data$step_end)
           rate <- attr(data, "rate", exact = TRUE)
           time <- step * rate
         }
