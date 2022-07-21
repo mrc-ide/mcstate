@@ -17,7 +17,7 @@ mcstate_trajectories_continuous <- function(time, state, predicted) {
     predicted <- rep_len(predicted, length(step))
   }
   if (any(predicted)) {
-    stop("predicted trajectories not yet supported (mrc-3452, mrc-3453)")
+    stop("predicted continuous trajectories not supported (mrc-3452, mrc-3453)")
   }
   ret <- list(time = time, state = state, predicted = predicted)
   class(ret) <- c("mcstate_trajectories_continuous", "mcstate_trajectories")
