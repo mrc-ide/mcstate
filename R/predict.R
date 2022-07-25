@@ -38,6 +38,9 @@ pmcmc_predict <- function(object, steps, prepend_trajectories = FALSE,
   if (is.null(object$predict)) {
     stop("mcmc was run with return_state = FALSE, can't predict")
   }
+  if (isTRUE(object$predict$is_continuous)) {
+    stop("predict not (yet) possible with continuous models (mrc-3453)")
+  }
   if (length(steps) < 2) {
     stop("At least two steps required for predict")
   }
@@ -75,10 +78,10 @@ pmcmc_predict <- function(object, steps, prepend_trajectories = FALSE,
   }
   y <- mod$simulate(steps)
 
-  res <- mcstate_trajectories(steps, object$predict$rate, y, TRUE)
+  res <- mcstate_trajectories_discrete(steps, object$predict$rate, y, TRUE)
 
   if (prepend_trajectories) {
-    res <- bind_mcstate_trajectories(object$trajectories, res)
+    res <- bind_mcstate_trajectories_discrete(object$trajectories, res)
   }
 
   res

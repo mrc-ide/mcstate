@@ -302,12 +302,27 @@ pmcmc_state <- R6::R6Class(
         ##
         ## Do we *definitely* need step and rate here?
         data <- private$filter$inputs()$data
+        is_continuous <- inherits(data, "particle_filter_data_continuous")
+        if (is_continuous) {
+          step <- NULL
+          rate <- NULL
+          time <- last(data$time_end)
+        } else {
+          step <- last(data$step_end)
+          rate <- attr(data, "rate", exact = TRUE)
+          time <- step * rate
+        }
+
         predict <- list(
+          is_continuous = is_continuous,
           transform = r6_private(private$pars)$transform,
           index = r6_private(private$filter)$last_history$index,
-          step = last(data$step_end),
-          rate = attr(data, "rate", exact = TRUE),
+          step = step,
+          rate = rate,
+          time = time,
           filter = private$filter$inputs())
+      } else {
+        predict <- NULL
       }
 
       if (private$control$save_state) {
@@ -333,11 +348,22 @@ pmcmc_state <- R6::R6Class(
         if (private$nested) {
           colnames(trajectories_state) <- private$pars$populations()
         }
-        steps <- attr(private$filter$inputs()$data, "steps")
-        step <- c(steps[[1]], steps[, 2])
-        trajectories <- mcstate_trajectories(step, predict$rate,
-                                             trajectories_state,
-                                             predicted = FALSE)
+        ## This needs a small amount of work; but it's not totally
+        ## clear what uses it. I think that there's a good case for
+        ## filling in nicely the requested bits - see sircovid's
+        ## helper-lancelot-pmcmc.R which does this, and similar code
+        ## in spimalot.
+        if (predict$is_continuous) {
+          times <- attr(predict$filter$data, "times")
+          time <- c(times[[1]], times[, 2])
+          trajectories <- mcstate_trajectories_continuous(
+            time, trajectories_state, predicted = FALSE)
+        } else {
+          steps <- attr(predict$filter$data, "steps")
+          step <- c(steps[[1]], steps[, 2])
+          trajectories <- mcstate_trajectories_discrete(
+            step, predict$rate, trajectories_state, predicted = FALSE)
+        }
       }
 
       iteration <- seq(private$control$n_burnin + 1,

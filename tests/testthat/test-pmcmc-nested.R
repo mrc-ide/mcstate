@@ -368,7 +368,7 @@ test_that("run nested pmcmc with the particle filter and retain history", {
   ## Additional information required to predict
   expect_setequal(
     names(results1$predict),
-    c("transform", "index", "rate", "step", "filter"))
+    c("is_continuous", "transform", "index", "rate", "step", "time", "filter"))
 })
 
 
