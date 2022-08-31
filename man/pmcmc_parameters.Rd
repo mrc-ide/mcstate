@@ -116,7 +116,7 @@ pars <- mcstate::pmcmc_parameters$new(
                                 prior = function(a) log(a)),
        mcstate::pmcmc_parameter("b", 0, prior = dnorm)),
   matrix(c(1, 0.5, 0.5, 2), 2, 2),
-  make_transform(m))
+  make_transform(demographic_matrix))
 
 # Now, as above we start from a position in terms of a and b only:
 pars$initial()
