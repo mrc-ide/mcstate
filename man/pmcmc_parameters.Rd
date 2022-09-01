@@ -10,6 +10,69 @@ internally to work with parameters. Most users only need to
 construct this object, but see the examples for how it can be
 used.
 }
+\section{Parameter transformations}{
+
+
+Unless you have a very simple model, it is highly unlikely that
+the parameters that you are interested in performing inference
+on are the same as the parameters that you might need to
+initialise your model.
+
+Due to the nature of mcmc and other inference algorithms, the
+general assumption is that the inference parameters will be a
+simple vector of real values; here each of the \code{parameters}
+elements corresponds to one of these. The proposal matrix maps
+one vector to another via a simple multivariate-gaussian kernel.
+
+On the other hand, dust models can take a named list of arbitrary
+data as their input parameters (see
+\link[dust:dust_generator]{dust::dust_generator}). These might include:
+\itemize{
+\item things that are not parameters at all from the perspective of
+the inference - for example some quantity that you might vary
+depending on the region/species/etc you're running the model for
+but that you are not fitting.
+\item non-scalar quantities that are directly derived from some
+parameters that you are fitting.  As an example of this, in
+\href{https://mrc-ide.github.io}{sircovid}, a transmission model of
+COVID, we take a number of "contact rates" which apply at
+different points in time, and generate from this an interpolated
+series of contact rates per time step (a very long
+vector). Other users have needed to generate equilibrium
+solutions to parts of their model and used these at
+initialisation.
+\item arbitrary complex inputs to the model, for example weather data,
+demographic matrices, population contact rate matrices
+etc. These are all "parameters" from the perspective of a dust
+model but not at all from the perspective of the inference
+process.
+}
+
+To allow for this in a flexible way, mcstate allows a "transform"
+function, the \code{transform} argument to the constructor. This
+function maps a named numeric vector of inference parameters to
+whatever you need for your dust model.  The default value for
+this function is \link{as.list} which just converts the named vector
+to a named list, which works well in the example cases here.
+
+When providing a transformation function, you may want to provide
+a "closure" rather than a top-level function. This way you can
+bind additional data into your function.  For example, suppose
+that you want to use some demographic matrix \code{m} in your model,
+and perform inference on parameters \code{a} and \code{b} you might write
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{make_transform <- function(m) \{
+  function(theta) \{
+    c(list(m = m), as.list(theta))
+  \}
+\}
+}\if{html}{\out{</div>}}
+
+and pass this into \code{mcstate::pmcmc_parameters$new}, providing
+parameter definitions only for \code{a} and \code{b}.  See the examples
+for full working of this.
+}
+
 \examples{
 # Construct an object with two parameters:
 pars <- mcstate::pmcmc_parameters$new(
@@ -34,6 +97,32 @@ pars$prior(p)
 
 # Transform data for your model
 pars$model(p)
+
+# Above we describe a nontrivial transformation function using a closure
+make_transform <- function(m) {
+  function(theta) {
+    c(list(m = m), as.list(theta))
+  }
+}
+
+# Suppose this is our demographic matrix (note here that the name
+# need not match that used in the transform)
+demographic_matrix <- diag(4)
+
+# Construct the parameters as above, but this time passing in the
+# function that make_transform returns
+pars <- mcstate::pmcmc_parameters$new(
+  list(mcstate::pmcmc_parameter("a", 0.1, min = 0, max = 1,
+                                prior = function(a) log(a)),
+       mcstate::pmcmc_parameter("b", 0, prior = dnorm)),
+  matrix(c(1, 0.5, 0.5, 2), 2, 2),
+  make_transform(demographic_matrix))
+
+# Now, as above we start from a position in terms of a and b only:
+pars$initial()
+
+# But when prepared for the model, our matrix will be set up
+pars$model(pars$initial())
 }
 \section{Methods}{
 \subsection{Public methods}{

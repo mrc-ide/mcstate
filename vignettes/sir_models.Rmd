@@ -203,6 +203,8 @@ mcmc_pars <- mcstate::pmcmc_parameters$new(list(beta = beta, gamma = gamma),
 
 The proposals for each MCMC step are also set here. Proposals are drawn from a multi-variate normal distribution, with the variance-covariance matrix set here. In this case we have simply set $\beta_{n+1} \sim N(\beta_{n}, 0.01)$ and $\gamma_{n+1} \sim N(\gamma_{n}, 0.01)$ so there is no covariance. We show how to improve this below.
 
+Note that in this very simple case, the parameters that our model takes as input (`alpha` and `beta`) happen to be exactly the same as the ones that we are interested in inferring. For nontrivial models this is very unlikely to the case, see the section "Parameter transformations" in `?mcstate::pmcmc_parameter` for details on how to cope with this.
+
 The sampler can now be run using these parameters, and the particle filter defined above.
 
 ```{r, include = in_pkgdown, eval = in_pkgdown}
