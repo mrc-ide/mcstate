@@ -50,7 +50,7 @@ process.
 
 To allow for this in a flexible way, mcstate allows a "transform"
 function, the \code{transform} argument to the constructor. This
-function maps a named numeric ector of inference parameters to
+function maps a named numeric vector of inference parameters to
 whatever you need for your dust model.  The default value for
 this function is \link{as.list} which just converts the named vector
 to a named list, which works well in the example cases here.
