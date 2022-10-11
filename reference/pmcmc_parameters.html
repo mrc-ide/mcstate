@@ -21,7 +21,7 @@ used."><meta property="og:image" content="/logo.png"><!-- mathjax --><script src
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.9</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.10</span>
       </span>
     </div>
 
@@ -89,6 +89,60 @@ used.</p>
     </div>
 
 
+    <div id="parameter-transformations">
+    <h2>Parameter transformations</h2>
+    
+
+
+<p>Unless you have a very simple model, it is highly unlikely that
+the parameters that you are interested in performing inference
+on are the same as the parameters that you might need to
+initialise your model.</p>
+<p>Due to the nature of mcmc and other inference algorithms, the
+general assumption is that the inference parameters will be a
+simple vector of real values; here each of the <code>parameters</code>
+elements corresponds to one of these. The proposal matrix maps
+one vector to another via a simple multivariate-gaussian kernel.</p>
+<p>On the other hand, dust models can take a named list of arbitrary
+data as their input parameters (see
+<a href="https://rdrr.io/pkg/dust/man/dust_generator.html" class="external-link">dust::dust_generator</a>). These might include:</p><ul><li><p>things that are not parameters at all from the perspective of
+the inference - for example some quantity that you might vary
+depending on the region/species/etc you're running the model for
+but that you are not fitting.</p></li>
+<li><p>non-scalar quantities that are directly derived from some
+parameters that you are fitting.  As an example of this, in
+<a href="https://mrc-ide.github.io" class="external-link">sircovid</a>, a transmission model of
+COVID, we take a number of "contact rates" which apply at
+different points in time, and generate from this an interpolated
+series of contact rates per time step (a very long
+vector). Other users have needed to generate equilibrium
+solutions to parts of their model and used these at
+initialisation.</p></li>
+<li><p>arbitrary complex inputs to the model, for example weather data,
+demographic matrices, population contact rate matrices
+etc. These are all "parameters" from the perspective of a dust
+model but not at all from the perspective of the inference
+process.</p></li>
+</ul><p>To allow for this in a flexible way, mcstate allows a "transform"
+function, the <code>transform</code> argument to the constructor. This
+function maps a named numeric vector of inference parameters to
+whatever you need for your dust model.  The default value for
+this function is <a href="https://rdrr.io/r/base/list.html" class="external-link">as.list</a> which just converts the named vector
+to a named list, which works well in the example cases here.</p>
+<p>When providing a transformation function, you may want to provide
+a "closure" rather than a top-level function. This way you can
+bind additional data into your function.  For example, suppose
+that you want to use some demographic matrix <code>m</code> in your model,
+and perform inference on parameters <code>a</code> and <code>b</code> you might write</p>
+<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1"></a>make_transform &lt;-<span class="st"> </span><span class="cf">function</span>(m) {</span>
+<span id="cb1-2"><a href="#cb1-2"></a>  <span class="cf">function</span>(theta) {</span>
+<span id="cb1-3"><a href="#cb1-3"></a>    <span class="kw">c</span>(<span class="kw">list</span>(<span class="dt">m =</span> m), <span class="kw">as.list</span>(theta))</span>
+<span id="cb1-4"><a href="#cb1-4"></a>  }</span>
+<span id="cb1-5"><a href="#cb1-5"></a>}</span></code></pre><p></p></div>
+<p>and pass this into <code>mcstate::pmcmc_parameters$new</code>, providing
+parameter definitions only for <code>a</code> and <code>b</code>.  See the examples
+for full working of this.</p>
+    </div>
     <div id="methods">
     <h2>Methods</h2>
     
@@ -297,7 +351,7 @@ reduce the dimensionality of your system.</p><div class="section">
 <span class="r-in"><span><span class="co"># Propose a new parameter point</span></span></span>
 <span class="r-in"><span><span class="va">pars</span><span class="op">$</span><span class="fu">propose</span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          a          b </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  0.9924352 -2.1201346 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  0.4023788 -1.6735342 </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Information about parameters:</span></span></span>
 <span class="r-in"><span><span class="va">pars</span><span class="op">$</span><span class="fu">names</span><span class="op">(</span><span class="op">)</span></span></span>
@@ -313,6 +367,47 @@ reduce the dimensionality of your system.</p><div class="section">
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Transform data for your model</span></span></span>
 <span class="r-in"><span><span class="va">pars</span><span class="op">$</span><span class="fu">model</span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $a</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Above we describe a nontrivial transformation function using a closure</span></span></span>
+<span class="r-in"><span><span class="va">make_transform</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">m</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="kw">function</span><span class="op">(</span><span class="va">theta</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>m <span class="op">=</span> <span class="va">m</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">as.list</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="op">}</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Suppose this is our demographic matrix (note here that the name</span></span></span>
+<span class="r-in"><span><span class="co"># need not match that used in the transform)</span></span></span>
+<span class="r-in"><span><span class="va">demographic_matrix</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">4</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Construct the parameters as above, but this time passing in the</span></span></span>
+<span class="r-in"><span><span class="co"># function that make_transform returns</span></span></span>
+<span class="r-in"><span><span class="va">pars</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="va">pmcmc_parameters</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="pmcmc_parameter.html">pmcmc_parameter</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="fl">0.1</span>, min <span class="op">=</span> <span class="fl">0</span>, max <span class="op">=</span> <span class="fl">1</span>,</span></span>
+<span class="r-in"><span>                                prior <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">a</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">a</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>       <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="pmcmc_parameter.html">pmcmc_parameter</a></span><span class="op">(</span><span class="st">"b"</span>, <span class="fl">0</span>, prior <span class="op">=</span> <span class="va">dnorm</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0.5</span>, <span class="fl">0.5</span>, <span class="fl">2</span><span class="op">)</span>, <span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  <span class="fu">make_transform</span><span class="op">(</span><span class="va">demographic_matrix</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Now, as above we start from a position in terms of a and b only:</span></span></span>
+<span class="r-in"><span><span class="va">pars</span><span class="op">$</span><span class="fu">initial</span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   a   b </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 0.1 0.0 </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># But when prepared for the model, our matrix will be set up</span></span></span>
+<span class="r-in"><span><span class="va">pars</span><span class="op">$</span><span class="fu">model</span><span class="op">(</span><span class="va">pars</span><span class="op">$</span><span class="fu">initial</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $m</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      [,1] [,2] [,3] [,4]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1,]    1    0    0    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [2,]    0    1    0    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [3,]    0    0    1    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [4,]    0    0    0    1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $a</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
