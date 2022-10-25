@@ -1,6 +1,6 @@
 Package: mcstate
 Title: Monte Carlo Methods for State Space Models
-Version: 0.9.10
+Version: 0.9.11
 Authors@R: c(person("Rich", "FitzJohn", role = c("aut", "cre"),
                     email = "rich.fitzjohn@gmail.com"),
              person("Marc", "Baguelin", role = "aut"),
@@ -32,7 +32,7 @@ Suggests:
     fs,
     knitr,
     mockery,
-    mode (>= 0.1.6),
+    mode (>= 0.1.9),
     mvtnorm,
     odin.dust (>= 0.2.20),
     rmarkdown,
