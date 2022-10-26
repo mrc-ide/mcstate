@@ -1,3 +1,7 @@
+# mcstate 0.9.11
+
+* Continuous time (ODE) models can now use workers for running chains in parallel with `pmcmc`
+
 # mcstate 0.9.9
 
 * Basic inference now working with continuous time (ODE) models, via `particle_filter` and `pmcmc`

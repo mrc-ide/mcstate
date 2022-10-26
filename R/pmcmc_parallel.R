@@ -130,6 +130,11 @@ make_seeds <- function(n, seed, model) {
     n_streams <- length(seed) / 32L # 4 uint64_t, each 8 bytes
   }
 
+  ## TODO: needs a little tweak in both dust to do more nicely, but
+  ## that can wait until we merge mode into dust
+  if (inherits(model, "mode_generator")) {
+    model <- "xoshiro256plus"
+  }
   seed_dust <- dust::dust_rng_distributed_state(seed, n_streams, n, model)
 
   ## Grab another source of independent numbers to create the R
