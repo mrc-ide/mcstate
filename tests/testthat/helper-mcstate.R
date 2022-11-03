@@ -486,8 +486,8 @@ example_variable <- function() {
     config(compare) <- "compare_variable.cpp"
   }, verbose = FALSE)
 
-  data <- particle_filter_data(data.frame(time = 1:50, observed = rnorm(50)),
-                               "time", 4)
+  data <- particle_filter_data(data.frame(t = 1:50, observed = rnorm(50)),
+                               "t", 4)
   ## Nonsense model
   compare <- function(state, observed, pars) {
     dnorm(state - observed$observed, log = TRUE)

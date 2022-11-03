@@ -607,7 +607,7 @@ check_save_restart <- function(save_restart, data) {
   assert_strictly_increasing(save_restart)
   assert_is(data, "particle_filter_data")
 
-  time_end <- attr(data, "times")[, 2]
+  time_end <- attr(data, "model_times")[, 2]
   i <- match(save_restart, time_end)
   if (anyNA(i)) {
     stop(sprintf("'save_restart' contains times not in '%s': %s",

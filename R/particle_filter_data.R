@@ -210,7 +210,7 @@ particle_filter_data_split <- function(data, compiled_compare) {
     ## TODO (#180): Stricter checks to come on the subset.
     k <- seq_len(nrow(x))[i]
     if (!is.null(attr(x, "population"))) {
-      k <- k[k <= nrow(attr(x, "steps"))]
+      k <- k[k <= nrow(attr(x, "times"))]
     }
     attr(ret, "model_times") <- attr(x, "model_times")[k, , drop = FALSE]
     attr(ret, "times") <- attr(x, "times")[k, , drop = FALSE]

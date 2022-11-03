@@ -305,7 +305,7 @@ pmcmc_state <- R6::R6Class(
         is_continuous <- inherits(data, "particle_filter_data_continuous")
         time <- last(data$time_end)
         rate <- if (is_continuous) 1 else attr(data, "rate", exact = TRUE)
-        model_time <- time * rate
+        model_time <- time / rate
 
         predict <- list(
           is_continuous = is_continuous,

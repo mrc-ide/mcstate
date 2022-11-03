@@ -103,10 +103,10 @@ particle_deterministic <- R6::R6Class(
     ##' overriding the first time step of your data - this must occur within
     ##' your first epoch in your `data` provided to the
     ##' constructor, i.e., not less than the first element of
-    ##' `step_start` and not more than `step_end`). Your function
+    ##' `time_start` and not more than `time_end`). Your function
     ##' can also return a vector or matrix of `state` and not alter
-    ##' the starting step, which is equivalent to returning
-    ##' `list(state = state, step = NULL)`.
+    ##' the starting time, which is equivalent to returning
+    ##' `list(state = state, time = NULL)`. (TODO: this no longer is allowed, and the docs might be out of date?)
     ##'
     ##' @param constant_log_likelihood An optional function, taking the
     ##' model parameters, that computes the constant part of the

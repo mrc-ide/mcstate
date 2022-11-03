@@ -698,7 +698,7 @@ test_that("Can't run past the end of the data", {
   n <- nrow(dat$data)
   expect_error(
     obj$step(n + 1),
-    "step_index 101 is beyond the length of the data (max 100)",
+    "time_index 101 is beyond the length of the data (max 100)",
     fixed = TRUE)
 })
 
