@@ -522,7 +522,7 @@ pfs_initial_single <- function(model, initial, pars, n_particles) {
   state <- initial(model$info(), n_particles, pars)
   if (is.list(state)) {
     ## TODO: are there docs advocating this somewhere?
-    stop("Setting 'step' from initial no longer supported")
+    stop("Setting 'time' from initial no longer supported")
   }
   state
 }
@@ -534,8 +534,9 @@ pfs_initial_multiple <- function(model, initial, pars, n_particles) {
     return()
   }
 
+  ## TODO: can be dropped now
   if (any(vlapply(state, is.list))) {
-    stop("Setting 'step' from initial no longer supported")
+    stop("Setting 'time' from initial no longer supported")
   }
 
   len <- lengths(state)

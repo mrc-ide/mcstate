@@ -921,7 +921,7 @@ test_that("can't change initial step via initial in nested filter", {
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index, initial = initial)
   expect_error(p$run(pars),
-               "Setting 'step' from initial no longer supported")
+               "Setting 'time' from initial no longer supported")
 })
 
 test_that("Can fork a particle_filter_state_nested object", {
@@ -992,7 +992,7 @@ test_that("particle filter state nested - error steps", {
 
   expect_error(
     obj$step(n + 1),
-    "step_index 201 is beyond the length of the data (max 100)",
+    "time_index 201 is beyond the length of the data (max 100)",
     fixed = TRUE)
 })
 
