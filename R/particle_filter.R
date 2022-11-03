@@ -11,7 +11,7 @@
 ##' gen <- dust::dust_example("sir")
 ##'
 ##' # Some data that we will fit to, using 1 particle:
-##' sir <- gen$new(pars = list(), step = 0, n_particles = 1)
+##' sir <- gen$new(pars = list(), time = 0, n_particles = 1)
 ##' dt <- 1 / 4
 ##' day <- seq(1, 100)
 ##' incidence <- rep(NA, length(day))
@@ -122,10 +122,11 @@ particle_filter <- R6::R6Class(
     ##'
     ##' @param data The data set to be used for the particle filter,
     ##' created by [particle_filter_data()]. This is essentially
-    ##' a [data.frame()] with at least columns `step_start`
-    ##' and `step_end`, along with any additional data used in the
+    ##' a [data.frame()] with at least columns `time_start`
+    ##' and `time_end`, along with any additional data used in the
     ##' `compare` function, and additional information about how your
-    ##' steps relate to time.
+    ##' dust time steps relate to a more interpretable measure of model
+    ##' time.
     ##'
     ##' @param model A stochastic model to use.  Must be a
     ##' `dust_generator` object.
@@ -167,14 +168,14 @@ particle_filter <- R6::R6Class(
     ##' must return a list, which can have the elements `state`
     ##' (initial model state, passed to the particle filter - either a
     ##' vector or a matrix, and overriding the initial conditions
-    ##' provided by your model) and `step` (the initial step,
-    ##' overriding the first step of your data - this must occur within
-    ##' your first epoch in your `data` provided to the
+    ##' provided by your model) and `time` (the initial time step,
+    ##' overriding the first time step of your data - this must occur
+    ##' within your first epoch in your `data` provided to the
     ##' constructor, i.e., not less than the first element of
-    ##' `step_start` and not more than `step_end`). Your function
+    ##' `time_start` and not more than `time_end`). Your function
     ##' can also return a vector or matrix of `state` and not alter
-    ##' the starting step, which is equivalent to returning
-    ##' `list(state = state, step = NULL)`.
+    ##' the starting time step, which is equivalent to returning
+    ##' `list(state = state, time = NULL)`.
     ##'
     ##' @param constant_log_likelihood An optional function, taking the
     ##' model parameters, that computes the constant part of the
@@ -212,8 +213,12 @@ particle_filter <- R6::R6Class(
     ##' For additional control, provide a list with elements `device_id`
     ##' and `run_block_size`. Further options (and validation) of this
     ##' list will be added in a future version!
-    ##' @param stochastic_schedule Vector of times to perform stochastic updates
-    ##' @param ode_control Tuning control for stepper
+    ##'
+    ##' @param stochastic_schedule Vector of times to perform stochastic
+    ##' updates, for continuous time models.
+    ##'
+    ##' @param ode_control Tuning control for the ODE stepper, for
+    ##' continuous time (ODE) models
     initialize = function(data, model, n_particles, compare,
                           index = NULL, initial = NULL,
                           constant_log_likelihood = NULL,
@@ -276,7 +281,7 @@ particle_filter <- R6::R6Class(
                      class(data)[2]))
       }
 
-      private$times <- attr(data, if (is_continuous) "times" else "steps")
+      private$times <- attr(data, "times")
       private$data_split <- particle_filter_data_split(data, is.null(compare))
 
       private$compare <- compare
@@ -312,7 +317,7 @@ particle_filter <- R6::R6Class(
     ##' @param save_restart An integer vector of time points to save
     ##' restart infomation for. These are in terms of your underlying time
     ##' variable (the `time` column in [particle_filter_data()]) not in
-    ##' terms of steps. The state will be saved after the particle
+    ##' terms of time steps. The state will be saved after the particle
     ##' filtering operation (i.e., at the end of the step).
     ##'
     ##' @param min_log_likelihood Optionally, a numeric value representing the
@@ -610,7 +615,7 @@ check_save_restart <- function(save_restart, data) {
                  paste(save_restart[is.na(i)], collapse = ", ")))
   }
 
-  data$step_end[i]
+  data$time_end[i]
 }
 
 
@@ -773,7 +778,7 @@ filter_run_multistage <- function(self, private, pars,
       obj <- obj$fork_multistage(
         models[[i]], stages[[i]]$pars, stages[[i]]$transform_state)
     }
-    obj$step(stages[[i]]$step_index)
+    obj$step(stages[[i]]$time_index)
     models[[i]] <- obj$model
     history[i] <- list(obj$history)
     restart[i] <- list(obj$restart_state)

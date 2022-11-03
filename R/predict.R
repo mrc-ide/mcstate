@@ -8,10 +8,10 @@
 ##'   `return_state = TRUE` (without this extra information,
 ##'   prediction is not possible)
 ##'
-##' @param steps A vector of time steps to return predictions for. The
+##' @param times A vector of time times to return predictions for. The
 ##'   first value must be the final value run in your simulation. An
 ##'   error will be thrown if you get this value wrong, look in
-##'   `object$predict$step` (or the error message) for the
+##'   `object$predict$time` (or the error message) for the
 ##'   correct value.
 ##'
 ##' @param n_threads The number of threads used in the simulation. If
@@ -33,7 +33,7 @@
 ##'   filter to the predictions created here.
 ##'
 ##' @export
-pmcmc_predict <- function(object, steps, prepend_trajectories = FALSE,
+pmcmc_predict <- function(object, times, prepend_trajectories = FALSE,
                           n_threads = NULL, seed = NULL) {
   if (is.null(object$predict)) {
     stop("mcmc was run with return_state = FALSE, can't predict")
@@ -41,11 +41,11 @@ pmcmc_predict <- function(object, steps, prepend_trajectories = FALSE,
   if (isTRUE(object$predict$is_continuous)) {
     stop("predict not (yet) possible with continuous models (mrc-3453)")
   }
-  if (length(steps) < 2) {
-    stop("At least two steps required for predict")
+  if (length(times) < 2) {
+    stop("At least two times required for predict")
   }
-  if (steps[[1]] != object$predict$step) {
-    stop(sprintf("Expected steps[1] to be %d", object$predict$step))
+  if (times[[1]] != object$predict$time) {
+    stop(sprintf("Expected times[1] to be %d", object$predict$time))
   }
   if (prepend_trajectories && is.null(object$trajectories)) {
     stop(paste("mcmc was run with return_trajectories = FALSE,",
@@ -69,16 +69,16 @@ pmcmc_predict <- function(object, steps, prepend_trajectories = FALSE,
   model <- object$predict$filter$model
   n_threads <- n_threads %||% object$predict$filter$n_threads
 
-  mod <- model$new(pars, steps[[1]], NULL, n_threads = n_threads,
+  mod <- model$new(pars, times[[1]], NULL, n_threads = n_threads,
                    seed = seed, pars_multi = TRUE)
 
   mod$update_state(state = state)
   if (!is.null(index)) {
     mod$set_index(index)
   }
-  y <- mod$simulate(steps)
+  y <- mod$simulate(times)
 
-  res <- mcstate_trajectories_discrete(steps, object$predict$rate, y, TRUE)
+  res <- mcstate_trajectories_discrete(times, object$predict$rate, y, TRUE)
 
   if (prepend_trajectories) {
     res <- bind_mcstate_trajectories_discrete(object$trajectories, res)

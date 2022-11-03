@@ -1,8 +1,8 @@
-mcstate_trajectories_discrete <- function(step, rate, state, predicted) {
+mcstate_trajectories_discrete <- function(time, rate, state, predicted) {
   if (length(predicted) == 1L) {
-    predicted <- rep(predicted, length(step))
+    predicted <- rep(predicted, length(time))
   }
-  ret <- list(step = step, rate = rate, state = state, predicted = predicted)
+  ret <- list(time = time, rate = rate, state = state, predicted = predicted)
   class(ret) <- c("mcstate_trajectories_discrete", "mcstate_trajectories")
   ret
 }
@@ -28,11 +28,11 @@ mcstate_trajectories_continuous <- function(time, state, predicted) {
 bind_mcstate_trajectories_discrete <- function(a, b) {
   stopifnot(inherits(a, "mcstate_trajectories_discrete"),
             inherits(b, "mcstate_trajectories_discrete"),
-            last(a$step) == b$step[[1]],
+            last(a$time) == b$time[[1]],
             a$rate == b$rate,
             dim(a)[1:2] == dim(b)[1:2])
 
-  step <- c(a$step, b$step[-1])
+  time <- c(a$time, b$time[-1])
   if (length(dim(b$state)) == 3) {
     state <- array_bind(a$state, b$state[, , -1, drop = FALSE])
   } else {
@@ -41,7 +41,7 @@ bind_mcstate_trajectories_discrete <- function(a, b) {
   rownames(state) <- rownames(b$state) %||% rownames(a$state)
   predicted <- c(a$predicted, b$predicted[-1])
 
-  mcstate_trajectories_discrete(step, a$rate, state, predicted)
+  mcstate_trajectories_discrete(time, a$rate, state, predicted)
 }
 
 
