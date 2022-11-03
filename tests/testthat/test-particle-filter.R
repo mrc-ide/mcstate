@@ -71,7 +71,7 @@ test_that("particle filter likelihood is worse with worse parameters", {
 test_that("stop simulation when likelihood is impossible", {
   dat <- example_sir()
   n_particles <- 42
-  steps <- nrow(dat$data) + 1
+  times <- nrow(dat$data) + 1
 
   compare <- function(state, observed, pars) {
     ret <- dat$compare(state, observed, pars)
@@ -86,7 +86,7 @@ test_that("stop simulation when likelihood is impossible", {
   res <- p$run(save_history = TRUE)
   expect_equal(res, -Inf)
 
-  i <- (which(dat$data$incidence > 15)[[1]] + 2):steps
+  i <- (which(dat$data$incidence > 15)[[1]] + 2):times
   history <- p$history()
   expect_false(any(is.na(history[, , !i])))
   expect_true(all(is.na(history[, , i])))
@@ -141,14 +141,14 @@ test_that("Control the starting point of the simulation", {
 
 test_that("Cannot use previous initial condition approach", {
   initial <- function(info, n_particles, pars) {
-    list(step = 2)
+    list(time = 2)
   }
 
   dat <- example_sir()
   n_particles <- 42
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index, initial = initial)
-  expect_error(p$run(), "Setting 'step' from initial no longer supported")
+  expect_error(p$run(), "Setting 'time' from initial no longer supported")
 })
 
 
@@ -1004,7 +1004,7 @@ test_that("stop simulation when likelihood is impossible", {
                                list(beta = 0.3, gamma = 0.1))
 
   n_particles <- 42
-  steps <- nrow(dat$data) / 2 + 1
+  times <- nrow(dat$data) / 2 + 1
 
   compare <- function(state, observed, pars) {
     ret <- dat$compare(state, observed, pars)
@@ -1019,7 +1019,7 @@ test_that("stop simulation when likelihood is impossible", {
   res <- p$run(pars, save_history = TRUE)
   expect_true(-Inf %in% res)
 
-  i <- (which(dat$data$incidence[1:100] > 15)[[1]] + 2):steps
+  i <- (which(dat$data$incidence[1:100] > 15)[[1]] + 2):times
   history <- p$history()
   expect_false(any(is.na(history[, , 1, !i])))
   expect_true(all(is.na(history[, , 1, i])))
