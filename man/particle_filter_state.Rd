@@ -35,7 +35,7 @@ This is a 3d (or greater) array as described in
 last step (i.e., the contribution to \code{log_likelihood} made on the
 last call to \verb{$step()}.}
 
-\item{\code{current_step_index}}{The index of the last completed step.}
+\item{\code{current_time_index}}{The index of the last completed step.}
 }
 \if{html}{\out{</div>}}
 }
@@ -94,7 +94,7 @@ documented.
 
 \item{\code{data_split}}{The same data as \code{data} but split by step}
 
-\item{\code{times}}{A matrix of step beginning and ends}
+\item{\code{times}}{A matrix of time step beginning and ends}
 
 \item{\code{n_particles}}{Number of particles to use}
 
@@ -118,7 +118,7 @@ documented.
 
 \item{\code{save_history}}{Logical, indicating if we should save history}
 
-\item{\code{save_restart}}{Vector of times to save restart at}
+\item{\code{save_restart}}{Vector of time steps to save restart at}
 
 \item{\code{stochastic_schedule}}{Vector of times to perform stochastic updates}
 
@@ -133,7 +133,7 @@ documented.
 \subsection{Method \code{run()}}{
 Run the particle filter to the end of the data. This is
 a convenience function around \verb{$step()} which provides the correct
-value of \code{step_index}
+value of \code{time_index}
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{particle_filter_state$run()}\if{html}{\out{</div>}}
 }
@@ -148,13 +148,13 @@ the particle filter forward one step within the \emph{data} (which
 may correspond to more than one step with your model) and
 returns the likelihood so far.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_filter_state$step(step_index, partial = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter_state$step(time_index, partial = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{step_index}}{The step \emph{index} to move to. This is not the same
+\item{\code{time_index}}{The step \emph{index} to move to. This is not the same
 as the model step, nor time, so be careful (it's the index within
 the data provided to the filter). It is an error to provide
 a value here that is lower than the current step index, or past

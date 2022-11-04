@@ -9,47 +9,62 @@ particle_filter_data(data, time, rate, initial_time = NULL, population = NULL)
 \arguments{
 \item{data}{A \code{\link[=data.frame]{data.frame()}} of data}
 
-\item{time}{The name of a column within \code{data} that
-represents your measure of time.  This column must be
-integer-like}
+\item{time}{The name of a column within \code{data} that represents
+your measure of time.  This column must be integer-like. To
+avoid confusion, this cannot be called \code{step}, \code{time}, or
+\code{model_time}.}
 
-\item{rate}{The number of model "steps" that occur between each
-time point (in \code{time}).  This must also be integer-like for discrete
-time models and must be \code{NULL} for continuous time models.}
+\item{rate}{The number of model "time steps" that occur between
+each time point (in model time \code{time}).  This must also be
+integer-like for discrete time models and must be \code{NULL} for
+continuous time models.}
 
 \item{initial_time}{Optionally, an initial time to start the model
 from.  Provide this if you need to burn the model in, or if
 there is a long period with no data at the beginning of the
 simulation.  If provided, it must be a non-negative integer and
-must be at most equal to the first value of the \code{time}
-column, minus 1 (i.e., \code{data[[time]] - 1}).}
+must be at most equal to the first value of the \code{time} column,
+minus 1 (i.e., \code{data[[time]] - 1}). For discrete time models,
+this is expressed in model time.}
 
 \item{population}{Optionally, the name of a column within \code{data} that
 represents different populations. Must be a factor.}
 }
 \value{
 If \code{population} is NULL, a data.frame with new columns
-\code{step_start} and \code{step_end} (required by \code{\link{particle_filter}}),
+\code{time_start} and \code{time_end} (required by \code{\link{particle_filter}}),
 along side all previous data except for the time variable, which
-is replaced by new \verb{<time>_start} and \verb{<time>_end}
-columns. If \code{population} is not NULL then a named list of data.frames as
-described above where each element represents populations in the order
-specified in the data.
+is replaced by new \verb{<time>_start} and \verb{<time>_end} columns. If
+\code{population} is not NULL then a named list of data.frames as
+described above where each element represents populations in the
+order specified in the data.
 }
 \description{
 Prepare data for use with the \code{\link{particle_filter}}.  This function
 is required to use the particle filter as helps arrange data and
 be explicit about the off-by-one errors that can occur.  It takes
 as input your data to compare against a model, including some
-measure of "time".  We need to convert this time into model steps.
+measure of "time".  We need to convert this time into model time
+steps (see Details).
 }
 \details{
 We require that the time variable increments in unit steps; this
 may be relaxed in future to even steps, or possibly irregular
 steps, but for now this assumption is required.  We assume that
 the data in the first column is recorded at the end of a period of
-1 time unit.  So if you have in the first column \verb{time = 10, data = 100} we assume that the model steps from time 9 to to time
-10 and at that period the data has value 100.
+1 time unit.  So if you have in the first column \verb{t = 10, data = 100} we assume that the model steps from \code{t = 9} to to \code{t = 10}
+and at that period the data has value 100.
+
+For continuous time models, time is simple to think about; time is
+continuous (and real-valued) and really any time is
+acceptable. For discrete time models there are two correlated
+measures of time we need to consider - (1) the \code{dust} "time step",
+a non-negative integer value that increases in unit steps, and (2)
+the "model time" which is related to the dust time step based on
+the \code{rate} parameter here as \verb{<model time> = <dust time> * <rate>}.  For a concrete example, consider a model where we want
+to think in terms of days, but which we take 10 steps per
+day. Time step 0 and model time 0 are the same, but day 1 occurs
+at step 10, day 15 at step 150 and so on.
 }
 \examples{
 d <- data.frame(day = 5:20, y = runif(16))
