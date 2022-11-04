@@ -174,7 +174,8 @@ test_that("particle_filter_data for continuous time", {
   expect_equal(res$data, d$data)
   expect_equal(attr(res, "rate"), NULL)
   expect_equal(attr(res, "time"), "month")
-  expect_equal(attr(res, "model_times"), cbind(c(0, 4:23), 4:24, deparse.level = 0))
+  expect_equal(attr(res, "model_times"),
+               cbind(c(0, 4:23), 4:24, deparse.level = 0))
   expect_s3_class(
     res,
     c("particle_filter_data_single",
