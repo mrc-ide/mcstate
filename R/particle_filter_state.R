@@ -511,7 +511,7 @@ particle_filter_update_state <- function(transform, model_old, model_new) {
     state <- vapply(state_new, identity, state_new[[1]])
   }
 
-  step <- model_old$step()
+  time <- model_old$time()
   model_new$update_state(state = state, time = time)
 }
 

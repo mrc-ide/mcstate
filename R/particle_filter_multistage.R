@@ -113,7 +113,7 @@ filter_check_times <- function(pars, data, save_restart) {
   ## when each phase *ends*, as that is the index that we do the
   ## switch at.
 
-  times <- attr(data, "times")
+  times <- attr(data, "model_times")
 
   time_pars <- vnapply(pars[-1], "[[", "start")
   time_pars_start <- c(-Inf, time_pars)
