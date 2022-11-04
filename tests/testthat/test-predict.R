@@ -11,10 +11,10 @@ test_that("can run a prediction from a mcmc run", {
   control <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE)
   results <- pmcmc(dat$pars, p, control = control)
 
-  steps <- seq(tail(dat$data$step_end, 1), by = 4, length.out = 26)
+  steps <- seq(tail(dat$data$time_end, 1), by = 4, length.out = 26)
   y <- pmcmc_predict(results, steps)
 
-  expect_equal(y$step, steps)
+  expect_equal(y$time, steps)
   expect_equal(y$rate, 4)
   expect_equal(y$predicted, rep(TRUE, length(steps)))
 
@@ -32,7 +32,7 @@ test_that("can run a prediction from a mcmc run", {
 test_that("Can rehydrate mcmc results and predict", {
   results <- example_sir_pmcmc()$pmcmc
 
-  steps <- seq(results$predict$step, by = 4, length.out = 26)
+  steps <- seq(results$predict$time, by = 4, length.out = 26)
   y1 <- pmcmc_predict(results, steps, seed = 1L)
 
   results <- unserialize(serialize(results, NULL))
@@ -43,13 +43,13 @@ test_that("Can rehydrate mcmc results and predict", {
 test_that("Can combine runs with predictions", {
   results <- example_sir_pmcmc()$pmcmc
 
-  steps <- seq(results$predict$step, by = 4, length.out = 26)
+  steps <- seq(results$predict$time, by = 4, length.out = 26)
   y1 <- pmcmc_predict(results, steps, prepend_trajectories = TRUE, seed = 1L)
   y2 <- pmcmc_predict(results, steps, seed = 1L)
 
   expect_is(y1, "mcstate_trajectories")
   expect_equal(y1$rate, 4)
-  expect_equal(y1$step, seq(0, 500, by = 4))
+  expect_equal(y1$time, seq(0, 500, by = 4))
   expect_equal(y1$predicted, rep(c(FALSE, TRUE), c(101, 25)))
   expect_identical(y1$state[, , 101:126], y2$state)
   expect_equal(y1$state[, , 1:101], results$trajectories$state)
@@ -70,30 +70,30 @@ test_that("Require at least two times", {
   results <- example_sir_pmcmc()$pmcmc
   expect_error(
     pmcmc_predict(results, integer(0)),
-    "At least two steps required for predict")
+    "At least two times required for predict")
   expect_error(
-    pmcmc_predict(results, results$predict$step),
-    "At least two steps required for predict")
+    pmcmc_predict(results, results$predict$time),
+    "At least two times required for predict")
 })
 
 
 test_that("Require start times to be correct", {
   results <- example_sir_pmcmc()$pmcmc
-  steps <- seq(results$predict$step, by = 4, length.out = 26)
+  steps <- seq(results$predict$time, by = 4, length.out = 26)
   expect_error(
     pmcmc_predict(results, steps + 1),
-    "Expected steps[1] to be 400",
+    "Expected times[1] to be 400",
     fixed = TRUE)
   expect_error(
     pmcmc_predict(results, steps - 1),
-    "Expected steps[1] to be 400",
+    "Expected times[1] to be 400",
     fixed = TRUE)
 })
 
 
 test_that("S3 method works as expected", {
   results <- example_sir_pmcmc()$pmcmc
-  steps <- seq(results$predict$step, by = 4, length.out = 26)
+  steps <- seq(results$predict$time, by = 4, length.out = 26)
   set.seed(1)
   y1 <- predict(results, steps)
   set.seed(1)
@@ -104,7 +104,7 @@ test_that("S3 method works as expected", {
 
 test_that("seed = NULL respects R's seed", {
   results <- example_sir_pmcmc()$pmcmc
-  steps <- seq(results$predict$step, by = 4, length.out = 26)
+  steps <- seq(results$predict$time, by = 4, length.out = 26)
   set.seed(1)
   y1 <- pmcmc_predict(results, steps)
   y2 <- pmcmc_predict(results, steps)
@@ -119,7 +119,7 @@ test_that("can't prepend history if trajectories not saved", {
   results <- example_sir_pmcmc()$pmcmc
   results$trajectories <- NULL
 
-  steps <- seq(results$predict$step, by = 4, length.out = 26)
+  steps <- seq(results$predict$time, by = 4, length.out = 26)
   expect_error(
     pmcmc_predict(results, steps, prepend_trajectories = TRUE),
     "mcmc was run with return_trajectories = FALSE, can't prepend trajectories")
@@ -128,7 +128,7 @@ test_that("can't prepend history if trajectories not saved", {
 
 test_that("names are copied from index into predictions", {
   results <- example_sir_pmcmc()$pmcmc
-  steps <- seq(results$predict$step, by = 4, length.out = 26)
+  steps <- seq(results$predict$time, by = 4, length.out = 26)
   y1 <- pmcmc_predict(results, steps, seed = 1L)
 
   names(results$predict$index) <- c("a", "b", "c")
@@ -151,10 +151,10 @@ test_that("can run a prediction from a nested mcmc run", {
   control <- pmcmc_control(30, save_state = TRUE, save_trajectories = TRUE)
   results <- pmcmc(dat$pars, p, control = control)
 
-  steps <- seq(tail(dat$data$step_end, 1), by = 4, length.out = 26)
+  steps <- seq(tail(dat$data$time_end, 1), by = 4, length.out = 26)
   y <- pmcmc_predict(results, steps)
 
-  expect_equal(y$step, steps)
+  expect_equal(y$time, steps)
   expect_equal(y$rate, 4)
   expect_equal(y$predicted, rep(TRUE, length(steps)))
 

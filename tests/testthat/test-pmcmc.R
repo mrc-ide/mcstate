@@ -159,7 +159,7 @@ test_that("run pmcmc with the particle filter and retain history", {
   expect_equal(results1$predict$index, 1:3)
   expect_equal(results1$predict$rate, 4)
   expect_equal(results1$predict$time, last(dat$data$time_end))
-  expect_equal(results1$predict$model_time, last(dat$data$model_time_end))
+  expect_equal(results1$predict$model_time, last(dat$data$day_end))
   expect_identical(results1$predict$filter, p1$inputs())
 })
 

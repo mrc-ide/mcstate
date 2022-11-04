@@ -208,6 +208,7 @@ particle_filter_data_split <- function(data, compiled_compare) {
   ## the effect of subsetting fairly efficiently:
   if (!identical(x$time_start, ret$time_start)) {
     ## TODO (#180): Stricter checks to come on the subset.
+    ## TODO: add a test of this, it was broken and not sure if tests caught it
     k <- seq_len(nrow(x))[i]
     if (!is.null(attr(x, "population"))) {
       k <- k[k <= nrow(attr(x, "times"))]
