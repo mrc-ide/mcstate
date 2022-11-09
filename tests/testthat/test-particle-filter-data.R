@@ -23,6 +23,19 @@ test_that("particle filter data validates time", {
 })
 
 
+test_that("can't use reserved names for time column", {
+  expect_error(
+    particle_filter_data(data_frame(time = 1:10), "time"),
+    "The time column cannot be called 'time'")
+  expect_error(
+    particle_filter_data(data_frame(step = 1:10), "step"),
+    "The time column cannot be called 'step'")
+  expect_error(
+    particle_filter_data(data_frame(model_time = 1:10), "model_time"),
+    "The time column cannot be called 'model_time'")
+})
+
+
 test_that("particle filter data validates rate", {
   d <- data.frame(t = 1:11, y = 0:10)
   expect_error(
