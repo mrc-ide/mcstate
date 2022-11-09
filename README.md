@@ -2,7 +2,7 @@
 
 <!-- badges: start -->
 [![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
-[![R build status](https://github.com/mrc-ide/sircovid2/workflows/R-CMD-check/badge.svg)](https://github.com/mrc-ide/sircovid2/actions)
+[![R build status](https://github.com/mrc-ide/mcstate/workflows/R-CMD-check/badge.svg)](https://github.com/mrc-ide/mcstate/actions)
 [![CodeFactor](https://www.codefactor.io/repository/github/mrc-ide/mcstate/badge)](https://www.codefactor.io/repository/github/mrc-ide/mcstate)
 [![codecov.io](https://codecov.io/github/mrc-ide/mcstate/coverage.svg?branch=master)](https://codecov.io/github/mrc-ide/mcstate?branch=master)
 <!-- badges: end -->
