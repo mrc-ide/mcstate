@@ -19,7 +19,7 @@ particle deterministically."><meta property="og:image" content="/logo.png"><!-- 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.12</span>
       </span>
     </div>
 
@@ -157,8 +157,8 @@ particle (read only).  This will either be 1 or the same value as
 <p></p><div class="arguments"><dl><dt><code>data</code></dt>
 <dd><p>The data set to be used for the particle filter,
 created by <code><a href="particle_filter_data.html">particle_filter_data()</a></code>. This is essentially
-a <code><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame()</a></code> with at least columns <code>step_start</code>
-and <code>step_end</code>, along with any additional data used in the
+a <code><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame()</a></code> with at least columns <code>time_start</code>
+and <code>time_end</code>, along with any additional data used in the
 <code>compare</code> function, and additional information about how your
 steps relate to time.</p></dd>
 
@@ -205,14 +205,14 @@ filter is using) and <code>pars</code> (parameters passed in in the
 must return a list, which can have the elements <code>state</code>
 (initial model state, passed to the particle filter - either a
 vector or a matrix, and overriding the initial conditions
-provided by your model) and <code>step</code> (the initial step,
-overriding the first step of your data - this must occur within
+provided by your model) and <code>time</code> (the initial time,
+overriding the first time step of your data - this must occur within
 your first epoch in your <code>data</code> provided to the
 constructor, i.e., not less than the first element of
-<code>step_start</code> and not more than <code>step_end</code>). Your function
+<code>time_start</code> and not more than <code>time_end</code>). Your function
 can also return a vector or matrix of <code>state</code> and not alter
-the starting step, which is equivalent to returning
-<code>list(state = state, step = NULL)</code>.</p></dd>
+the starting time, which is equivalent to returning
+<code>list(state = state, time = NULL)</code>. (TODO: this no longer is allowed, and the docs might be out of date?)</p></dd>
 
 
 <dt><code>constant_log_likelihood</code></dt>

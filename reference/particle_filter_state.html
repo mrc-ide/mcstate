@@ -25,7 +25,7 @@ them, but don't)."><meta property="og:image" content="/logo.png"><!-- mathjax --
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.12</span>
       </span>
     </div>
 
@@ -126,7 +126,7 @@ last step (i.e., the contribution to <code>log_likelihood</code> made on the
 last call to <code>$step()</code>.</p></dd>
 
 
-<dt><code>current_step_index</code></dt>
+<dt><code>current_time_index</code></dt>
 <dd><p>The index of the last completed step.</p></dd>
 
 
@@ -196,7 +196,7 @@ documented.</p><div class="section">
 
 
 <dt><code>times</code></dt>
-<dd><p>A matrix of step beginning and ends</p></dd>
+<dd><p>A matrix of time step beginning and ends</p></dd>
 
 
 <dt><code>n_particles</code></dt>
@@ -244,7 +244,7 @@ documented.</p><div class="section">
 
 
 <dt><code>save_restart</code></dt>
-<dd><p>Vector of times to save restart at</p></dd>
+<dd><p>Vector of time steps to save restart at</p></dd>
 
 
 <dt><code>stochastic_schedule</code></dt>
@@ -262,7 +262,7 @@ documented.</p><div class="section">
 <h3 id="method-run-">Method <code>run()</code><a class="anchor" aria-label="anchor" href="#method-run-"></a></h3>
 <p>Run the particle filter to the end of the data. This is
 a convenience function around <code>$step()</code> which provides the correct
-value of <code>step_index</code></p><div class="section">
+value of <code>time_index</code></p><div class="section">
 <h4 id="usage-1">Usage<a class="anchor" aria-label="anchor" href="#usage-1"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">particle_filter_state</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
@@ -275,12 +275,12 @@ the particle filter forward one step within the <em>data</em> (which
 may correspond to more than one step with your model) and
 returns the likelihood so far.</p><div class="section">
 <h4 id="usage-2">Usage<a class="anchor" aria-label="anchor" href="#usage-2"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">particle_filter_state</span><span class="op">$</span><span class="fu">step</span><span class="op">(</span><span class="va">step_index</span>, partial <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">particle_filter_state</span><span class="op">$</span><span class="fu">step</span><span class="op">(</span><span class="va">time_index</span>, partial <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
 <h4 id="arguments-1">Arguments<a class="anchor" aria-label="anchor" href="#arguments-1"></a></h4>
-<p></p><div class="arguments"><dl><dt><code>step_index</code></dt>
+<p></p><div class="arguments"><dl><dt><code>time_index</code></dt>
 <dd><p>The step <em>index</em> to move to. This is not the same
 as the model step, nor time, so be careful (it's the index within
 the data provided to the filter). It is an error to provide

@@ -19,7 +19,7 @@ the object, using R's S3 dispatch."><meta property="og:image" content="/logo.png
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.12</span>
       </span>
     </div>
 
@@ -87,7 +87,7 @@ the object, using R's S3 dispatch.</p>
     <div id="ref-usage">
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">pmcmc_predict</span><span class="op">(</span></span>
 <span>  <span class="va">object</span>,</span>
-<span>  <span class="va">steps</span>,</span>
+<span>  <span class="va">times</span>,</span>
 <span>  prepend_trajectories <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  n_threads <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
@@ -102,11 +102,11 @@ the object, using R's S3 dispatch.</p>
 prediction is not possible)</p></dd>
 
 
-<dt>steps</dt>
-<dd><p>A vector of time steps to return predictions for. The
+<dt>times</dt>
+<dd><p>A vector of time times to return predictions for. The
 first value must be the final value run in your simulation. An
 error will be thrown if you get this value wrong, look in
-<code>object$predict$step</code> (or the error message) for the
+<code>object$predict$time</code> (or the error message) for the
 correct value.</p></dd>
 
 

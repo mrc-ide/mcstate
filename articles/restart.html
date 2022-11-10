@@ -40,7 +40,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.12</span>
       </span>
     </div>
 
@@ -196,7 +196,7 @@
 <div class="section level2">
 <h2 id="restarting">Restarting<a class="anchor" aria-label="anchor" href="#restarting"></a>
 </h2>
-<p>In the <code><a href="../reference/pmcmc_control.html">mcstate::pmcmc_control</a></code> call above we added <code>save_restart = 40</code>; this means that we save the entire internal state of a single particle at time step 40 (this is the “day” time, not the model step).</p>
+<p>In the <code><a href="../reference/pmcmc_control.html">mcstate::pmcmc_control</a></code> call above we added <code>save_restart = 40</code>; this means that we save the entire internal state of a single particle at time step 40 (this is the model time “day” time, not the model time step).</p>
 <p>The restart state is a 3d array with dimensions corresponding to (1) model state, (2) MCMC sample, (3) restart time (a vector of times can be provided to <code>save_restart</code> but here just one time was returned).</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">res1</span><span class="op">$</span><span class="va">restart</span><span class="op">$</span><span class="va">state</span><span class="op">)</span></span>
