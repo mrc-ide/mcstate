@@ -23,6 +23,19 @@ test_that("particle filter data validates time", {
 })
 
 
+test_that("can't use reserved names for time column", {
+  expect_error(
+    particle_filter_data(data_frame(time = 1:10), "time"),
+    "The time column cannot be called 'time'")
+  expect_error(
+    particle_filter_data(data_frame(step = 1:10), "step"),
+    "The time column cannot be called 'step'")
+  expect_error(
+    particle_filter_data(data_frame(model_time = 1:10), "model_time"),
+    "The time column cannot be called 'model_time'")
+})
+
+
 test_that("particle filter data validates rate", {
   d <- data.frame(t = 1:11, y = 0:10)
   expect_error(
@@ -50,16 +63,16 @@ test_that("particle filter data creates data", {
   res <- particle_filter_data(d, "day", 10)
   expect_setequal(
     names(res),
-    c("day_start", "day_end", "step_start", "step_end", "data"))
+    c("day_start", "day_end", "time_start", "time_end", "data"))
   expect_equal(res$day_start, 0:10)
   expect_equal(res$day_end, 1:11)
-  expect_equal(res$step_start, 0:10 * 10)
-  expect_equal(res$step_end, 1:11 * 10)
+  expect_equal(res$time_start, 0:10 * 10)
+  expect_equal(res$time_end, 1:11 * 10)
   expect_equal(res$data, d$data)
   expect_equal(attr(res, "rate"), 10)
   expect_equal(attr(res, "time"), "day")
-  expect_equal(attr(res, "times"), cbind(0:10, 1:11, deparse.level = 0))
-  expect_equal(attr(res, "steps"), attr(res, "times") * 10)
+  expect_equal(attr(res, "model_times"), cbind(0:10, 1:11, deparse.level = 0))
+  expect_equal(attr(res, "times"), attr(res, "model_times") * 10)
   expect_s3_class(
     res,
     c("particle_filter_data_single",
@@ -76,14 +89,14 @@ test_that("particle filter can offset initial data", {
 
   cmp <- data.frame(hour_start = c(1, 11:19),
                     hour_end = 11:20,
-                    step_start = c(4, 11:19 * 4),
-                    step_end = 11:20 * 4,
+                    time_start = c(4, 11:19 * 4),
+                    time_end = 11:20 * 4,
                     a = d$a,
                     b = d$b)
   attr(cmp, "rate") <- 4
   attr(cmp, "time") <- "hour"
-  attr(cmp, "times") <- cbind(c(1, 11:19), 11:20)
-  attr(cmp, "steps") <- attr(cmp, "times") * 4
+  attr(cmp, "model_times") <- cbind(c(1, 11:19), 11:20)
+  attr(cmp, "times") <- attr(cmp, "model_times") * 4
   class(cmp) <- c("particle_filter_data_single",
                   "particle_filter_data_discrete",
                   "particle_filter_data",
@@ -115,18 +128,18 @@ test_that("particle filter data with populations creates data - equal", {
 
   expect_setequal(
     names(res),
-    c("day_start", "day_end", "step_start", "step_end", "group", "data"))
+    c("day_start", "day_end", "time_start", "time_end", "group", "data"))
   expect_equal(res$day_start, rep(0:10, 2))
   expect_equal(res$day_end, rep(1:11, 2))
-  expect_equal(res$step_start, rep(0:10, 2) * 10)
-  expect_equal(res$step_end, rep(1:11, 2) * 10)
+  expect_equal(res$time_start, rep(0:10, 2) * 10)
+  expect_equal(res$time_end, rep(1:11, 2) * 10)
   expect_equal(res$group, factor(rep(c("a", "b"), each = 11)))
   expect_equal(res$data, data)
 
   expect_equal(attr(res, "rate"), 10)
   expect_equal(attr(res, "time"), "day")
-  expect_equal(attr(res, "times"), cbind(0:10, 1:11))
-  expect_equal(attr(res, "steps"), cbind(0:10, 1:11) * 10)
+  expect_equal(attr(res, "model_times"), cbind(0:10, 1:11))
+  expect_equal(attr(res, "times"), cbind(0:10, 1:11) * 10)
   expect_equal(attr(res, "population"), "group")
   expect_equal(attr(res, "populations"), c("a", "b"))
 })
@@ -174,7 +187,8 @@ test_that("particle_filter_data for continuous time", {
   expect_equal(res$data, d$data)
   expect_equal(attr(res, "rate"), NULL)
   expect_equal(attr(res, "time"), "month")
-  expect_equal(attr(res, "times"), cbind(c(0, 4:23), 4:24, deparse.level = 0))
+  expect_equal(attr(res, "model_times"),
+               cbind(c(0, 4:23), 4:24, deparse.level = 0))
   expect_s3_class(
     res,
     c("particle_filter_data_single",

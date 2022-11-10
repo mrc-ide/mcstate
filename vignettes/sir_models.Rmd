@@ -118,7 +118,7 @@ case_compare <- function(state, observed, pars = NULL) {
 We can use the `info()` method on a dust model to inspect what order the state variables will come in:
 
 ```{r}
-gen_sir$new(pars = list(), step = 0, n_particles = 1L)$info()
+gen_sir$new(pars = list(), time = 0, n_particles = 1L)$info()
 ```
 
 The SIR example actually outputs incidence directly as part of the state, so the comparison function can be written without needing to recalculate this:
@@ -295,8 +295,9 @@ coda::effectiveSize(mcmc2)
 Going back to the simple SIR model above, we can easily continue running the fitted model forward in time using the posterior estimated by `pmcmc()` to create a forecast past the end of the data, sampling 10 particles:
 
 ```{r}
+## TODO: the use of times here is confusing, which is it?
 forecast <- predict(processed_chains,
-                    steps = seq(400, 800, 4),
+                    times = seq(400, 800, 4),
                     prepend_trajectories = TRUE,
                     seed = processed_chains$predict$seed)
 
@@ -354,7 +355,7 @@ index <- function(info) {
                  D = info$index$D))
 }
 
-death_model <- gen_death$new(pars = list(), step = 0, n_particles = 1L)
+death_model <- gen_death$new(pars = list(), time = 0, n_particles = 1L)
 index(death_model$info())
 ```
 

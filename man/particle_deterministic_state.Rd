@@ -29,7 +29,7 @@ This is a 3d array as described in \link{particle_filter}}
 \item{\code{log_likelihood}}{The log-likelihood so far. This starts at
 0 when initialised and accumulates value for each step taken.}
 
-\item{\code{current_step_index}}{The index of the last completed step.}
+\item{\code{current_time_index}}{The index of the last completed step.}
 }
 \if{html}{\out{</div>}}
 }
@@ -56,7 +56,7 @@ documented.
   model,
   data,
   data_split,
-  steps,
+  times,
   has_multiple_parameters,
   n_threads,
   initial,
@@ -81,7 +81,7 @@ documented.
 
 \item{\code{data_split}}{The same data as \code{data} but split by step}
 
-\item{\code{steps}}{A matrix of step beginning and ends}
+\item{\code{times}}{A matrix of time step beginning and ends}
 
 \item{\code{has_multiple_parameters}}{Compute multiple likelihoods at once?}
 
@@ -97,7 +97,7 @@ documented.
 
 \item{\code{save_history}}{Logical, indicating if we should save history}
 
-\item{\code{save_restart}}{Vector of steps to save restart at}
+\item{\code{save_restart}}{Vector of time steps to save restart at}
 }
 \if{html}{\out{</div>}}
 }
@@ -108,7 +108,7 @@ documented.
 \subsection{Method \code{run()}}{
 Run the deterministic particle to the end of the data.
 This is a convenience function around \verb{$step()} which provides the
-correct value of \code{step_index}
+correct value of \code{time_index}
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{particle_deterministic_state$run()}\if{html}{\out{</div>}}
 }
@@ -123,13 +123,13 @@ the system forward one step within the \emph{data} (which
 may correspond to more than one step with your model) and
 returns the likelihood so far.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_deterministic_state$step(step_index)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{particle_deterministic_state$step(time_index)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{step_index}}{The step \emph{index} to move to. This is not the same
+\item{\code{time_index}}{The step \emph{index} to move to. This is not the same
 as the model step, nor time, so be careful (it's the index within
 the data provided to the filter). It is an error to provide
 a value here that is lower than the current step index, or past

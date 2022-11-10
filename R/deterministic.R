@@ -12,8 +12,8 @@ particle_deterministic <- R6::R6Class(
   private = list(
     data = NULL,
     data_split = NULL,
-    steps = NULL,
-    n_steps = NULL,
+    times = NULL,
+    n_times = NULL,
     n_threads = NULL,
     initial = NULL,
     index = NULL,
@@ -59,8 +59,8 @@ particle_deterministic <- R6::R6Class(
     ##'
     ##' @param data The data set to be used for the particle filter,
     ##' created by [particle_filter_data()]. This is essentially
-    ##' a [data.frame()] with at least columns `step_start`
-    ##' and `step_end`, along with any additional data used in the
+    ##' a [data.frame()] with at least columns `time_start`
+    ##' and `time_end`, along with any additional data used in the
     ##' `compare` function, and additional information about how your
     ##' steps relate to time.
     ##'
@@ -99,14 +99,15 @@ particle_deterministic <- R6::R6Class(
     ##' must return a list, which can have the elements `state`
     ##' (initial model state, passed to the particle filter - either a
     ##' vector or a matrix, and overriding the initial conditions
-    ##' provided by your model) and `step` (the initial step,
-    ##' overriding the first step of your data - this must occur within
+    ##' provided by your model) and `time` (the initial time,
+    ##' overriding the first time step of your data - this must occur within
     ##' your first epoch in your `data` provided to the
     ##' constructor, i.e., not less than the first element of
-    ##' `step_start` and not more than `step_end`). Your function
+    ##' `time_start` and not more than `time_end`). Your function
     ##' can also return a vector or matrix of `state` and not alter
-    ##' the starting step, which is equivalent to returning
-    ##' `list(state = state, step = NULL)`.
+    ##' the starting time, which is equivalent to returning
+    ##' `list(state = state, time = NULL)`.
+    ##' (TODO: this no longer is allowed, and the docs might be out of date?)
     ##'
     ##' @param constant_log_likelihood An optional function, taking the
     ##' model parameters, that computes the constant part of the
@@ -151,7 +152,7 @@ particle_deterministic <- R6::R6Class(
       copy_list_and_lock(check_n_parameters(n_parameters, data),
                          self)
 
-      private$steps <- attr(data, "steps")
+      private$times <- attr(data, "times")
       private$data_split <- particle_filter_data_split(data, is.null(compare))
 
       private$compare <- compare
@@ -224,7 +225,7 @@ particle_deterministic <- R6::R6Class(
       }
       particle_deterministic_state$new(
         pars, self$model, private$last_model[[1]], private$data,
-        private$data_split, private$steps, self$has_multiple_parameters,
+        private$data_split, private$times, self$has_multiple_parameters,
         private$n_threads, private$initial, private$index, private$compare,
         private$constant_log_likelihood,
         save_history, save_restart)

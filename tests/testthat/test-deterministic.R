@@ -310,7 +310,7 @@ test_that("Cannot use previous initial condition approach", {
   dat <- example_sir()
   p <- particle_deterministic$new(dat$data, dat$model, dat$compare,
                                   index = dat$index, initial = initial)
-  expect_error(p$run(), "Setting 'step' from initial no longer supported")
+  expect_error(p$run(), "Setting 'time' from initial no longer supported")
 })
 
 

@@ -406,11 +406,11 @@ test_that("Can filter multistage parameters based on data", {
       multistage_epoch(t[[i]], pars = list(i = i + 1)))
     p <- multistage_parameters(base, epochs)
     res <- filter_check_times(p, d, NULL)
-    vapply(res, function(x) c(x$pars$i, x$step_index), numeric(2))
+    vapply(res, function(x) c(x$pars$i, x$time_index), numeric(2))
   }
 
-  d <- particle_filter_data(data.frame(time = 11:30, value = runif(20)),
-                            "time", 4)
+  d <- particle_filter_data(data.frame(t = 11:30, value = runif(20)),
+                            "t", 4)
 
   expect_equal(f(integer(0), d), cbind(c(1, 20)))
   ## Changes all before any data; use last
@@ -458,7 +458,7 @@ test_that("Can run a multistage filter from part way through", {
   t_min <- 35
   step_min <- t_min * attr(dat$data, "rate")
   data <- dat$data
-  data <- dat$data[dat$data$time_end > t_min, ]
+  data <- dat$data[dat$data$t_end > t_min, ]
 
   initial <- function(info, n_particles, pars) {
     rep(0, info$len)
@@ -487,11 +487,11 @@ test_that("Confirm nested filter is correct", {
   dat <- example_variable()
 
   ## We need some multipopulation data here:
-  data_raw <- data.frame(time = rep(1:50, 2),
+  data_raw <- data.frame(t = rep(1:50, 2),
                          observed = rnorm(100),
                          population = factor(rep(c("a", "b"), each = 50)))
   data <- particle_filter_data(data_raw, population = "population",
-                               time = "time", rate = 4)
+                               time = "t", rate = 4)
   new_filter <- function() {
     set.seed(1)
     particle_filter$new(data, dat$model, 42,
@@ -616,7 +616,7 @@ test_that("can run a particle filter over a subset of data, twice", {
                  transform_state = dat$transform_state))
   pars <- multistage_parameters(pars_base, epochs)
 
-  data <- subset(dat$data, time_start >= 30)
+  data <- subset(dat$data, t_start >= 30)
   filter <- particle_filter$new(data, dat$model, 42, dat$compare,
                                 index = index, seed = 1L)
   filter$run(pars)

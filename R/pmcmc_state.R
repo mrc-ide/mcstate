@@ -303,23 +303,17 @@ pmcmc_state <- R6::R6Class(
         ## Do we *definitely* need step and rate here?
         data <- private$filter$inputs()$data
         is_continuous <- inherits(data, "particle_filter_data_continuous")
-        if (is_continuous) {
-          step <- NULL
-          rate <- NULL
-          time <- last(data$time_end)
-        } else {
-          step <- last(data$step_end)
-          rate <- attr(data, "rate", exact = TRUE)
-          time <- step * rate
-        }
+        time <- last(data$time_end)
+        rate <- if (is_continuous) 1 else attr(data, "rate", exact = TRUE)
+        model_time <- time / rate
 
         predict <- list(
           is_continuous = is_continuous,
           transform = r6_private(private$pars)$transform,
           index = r6_private(private$filter)$last_history$index,
-          step = step,
-          rate = rate,
           time = time,
+          rate = rate,
+          model_time = model_time,
           filter = private$filter$inputs())
       } else {
         predict <- NULL
@@ -353,16 +347,16 @@ pmcmc_state <- R6::R6Class(
         ## filling in nicely the requested bits - see sircovid's
         ## helper-lancelot-pmcmc.R which does this, and similar code
         ## in spimalot.
+        times <- attr(predict$filter$data, "times")
+        time <- c(times[[1]], times[, 2])
+        ## TODO: these can be harmonised now, they're the same if we
+        ## make rate = 1
         if (predict$is_continuous) {
-          times <- attr(predict$filter$data, "times")
-          time <- c(times[[1]], times[, 2])
           trajectories <- mcstate_trajectories_continuous(
             time, trajectories_state, predicted = FALSE)
         } else {
-          steps <- attr(predict$filter$data, "steps")
-          step <- c(steps[[1]], steps[, 2])
           trajectories <- mcstate_trajectories_discrete(
-            step, predict$rate, trajectories_state, predicted = FALSE)
+            time, predict$rate, trajectories_state, predicted = FALSE)
         }
       }
 

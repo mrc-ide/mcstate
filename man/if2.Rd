@@ -48,7 +48,7 @@ PNAS, 112(3), 719–724. https://doi.org/10.1073/pnas.1410597112.
 gen <- dust::dust_example("sir")
 
 # Some data that we will fit to, using 1 particle:
-sir <- gen$new(pars = list(), step = 0, n_particles = 1)
+sir <- gen$new(pars = list(), time = 0, n_particles = 1)
 dt <- 1 / 4
 day <- seq(1, 100)
 incidence <- rep(NA, length(day))

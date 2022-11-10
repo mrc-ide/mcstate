@@ -362,13 +362,14 @@ test_that("run nested pmcmc with the particle filter and retain history", {
   ## Trajectories, if returned, have the same shape
   expect_s3_class(results1$trajectories, "mcstate_trajectories")
   expect_equal(dim(results1$trajectories$state), c(3, 2, 30, 101))
-  expect_equal(results1$trajectories$step, seq(0, 400, by = 4))
+  expect_equal(results1$trajectories$time, seq(0, 400, by = 4))
   expect_equal(results1$trajectories$rate, 4)
 
   ## Additional information required to predict
   expect_setequal(
     names(results1$predict),
-    c("is_continuous", "transform", "index", "rate", "step", "time", "filter"))
+    c("is_continuous", "transform", "index", "rate", "time", "model_time",
+      "filter"))
 })
 
 

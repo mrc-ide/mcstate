@@ -113,7 +113,7 @@ filter_check_times <- function(pars, data, save_restart) {
   ## when each phase *ends*, as that is the index that we do the
   ## switch at.
 
-  times <- attr(data, "times")
+  times <- attr(data, "model_times")
 
   time_pars <- vnapply(pars[-1], "[[", "start")
   time_pars_start <- c(-Inf, time_pars)
@@ -127,11 +127,11 @@ filter_check_times <- function(pars, data, save_restart) {
   }
   index <- which(!drop)
 
-  step_index <- c(match(time_pars, times[, 2]), nrow(times))
+  time_index <- c(match(time_pars, times[, 2]), nrow(times))
 
-  if (any(is.na(step_index))) {
+  if (any(is.na(time_index))) {
     stop(sprintf("Could not map epoch to filter time: error for stage %s",
-                 paste(index[is.na(step_index)], collapse = ", ")))
+                 paste(index[is.na(time_index)], collapse = ", ")))
   }
 
   ## this is a bookkeeping and interpretation nightmare so disallow it:
@@ -147,7 +147,7 @@ filter_check_times <- function(pars, data, save_restart) {
   save_restart_index <- seq_along(save_restart)
 
   for (i in seq_along(pars)) {
-    pars[[i]]$step_index <- step_index[[i]]
+    pars[[i]]$time_index <- time_index[[i]]
     if (!is.null(save_restart)) {
       pars[[i]]$restart_index <- save_restart_index[save_restart_stage == i]
     }
@@ -158,7 +158,7 @@ filter_check_times <- function(pars, data, save_restart) {
 
 
 join_histories <- function(history, stages) {
-  step_index <- vnapply(stages, "[[", "step_index")
+  time_index <- vnapply(stages, "[[", "time_index")
 
   if (is.null(names(history[[1]]$index))) {
     ## it is possible but unlikely that we could use non-named things
@@ -182,7 +182,7 @@ join_histories <- function(history, stages) {
   index <- rep(NA_integer_, length(nms))
   names(index) <- nms
 
-  end <- step_index + 1L
+  end <- time_index + 1L
   start <- c(1L, end[-length(end)] + 1L)
 
   rank <- length(dim(value))
