@@ -1,3 +1,7 @@
+# mcstate 0.9.13
+
+* Particle filters now work with irregular and non-unit spaced time series data
+
 # mcstate 0.9.11
 
 * Continuous time (ODE) models can now use workers for running chains in parallel with `pmcmc`

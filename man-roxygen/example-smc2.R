@@ -16,7 +16,7 @@ sir <- dust::dust_example("sir")
 incidence <- read.csv(system.file("sir_incidence.csv", package = "mcstate"))
 
 # Annotate the data so that it is suitable for the particle filter to use
-dat <- mcstate::particle_filter_data(incidence, "day", 4)
+dat <- mcstate::particle_filter_data(incidence, "day", 4, 0)
 
 # Subset the output during run
 index <- function(info) {

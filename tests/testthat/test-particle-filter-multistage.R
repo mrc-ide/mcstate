@@ -410,7 +410,7 @@ test_that("Can filter multistage parameters based on data", {
   }
 
   d <- particle_filter_data(data.frame(t = 11:30, value = runif(20)),
-                            "t", 4)
+                            "t", 4, 10)
 
   expect_equal(f(integer(0), d), cbind(c(1, 20)))
   ## Changes all before any data; use last
@@ -491,7 +491,7 @@ test_that("Confirm nested filter is correct", {
                          observed = rnorm(100),
                          population = factor(rep(c("a", "b"), each = 50)))
   data <- particle_filter_data(data_raw, population = "population",
-                               time = "t", rate = 4)
+                               time = "t", rate = 4, initial_time = 0)
   new_filter <- function() {
     set.seed(1)
     particle_filter$new(data, dat$model, 42,

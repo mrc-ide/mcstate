@@ -39,13 +39,15 @@
 ##'   integer-like for discrete time models and must be `NULL` for
 ##'   continuous time models.
 ##'
-##' @param initial_time Optionally, an initial time to start the model
-##'   from.  Provide this if you need to burn the model in, or if
-##'   there is a long period with no data at the beginning of the
-##'   simulation.  If provided, it must be a non-negative integer and
-##'   must be at most equal to the first value of the `time` column,
-##'   minus 1 (i.e., `data[[time]] - 1`). For discrete time models,
-##'   this is expressed in model time.
+##' @param initial_time An initial time to start the model from. This
+##'   should always be provided, and must be provided for continuous
+##'   time models. For discrete time models, this is expressed in
+##'   model time. It must be a non-negative integer and must be at
+##'   most equal to the first value of the `time` column, minus 1
+##'   (i.e., `data[[time]] - 1`). For historical reasons if not given
+##'   we take the first value of the `time` column minus one, but with
+##'   a warning - this behaviour will be removed in a future version
+##'   of mcstate.
 ##'
 ##' @param population Optionally, the name of a column within `data` that
 ##'   represents different populations. Must be a factor.
@@ -61,11 +63,11 @@
 ##' @export
 ##' @examples
 ##' d <- data.frame(day = 5:20, y = runif(16))
-##' mcstate::particle_filter_data(d, "day", 4)
+##' mcstate::particle_filter_data(d, "day", rate = 4, initial_time = 4)
 ##'
 ##' # If providing an initial day, then the first epoch of simulation
 ##' # will be longer (see the first row)
-##' mcstate::particle_filter_data(d, "day", 4, 0)
+##' mcstate::particle_filter_data(d, "day", rate = 4, initial_time = 0)
 ##'
 ##' # If including populations:
 ##' d <- data.frame(day = 5:20, y = runif(16),
@@ -117,37 +119,51 @@ particle_filter_data <- function(data, time, rate, initial_time = NULL,
     model_time_end <- time_split[[1]]
   }
 
+  ## This is only required for discrete time models really
   assert_integer(model_time_end, name = sprintf("data$%s", time))
-  if (!is_continuous && !all(diff(model_time_end) == 1)) {
-    ## It's possible that we can make this work ok for irregular time
-    ## units, but we make this assumption below when working out the
-    ## start and end step (i.e., that we assume that the data
-    stop("Expected each time difference to be one unit")
-  }
-
-  if (length(model_time_end) < 2) {
-    stop("Expected at least two time windows")
-  }
-
-  ## NOTE: test is against 1 because we'll start at 1 - 1 = 0
-  if (!is_continuous && model_time_end[[1L]] < 1) {
-    stop(sprintf("The first time must be at least 1 (but was given %d)",
-                 model_time_end[[1L]]))
-  }
 
   if (is.null(initial_time)) {
     if (is_continuous) {
       stop("'initial_time' must be given for continuous models")
+    } else {
+      initial_time <- model_time_end[[1L]] - 1
+      fmt <- paste("'initial_time' should be provided. I'm assuming '%d'",
+                   "which is one time unit before the first time in your",
+                   "data (%d), but this might not be appropriate. This",
+                   "will become an error in a future version of mcstate")
+      warning(sprintf(fmt, initial_time, model_time_end[[1L]]),
+              immediate. = TRUE)
+
+      ## This is only an issue while we allow not providing an initial
+      ## time.
+      if (model_time_end[[1L]] < 1) {
+        stop(sprintf("The first time must be at least 1 (but was given %d)",
+                     model_time_end[[1L]]))
+      }
     }
-    initial_time <- model_time_end[[1L]] - 1
-  } else {
-    initial_time <- assert_integer(initial_time)
-    if (initial_time < 0) {
-      stop("'initial_time' must be non-negative")
-    }
-    if (initial_time > model_time_end[[1L]] - 1) {
-      stop(sprintf("'initial_time' must be <= %d", model_time_end[[1L]] - 1))
-    }
+  }
+
+  ## I am not entirely sure why we require two time windows and not
+  ## one - it's possible this is a hangover an earlier version where
+  ## the first line was the start time?
+  if (length(model_time_end) < 2) {
+    stop("Expected at least two time windows")
+  }
+
+  if (any(model_time_end < 0)) {
+    ## This condition is actually only required for discrete time
+    ## models; for continuous time models this would be fine.
+    stop("All times must be non-negative")
+  }
+
+  initial_time <- assert_integer(initial_time)
+  if (initial_time < 0) {
+    ## This condition is actually only required for discrete time
+    ## models; for continuous time models this would be fine.
+    stop("'initial_time' must be non-negative")
+  }
+  if (initial_time > model_time_end[[1L]]) {
+    stop(sprintf("'initial_time' must be <= %d", model_time_end[[1L]]))
   }
 
   model_time_start <- c(initial_time, model_time_end[-length(model_time_end)])
