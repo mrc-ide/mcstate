@@ -259,7 +259,6 @@ test_that("particle filter data can construct with irregular time data", {
   df2 <- particle_filter_data(d2, "day", 4, 0)
 
   i <- which(!is.na(d1$incidence))
-  ## expect_equal(df2$day_start, df1$day_start[i - 1])
   expect_equal(df2$day_start, c(0, df2$day_end[-nrow(df2)]))
   expect_equal(df2$day_end, df1$day_end[i])
   expect_equal(df2$time_start, c(0, df2$time_end[-nrow(df2)]))
