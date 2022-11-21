@@ -14,6 +14,9 @@ test_that("particle filter data validates time", {
     "'data$t' must be an integer",
     fixed = TRUE)
   expect_error(
+    suppressWarnings(particle_filter_data(d - 1, "t", 10)),
+    "The first time must be at least 1 (but was given 0)", fixed = TRUE)
+  expect_error(
     particle_filter_data(d - 2, "t", 10, 0),
     "All times must be non-negative",
     fixed = TRUE)
