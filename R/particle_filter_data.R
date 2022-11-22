@@ -150,9 +150,7 @@ particle_filter_data <- function(data, time, rate, initial_time = NULL,
     stop("Expected at least two time windows")
   }
 
-  if (any(model_time_end < 0)) {
-    ## This condition is actually only required for discrete time
-    ## models; for continuous time models this would be fine.
+  if (!is_continuous && any(model_time_end < 0)) {
     stop("All times must be non-negative")
   }
 
