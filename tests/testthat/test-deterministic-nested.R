@@ -16,9 +16,9 @@ test_that("Confirm nested particle deterministic is correct", {
                list(beta = 0.3, gamma = 0.1))
 
   data1 <- particle_filter_data(dat$data_raw[dat$data_raw$populations == "a", ],
-                                time = "day", rate = 4)
+                                time = "day", rate = 4, initial_time = 0)
   data2 <- particle_filter_data(dat$data_raw[dat$data_raw$populations == "b", ],
-                                time = "day", rate = 4)
+                                time = "day", rate = 4, initial_time = 0)
 
   p1 <- particle_deterministic$new(data1, dat$model, compare,
                                    index = dat$index)

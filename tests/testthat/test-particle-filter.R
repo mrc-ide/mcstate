@@ -1310,9 +1310,9 @@ test_that("Confirm nested filter is correct", {
   seed2 <- seed[-seq_len(length(seed) / 2)]
 
   data1 <- particle_filter_data(dat$data_raw[dat$data_raw$populations == "a", ],
-                                time = "day", rate = 4)
+                                time = "day", rate = 4, initial_time = 0)
   data2 <- particle_filter_data(dat$data_raw[dat$data_raw$populations == "b", ],
-                                time = "day", rate = 4)
+                                time = "day", rate = 4, initial_time = 0)
 
   set.seed(1)
   p1 <- particle_filter$new(data1, dat$model, n_particles, compare,
@@ -1408,7 +1408,7 @@ test_that("Can run a particle filter in replicate", {
   data_raw <- do.call(rbind, lapply(seq_len(n_parameters), function(i)
     cbind(dat$data_raw, replicate = i)))
   data_raw$replicate <- factor(data_raw$replicate)
-  data_replicated <- particle_filter_data(data_raw, "day", 4,
+  data_replicated <- particle_filter_data(data_raw, "day", 4, 0,
                                           population = "replicate")
   p2 <- particle_filter$new(data_replicated, dat$model, n_particles,
                             dat$compare, index = dat$index, seed = 1L)
@@ -1440,7 +1440,7 @@ test_that("Can run a particle filter in replicate with compiled compare", {
   data_raw <- do.call(rbind, lapply(seq_len(n_parameters), function(i)
     cbind(dat$data_raw, replicate = i)))
   data_raw$replicate <- factor(data_raw$replicate)
-  data_replicated <- particle_filter_data(data_raw, "day", 4,
+  data_replicated <- particle_filter_data(data_raw, "day", 4, 0,
                                           population = "replicate")
   p2 <- particle_filter$new(data_replicated, dat$model, n_particles,
                             NULL, index = dat$index, seed = 1L)
@@ -1673,4 +1673,53 @@ test_that("Can reconstruct a continuous time filter", {
 
   p2 <- particle_filter_from_inputs(inputs)
   expect_equal(p2$inputs(), inputs)
+})
+
+
+test_that("filter works with non-unit data", {
+  dat <- example_sir()
+
+  d1 <- dat$data_raw
+  d1$incidence[rep(c(TRUE, FALSE), length.out = nrow(d1))] <- NA
+  d2 <- d1[!is.na(d1$incidence), ]
+
+  df1 <- particle_filter_data(d1, "day", 4, 0)
+  df2 <- particle_filter_data(d2, "day", 4, 0)
+
+  n_particles <- 42
+  set.seed(1)
+  p1 <- particle_filter$new(df1, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  ll1 <- p1$run(list())
+  set.seed(1)
+  p2 <- particle_filter$new(df2, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  ll2 <- p2$run(list())
+
+  expect_equal(ll2, ll1)
+})
+
+
+test_that("filter works with irregular data", {
+  dat <- example_sir()
+
+  set.seed(1)
+  d1 <- dat$data_raw
+  d1$incidence[c(runif(nrow(d1) - 1) < 0.5, FALSE)] <- NA
+  d2 <- d1[!is.na(d1$incidence), ]
+
+  df1 <- particle_filter_data(d1, "day", 4, 0)
+  df2 <- particle_filter_data(d2, "day", 4, 0)
+
+  n_particles <- 42
+  set.seed(1)
+  p1 <- particle_filter$new(df1, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  ll1 <- p1$run(list())
+  set.seed(1)
+  p2 <- particle_filter$new(df2, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  ll2 <- p2$run(list())
+
+  expect_equal(ll2, ll1)
 })

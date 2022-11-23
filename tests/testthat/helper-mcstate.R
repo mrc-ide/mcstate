@@ -35,7 +35,7 @@ example_sir <- function() {
   }
 
   data_raw <- data.frame(day = day, incidence = incidence)
-  data <- particle_filter_data(data_raw, "day", 4)
+  data <- particle_filter_data(data_raw, "day", 4, 0)
 
   index <- function(info) {
     list(run = 5L, state = 1:3)
@@ -105,7 +105,7 @@ example_volatility <- function(pars = NULL) {
   res <- mod$simulate(times)
   observed <- res[1, 1, -1] + rnorm(length(times) - 1, 0, 1)
   data <- data.frame(t = times[-1], observed = observed)
-  data <- particle_filter_data(data, "t", 1)
+  data <- particle_filter_data(data, "t", 1, 0)
 
   compare <- function(state, observed, pars) {
     dnorm(observed$observed, pars$compare$gamma * drop(state),
@@ -171,6 +171,7 @@ example_sir_shared <- function() {
   data_raw$populations <- factor(rep(letters[1:2], each = nrow(data_raw) / 2))
 
   data <- particle_filter_data(data_raw, time = "day", rate = 4,
+                               initial_time = 0,
                                population = "populations")
 
   index <- function(info) {
@@ -487,7 +488,7 @@ example_variable <- function() {
   }, verbose = FALSE)
 
   data <- particle_filter_data(data.frame(t = 1:50, observed = rnorm(50)),
-                               "t", 4)
+                               "t", 4, 0)
   ## Nonsense model
   compare <- function(state, observed, pars) {
     dnorm(state - observed$observed, log = TRUE)
