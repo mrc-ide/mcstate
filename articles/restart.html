@@ -40,7 +40,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.12</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.13</span>
       </span>
     </div>
 
@@ -134,7 +134,11 @@
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sir</span> <span class="op">&lt;-</span> <span class="fu">dust</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/dust/man/dust_example.html" class="external-link">dust_example</a></span><span class="op">(</span><span class="st">"sir"</span><span class="op">)</span></span>
 <span><span class="va">dt</span> <span class="op">&lt;-</span> <span class="fl">0.25</span></span>
-<span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/particle_filter_data.html">particle_filter_data</a></span><span class="op">(</span><span class="va">incidence</span>, time <span class="op">=</span> <span class="st">"day"</span>, rate <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="va">dt</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/particle_filter_data.html">particle_filter_data</a></span><span class="op">(</span><span class="va">incidence</span>, time <span class="op">=</span> <span class="st">"day"</span>, rate <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="va">dt</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning in mcstate::particle_filter_data(incidence, time = "day", rate = 1/</span></span>
+<span><span class="co">#&gt; dt): 'initial_time' should be provided. I'm assuming '0' which is one time unit</span></span>
+<span><span class="co">#&gt; before the first time in your data (1), but this might not be appropriate. This</span></span>
+<span><span class="co">#&gt; will become an error in a future version of mcstate</span></span></code></pre></div>
 <p>A comparison function</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">compare</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">state</span>, <span class="va">observed</span>, <span class="va">pars</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span></span>

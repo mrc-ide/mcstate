@@ -40,7 +40,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.12</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.13</span>
       </span>
     </div>
 
@@ -136,7 +136,11 @@
 <span>     type <span class="op">=</span> <span class="st">"o"</span>, xlab <span class="op">=</span> <span class="st">"Day"</span>, ylab <span class="op">=</span> <span class="st">"New cases"</span>, pch <span class="op">=</span> <span class="fl">19</span><span class="op">)</span></span></code></pre></div>
 <p><img src="if2_files/figure-html/unnamed-chunk-2-1.png" width="672"></p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/particle_filter_data.html">particle_filter_data</a></span><span class="op">(</span><span class="va">incidence</span>, time <span class="op">=</span> <span class="st">"day"</span>, rate <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/particle_filter_data.html">particle_filter_data</a></span><span class="op">(</span><span class="va">incidence</span>, time <span class="op">=</span> <span class="st">"day"</span>, rate <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning in mcstate::particle_filter_data(incidence, time = "day", rate = 4):</span></span>
+<span><span class="co">#&gt; 'initial_time' should be provided. I'm assuming '0' which is one time unit</span></span>
+<span><span class="co">#&gt; before the first time in your data (1), but this might not be appropriate. This</span></span>
+<span><span class="co">#&gt; will become an error in a future version of mcstate</span></span></code></pre></div>
 <p>A dust model generator object</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sir</span> <span class="op">&lt;-</span> <span class="fu">dust</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/dust/man/dust_example.html" class="external-link">dust_example</a></span><span class="op">(</span><span class="st">"sir"</span><span class="op">)</span></span></code></pre></div>
@@ -211,7 +215,7 @@
 <code class="sourceCode R"><span><span class="va">pars_series</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">result</span><span class="op">$</span><span class="va">pars</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="va">pars_series</span><span class="op">[</span>, , <span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">pars_series</span><span class="op">)</span><span class="op">[[</span><span class="fl">3</span><span class="op">]</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt;       beta      gamma </span></span>
-<span><span class="co">#&gt; 0.12089316 0.05390074</span></span></code></pre></div>
+<span><span class="co">#&gt; 0.18934036 0.05791383</span></span></code></pre></div>
 <p>We can also run particle filters at each final parameter estimate to get an estimate of the model likelihood, showing the mean value in red:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">n_particles</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
