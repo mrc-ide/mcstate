@@ -546,30 +546,50 @@ particle_resample <- function(weights) {
 ## `$inputs()` data, but possibly changing the seed
 particle_filter_from_inputs <- function(inputs, seed = NULL) {
   if (is.null(inputs$n_particles)) {
-    particle_deterministic$new(
-      data = inputs$data,
-      model = inputs$model,
-      compare = inputs$compare,
-      index = inputs$index,
-      initial = inputs$initial,
-      constant_log_likelihood = inputs$constant_log_likelihood,
-      n_threads = inputs$n_threads)
+    particle_filter_from_inputs_deterministic(inputs)
   } else {
-    particle_filter$new(
-      data = inputs$data,
-      model = inputs$model,
-      n_particles = inputs$n_particles,
-      compare = inputs$compare,
-      gpu_config = inputs$gpu_config,
-      index = inputs$index,
-      initial = inputs$initial,
-      constant_log_likelihood = inputs$constant_log_likelihood,
-      n_threads = inputs$n_threads,
-      seed = seed %||% inputs$seed,
-      stochastic_schedule = inputs$stochastic_schedule,
-      ode_control = inputs$ode_control)
+    particle_filter_from_inputs_stochastic(inputs, seed)
   }
 }
+
+
+particle_filter_from_inputs_deterministic <- function(inputs) {
+  particle_deterministic$new(
+    data = inputs$data,
+    model = inputs$model,
+    compare = inputs$compare,
+    index = inputs$index,
+    initial = inputs$initial,
+    constant_log_likelihood = inputs$constant_log_likelihood,
+    n_threads = inputs$n_threads,
+    n_parameters = inputs$n_parameters)
+}
+
+
+particle_filter_from_inputs_stochastic <- function(inputs, seed) {
+  particle_filter$new(
+    data = inputs$data,
+    model = inputs$model,
+    n_particles = inputs$n_particles,
+    compare = inputs$compare,
+    gpu_config = inputs$gpu_config,
+    index = inputs$index,
+    initial = inputs$initial,
+    constant_log_likelihood = inputs$constant_log_likelihood,
+    n_threads = inputs$n_threads,
+    n_parameters = n_parameters,
+    seed = seed %||% inputs$seed,
+    stochastic_schedule = inputs$stochastic_schedule,
+    ode_control = inputs$ode_control)
+}
+
+check_inputs <- function(inputs, class) {
+  args <- formals(class$public_methods$initialize)
+  if (!setequal(names(inputs), names(args))) {
+    stop("inputs incompatible with this mcstate version")
+  }
+}
+
 
 
 scale_log_weights <- function(log_weights) {

@@ -313,6 +313,11 @@ particle_deterministic <- R6::R6Class(
     ##' filter. These correspond directly to the argument names for the
     ##' constructor and are the same as the input arguments.
     inputs = function() {
+      if (self$has_multiple_parameters) {
+        n_parameters <- self$n_parameters
+      } else {
+        n_parameters <- NULL
+      }
       list(data = private$data,
            model = self$model,
            index = private$index,
@@ -320,7 +325,7 @@ particle_deterministic <- R6::R6Class(
            compare = private$compare,
            constant_log_likelihood = private$constant_log_likelihood,
            n_threads = private$n_threads,
-           seed = filter_current_seed(last(private$last_model), NULL))
+           n_parameters = n_parameters)
     },
 
     ##' @description
