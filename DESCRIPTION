@@ -32,7 +32,7 @@ Suggests:
     fs,
     knitr,
     mockery,
-    mode (>= 0.1.9),
+    mode (>= 0.1.12),
     mvtnorm,
     odin.dust (>= 0.2.20),
     rmarkdown,
