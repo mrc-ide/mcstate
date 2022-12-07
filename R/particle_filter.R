@@ -577,7 +577,7 @@ particle_filter_from_inputs_stochastic <- function(inputs, seed) {
     initial = inputs$initial,
     constant_log_likelihood = inputs$constant_log_likelihood,
     n_threads = inputs$n_threads,
-    n_parameters = n_parameters,
+    n_parameters = inputs$n_parameters,
     seed = seed %||% inputs$seed,
     stochastic_schedule = inputs$stochastic_schedule,
     ode_control = inputs$ode_control)
