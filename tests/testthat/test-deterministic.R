@@ -267,6 +267,22 @@ test_that("Can reference by name in compare", {
 })
 
 
+test_that("can return inputs, and these are the full interface", {
+  dat <- example_sir()
+  p <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
+  inputs <- p$inputs()
+  expect_setequal(names(inputs), names(formals(p$initialize)))
+
+  ## Can't use mockery to spy on the calls, so check that all args are
+  ## used statically instead; and this trick does not work with the
+  ## way that covr works!
+  testthat::skip_on_covr()
+  exprs <- body(particle_filter_from_inputs_deterministic)
+  args <- names(as.list(exprs[[2]][-1]))
+  expect_setequal(args, names(inputs))
+})
+
+
 test_that("reconstruct deterministic filter from inputs", {
   dat <- example_sir()
   p1 <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)

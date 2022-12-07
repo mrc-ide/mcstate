@@ -436,7 +436,7 @@ particle_filter <- R6::R6Class(
     ##' calling through to the `$statistics()` method of the underlying
     ##' model. This is only available for continuous time (ODE) models,
     ##' and will error if used with discrete time models.
-    statistics = function() {
+    ode_statistics = function() {
       if (!inherits(private$data, "particle_filter_data_continuous")) {
         stop("Statistics are only available for continuous (ODE) models")
       }
@@ -445,7 +445,7 @@ particle_filter <- R6::R6Class(
       }
       ## when/if we support multistage models, more care will be
       ## needed here.
-      private$last_model[[1]]$statistics()
+      private$last_model[[1]]$ode_statistics()
     },
 
     ##' @description
@@ -546,29 +546,41 @@ particle_resample <- function(weights) {
 ## `$inputs()` data, but possibly changing the seed
 particle_filter_from_inputs <- function(inputs, seed = NULL) {
   if (is.null(inputs$n_particles)) {
-    particle_deterministic$new(
-      data = inputs$data,
-      model = inputs$model,
-      compare = inputs$compare,
-      index = inputs$index,
-      initial = inputs$initial,
-      constant_log_likelihood = inputs$constant_log_likelihood,
-      n_threads = inputs$n_threads)
+    particle_filter_from_inputs_deterministic(inputs)
   } else {
-    particle_filter$new(
-      data = inputs$data,
-      model = inputs$model,
-      n_particles = inputs$n_particles,
-      compare = inputs$compare,
-      gpu_config = inputs$gpu_config,
-      index = inputs$index,
-      initial = inputs$initial,
-      constant_log_likelihood = inputs$constant_log_likelihood,
-      n_threads = inputs$n_threads,
-      seed = seed %||% inputs$seed,
-      stochastic_schedule = inputs$stochastic_schedule,
-      ode_control = inputs$ode_control)
+    particle_filter_from_inputs_stochastic(inputs, seed)
   }
+}
+
+
+particle_filter_from_inputs_deterministic <- function(inputs) {
+  particle_deterministic$new(
+    data = inputs$data,
+    model = inputs$model,
+    compare = inputs$compare,
+    index = inputs$index,
+    initial = inputs$initial,
+    constant_log_likelihood = inputs$constant_log_likelihood,
+    n_threads = inputs$n_threads,
+    n_parameters = inputs$n_parameters)
+}
+
+
+particle_filter_from_inputs_stochastic <- function(inputs, seed) {
+  particle_filter$new(
+    data = inputs$data,
+    model = inputs$model,
+    n_particles = inputs$n_particles,
+    compare = inputs$compare,
+    gpu_config = inputs$gpu_config,
+    index = inputs$index,
+    initial = inputs$initial,
+    constant_log_likelihood = inputs$constant_log_likelihood,
+    n_threads = inputs$n_threads,
+    n_parameters = inputs$n_parameters,
+    seed = seed %||% inputs$seed,
+    stochastic_schedule = inputs$stochastic_schedule,
+    ode_control = inputs$ode_control)
 }
 
 

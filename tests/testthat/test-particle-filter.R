@@ -353,6 +353,14 @@ test_that("can return inputs", {
 
   expect_identical(inputs2[names(inputs2) != "seed"],
                    inputs[names(inputs) != "seed"])
+
+  ## Can't use mockery to spy on the calls, so check that all args are
+  ## used statically instead; and this trick does not work with the
+  ## way that covr works!
+  testthat::skip_on_covr()
+  exprs <- body(particle_filter_from_inputs_stochastic)
+  args <- names(as.list(exprs[[2]][-1]))
+  expect_setequal(args, names(inputs))
 })
 
 
@@ -1633,10 +1641,10 @@ test_that("Can fetch statistics from continuous model", {
                init_Sv = 100,
                init_Iv = 1,
                nrates = 15)
-  expect_error(p$statistics(),
+  expect_error(p$ode_statistics(),
                "Model has not yet been run")
   res <- p$run(pars)
-  s <- p$statistics()
+  s <- p$ode_statistics()
   expect_s3_class(s, "mode_statistics")
 })
 
@@ -1648,12 +1656,12 @@ test_that("Can't fetch statistics from discrete model", {
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index, seed = 1L)
   expect_error(
-    p$statistics(),
+    p$ode_statistics(),
     "Statistics are only available for continuous (ODE) models",
     fixed = TRUE)
   res <- p$run()
   expect_error(
-    p$statistics(),
+    p$ode_statistics(),
     "Statistics are only available for continuous (ODE) models",
     fixed = TRUE)
 })
