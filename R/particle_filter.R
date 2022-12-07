@@ -583,14 +583,6 @@ particle_filter_from_inputs_stochastic <- function(inputs, seed) {
     ode_control = inputs$ode_control)
 }
 
-check_inputs <- function(inputs, class) {
-  args <- formals(class$public_methods$initialize)
-  if (!setequal(names(inputs), names(args))) {
-    stop("inputs incompatible with this mcstate version")
-  }
-}
-
-
 
 scale_log_weights <- function(log_weights) {
   log_weights[is.nan(log_weights)] <- -Inf
