@@ -436,7 +436,7 @@ particle_filter <- R6::R6Class(
     ##' calling through to the `$statistics()` method of the underlying
     ##' model. This is only available for continuous time (ODE) models,
     ##' and will error if used with discrete time models.
-    statistics = function() {
+    ode_statistics = function() {
       if (!inherits(private$data, "particle_filter_data_continuous")) {
         stop("Statistics are only available for continuous (ODE) models")
       }
@@ -445,7 +445,7 @@ particle_filter <- R6::R6Class(
       }
       ## when/if we support multistage models, more care will be
       ## needed here.
-      private$last_model[[1]]$statistics()
+      private$last_model[[1]]$ode_statistics()
     },
 
     ##' @description
