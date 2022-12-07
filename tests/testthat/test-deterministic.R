@@ -274,7 +274,9 @@ test_that("can return inputs, and these are the full interface", {
   expect_setequal(names(inputs), names(formals(p$initialize)))
 
   ## Can't use mockery to spy on the calls, so check that all args are
-  ## used statically instead
+  ## used statically instead; and this trick does not work with the
+  ## way that covr works!
+  testthat::skip_on_covr()
   exprs <- body(particle_filter_from_inputs_deterministic)
   args <- names(as.list(exprs[[2]][-1]))
   expect_setequal(args, names(inputs))

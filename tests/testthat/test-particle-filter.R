@@ -334,12 +334,6 @@ test_that("can return inputs", {
   inputs <- p$inputs()
   expect_setequal(names(inputs), names(formals(p$initialize)))
 
-  ## Can't use mockery to spy on the calls, so check that all args are
-  ## used statically instead
-  exprs <- body(particle_filter_from_inputs_stochastic)
-  args <- names(as.list(exprs[[2]][-1]))
-  expect_setequal(args, names(inputs))
-
   expect_equal(inputs$data, dat$data)
   expect_equal(inputs$model, dat$model)
   expect_equal(inputs$n_particles, n_particles)
@@ -359,6 +353,14 @@ test_that("can return inputs", {
 
   expect_identical(inputs2[names(inputs2) != "seed"],
                    inputs[names(inputs) != "seed"])
+
+  ## Can't use mockery to spy on the calls, so check that all args are
+  ## used statically instead; and this trick does not work with the
+  ## way that covr works!
+  testthat::skip_on_covr()
+  exprs <- body(particle_filter_from_inputs_stochastic)
+  args <- names(as.list(exprs[[2]][-1]))
+  expect_setequal(args, names(inputs))
 })
 
 
