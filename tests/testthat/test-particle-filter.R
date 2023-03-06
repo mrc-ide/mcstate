@@ -1562,7 +1562,7 @@ test_that("can provide ode_control for continuous model", {
                init_Sv = 100,
                init_Iv = 1,
                nrates = 15)
-  ctl <- mode::mode_control(max_steps = 1, atol = 1e-2, rtol = 1e-2)
+  ctl <- dust::dust_ode_control(max_steps = 1, atol = 1e-2, rtol = 1e-2)
   p <- particle_filter$new(dat$data, dat$model, 1, dat$compare,
                            index = dat$index, seed = 1L,
                            ode_control = ctl)
@@ -1584,7 +1584,7 @@ test_that("ovide ode_control must be of type mode_control", {
 
 test_that("cannot provide ode_control for discrete model", {
   dat <- example_sir()
-  ctl <- mode::mode_control(max_steps = 100000, atol = 1e-2, rtol = 1e-2)
+  ctl <- dust::dust_ode_control(max_steps = 100000, atol = 1e-2, rtol = 1e-2)
   expect_error(particle_filter$new(dat$data, dat$model, 1, dat$compare,
                                    index = dat$index, ode_control = ctl),
                "'ode_control' provided but 'model' does not support this")
@@ -1670,7 +1670,7 @@ test_that("Can't fetch statistics from discrete model", {
 test_that("Can reconstruct a continuous time filter", {
   dat <- example_continuous()
   n_particles <- 42
-  ode_control <- mode::mode_control(atol = 1e-4, rtol = 1e-4)
+  ode_control <- dust::dust_ode_control(atol = 1e-4, rtol = 1e-4)
   p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index, seed = 1L,
                            stochastic_schedule = dat$stochastic_schedule,

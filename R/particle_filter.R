@@ -75,7 +75,7 @@ particle_filter <- R6::R6Class(
     ## Control for dust
     seed = NULL,
     n_threads = NULL,
-    ## Control for mode
+    ## Control for ODE models
     ode_control = NULL,
     stochastic_schedule = NULL,
     ## Updated when the model is run
@@ -250,14 +250,16 @@ particle_filter <- R6::R6Class(
       copy_list_and_lock(check_n_parameters(n_parameters, data),
                          self)
 
-      is_continuous <- inherits(data, "particle_filter_data_continuous")
+      data_is_continuous <- inherits(data, "particle_filter_data_continuous")
       has_multiple_data <- inherits(data, "particle_filter_data_nested")
 
-      if (is_continuous && has_multiple_data) {
-        stop("nested data not supported for continuous models")
+      model_is_continuous <- model$public_methods$data_type() == "continuous"
+      if (model_is_continuous != is_continuous) {
+        stop(sprintf("'model' is %s but 'data' is of type '%s'",
+                     model$public_methods$data_type(), class(data)[2]))
       }
 
-      if (!is_continuous) {
+      if (!model_is_continuous) {
         if (!is.null(stochastic_schedule)) {
           stop(paste("'stochastic_schedule' provided but 'model' does not",
            "support this"))
@@ -270,15 +272,6 @@ particle_filter <- R6::R6Class(
         assert_is_or_null(ode_control, "mode_control")
         private$stochastic_schedule <- stochastic_schedule
         private$ode_control <- ode_control
-      }
-
-      if (identical(attr(model, which = "name", exact = TRUE),
-                    "mode_generator") != is_continuous) {
-        mod_type <- if (identical(attr(model, which = "name", exact = TRUE),
-                           "mode_generator")) "continuous" else "discrete"
-        stop(sprintf("'model' is %s but 'data' is of type '%s'",
-                     mod_type,
-                     class(data)[2]))
       }
 
       private$times <- attr(data, "times")
@@ -606,8 +599,7 @@ scale_log_weights <- function(log_weights) {
 
 is_dust_generator <- function(x) {
   inherits(x, "R6ClassGenerator") &&
-    (identical(attr(x, which = "name", exact = TRUE), "dust_generator") ||
-      identical(attr(x, which = "name", exact = TRUE), "mode_generator"))
+    identical(attr(x, which = "name", exact = TRUE), "dust_generator")
 }
 
 
