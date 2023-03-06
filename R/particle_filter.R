@@ -253,10 +253,10 @@ particle_filter <- R6::R6Class(
       data_is_continuous <- inherits(data, "particle_filter_data_continuous")
       has_multiple_data <- inherits(data, "particle_filter_data_nested")
 
-      model_is_continuous <- model$public_methods$data_type() == "continuous"
-      if (model_is_continuous != is_continuous) {
+      model_is_continuous <- model$public_methods$time_type() == "continuous"
+      if (model_is_continuous != data_is_continuous) {
         stop(sprintf("'model' is %s but 'data' is of type '%s'",
-                     model$public_methods$data_type(), class(data)[2]))
+                     model$public_methods$time_type(), class(data)[2]))
       }
 
       if (!model_is_continuous) {
