@@ -1570,7 +1570,7 @@ test_that("can provide ode_control for continuous model", {
 })
 
 
-test_that("ovide ode_control must be of type mode_control", {
+test_that("if provided, ode_control must be of type dust_ode_control", {
   dat <- example_continuous()
   pars <- list(init_Ih = 0.8,
                init_Sv = 100,
@@ -1578,7 +1578,7 @@ test_that("ovide ode_control must be of type mode_control", {
                nrates = 15)
   expect_error(particle_filter$new(dat$data, dat$model, 1, dat$compare,
                                    index = dat$index, ode_control = c(1, 2, 3)),
-               "'ode_control' must be a mode_control")
+               "'ode_control' must be a dust_ode_control")
 })
 
 
@@ -1645,7 +1645,7 @@ test_that("Can fetch statistics from continuous model", {
                "Model has not yet been run")
   res <- p$run(pars)
   s <- p$ode_statistics()
-  expect_s3_class(s, "mode_statistics")
+  expect_s3_class(s, "ode_statistics")
 })
 
 
