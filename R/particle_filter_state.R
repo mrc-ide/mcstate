@@ -230,7 +230,8 @@ particle_filter_state <- R6::R6Class(
                                  n_particles = n_particles,
                                  n_threads = n_threads,
                                  seed = seed,
-                                 ode_control = ode_control)
+                                 ode_control = ode_control,
+                                 pars_multi = has_multiple_parameters)
           model$set_stochastic_schedule(stochastic_schedule)
         } else {
           model <- generator$new(pars = pars, time = times[[1L]],

@@ -1591,19 +1591,30 @@ test_that("cannot provide ode_control for discrete model", {
 })
 
 
-test_that("cannot provide nested data for continuous model", {
+test_that("Can run nested filter for continuous model", {
   dat <- example_continuous()
   data_raw <- read.csv("malaria/casedata_monthly.csv",
                        stringsAsFactors = FALSE)
+  np <- 100
+  data1 <- particle_filter_data(data_raw, time = "day", initial_time = 0,
+                                rate = NULL)
+  f1 <- particle_filter$new(data1, dat$model, np, dat$compare,
+                            index = dat$index, seed = 1L)
+
   data_raw$population <- as.factor("A")
-  data <- particle_filter_data(data_raw, time = "day", initial_time = 0,
-                               rate = NULL, population = "population")
-  expect_error(particle_filter$new(data,
-                           dat$model,
-                           1,
-                           dat$compare,
-                           index = dat$index),
-               "nested data not supported for continuous models")
+  data2 <- particle_filter_data(data_raw, time = "day", initial_time = 0,
+                                rate = NULL, population = "population")
+  f2 <- particle_filter$new(data2, dat$model, np, dat$compare,
+                            index = dat$index, seed = 1L)
+
+  p <- dat$pars$model(dat$pars$initial())
+
+  set.seed(1)
+  ll1 <- f1$run(p)
+
+  set.seed(1)
+  ll2 <- f2$run(list(p))
+  expect_identical(ll1, ll2)
 })
 
 
