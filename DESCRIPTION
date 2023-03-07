@@ -37,7 +37,7 @@ Suggests:
     rmarkdown,
     testthat,
     withr
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 Roxygen: list(markdown = TRUE)
 Remotes:
     mrc-ide/dust@mrc-4055,

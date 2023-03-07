@@ -65,7 +65,7 @@ for (i in day) {
 
 # Convert this into our required format:
 data_raw <- data.frame(day = day, incidence = incidence)
-data <- particle_filter_data(data_raw, "day", 4)
+data <- particle_filter_data(data_raw, "day", 4, 0)
 
 # A comparison function
 compare <- function(state, observed, pars = NULL) {

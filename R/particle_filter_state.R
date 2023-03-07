@@ -265,11 +265,7 @@ particle_filter_state <- R6::R6Class(
       }
 
       ## The model shape is [n_particles, <any multi-par structure>]
-      if (is_continuous) {
-        shape <- model$n_particles()
-      } else {
-        shape <- model$shape()
-      }
+      shape <- model$shape()
 
       if (save_history) {
         len <- nrow(times) + 1L

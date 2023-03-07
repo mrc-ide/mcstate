@@ -64,7 +64,9 @@ documented.
   compare,
   constant_log_likelihood,
   save_history,
-  save_restart
+  save_restart,
+  stochastic_schedule,
+  ode_control
 )}\if{html}{\out{</div>}}
 }
 
@@ -98,6 +100,10 @@ documented.
 \item{\code{save_history}}{Logical, indicating if we should save history}
 
 \item{\code{save_restart}}{Vector of time steps to save restart at}
+
+\item{\code{stochastic_schedule}}{Vector of times to perform stochastic updates}
+
+\item{\code{ode_control}}{Tuning control for stepper}
 }
 \if{html}{\out{</div>}}
 }

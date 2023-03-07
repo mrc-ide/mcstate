@@ -168,12 +168,16 @@ particle_deterministic_state <- R6::R6Class(
     ##' @param constant_log_likelihood Constant log likelihood function
     ##' @param save_history Logical, indicating if we should save history
     ##' @param save_restart Vector of time steps to save restart at
+    ##' @param stochastic_schedule Vector of times to perform stochastic updates
+    ##' @param ode_control Tuning control for stepper
     initialize = function(pars, generator, model, data, data_split, times,
                           has_multiple_parameters, n_threads,
                           initial, index, compare,
                           constant_log_likelihood,
-                          save_history, save_restart) {
+                          save_history, save_restart,
+                          stochastic_schedule, ode_control) {
       has_multiple_data <- inherits(data, "particle_filter_data_nested")
+      is_continuous <- inherits(data, "particle_filter_data_continuous")
       support <- particle_deterministic_state_support(has_multiple_parameters,
                                                       has_multiple_data)
 
@@ -182,10 +186,21 @@ particle_deterministic_state <- R6::R6Class(
       ## this behaving more similarly to the particle filter.
       n_particles <- 1L
       if (is.null(model)) {
-        model <- generator$new(pars = pars, time = times[[1]],
-                               n_particles = n_particles, n_threads = n_threads,
-                               seed = NULL, deterministic = TRUE,
-                               pars_multi = has_multiple_parameters)
+        if (is_continuous) {
+          model <- generator$new(pars = pars, time = times[[1L]],
+                                 n_particles = n_particles,
+                                 n_threads = n_threads,
+                                 seed = NULL, deterministic = TRUE,
+                                 ode_control = ode_control,
+                                 pars_multi = has_multiple_parameters)
+          model$set_stochastic_schedule(stochastic_schedule)
+        } else {
+          model <- generator$new(pars = pars, time = times[[1L]],
+                                 n_particles = n_particles,
+                                 n_threads = n_threads,
+                                 seed = NULL, deterministic = TRUE,
+                                 pars_multi = has_multiple_parameters)
+        }
         if (is.null(compare)) {
           data_is_shared <- has_multiple_parameters && !has_multiple_data
           model$set_data(data_split, data_is_shared)
@@ -228,6 +243,7 @@ particle_deterministic_state <- R6::R6Class(
 
       save_restart_time <- check_save_restart(save_restart, data)
       if (length(save_restart_time) > 0) {
+        stopifnot(!is_continuous)
         self$restart_state <-
           array(NA_real_, c(model$n_state(), shape, length(save_restart)))
       } else {
