@@ -40,6 +40,6 @@ Suggests:
 RoxygenNote: 7.2.3
 Roxygen: list(markdown = TRUE)
 Remotes:
-    mrc-ide/dust@mrc-4055,
+    mrc-ide/dust,
     mrc-ide/odin.dust
 VignetteBuilder: knitr
