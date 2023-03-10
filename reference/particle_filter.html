@@ -19,7 +19,7 @@ interface will be implemented later."><meta property="og:image" content="/logo.p
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.14</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.15</span>
       </span>
     </div>
 
@@ -137,7 +137,7 @@ this will be 1.</p></dd>
 <li><p><a href="#method-particle_filter-run_begin"><code>particle_filter$run_begin()</code></a></p></li>
 <li><p><a href="#method-particle_filter-state"><code>particle_filter$state()</code></a></p></li>
 <li><p><a href="#method-particle_filter-history"><code>particle_filter$history()</code></a></p></li>
-<li><p><a href="#method-particle_filter-statistics"><code>particle_filter$statistics()</code></a></p></li>
+<li><p><a href="#method-particle_filter-ode_statistics"><code>particle_filter$ode_statistics()</code></a></p></li>
 <li><p><a href="#method-particle_filter-restart_state"><code>particle_filter$restart_state()</code></a></p></li>
 <li><p><a href="#method-particle_filter-inputs"><code>particle_filter$inputs()</code></a></p></li>
 <li><p><a href="#method-particle_filter-set_n_threads"><code>particle_filter$set_n_threads()</code></a></p></li>
@@ -451,14 +451,14 @@ histories.</p></dd>
 </dl><p></p></div>
 </div>
 
-</div><p></p><hr><a id="method-particle_filter-statistics"></a><div class="section">
-<h3 id="method-statistics-">Method <code>statistics()</code><a class="anchor" aria-label="anchor" href="#method-statistics-"></a></h3>
+</div><p></p><hr><a id="method-particle_filter-ode_statistics"></a><div class="section">
+<h3 id="method-ode-statistics-">Method <code>ode_statistics()</code><a class="anchor" aria-label="anchor" href="#method-ode-statistics-"></a></h3>
 <p>Fetch statistics about steps taken during the integration, by
 calling through to the <code>$statistics()</code> method of the underlying
 model. This is only available for continuous time (ODE) models,
 and will error if used with discrete time models.</p><div class="section">
 <h4 id="usage-5">Usage<a class="anchor" aria-label="anchor" href="#usage-5"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">particle_filter</span><span class="op">$</span><span class="fu">statistics</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">particle_filter</span><span class="op">$</span><span class="fu">ode_statistics</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 
@@ -556,8 +556,7 @@ requested (based on environment variables and OpenMP support).</p></dd>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Convert this into our required format:</span></span></span>
 <span class="r-in"><span><span class="va">data_raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>day <span class="op">=</span> <span class="va">day</span>, incidence <span class="op">=</span> <span class="va">incidence</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="particle_filter_data.html">particle_filter_data</a></span><span class="op">(</span><span class="va">data_raw</span>, <span class="st">"day"</span>, <span class="fl">4</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'initial_time' should be provided. I'm assuming '0' which is one time unit before the first time in your data (1), but this might not be appropriate. This will become an error in a future version of mcstate</span>
+<span class="r-in"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="particle_filter_data.html">particle_filter_data</a></span><span class="op">(</span><span class="va">data_raw</span>, <span class="st">"day"</span>, <span class="fl">4</span>, <span class="fl">0</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># A comparison function</span></span></span>
 <span class="r-in"><span><span class="va">compare</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">state</span>, <span class="va">observed</span>, <span class="va">pars</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span></span></span>
@@ -576,7 +575,7 @@ requested (based on environment variables and OpenMP support).</p></dd>
 <span class="r-in"><span><span class="co"># Construct the particle_filter object with 100 particles</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">particle_filter</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">data</span>, <span class="va">gen</span>, <span class="fl">100</span>, <span class="va">compare</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span>save_history <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -17158.25</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -16052.57</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Our simulated trajectories, with the "real" data superimposed</span></span></span>
 <span class="r-in"><span><span class="va">history</span> <span class="op">&lt;-</span> <span class="va">p</span><span class="op">$</span><span class="fu">history</span><span class="op">(</span><span class="op">)</span></span></span>
@@ -602,7 +601,7 @@ requested (based on environment variables and OpenMP support).</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
       </footer></div>

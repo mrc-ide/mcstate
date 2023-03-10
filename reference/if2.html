@@ -18,7 +18,7 @@ inference."><meta property="og:image" content="/logo.png"><!-- mathjax --><scrip
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.14</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.15</span>
       </span>
     </div>
 
@@ -157,8 +157,7 @@ PNAS, 112(3), 719–724. https://doi.org/10.1073/pnas.1410597112.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Convert this into our required format:</span></span></span>
 <span class="r-in"><span><span class="va">data_raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>day <span class="op">=</span> <span class="va">day</span>, incidence <span class="op">=</span> <span class="va">incidence</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="particle_filter_data.html">particle_filter_data</a></span><span class="op">(</span><span class="va">data_raw</span>, <span class="st">"day"</span>, <span class="fl">4</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'initial_time' should be provided. I'm assuming '0' which is one time unit before the first time in your data (1), but this might not be appropriate. This will become an error in a future version of mcstate</span>
+<span class="r-in"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="particle_filter_data.html">particle_filter_data</a></span><span class="op">(</span><span class="va">data_raw</span>, <span class="st">"day"</span>, <span class="fl">4</span>, <span class="fl">0</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># A comparison function</span></span></span>
 <span class="r-in"><span><span class="va">compare</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">state</span>, <span class="va">observed</span>, <span class="va">pars</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span></span></span>
@@ -211,7 +210,7 @@ PNAS, 112(3), 719–724. https://doi.org/10.1073/pnas.1410597112.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
       </footer></div>

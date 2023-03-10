@@ -19,7 +19,7 @@ particle deterministically."><meta property="og:image" content="/logo.png"><!-- 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.14</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.15</span>
       </span>
     </div>
 
@@ -148,7 +148,9 @@ particle (read only).  This will either be 1 or the same value as
 <span>  initial <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  constant_log_likelihood <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  n_threads <span class="op">=</span> <span class="fl">1L</span>,</span>
-<span>  n_parameters <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  n_parameters <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  stochastic_schedule <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  ode_control <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -212,7 +214,8 @@ constructor, i.e., not less than the first element of
 <code>time_start</code> and not more than <code>time_end</code>). Your function
 can also return a vector or matrix of <code>state</code> and not alter
 the starting time, which is equivalent to returning
-<code>list(state = state, time = NULL)</code>. (TODO: this no longer is allowed, and the docs might be out of date?)</p></dd>
+<code>list(state = state, time = NULL)</code>.
+(TODO: this no longer is allowed, and the docs might be out of date?)</p></dd>
 
 
 <dt><code>constant_log_likelihood</code></dt>
@@ -240,6 +243,18 @@ particle for now.</p></dd>
 with <code>data</code>, controls the interpretation of how the deterministic
 particle, and importantly will add an additional dimension to
 most outputs (scalars become vectors, vectors become matrices etc).</p></dd>
+
+
+<dt><code>stochastic_schedule</code></dt>
+<dd><p>Vector of times to perform stochastic
+updates, for continuous time models. Note that despite the name,
+these will be applied deterministically (i.e., replacing the
+stochastic draw with its expectation).</p></dd>
+
+
+<dt><code>ode_control</code></dt>
+<dd><p>Tuning control for the ODE stepper, for
+continuous time (ODE) models</p></dd>
 
 
 </dl><p></p></div>
@@ -466,7 +481,7 @@ requested (based on environment variables and OpenMP support).</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
       </footer></div>
