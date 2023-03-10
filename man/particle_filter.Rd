@@ -30,7 +30,7 @@ for (i in day) {
 
 # Convert this into our required format:
 data_raw <- data.frame(day = day, incidence = incidence)
-data <- particle_filter_data(data_raw, "day", 4)
+data <- particle_filter_data(data_raw, "day", 4, 0)
 
 # A comparison function
 compare <- function(state, observed, pars = NULL) {
@@ -98,7 +98,7 @@ this will be 1.}
 \item \href{#method-particle_filter-run_begin}{\code{particle_filter$run_begin()}}
 \item \href{#method-particle_filter-state}{\code{particle_filter$state()}}
 \item \href{#method-particle_filter-history}{\code{particle_filter$history()}}
-\item \href{#method-particle_filter-statistics}{\code{particle_filter$statistics()}}
+\item \href{#method-particle_filter-ode_statistics}{\code{particle_filter$ode_statistics()}}
 \item \href{#method-particle_filter-restart_state}{\code{particle_filter$restart_state()}}
 \item \href{#method-particle_filter-inputs}{\code{particle_filter$inputs()}}
 \item \href{#method-particle_filter-set_n_threads}{\code{particle_filter$set_n_threads()}}
@@ -382,15 +382,15 @@ histories.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-particle_filter-statistics"></a>}}
-\if{latex}{\out{\hypertarget{method-particle_filter-statistics}{}}}
-\subsection{Method \code{statistics()}}{
+\if{html}{\out{<a id="method-particle_filter-ode_statistics"></a>}}
+\if{latex}{\out{\hypertarget{method-particle_filter-ode_statistics}{}}}
+\subsection{Method \code{ode_statistics()}}{
 Fetch statistics about steps taken during the integration, by
 calling through to the \verb{$statistics()} method of the underlying
 model. This is only available for continuous time (ODE) models,
 and will error if used with discrete time models.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_filter$statistics()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter$ode_statistics()}\if{html}{\out{</div>}}
 }
 
 }

@@ -457,3 +457,13 @@ test_that("Can run an adaptive proposal, increasing acceptance rate", {
   expect_lt(coda::rejectionRate(coda::mcmc(res1$pars))[[1]],
             coda::rejectionRate(coda::mcmc(res2$pars))[[1]])
 })
+
+
+test_that("Can run the deterministic filter on ODE model", {
+  dat <- example_continuous()
+
+  p <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
+  set.seed(1)
+  ll <- p$run(dat$pars$model(dat$pars$initial()))
+  expect_equal(ll, -62466.04)
+})

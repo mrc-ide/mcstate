@@ -75,7 +75,7 @@ particle_filter <- R6::R6Class(
     ## Control for dust
     seed = NULL,
     n_threads = NULL,
-    ## Control for mode
+    ## Control for ODE models
     ode_control = NULL,
     stochastic_schedule = NULL,
     ## Updated when the model is run
@@ -250,36 +250,9 @@ particle_filter <- R6::R6Class(
       copy_list_and_lock(check_n_parameters(n_parameters, data),
                          self)
 
-      is_continuous <- inherits(data, "particle_filter_data_continuous")
-      has_multiple_data <- inherits(data, "particle_filter_data_nested")
-
-      if (is_continuous && has_multiple_data) {
-        stop("nested data not supported for continuous models")
-      }
-
-      if (!is_continuous) {
-        if (!is.null(stochastic_schedule)) {
-          stop(paste("'stochastic_schedule' provided but 'model' does not",
-           "support this"))
-        }
-        if (!is.null(ode_control)) {
-          stop(paste("'ode_control' provided but 'model' does not",
-                     "support this"))
-        }
-      } else {
-        assert_is_or_null(ode_control, "mode_control")
-        private$stochastic_schedule <- stochastic_schedule
-        private$ode_control <- ode_control
-      }
-
-      if (identical(attr(model, which = "name", exact = TRUE),
-                    "mode_generator") != is_continuous) {
-        mod_type <- if (identical(attr(model, which = "name", exact = TRUE),
-                           "mode_generator")) "continuous" else "discrete"
-        stop(sprintf("'model' is %s but 'data' is of type '%s'",
-                     mod_type,
-                     class(data)[2]))
-      }
+      check_time_type(model, data, stochastic_schedule, ode_control)
+      private$stochastic_schedule <- stochastic_schedule
+      private$ode_control <- ode_control
 
       private$times <- attr(data, "times")
       private$data_split <- particle_filter_data_split(data, is.null(compare))
@@ -562,7 +535,9 @@ particle_filter_from_inputs_deterministic <- function(inputs) {
     initial = inputs$initial,
     constant_log_likelihood = inputs$constant_log_likelihood,
     n_threads = inputs$n_threads,
-    n_parameters = inputs$n_parameters)
+    n_parameters = inputs$n_parameters,
+    stochastic_schedule = inputs$stochastic_schedule,
+    ode_control = inputs$ode_control)
 }
 
 
@@ -606,8 +581,7 @@ scale_log_weights <- function(log_weights) {
 
 is_dust_generator <- function(x) {
   inherits(x, "R6ClassGenerator") &&
-    (identical(attr(x, which = "name", exact = TRUE), "dust_generator") ||
-      identical(attr(x, which = "name", exact = TRUE), "mode_generator"))
+    identical(attr(x, which = "name", exact = TRUE), "dust_generator")
 }
 
 
@@ -945,4 +919,27 @@ check_n_parameters <- function(n_parameters, data) {
        has_multiple_data = has_multiple_data,
        n_parameters = n_parameters,
        n_data = n_data)
+}
+
+
+check_time_type <- function(model, data, stochastic_schedule, ode_control) {
+  data_is_continuous <- inherits(data, "particle_filter_data_continuous")
+  model_is_continuous <- model$public_methods$time_type() == "continuous"
+  if (model_is_continuous != data_is_continuous) {
+    stop(sprintf("'model' is %s but 'data' is of type '%s'",
+                 model$public_methods$time_type(), class(data)[2]))
+  }
+
+  if (!model_is_continuous) {
+    if (!is.null(stochastic_schedule)) {
+      stop(paste("'stochastic_schedule' provided but 'model' does not",
+                 "support this"))
+    }
+    if (!is.null(ode_control)) {
+      stop(paste("'ode_control' provided but 'model' does not",
+                 "support this"))
+    }
+  } else {
+    assert_is_or_null(ode_control, "dust_ode_control")
+  }
 }

@@ -15,6 +15,8 @@ particle_deterministic <- R6::R6Class(
     times = NULL,
     n_times = NULL,
     n_threads = NULL,
+    ode_control = NULL,
+    stochastic_schedule = NULL,
     initial = NULL,
     index = NULL,
     compare = NULL,
@@ -129,10 +131,19 @@ particle_deterministic <- R6::R6Class(
     ##'   with `data`, controls the interpretation of how the deterministic
     ##'   particle, and importantly will add an additional dimension to
     ##'   most outputs (scalars become vectors, vectors become matrices etc).
+    ##'
+    ##' @param stochastic_schedule Vector of times to perform stochastic
+    ##'   updates, for continuous time models. Note that despite the name,
+    ##'   these will be applied deterministically (i.e., replacing the
+    ##'   stochastic draw with its expectation).
+    ##'
+    ##' @param ode_control Tuning control for the ODE stepper, for
+    ##'   continuous time (ODE) models
     initialize = function(data, model, compare,
                           index = NULL, initial = NULL,
                           constant_log_likelihood = NULL, n_threads = 1L,
-                          n_parameters = NULL) {
+                          n_parameters = NULL, stochastic_schedule = NULL,
+                          ode_control = NULL) {
       if (!is_dust_generator(model)) {
         stop("'model' must be a dust_generator")
       }
@@ -151,6 +162,10 @@ particle_deterministic <- R6::R6Class(
 
       copy_list_and_lock(check_n_parameters(n_parameters, data),
                          self)
+
+      check_time_type(model, data, stochastic_schedule, ode_control)
+      private$stochastic_schedule <- stochastic_schedule
+      private$ode_control <- ode_control
 
       private$times <- attr(data, "times")
       private$data_split <- particle_filter_data_split(data, is.null(compare))
@@ -228,7 +243,8 @@ particle_deterministic <- R6::R6Class(
         private$data_split, private$times, self$has_multiple_parameters,
         private$n_threads, private$initial, private$index, private$compare,
         private$constant_log_likelihood,
-        save_history, save_restart)
+        save_history, save_restart,
+        private$stochastic_schedule, private$ode_control)
     },
 
     ##' @description Extract the current model state, optionally filtering.
@@ -325,7 +341,9 @@ particle_deterministic <- R6::R6Class(
            compare = private$compare,
            constant_log_likelihood = private$constant_log_likelihood,
            n_threads = private$n_threads,
-           n_parameters = n_parameters)
+           n_parameters = n_parameters,
+           stochastic_schedule = private$stochastic_schedule,
+           ode_control = private$ode_control)
     },
 
     ##' @description

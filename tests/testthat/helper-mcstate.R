@@ -61,6 +61,7 @@ example_sir <- function() {
 }
 
 example_continuous <- function() {
+  skip_if_not_installed("odin.dust")
   model <- odin.dust::odin_dust("malaria/malariamodel.R", verbose = FALSE)
 
   compare <- function(state, observed, pars = NULL) {
@@ -474,6 +475,7 @@ random_array <- function(dim, named = FALSE) {
 
 
 example_variable <- function() {
+  testthat::skip_if_not_installed("odin.dust")
   ## A small, very silly, model designed to help work with the
   ## multistage filter.  We have a model we can change the dimensions of
   ## without changing the way that the random number draws will work

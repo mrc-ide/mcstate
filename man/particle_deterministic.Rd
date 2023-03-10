@@ -63,7 +63,9 @@ Create the particle filter
   initial = NULL,
   constant_log_likelihood = NULL,
   n_threads = 1L,
-  n_parameters = NULL
+  n_parameters = NULL,
+  stochastic_schedule = NULL,
+  ode_control = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -119,7 +121,8 @@ constructor, i.e., not less than the first element of
 \code{time_start} and not more than \code{time_end}). Your function
 can also return a vector or matrix of \code{state} and not alter
 the starting time, which is equivalent to returning
-\code{list(state = state, time = NULL)}. (TODO: this no longer is allowed, and the docs might be out of date?)}
+\code{list(state = state, time = NULL)}.
+(TODO: this no longer is allowed, and the docs might be out of date?)}
 
 \item{\code{constant_log_likelihood}}{An optional function, taking the
 model parameters, that computes the constant part of the
@@ -141,6 +144,14 @@ particle for now.}
 with \code{data}, controls the interpretation of how the deterministic
 particle, and importantly will add an additional dimension to
 most outputs (scalars become vectors, vectors become matrices etc).}
+
+\item{\code{stochastic_schedule}}{Vector of times to perform stochastic
+updates, for continuous time models. Note that despite the name,
+these will be applied deterministically (i.e., replacing the
+stochastic draw with its expectation).}
+
+\item{\code{ode_control}}{Tuning control for the ODE stepper, for
+continuous time (ODE) models}
 }
 \if{html}{\out{</div>}}
 }

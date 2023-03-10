@@ -230,7 +230,8 @@ particle_filter_state <- R6::R6Class(
                                  n_particles = n_particles,
                                  n_threads = n_threads,
                                  seed = seed,
-                                 ode_control = ode_control)
+                                 ode_control = ode_control,
+                                 pars_multi = has_multiple_parameters)
           model$set_stochastic_schedule(stochastic_schedule)
         } else {
           model <- generator$new(pars = pars, time = times[[1L]],
@@ -264,11 +265,7 @@ particle_filter_state <- R6::R6Class(
       }
 
       ## The model shape is [n_particles, <any multi-par structure>]
-      if (is_continuous) {
-        shape <- model$n_particles()
-      } else {
-        shape <- model$shape()
-      }
+      shape <- model$shape()
 
       if (save_history) {
         len <- nrow(times) + 1L

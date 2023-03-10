@@ -1562,7 +1562,7 @@ test_that("can provide ode_control for continuous model", {
                init_Sv = 100,
                init_Iv = 1,
                nrates = 15)
-  ctl <- mode::mode_control(max_steps = 1, atol = 1e-2, rtol = 1e-2)
+  ctl <- dust::dust_ode_control(max_steps = 1, atol = 1e-2, rtol = 1e-2)
   p <- particle_filter$new(dat$data, dat$model, 1, dat$compare,
                            index = dat$index, seed = 1L,
                            ode_control = ctl)
@@ -1570,7 +1570,7 @@ test_that("can provide ode_control for continuous model", {
 })
 
 
-test_that("ovide ode_control must be of type mode_control", {
+test_that("if provided, ode_control must be of type dust_ode_control", {
   dat <- example_continuous()
   pars <- list(init_Ih = 0.8,
                init_Sv = 100,
@@ -1578,32 +1578,43 @@ test_that("ovide ode_control must be of type mode_control", {
                nrates = 15)
   expect_error(particle_filter$new(dat$data, dat$model, 1, dat$compare,
                                    index = dat$index, ode_control = c(1, 2, 3)),
-               "'ode_control' must be a mode_control")
+               "'ode_control' must be a dust_ode_control")
 })
 
 
 test_that("cannot provide ode_control for discrete model", {
   dat <- example_sir()
-  ctl <- mode::mode_control(max_steps = 100000, atol = 1e-2, rtol = 1e-2)
+  ctl <- dust::dust_ode_control(max_steps = 100000, atol = 1e-2, rtol = 1e-2)
   expect_error(particle_filter$new(dat$data, dat$model, 1, dat$compare,
                                    index = dat$index, ode_control = ctl),
                "'ode_control' provided but 'model' does not support this")
 })
 
 
-test_that("cannot provide nested data for continuous model", {
+test_that("Can run nested filter for continuous model", {
   dat <- example_continuous()
   data_raw <- read.csv("malaria/casedata_monthly.csv",
                        stringsAsFactors = FALSE)
+  np <- 100
+  data1 <- particle_filter_data(data_raw, time = "day", initial_time = 0,
+                                rate = NULL)
+  f1 <- particle_filter$new(data1, dat$model, np, dat$compare,
+                            index = dat$index, seed = 1L)
+
   data_raw$population <- as.factor("A")
-  data <- particle_filter_data(data_raw, time = "day", initial_time = 0,
-                               rate = NULL, population = "population")
-  expect_error(particle_filter$new(data,
-                           dat$model,
-                           1,
-                           dat$compare,
-                           index = dat$index),
-               "nested data not supported for continuous models")
+  data2 <- particle_filter_data(data_raw, time = "day", initial_time = 0,
+                                rate = NULL, population = "population")
+  f2 <- particle_filter$new(data2, dat$model, np, dat$compare,
+                            index = dat$index, seed = 1L)
+
+  p <- dat$pars$model(dat$pars$initial())
+
+  set.seed(1)
+  ll1 <- f1$run(p)
+
+  set.seed(1)
+  ll2 <- f2$run(list(p))
+  expect_identical(ll1, ll2)
 })
 
 
@@ -1645,7 +1656,7 @@ test_that("Can fetch statistics from continuous model", {
                "Model has not yet been run")
   res <- p$run(pars)
   s <- p$ode_statistics()
-  expect_s3_class(s, "mode_statistics")
+  expect_s3_class(s, "ode_statistics")
 })
 
 
@@ -1670,7 +1681,7 @@ test_that("Can't fetch statistics from discrete model", {
 test_that("Can reconstruct a continuous time filter", {
   dat <- example_continuous()
   n_particles <- 42
-  ode_control <- mode::mode_control(atol = 1e-4, rtol = 1e-4)
+  ode_control <- dust::dust_ode_control(atol = 1e-4, rtol = 1e-4)
   p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index, seed = 1L,
                            stochastic_schedule = dat$stochastic_schedule,

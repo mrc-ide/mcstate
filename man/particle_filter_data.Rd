@@ -19,13 +19,15 @@ each time point (in model time \code{time}).  This must also be
 integer-like for discrete time models and must be \code{NULL} for
 continuous time models.}
 
-\item{initial_time}{Optionally, an initial time to start the model
-from.  Provide this if you need to burn the model in, or if
-there is a long period with no data at the beginning of the
-simulation.  If provided, it must be a non-negative integer and
-must be at most equal to the first value of the \code{time} column,
-minus 1 (i.e., \code{data[[time]] - 1}). For discrete time models,
-this is expressed in model time.}
+\item{initial_time}{An initial time to start the model from. This
+should always be provided, and must be provided for continuous
+time models. For discrete time models, this is expressed in
+model time. It must be a non-negative integer and must be at
+most equal to the first value of the \code{time} column, minus 1
+(i.e., \code{data[[time]] - 1}). For historical reasons if not given
+we take the first value of the \code{time} column minus one, but with
+a warning - this behaviour will be removed in a future version
+of mcstate.}
 
 \item{population}{Optionally, the name of a column within \code{data} that
 represents different populations. Must be a factor.}
@@ -68,11 +70,11 @@ at step 10, day 15 at step 150 and so on.
 }
 \examples{
 d <- data.frame(day = 5:20, y = runif(16))
-mcstate::particle_filter_data(d, "day", 4)
+mcstate::particle_filter_data(d, "day", rate = 4, initial_time = 4)
 
 # If providing an initial day, then the first epoch of simulation
 # will be longer (see the first row)
-mcstate::particle_filter_data(d, "day", 4, 0)
+mcstate::particle_filter_data(d, "day", rate = 4, initial_time = 0)
 
 # If including populations:
 d <- data.frame(day = 5:20, y = runif(16),
