@@ -40,7 +40,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.15</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.16</span>
       </span>
     </div>
 
@@ -214,8 +214,8 @@
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pars_series</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">result</span><span class="op">$</span><span class="va">pars</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="va">pars_series</span><span class="op">[</span>, , <span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">pars_series</span><span class="op">)</span><span class="op">[[</span><span class="fl">3</span><span class="op">]</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt;      beta     gamma </span></span>
-<span><span class="co">#&gt; 0.2255335 0.0791209</span></span></code></pre></div>
+<span><span class="co">#&gt;       beta      gamma </span></span>
+<span><span class="co">#&gt; 0.34752438 0.06121667</span></span></code></pre></div>
 <p>We can also run particle filters at each final parameter estimate to get an estimate of the model likelihood, showing the mean value in red:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">n_particles</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
