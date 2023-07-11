@@ -126,6 +126,13 @@ print.mcstate_pmcmc <- function(x, ...) {
 }
 
 
+##' @export
+str.mcstate_pmcmc <- function(object, ...) {
+  object <- unclass(object)
+  NextMethod("str")
+}
+
+
 ## NOTE: we need to expose a 'force' argument here for testing, as
 ## otherwise under R CMD check the progress bar does not run.
 pmcmc_progress <- function(n_steps, progress, simple = FALSE, force = FALSE) {
