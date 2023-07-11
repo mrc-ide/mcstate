@@ -785,3 +785,14 @@ test_that("can run pmcmc for ode models", {
   expect_equal(results1$predict$model_time, results1$predict$time)
   expect_identical(results1$predict$filter, p1$inputs())
 })
+
+
+test_that("can use str() without error on samples object", {
+  dat <- example_uniform()
+  control <- pmcmc_control(10, save_state = FALSE, save_trajectories = FALSE)
+  res <- pmcmc(dat$pars, dat$filter, control = control)
+  cmp <- structure(res, class = NULL)
+  expect_output(str(res),
+                paste(capture.output(str(cmp)), collapse = "\n"),
+                fixed = TRUE)
+})
