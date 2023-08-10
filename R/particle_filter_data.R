@@ -143,13 +143,6 @@ particle_filter_data <- function(data, time, rate, initial_time = NULL,
     }
   }
 
-  ## I am not entirely sure why we require two time windows and not
-  ## one - it's possible this is a hangover an earlier version where
-  ## the first line was the start time?
-  if (length(model_time_end) < 2) {
-    stop("Expected at least two time windows")
-  }
-
   if (!is_continuous && any(model_time_end < 0)) {
     stop("All times must be non-negative")
   }

@@ -1742,3 +1742,35 @@ test_that("filter works with irregular data", {
 
   expect_equal(ll2, ll1)
 })
+
+
+test_that("filter works with single data point", {
+  dat <- example_sir()
+
+  set.seed(1)
+  d <- dat$data_raw[1:3, ]
+  d$incidence[1:2] <- NA
+
+  df1 <- particle_filter_data(d, "day", 4, 0)
+  df2 <- particle_filter_data(d[-1, ], "day", 4, 0)
+  df3 <- particle_filter_data(d[-(1:2), ], "day", 4, 0)
+
+  n_particles <- 42
+  set.seed(1)
+  p1 <- particle_filter$new(df1, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  ll1 <- p1$run(list())
+
+  set.seed(1)
+  p2 <- particle_filter$new(df2, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  ll2 <- p2$run(list())
+
+  set.seed(1)
+  p3 <- particle_filter$new(df3, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  ll3 <- p3$run(list())
+
+  expect_equal(ll2, ll1)
+  expect_equal(ll3, ll1)
+})

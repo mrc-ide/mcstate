@@ -113,13 +113,14 @@ test_that("particle filter can offset initial data", {
 })
 
 
-test_that("require more than one observation", {
+test_that("allow only one observation", {
   d <- data.frame(hour = 1:2, a = 2:3, b = 3:4)
-  expect_error(
-    particle_filter_data(d[1, ], "hour", 10, 0),
-    "Expected at least two time windows")
-  expect_silent(
-    particle_filter_data(d, "hour", 10, 0))
+  df1 <- particle_filter_data(d[1, ], "hour", 10, 0)
+  df2 <- particle_filter_data(d[1:2, ], "hour", 10, 0)
+
+  expect_equal(names(df1), names(df2))
+  expect_equal(df1[, ], df2[1, ])
+  expect_equal(nrow(df1), 1)
 })
 
 
