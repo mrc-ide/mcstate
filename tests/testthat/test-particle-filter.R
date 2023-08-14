@@ -71,7 +71,7 @@ test_that("particle filter likelihood is worse with worse parameters", {
 test_that("stop simulation when likelihood is impossible", {
   dat <- example_sir()
   n_particles <- 42
-  steps <- nrow(dat$data) + 1
+  times <- nrow(dat$data) + 1
 
   compare <- function(state, observed, pars) {
     ret <- dat$compare(state, observed, pars)
@@ -86,7 +86,7 @@ test_that("stop simulation when likelihood is impossible", {
   res <- p$run(save_history = TRUE)
   expect_equal(res, -Inf)
 
-  i <- (which(dat$data$incidence > 15)[[1]] + 2):steps
+  i <- (which(dat$data$incidence > 15)[[1]] + 2):times
   history <- p$history()
   expect_false(any(is.na(history[, , !i])))
   expect_true(all(is.na(history[, , i])))
@@ -141,14 +141,14 @@ test_that("Control the starting point of the simulation", {
 
 test_that("Cannot use previous initial condition approach", {
   initial <- function(info, n_particles, pars) {
-    list(step = 2)
+    list(time = 2)
   }
 
   dat <- example_sir()
   n_particles <- 42
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index, initial = initial)
-  expect_error(p$run(), "Setting 'step' from initial no longer supported")
+  expect_error(p$run(), "Setting 'time' from initial no longer supported")
 })
 
 
@@ -353,6 +353,14 @@ test_that("can return inputs", {
 
   expect_identical(inputs2[names(inputs2) != "seed"],
                    inputs[names(inputs) != "seed"])
+
+  ## Can't use mockery to spy on the calls, so check that all args are
+  ## used statically instead; and this trick does not work with the
+  ## way that covr works!
+  testthat::skip_on_covr()
+  exprs <- body(particle_filter_from_inputs_stochastic)
+  args <- names(as.list(exprs[[2]][-1]))
+  expect_setequal(args, names(inputs))
 })
 
 
@@ -698,7 +706,7 @@ test_that("Can't run past the end of the data", {
   n <- nrow(dat$data)
   expect_error(
     obj$step(n + 1),
-    "step_index 101 is beyond the length of the data (max 100)",
+    "time_index 101 is beyond the length of the data (max 100)",
     fixed = TRUE)
 })
 
@@ -921,7 +929,7 @@ test_that("can't change initial step via initial in nested filter", {
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index, initial = initial)
   expect_error(p$run(pars),
-               "Setting 'step' from initial no longer supported")
+               "Setting 'time' from initial no longer supported")
 })
 
 test_that("Can fork a particle_filter_state_nested object", {
@@ -992,7 +1000,7 @@ test_that("particle filter state nested - error steps", {
 
   expect_error(
     obj$step(n + 1),
-    "step_index 201 is beyond the length of the data (max 100)",
+    "time_index 201 is beyond the length of the data (max 100)",
     fixed = TRUE)
 })
 
@@ -1004,7 +1012,7 @@ test_that("stop simulation when likelihood is impossible", {
                                list(beta = 0.3, gamma = 0.1))
 
   n_particles <- 42
-  steps <- nrow(dat$data) / 2 + 1
+  times <- nrow(dat$data) / 2 + 1
 
   compare <- function(state, observed, pars) {
     ret <- dat$compare(state, observed, pars)
@@ -1019,7 +1027,7 @@ test_that("stop simulation when likelihood is impossible", {
   res <- p$run(pars, save_history = TRUE)
   expect_true(-Inf %in% res)
 
-  i <- (which(dat$data$incidence[1:100] > 15)[[1]] + 2):steps
+  i <- (which(dat$data$incidence[1:100] > 15)[[1]] + 2):times
   history <- p$history()
   expect_false(any(is.na(history[, , 1, !i])))
   expect_true(all(is.na(history[, , 1, i])))
@@ -1310,9 +1318,9 @@ test_that("Confirm nested filter is correct", {
   seed2 <- seed[-seq_len(length(seed) / 2)]
 
   data1 <- particle_filter_data(dat$data_raw[dat$data_raw$populations == "a", ],
-                                time = "day", rate = 4)
+                                time = "day", rate = 4, initial_time = 0)
   data2 <- particle_filter_data(dat$data_raw[dat$data_raw$populations == "b", ],
-                                time = "day", rate = 4)
+                                time = "day", rate = 4, initial_time = 0)
 
   set.seed(1)
   p1 <- particle_filter$new(data1, dat$model, n_particles, compare,
@@ -1408,7 +1416,7 @@ test_that("Can run a particle filter in replicate", {
   data_raw <- do.call(rbind, lapply(seq_len(n_parameters), function(i)
     cbind(dat$data_raw, replicate = i)))
   data_raw$replicate <- factor(data_raw$replicate)
-  data_replicated <- particle_filter_data(data_raw, "day", 4,
+  data_replicated <- particle_filter_data(data_raw, "day", 4, 0,
                                           population = "replicate")
   p2 <- particle_filter$new(data_replicated, dat$model, n_particles,
                             dat$compare, index = dat$index, seed = 1L)
@@ -1440,7 +1448,7 @@ test_that("Can run a particle filter in replicate with compiled compare", {
   data_raw <- do.call(rbind, lapply(seq_len(n_parameters), function(i)
     cbind(dat$data_raw, replicate = i)))
   data_raw$replicate <- factor(data_raw$replicate)
-  data_replicated <- particle_filter_data(data_raw, "day", 4,
+  data_replicated <- particle_filter_data(data_raw, "day", 4, 0,
                                           population = "replicate")
   p2 <- particle_filter$new(data_replicated, dat$model, n_particles,
                             NULL, index = dat$index, seed = 1L)
@@ -1554,7 +1562,7 @@ test_that("can provide ode_control for continuous model", {
                init_Sv = 100,
                init_Iv = 1,
                nrates = 15)
-  ctl <- mode::mode_control(max_steps = 1, atol = 1e-2, rtol = 1e-2)
+  ctl <- dust::dust_ode_control(max_steps = 1, atol = 1e-2, rtol = 1e-2)
   p <- particle_filter$new(dat$data, dat$model, 1, dat$compare,
                            index = dat$index, seed = 1L,
                            ode_control = ctl)
@@ -1562,7 +1570,7 @@ test_that("can provide ode_control for continuous model", {
 })
 
 
-test_that("ovide ode_control must be of type mode_control", {
+test_that("if provided, ode_control must be of type dust_ode_control", {
   dat <- example_continuous()
   pars <- list(init_Ih = 0.8,
                init_Sv = 100,
@@ -1570,32 +1578,43 @@ test_that("ovide ode_control must be of type mode_control", {
                nrates = 15)
   expect_error(particle_filter$new(dat$data, dat$model, 1, dat$compare,
                                    index = dat$index, ode_control = c(1, 2, 3)),
-               "'ode_control' must be a mode_control")
+               "'ode_control' must be a dust_ode_control")
 })
 
 
 test_that("cannot provide ode_control for discrete model", {
   dat <- example_sir()
-  ctl <- mode::mode_control(max_steps = 100000, atol = 1e-2, rtol = 1e-2)
+  ctl <- dust::dust_ode_control(max_steps = 100000, atol = 1e-2, rtol = 1e-2)
   expect_error(particle_filter$new(dat$data, dat$model, 1, dat$compare,
                                    index = dat$index, ode_control = ctl),
                "'ode_control' provided but 'model' does not support this")
 })
 
 
-test_that("cannot provide nested data for continuous model", {
+test_that("Can run nested filter for continuous model", {
   dat <- example_continuous()
   data_raw <- read.csv("malaria/casedata_monthly.csv",
                        stringsAsFactors = FALSE)
+  np <- 100
+  data1 <- particle_filter_data(data_raw, time = "day", initial_time = 0,
+                                rate = NULL)
+  f1 <- particle_filter$new(data1, dat$model, np, dat$compare,
+                            index = dat$index, seed = 1L)
+
   data_raw$population <- as.factor("A")
-  data <- particle_filter_data(data_raw, time = "day", initial_time = 0,
-                               rate = NULL, population = "population")
-  expect_error(particle_filter$new(data,
-                           dat$model,
-                           1,
-                           dat$compare,
-                           index = dat$index),
-               "nested data not supported for continuous models")
+  data2 <- particle_filter_data(data_raw, time = "day", initial_time = 0,
+                                rate = NULL, population = "population")
+  f2 <- particle_filter$new(data2, dat$model, np, dat$compare,
+                            index = dat$index, seed = 1L)
+
+  p <- dat$pars$model(dat$pars$initial())
+
+  set.seed(1)
+  ll1 <- f1$run(p)
+
+  set.seed(1)
+  ll2 <- f2$run(list(p))
+  expect_identical(ll1, ll2)
 })
 
 
@@ -1633,11 +1652,11 @@ test_that("Can fetch statistics from continuous model", {
                init_Sv = 100,
                init_Iv = 1,
                nrates = 15)
-  expect_error(p$statistics(),
+  expect_error(p$ode_statistics(),
                "Model has not yet been run")
   res <- p$run(pars)
-  s <- p$statistics()
-  expect_s3_class(s, "mode_statistics")
+  s <- p$ode_statistics()
+  expect_s3_class(s, "ode_statistics")
 })
 
 
@@ -1648,12 +1667,12 @@ test_that("Can't fetch statistics from discrete model", {
   p <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index, seed = 1L)
   expect_error(
-    p$statistics(),
+    p$ode_statistics(),
     "Statistics are only available for continuous (ODE) models",
     fixed = TRUE)
   res <- p$run()
   expect_error(
-    p$statistics(),
+    p$ode_statistics(),
     "Statistics are only available for continuous (ODE) models",
     fixed = TRUE)
 })
@@ -1662,7 +1681,7 @@ test_that("Can't fetch statistics from discrete model", {
 test_that("Can reconstruct a continuous time filter", {
   dat <- example_continuous()
   n_particles <- 42
-  ode_control <- mode::mode_control(atol = 1e-4, rtol = 1e-4)
+  ode_control <- dust::dust_ode_control(atol = 1e-4, rtol = 1e-4)
   p1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                            index = dat$index, seed = 1L,
                            stochastic_schedule = dat$stochastic_schedule,
@@ -1673,4 +1692,85 @@ test_that("Can reconstruct a continuous time filter", {
 
   p2 <- particle_filter_from_inputs(inputs)
   expect_equal(p2$inputs(), inputs)
+})
+
+
+test_that("filter works with non-unit data", {
+  dat <- example_sir()
+
+  d1 <- dat$data_raw
+  d1$incidence[rep(c(TRUE, FALSE), length.out = nrow(d1))] <- NA
+  d2 <- d1[!is.na(d1$incidence), ]
+
+  df1 <- particle_filter_data(d1, "day", 4, 0)
+  df2 <- particle_filter_data(d2, "day", 4, 0)
+
+  n_particles <- 42
+  set.seed(1)
+  p1 <- particle_filter$new(df1, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  ll1 <- p1$run(list())
+  set.seed(1)
+  p2 <- particle_filter$new(df2, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  ll2 <- p2$run(list())
+
+  expect_equal(ll2, ll1)
+})
+
+
+test_that("filter works with irregular data", {
+  dat <- example_sir()
+
+  set.seed(1)
+  d1 <- dat$data_raw
+  d1$incidence[c(runif(nrow(d1) - 1) < 0.5, FALSE)] <- NA
+  d2 <- d1[!is.na(d1$incidence), ]
+
+  df1 <- particle_filter_data(d1, "day", 4, 0)
+  df2 <- particle_filter_data(d2, "day", 4, 0)
+
+  n_particles <- 42
+  set.seed(1)
+  p1 <- particle_filter$new(df1, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  ll1 <- p1$run(list())
+  set.seed(1)
+  p2 <- particle_filter$new(df2, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  ll2 <- p2$run(list())
+
+  expect_equal(ll2, ll1)
+})
+
+
+test_that("filter works with single data point", {
+  dat <- example_sir()
+
+  set.seed(1)
+  d <- dat$data_raw[1:3, ]
+  d$incidence[1:2] <- NA
+
+  df1 <- particle_filter_data(d, "day", 4, 0)
+  df2 <- particle_filter_data(d[-1, ], "day", 4, 0)
+  df3 <- particle_filter_data(d[-(1:2), ], "day", 4, 0)
+
+  n_particles <- 42
+  set.seed(1)
+  p1 <- particle_filter$new(df1, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  ll1 <- p1$run(list())
+
+  set.seed(1)
+  p2 <- particle_filter$new(df2, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  ll2 <- p2$run(list())
+
+  set.seed(1)
+  p3 <- particle_filter$new(df3, dat$model, n_particles, dat$compare,
+                            index = dat$index, seed = 1L)
+  ll3 <- p3$run(list())
+
+  expect_equal(ll2, ll1)
+  expect_equal(ll3, ll1)
 })

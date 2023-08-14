@@ -1,7 +1,7 @@
 example_sir <- function() {
   set.seed(42)
   model <- dust::dust_example("sir")
-  sir <- model$new(pars = list(), step = 0, n_particles = 1)
+  sir <- model$new(pars = list(), time = 0, n_particles = 1)
   y0 <- sir$state()
 
   compare <- function(state, observed, pars = NULL) {
@@ -35,7 +35,7 @@ example_sir <- function() {
   }
 
   data_raw <- data.frame(day = day, incidence = incidence)
-  data <- particle_filter_data(data_raw, "day", 4)
+  data <- particle_filter_data(data_raw, "day", 4, 0)
 
   index <- function(info) {
     list(run = 5L, state = 1:3)
@@ -61,6 +61,7 @@ example_sir <- function() {
 }
 
 example_continuous <- function() {
+  skip_if_not_installed("odin.dust")
   model <- odin.dust::odin_dust("malaria/malariamodel.R", verbose = FALSE)
 
   compare <- function(state, observed, pars = NULL) {
@@ -101,11 +102,11 @@ example_volatility <- function(pars = NULL) {
   volatility <- dust::dust_example("volatility")
   mod <- volatility$new(pars, 0, 1L, seed = 1L)
   mod$update_state(state = matrix(rnorm(1L, 0, 1L), 1))
-  steps <- seq(0, 100, by = 1)
-  res <- mod$simulate(steps)
-  observed <- res[1, 1, -1] + rnorm(length(steps) - 1, 0, 1)
-  data <- data.frame(step = steps[-1], observed = observed)
-  data <- particle_filter_data(data, "step", 1)
+  times <- seq(0, 100, by = 1)
+  res <- mod$simulate(times)
+  observed <- res[1, 1, -1] + rnorm(length(times) - 1, 0, 1)
+  data <- data.frame(t = times[-1], observed = observed)
+  data <- particle_filter_data(data, "t", 1, 0)
 
   compare <- function(state, observed, pars) {
     dnorm(observed$observed, pars$compare$gamma * drop(state),
@@ -149,7 +150,7 @@ example_sir_shared <- function() {
   model <- dust::dust_example("sir")
   sir <- model$new(pars = list(list(beta = 0.2, gamma = 0.1),
                                list(beta = 0.3, gamma = 0.1)),
-                   step = 0, n_particles = 1, pars_multi = TRUE)
+                   time = 0, n_particles = 1, pars_multi = TRUE)
   y0 <- sir$state()
 
   inv_dt <- 4
@@ -171,6 +172,7 @@ example_sir_shared <- function() {
   data_raw$populations <- factor(rep(letters[1:2], each = nrow(data_raw) / 2))
 
   data <- particle_filter_data(data_raw, time = "day", rate = 4,
+                               initial_time = 0,
                                population = "populations")
 
   index <- function(info) {
@@ -473,6 +475,7 @@ random_array <- function(dim, named = FALSE) {
 
 
 example_variable <- function() {
+  testthat::skip_if_not_installed("odin.dust")
   ## A small, very silly, model designed to help work with the
   ## multistage filter.  We have a model we can change the dimensions of
   ## without changing the way that the random number draws will work
@@ -486,8 +489,8 @@ example_variable <- function() {
     config(compare) <- "compare_variable.cpp"
   }, verbose = FALSE)
 
-  data <- particle_filter_data(data.frame(time = 1:50, observed = rnorm(50)),
-                               "time", 4)
+  data <- particle_filter_data(data.frame(t = 1:50, observed = rnorm(50)),
+                               "t", 4, 0)
   ## Nonsense model
   compare <- function(state, observed, pars) {
     dnorm(state - observed$observed, log = TRUE)

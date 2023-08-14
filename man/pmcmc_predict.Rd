@@ -6,7 +6,7 @@
 \usage{
 pmcmc_predict(
   object,
-  steps,
+  times,
   prepend_trajectories = FALSE,
   n_threads = NULL,
   seed = NULL
@@ -17,10 +17,10 @@ pmcmc_predict(
 \code{return_state = TRUE} (without this extra information,
 prediction is not possible)}
 
-\item{steps}{A vector of time steps to return predictions for. The
+\item{times}{A vector of time times to return predictions for. The
 first value must be the final value run in your simulation. An
 error will be thrown if you get this value wrong, look in
-\code{object$predict$step} (or the error message) for the
+\code{object$predict$time} (or the error message) for the
 correct value.}
 
 \item{prepend_trajectories}{Prepend trajectories from the particle

@@ -138,13 +138,13 @@ test_that("deprecation warnings on old interface", {
   base <- results$trajectories
 
   expect_warning(
-    res <- mcstate_trajectories(base$step, base$rate, base$state,
+    res <- mcstate_trajectories(base$time, base$rate, base$state,
                                 base$predicted),
     "deprecated")
   expect_identical(res, base)
 
-  steps <- seq(results$predict$step, by = 4, length.out = 26)
-  prediction <- pmcmc_predict(results, steps, seed = 1L)
+  times <- seq(results$predict$time, by = 4, length.out = 26)
+  prediction <- pmcmc_predict(results, times, seed = 1L)
 
   expect_warning(
     res <- bind_mcstate_trajectories(base, prediction),
@@ -157,6 +157,6 @@ test_that("deprecation warnings on old interface", {
 test_that("disallow predicted in continuous trajectories", {
   dat <- example_sir_pmcmc()$pmcmc$trajectories
   expect_error(
-    mcstate_trajectories_continuous(dat$step * dat$rate, dat$state, TRUE),
+    mcstate_trajectories_continuous(dat$time * dat$rate, dat$state, TRUE),
     "predicted continuous trajectories not supported")
 })

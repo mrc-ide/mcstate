@@ -173,11 +173,11 @@ test_that("Confirm deterministic nested multistage is correct", {
   dat <- example_variable()
 
   ## We need some multipopulation data here:
-  data_raw <- data.frame(time = rep(1:50, 2),
+  data_raw <- data.frame(t = rep(1:50, 2),
                          observed = rnorm(100),
                          population = factor(rep(c("a", "b"), each = 50)))
   data <- particle_filter_data(data_raw, population = "population",
-                               time = "time", rate = 4)
+                               time = "t", rate = 4, initial_time = 0)
   new_filter <- function() {
     set.seed(1)
     particle_deterministic$new(data, dat$model, compare = dat$compare,
@@ -254,11 +254,11 @@ test_that("Can run multistage with compiled", {
   dat <- example_variable()
 
   ## We need some multipopulation data here:
-  data_raw <- data.frame(time = rep(1:50, 2),
+  data_raw <- data.frame(t = rep(1:50, 2),
                          observed = rnorm(100),
                          population = factor(rep(c("a", "b"), each = 50)))
   data <- particle_filter_data(data_raw, population = "population",
-                               time = "time", rate = 4)
+                               time = "t", rate = 4, initial_time = 0)
 
   p1 <- particle_deterministic$new(data, dat$model, compare = dat$compare,
                                    index = dat$index)

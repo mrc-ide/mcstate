@@ -21,7 +21,7 @@ particle_deterministic_state <- R6::R6Class(
     pars = NULL,
     data = NULL,
     data_split = NULL,
-    steps = NULL,
+    times = NULL,
     n_threads = NULL,
     has_multiple_parameters = NULL,
     initial = NULL,
@@ -29,13 +29,13 @@ particle_deterministic_state <- R6::R6Class(
     index_data = NULL,
     compare = NULL,
     save_history = NULL,
-    save_restart_step = NULL,
+    save_restart_time = NULL,
     save_restart = NULL,
     support = NULL,
 
-    step_r = function(step_index) {
-      curr <- self$current_step_index
-      check_step(curr, step_index, private$steps)
+    step_r = function(time_index) {
+      curr <- self$current_time_index
+      check_time_step(curr, time_index, private$times)
 
       model <- self$model
       index <- private$index_data
@@ -46,18 +46,18 @@ particle_deterministic_state <- R6::R6Class(
       save_restart <- !is.null(restart_state)
 
       ## Unlike the normal particle filter, we do this all in one shot
-      idx <- (curr + 1):step_index
-      step_end <- private$steps[idx, 2]
+      idx <- (curr + 1):time_index
+      time_end <- private$times[idx, 2]
 
       support <- private$support
 
       if (save_restart) {
-        phases <- deterministic_steps_restart(
-          private$save_restart_step, step_end)
+        phases <- deterministic_times_restart(
+          private$save_restart_time, time_end)
         y <- vector("list", length(phases))
         for (i in seq_along(phases)) {
           phase <- phases[[i]]
-          y[[i]] <- model$simulate(phase$step_end)
+          y[[i]] <- model$simulate(phase$time_end)
           if (!is.na(phase$restart)) {
             array_last_dimension(restart_state, phase$restart) <- model$state()
           }
@@ -65,7 +65,7 @@ particle_deterministic_state <- R6::R6Class(
         self$restart_state <- restart_state
         y <- array_bind(arrays = y)
       } else {
-        y <- model$simulate(step_end)
+        y <- model$simulate(time_end)
         restart_state <- NULL
       }
 
@@ -100,25 +100,25 @@ particle_deterministic_state <- R6::R6Class(
       }
 
       self$log_likelihood <- log_likelihood
-      self$current_step_index <- step_index
+      self$current_time_index <- time_index
 
       log_likelihood
     },
 
-    step_compiled = function(step_index) {
-      curr <- self$current_step_index
-      check_step(curr, step_index, private$steps, "Particle filter")
-      step <- private$steps[step_index, 2]
+    step_compiled = function(time_index) {
+      curr <- self$current_time_index
+      check_time_step(curr, time_index, private$times, "Particle filter")
+      time <- private$times[time_index, 2]
 
       model <- self$model
 
       history <- self$history
       save_history <- !is.null(history)
 
-      res <- model$filter(step, save_history, private$save_restart_step)
+      res <- model$filter(time, save_history, private$save_restart_time)
 
       self$log_likelihood <- self$log_likelihood + res$log_likelihood
-      self$current_step_index <- step_index
+      self$current_time_index <- time_index
       if (save_history) {
         self$history <- list(value = res$trajectories,
                              index = self$history$index)
@@ -145,8 +145,8 @@ particle_deterministic_state <- R6::R6Class(
     ##'   0 when initialised and accumulates value for each step taken.
     log_likelihood = NULL,
 
-    ##' @field current_step_index The index of the last completed step.
-    current_step_index = 0L,
+    ##' @field current_time_index The index of the last completed step.
+    current_time_index = 0L,
 
     ## As for private fields; missing
     ## n_particles, gpu_config, min_log_likelihood but also missing seed
@@ -159,7 +159,7 @@ particle_deterministic_state <- R6::R6Class(
     ##' @param model If the generator has previously been initialised
     ##' @param data A [mcstate::particle_filter_data] data object
     ##' @param data_split The same data as `data` but split by step
-    ##' @param steps A matrix of step beginning and ends
+    ##' @param times A matrix of time step beginning and ends
     ##' @param has_multiple_parameters Compute multiple likelihoods at once?
     ##' @param n_threads The number of threads to use
     ##' @param initial Initial condition function (or `NULL`)
@@ -167,13 +167,17 @@ particle_deterministic_state <- R6::R6Class(
     ##' @param compare Compare function
     ##' @param constant_log_likelihood Constant log likelihood function
     ##' @param save_history Logical, indicating if we should save history
-    ##' @param save_restart Vector of steps to save restart at
-    initialize = function(pars, generator, model, data, data_split, steps,
+    ##' @param save_restart Vector of time steps to save restart at
+    ##' @param stochastic_schedule Vector of times to perform stochastic updates
+    ##' @param ode_control Tuning control for stepper
+    initialize = function(pars, generator, model, data, data_split, times,
                           has_multiple_parameters, n_threads,
                           initial, index, compare,
                           constant_log_likelihood,
-                          save_history, save_restart) {
+                          save_history, save_restart,
+                          stochastic_schedule, ode_control) {
       has_multiple_data <- inherits(data, "particle_filter_data_nested")
+      is_continuous <- inherits(data, "particle_filter_data_continuous")
       support <- particle_deterministic_state_support(has_multiple_parameters,
                                                       has_multiple_data)
 
@@ -182,16 +186,27 @@ particle_deterministic_state <- R6::R6Class(
       ## this behaving more similarly to the particle filter.
       n_particles <- 1L
       if (is.null(model)) {
-        model <- generator$new(pars = pars, step = steps[[1]],
-                               n_particles = n_particles, n_threads = n_threads,
-                               seed = NULL, deterministic = TRUE,
-                               pars_multi = has_multiple_parameters)
+        if (is_continuous) {
+          model <- generator$new(pars = pars, time = times[[1L]],
+                                 n_particles = n_particles,
+                                 n_threads = n_threads,
+                                 seed = NULL, deterministic = TRUE,
+                                 ode_control = ode_control,
+                                 pars_multi = has_multiple_parameters)
+          model$set_stochastic_schedule(stochastic_schedule)
+        } else {
+          model <- generator$new(pars = pars, time = times[[1L]],
+                                 n_particles = n_particles,
+                                 n_threads = n_threads,
+                                 seed = NULL, deterministic = TRUE,
+                                 pars_multi = has_multiple_parameters)
+        }
         if (is.null(compare)) {
           data_is_shared <- has_multiple_parameters && !has_multiple_data
           model$set_data(data_split, data_is_shared)
         }
       } else {
-        model$update_state(pars = pars, step = steps[[1]])
+        model$update_state(pars = pars, time = times[[1]])
       }
 
       if (!is.null(initial)) {
@@ -214,7 +229,7 @@ particle_deterministic_state <- R6::R6Class(
       shape <- model$shape()
 
       if (save_history) {
-        len <- nrow(steps) + 1L
+        len <- nrow(times) + 1L
         state <- model$state(index_data$predict)
         history_value <- array(NA_real_, c(dim(state), len))
         array_last_dimension(history_value, 1) <- state
@@ -226,8 +241,9 @@ particle_deterministic_state <- R6::R6Class(
         self$history <- NULL
       }
 
-      save_restart_step <- check_save_restart(save_restart, data)
-      if (length(save_restart_step) > 0) {
+      save_restart_time <- check_save_restart(save_restart, data)
+      if (length(save_restart_time) > 0) {
+        stopifnot(!is_continuous)
         self$restart_state <-
           array(NA_real_, c(model$n_state(), shape, length(save_restart)))
       } else {
@@ -239,7 +255,7 @@ particle_deterministic_state <- R6::R6Class(
       private$pars <- pars
       private$data <- data
       private$data_split <- data_split
-      private$steps <- steps
+      private$times <- times
       private$has_multiple_parameters <- has_multiple_parameters
       private$n_threads <- n_threads
       private$initial <- initial
@@ -247,7 +263,7 @@ particle_deterministic_state <- R6::R6Class(
       private$index_data <- index_data
       private$compare <- compare
       private$save_history <- save_history
-      private$save_restart_step <- save_restart_step
+      private$save_restart_time <- save_restart_time
       private$save_restart <- save_restart
       private$support <- support
 
@@ -259,9 +275,9 @@ particle_deterministic_state <- R6::R6Class(
 
     ##' @description Run the deterministic particle to the end of the data.
     ##' This is a convenience function around `$step()` which provides the
-    ##' correct value of `step_index`
+    ##' correct value of `time_index`
     run = function() {
-      self$step(nrow(private$steps))
+      self$step(nrow(private$times))
     },
 
     ##' @description Take a step with the deterministic particle. This moves
@@ -269,16 +285,16 @@ particle_deterministic_state <- R6::R6Class(
     ##' may correspond to more than one step with your model) and
     ##' returns the likelihood so far.
     ##'
-    ##' @param step_index The step *index* to move to. This is not the same
+    ##' @param time_index The step *index* to move to. This is not the same
     ##' as the model step, nor time, so be careful (it's the index within
     ##' the data provided to the filter). It is an error to provide
     ##' a value here that is lower than the current step index, or past
     ##' the end of the data.
-    step = function(step_index) {
+    step = function(time_index) {
       if (is.null(private$compare)) {
-        private$step_compiled(step_index)
+        private$step_compiled(time_index)
       } else {
-        private$step_r(step_index)
+        private$step_r(time_index)
       }
     },
 
@@ -303,13 +319,13 @@ particle_deterministic_state <- R6::R6Class(
       }
       ret <- particle_deterministic_state$new(
         pars, private$generator, model, private$data, private$data_split,
-        private$steps, private$has_multiple_parameters, private$n_threads,
+        private$times, private$has_multiple_parameters, private$n_threads,
         initial, private$index, private$compare, constant_log_likelihood,
         save_history, private$save_restart)
 
       particle_filter_update_state(transform_state, self$model, ret$model)
 
-      ret$current_step_index <- self$current_step_index
+      ret$current_time_index <- self$current_time_index
       ret$log_likelihood <- self$log_likelihood
 
       ret
@@ -317,25 +333,25 @@ particle_deterministic_state <- R6::R6Class(
   ))
 
 
-deterministic_steps_restart <- function(save_restart_step, step_end) {
-  i <- match(save_restart_step, step_end)
+deterministic_times_restart <- function(save_restart_time, time_end) {
+  i <- match(save_restart_time, time_end)
   j <- which(!is.na(i))
 
   ## No restart in this block, do the easy exit:
   if (length(j) == 0L) {
-    return(list(list(step_end = step_end, restart = NA_integer_)))
+    return(list(list(time_end = time_end, restart = NA_integer_)))
   }
 
   i <- i[j]
-  if (length(i) == 0 || last(i) < length(step_end)) { # first part now dead?
-    i <- c(i, length(step_end))
+  if (length(i) == 0 || last(i) < length(time_end)) { # first part now dead?
+    i <- c(i, length(time_end))
     j <- c(j, NA_integer_)
   }
 
   ## This feels like it could be done more efficiently this is at
   ## least fairly compact:
-  step_end <- unname(split(step_end, rep(seq_along(i), diff(c(0, i)))))
-  Map(list, step_end = step_end, restart = j)
+  time_end <- unname(split(time_end, rep(seq_along(i), diff(c(0, i)))))
+  Map(list, time_end = time_end, restart = j)
 }
 
 

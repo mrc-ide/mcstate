@@ -4,29 +4,50 @@ context("particle_filter_data")
 test_that("particle filter data validates time", {
   d <- data.frame(t = 1:11, y = 0:10)
   expect_error(
-    particle_filter_data(NULL, "t", 10),
+    particle_filter_data(NULL, "t", 10, 0),
     "'data' must be a data.frame")
   expect_error(
-    particle_filter_data(d, "time", 10),
+    particle_filter_data(d, "time", 10, 0),
     "Did not find column 'time', representing time, in data")
   expect_error(
-    particle_filter_data(d + 0.5, "t", 10),
+    particle_filter_data(d + 0.5, "t", 10, 0),
     "'data$t' must be an integer",
     fixed = TRUE)
   expect_error(
-    particle_filter_data(d - 1, "t", 10),
-    "The first time must be at least 1 (but was given 0)",
+    suppressWarnings(particle_filter_data(d - 1, "t", 10)),
+    "The first time must be at least 1 (but was given 0)", fixed = TRUE)
+  expect_error(
+    particle_filter_data(d - 2, "t", 10, 0),
+    "All times must be non-negative",
     fixed = TRUE)
   expect_error(
-    particle_filter_data(d * 2, "t", 10),
-    "Expected each time difference to be one unit")
+    particle_filter_data(d, "t", 10, -1),
+    "'initial_time' must be non-negative",
+    fixed = TRUE)
+  expect_error(
+    particle_filter_data(d, "t", 10, 2),
+    "'initial_time' must be <= 1",
+    fixed = TRUE)
+})
+
+
+test_that("can't use reserved names for time column", {
+  expect_error(
+    particle_filter_data(data_frame(time = 1:10), "time", 1, 0),
+    "The time column cannot be called 'time'")
+  expect_error(
+    particle_filter_data(data_frame(step = 1:10), "step", 1, 0),
+    "The time column cannot be called 'step'")
+  expect_error(
+    particle_filter_data(data_frame(model_time = 1:10), "model_time", 1, 0),
+    "The time column cannot be called 'model_time'")
 })
 
 
 test_that("particle filter data validates rate", {
   d <- data.frame(t = 1:11, y = 0:10)
   expect_error(
-    particle_filter_data(d, "t", 2.3),
+    particle_filter_data(d, "t", 2.3, 0),
     "'rate' must be an integer")
 })
 
@@ -38,7 +59,7 @@ test_that("particle filter data validates initial_time", {
     "'initial_time' must be non-negative")
   expect_error(
     particle_filter_data(d, "t", 2, 2),
-    "'initial_time' must be <= 0")
+    "'initial_time' must be <= 1")
   expect_error(
     particle_filter_data(d, "t", 2, 0.5),
     "'initial_time' must be an integer")
@@ -47,19 +68,19 @@ test_that("particle filter data validates initial_time", {
 
 test_that("particle filter data creates data", {
   d <- data.frame(day = 1:11, data = seq(0, 1, by = 0.1))
-  res <- particle_filter_data(d, "day", 10)
+  res <- particle_filter_data(d, "day", 10, 0)
   expect_setequal(
     names(res),
-    c("day_start", "day_end", "step_start", "step_end", "data"))
+    c("day_start", "day_end", "time_start", "time_end", "data"))
   expect_equal(res$day_start, 0:10)
   expect_equal(res$day_end, 1:11)
-  expect_equal(res$step_start, 0:10 * 10)
-  expect_equal(res$step_end, 1:11 * 10)
+  expect_equal(res$time_start, 0:10 * 10)
+  expect_equal(res$time_end, 1:11 * 10)
   expect_equal(res$data, d$data)
   expect_equal(attr(res, "rate"), 10)
   expect_equal(attr(res, "time"), "day")
-  expect_equal(attr(res, "times"), cbind(0:10, 1:11, deparse.level = 0))
-  expect_equal(attr(res, "steps"), attr(res, "times") * 10)
+  expect_equal(attr(res, "model_times"), cbind(0:10, 1:11, deparse.level = 0))
+  expect_equal(attr(res, "times"), attr(res, "model_times") * 10)
   expect_s3_class(
     res,
     c("particle_filter_data_single",
@@ -76,14 +97,14 @@ test_that("particle filter can offset initial data", {
 
   cmp <- data.frame(hour_start = c(1, 11:19),
                     hour_end = 11:20,
-                    step_start = c(4, 11:19 * 4),
-                    step_end = 11:20 * 4,
+                    time_start = c(4, 11:19 * 4),
+                    time_end = 11:20 * 4,
                     a = d$a,
                     b = d$b)
   attr(cmp, "rate") <- 4
   attr(cmp, "time") <- "hour"
-  attr(cmp, "times") <- cbind(c(1, 11:19), 11:20)
-  attr(cmp, "steps") <- attr(cmp, "times") * 4
+  attr(cmp, "model_times") <- cbind(c(1, 11:19), 11:20)
+  attr(cmp, "times") <- attr(cmp, "model_times") * 4
   class(cmp) <- c("particle_filter_data_single",
                   "particle_filter_data_discrete",
                   "particle_filter_data",
@@ -92,13 +113,14 @@ test_that("particle filter can offset initial data", {
 })
 
 
-test_that("require more than one observation", {
+test_that("allow only one observation", {
   d <- data.frame(hour = 1:2, a = 2:3, b = 3:4)
-  expect_error(
-    particle_filter_data(d[1, ], "hour", 10),
-    "Expected at least two time windows")
-  expect_silent(
-    particle_filter_data(d, "hour", 10))
+  df1 <- particle_filter_data(d[1, ], "hour", 10, 0)
+  df2 <- particle_filter_data(d[1:2, ], "hour", 10, 0)
+
+  expect_equal(names(df1), names(df2))
+  expect_equal(df1[, ], df2[1, ])
+  expect_equal(nrow(df1), 1)
 })
 
 
@@ -109,24 +131,24 @@ test_that("particle filter data with populations creates data - equal", {
                   group = rep(letters[1:2], each = 11),
                   stringsAsFactors = TRUE)
   d <- d[sample.int(nrow(d)), ]
-  res <- particle_filter_data(d, "day", 10, population = "group")
+  res <- particle_filter_data(d, "day", 10, 0, population = "group")
 
   expect_s3_class(res, "particle_filter_data_nested")
 
   expect_setequal(
     names(res),
-    c("day_start", "day_end", "step_start", "step_end", "group", "data"))
+    c("day_start", "day_end", "time_start", "time_end", "group", "data"))
   expect_equal(res$day_start, rep(0:10, 2))
   expect_equal(res$day_end, rep(1:11, 2))
-  expect_equal(res$step_start, rep(0:10, 2) * 10)
-  expect_equal(res$step_end, rep(1:11, 2) * 10)
+  expect_equal(res$time_start, rep(0:10, 2) * 10)
+  expect_equal(res$time_end, rep(1:11, 2) * 10)
   expect_equal(res$group, factor(rep(c("a", "b"), each = 11)))
   expect_equal(res$data, data)
 
   expect_equal(attr(res, "rate"), 10)
   expect_equal(attr(res, "time"), "day")
-  expect_equal(attr(res, "times"), cbind(0:10, 1:11))
-  expect_equal(attr(res, "steps"), cbind(0:10, 1:11) * 10)
+  expect_equal(attr(res, "model_times"), cbind(0:10, 1:11))
+  expect_equal(attr(res, "times"), cbind(0:10, 1:11) * 10)
   expect_equal(attr(res, "population"), "group")
   expect_equal(attr(res, "populations"), c("a", "b"))
 })
@@ -174,7 +196,8 @@ test_that("particle_filter_data for continuous time", {
   expect_equal(res$data, d$data)
   expect_equal(attr(res, "rate"), NULL)
   expect_equal(attr(res, "time"), "month")
-  expect_equal(attr(res, "times"), cbind(c(0, 4:23), 4:24, deparse.level = 0))
+  expect_equal(attr(res, "model_times"),
+               cbind(c(0, 4:23), 4:24, deparse.level = 0))
   expect_s3_class(
     res,
     c("particle_filter_data_single",
@@ -204,4 +227,57 @@ test_that("particle_filter_data for continuous time requires initial time", {
                   stringsAsFactors = FALSE)
   expect_error(particle_filter_data(d, "month", NULL),
                "'initial_time' must be given for continuous models")
+})
+
+
+test_that("particle filter data can construct with non-unit time data", {
+  dat <- example_sir()
+
+  d1 <- dat$data_raw
+  d1$incidence[rep(c(TRUE, FALSE), length.out = nrow(d1))] <- NA
+  d2 <- d1[!is.na(d1$incidence), ]
+
+  df1 <- particle_filter_data(d1, "day", 4, 0)
+  df2 <- particle_filter_data(d2, "day", 4, 0)
+
+  i <- which(!is.na(d1$incidence))
+  expect_equal(df2$day_start, df1$day_start[i - 1])
+  expect_equal(df2$day_end, df1$day_end[i])
+  expect_equal(df2$time_start, df1$time_start[i - 1])
+  expect_equal(df2$time_end, df1$time_end[i])
+  expect_equal(df2$incidence, df1$incidence[i])
+
+  expect_equal(attr(df2, "rate"), attr(df1, "rate"))
+  expect_equal(attr(df2, "time"), attr(df1, "time"))
+})
+
+test_that("particle filter data can construct with irregular time data", {
+  dat <- example_sir()
+
+  set.seed(1)
+  d1 <- dat$data_raw
+  d1$incidence[c(runif(nrow(d1) - 1) < 0.5, FALSE)] <- NA
+  d2 <- d1[!is.na(d1$incidence), ]
+
+  df1 <- particle_filter_data(d1, "day", 4, 0)
+  df2 <- particle_filter_data(d2, "day", 4, 0)
+
+  i <- which(!is.na(d1$incidence))
+  expect_equal(df2$day_start, c(0, df2$day_end[-nrow(df2)]))
+  expect_equal(df2$day_end, df1$day_end[i])
+  expect_equal(df2$time_start, c(0, df2$time_end[-nrow(df2)]))
+  expect_equal(df2$time_end, df1$time_end[i])
+  expect_equal(df2$incidence, df1$incidence[i])
+
+  expect_equal(attr(df2, "rate"), attr(df1, "rate"))
+  expect_equal(attr(df2, "time"), attr(df1, "time"))
+})
+
+
+test_that("particle filter data warns if initial time not given", {
+  d <- data.frame(day = 2:12, data = seq(0, 1, by = 0.1))
+  expect_warning(
+    res <- particle_filter_data(d, "day", 10),
+    "'initial_time' should be provided. I'm assuming '1'")
+  expect_equal(res, particle_filter_data(d, "day", 10, 1))
 })

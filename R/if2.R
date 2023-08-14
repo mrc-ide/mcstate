@@ -32,7 +32,7 @@
 ##' gen <- dust::dust_example("sir")
 ##'
 ##' # Some data that we will fit to, using 1 particle:
-##' sir <- gen$new(pars = list(), step = 0, n_particles = 1)
+##' sir <- gen$new(pars = list(), time = 0, n_particles = 1)
 ##' dt <- 1 / 4
 ##' day <- seq(1, 100)
 ##' incidence <- rep(NA, length(day))
@@ -49,7 +49,7 @@
 ##'
 ##' # Convert this into our required format:
 ##' data_raw <- data.frame(day = day, incidence = incidence)
-##' data <- particle_filter_data(data_raw, "day", 4)
+##' data <- particle_filter_data(data_raw, "day", 4, 0)
 ##'
 ##' # A comparison function
 ##' compare <- function(state, observed, pars = NULL) {
@@ -106,8 +106,8 @@ if2 <- function(pars, filter, control) {
   data_split <- particle_filter_data_split(inputs$data,
                                            compiled_compare = FALSE)
 
-  steps <- attr(inputs$data, "steps")
-  n_steps <- nrow(steps)
+  times <- attr(inputs$data, "times")
+  n_times <- nrow(times)
 
   n_par_sets <- control$n_par_sets
   iterations <- control$iterations
@@ -118,7 +118,7 @@ if2 <- function(pars, filter, control) {
   n_pars <- nrow(pars_matrix)
 
   model <- inputs$model$new(pars = pars$model(pars_matrix),
-                            step = steps[[1L]],
+                            time = times[[1L]],
                             n_particles = NULL,
                             n_threads = inputs$n_threads,
                             seed = inputs$seed,
@@ -140,10 +140,10 @@ if2 <- function(pars, filter, control) {
 
   for (i in seq_len(iterations)) {
     p()
-    model$update_state(pars = pars$model(pars_matrix), step = steps[[1L]])
-    for (t in seq_len(n_steps)) {
-      step_end <- steps[t, 2L]
-      state <- model$run(step_end)
+    model$update_state(pars = pars$model(pars_matrix), time = times[[1L]])
+    for (t in seq_len(n_times)) {
+      time_end <- times[t, 2L]
+      state <- model$run(time_end)
 
       log_weights <- inputs$compare(state, data_split[[t]], pars_compare)
 

@@ -43,16 +43,16 @@ We can simulate some data from the model:
 data <- local({
   mod <- volatility$new(list(alpha = 0.91, sigma = 1), 0, 1L)
   mod$update_state(state = matrix(rnorm(1L, 0, 1L), 1))
-  steps <- seq(0, 100, by = 1)
-  res <- mod$simulate(steps)
-  observed <- res[1, 1, -1] + rnorm(length(steps) - 1, 0, 1)
-  data.frame(step = steps[-1], value = observed)
+  t <- seq(0, 100, by = 1)
+  res <- mod$simulate(t)
+  observed <- res[1, 1, -1] + rnorm(length(t) - 1, 0, 1)
+  data.frame(t = t[-1], value = observed)
 })
 ```
 
 ```{r volatility_data_show}
 head(data)
-plot(value ~ step, data, type = "o", pch = 19, las = 1)
+plot(value ~ t, data, type = "o", pch = 19, las = 1)
 ```
 
 In order to estimate the parameters of the process that might have generated this dataset, we need, in addition to our model, an observation/comparison function.  In this case, given that we observe some `state`:
@@ -84,7 +84,7 @@ pars <- list(
 and preprocess the data into the correct format:
 
 ```{r}
-volatility_data <- mcstate::particle_filter_data(data, "step", 1)
+volatility_data <- mcstate::particle_filter_data(data, "t", 1)
 head(volatility_data)
 ```
 
@@ -196,8 +196,8 @@ dim(filter$history())
 This is a _N_ state (here 1) x _N_ particles (1000) x _N_ time steps (100) 3d array, but we will drop the first rank of this for plotting
 
 ```{r}
-matplot(0:100, t(drop(filter$history())), xlab = "Step", ylab = "Value",
+matplot(0:100, t(drop(filter$history())), xlab = "Time", ylab = "Value",
         las = 1, type = "l", lty = 1, col = "#00000002")
-points(value ~ step, data, col = "steelblue3", pch = 19)
+points(value ~ t, data, col = "steelblue3", pch = 19)
 ```
 

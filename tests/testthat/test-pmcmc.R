@@ -147,17 +147,19 @@ test_that("run pmcmc with the particle filter and retain history", {
     results1$trajectories$state[, , dim(results1$trajectories$state)[3]],
     results1$state[1:3, ])
   expect_equal(results1$trajectories$predicted, rep(FALSE, 101))
-  expect_equal(results1$trajectories$step, seq(0, 400, by = 4))
+  expect_equal(results1$trajectories$time, seq(0, 400, by = 4))
   expect_equal(results1$trajectories$rate, 4)
 
   ## Additional information required to predict
   expect_setequal(
     names(results1$predict),
-    c("is_continuous", "transform", "index", "rate", "step", "time", "filter"))
+    c("is_continuous", "transform", "index", "rate", "model_time", "time",
+      "filter"))
   expect_identical(results1$predict$transform, as.list)
   expect_equal(results1$predict$index, 1:3)
   expect_equal(results1$predict$rate, 4)
-  expect_equal(results1$predict$step, last(dat$data$step_end))
+  expect_equal(results1$predict$time, last(dat$data$time_end))
+  expect_equal(results1$predict$model_time, last(dat$data$day_end))
   expect_identical(results1$predict$filter, p1$inputs())
 })
 
@@ -491,7 +493,7 @@ test_that("can restart the mcmc using saved state", {
                             progress = FALSE)
   res2 <- pmcmc(dat$pars, p2, control = control2)
 
-  expect_equal(res2$trajectories$step, (40:100) * 4)
+  expect_equal(res2$trajectories$time, (40:100) * 4)
   expect_equal(dim(res2$trajectories$state), c(3, 50, 61))
 })
 
@@ -774,10 +776,23 @@ test_that("can run pmcmc for ode models", {
   ## Additional information required to predict
   expect_setequal(
     names(results1$predict),
-    c("is_continuous", "transform", "index", "rate", "step", "time", "filter"))
+    c("is_continuous", "transform", "index", "rate", "time", "model_time",
+      "filter"))
   expect_identical(results1$predict$transform, as.list)
   expect_equal(results1$predict$index, c(Ih = 2, Sh = 1))
-  expect_null(results1$predict$rate)
+  expect_equal(results1$predict$rate, 1)
   expect_equal(results1$predict$time, last(dat$data$time_end))
+  expect_equal(results1$predict$model_time, results1$predict$time)
   expect_identical(results1$predict$filter, p1$inputs())
+})
+
+
+test_that("can use str() without error on samples object", {
+  dat <- example_uniform()
+  control <- pmcmc_control(10, save_state = FALSE, save_trajectories = FALSE)
+  res <- pmcmc(dat$pars, dat$filter, control = control)
+  cmp <- structure(res, class = NULL)
+  expect_output(str(res),
+                paste(capture.output(str(cmp)), collapse = "\n"),
+                fixed = TRUE)
 })

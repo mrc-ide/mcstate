@@ -27,15 +27,15 @@ particle_filter_state <- R6::R6Class(
     index = NULL,
     compare = NULL,
     gpu = NULL,
-    save_restart_step = NULL,
+    save_restart_time = NULL,
     save_restart = NULL,
     min_log_likelihood = NULL,
     support = NULL,
 
-    step_r = function(step_index, partial = FALSE) {
+    step_r = function(time_index, partial = FALSE) {
       times <- private$times
-      curr <- self$current_step_index
-      check_step(curr, step_index, private$times, "Particle filter")
+      curr <- self$current_time_index
+      check_time_step(curr, time_index, private$times, "Particle filter")
 
       model <- self$model
       compare <- private$compare
@@ -46,7 +46,7 @@ particle_filter_state <- R6::R6Class(
       pars <- private$pars
 
       restart_state <- self$restart_state
-      save_restart_step <- private$save_restart_step
+      save_restart_time <- private$save_restart_time
       save_restart <- !is.null(restart_state)
 
       history <- self$history
@@ -60,7 +60,7 @@ particle_filter_state <- R6::R6Class(
 
       min_log_likelihood <- private$min_log_likelihood
       support <- private$support
-      for (t in seq(curr + 1L, step_index)) {
+      for (t in seq(curr + 1L, time_index)) {
         time_end <- times[t, 2L]
         state <- model$run(time_end)
 
@@ -109,7 +109,7 @@ particle_filter_state <- R6::R6Class(
         }
 
         if (save_restart) {
-          i_restart <- match(time_end, save_restart_step)
+          i_restart <- match(time_end, save_restart_time)
           if (!is.na(i_restart)) {
             array_last_dimension(restart_state, i_restart) <- model$state()
           }
@@ -118,7 +118,7 @@ particle_filter_state <- R6::R6Class(
 
       self$log_likelihood_step <- log_likelihood_step
       self$log_likelihood <- log_likelihood
-      self$current_step_index <- step_index
+      self$current_time_index <- time_index
       if (save_history) {
         history$value <- history_value
         history$order <- history_order
@@ -135,24 +135,24 @@ particle_filter_state <- R6::R6Class(
       }
     },
 
-    step_compiled = function(step_index, partial = FALSE) {
+    step_compiled = function(time_index, partial = FALSE) {
       if (partial) {
         stop("'partial' not supported with compiled compare")
       }
-      curr <- self$current_step_index
-      check_step(curr, step_index, private$times, "Particle filter")
-      step <- private$times[step_index, 2]
+      curr <- self$current_time_index
+      check_time_step(curr, time_index, private$times, "Particle filter")
+      time <- private$times[time_index, 2]
 
       model <- self$model
 
       history <- self$history
       save_history <- !is.null(history)
 
-      res <- model$filter(step, save_history, private$save_restart_step)
+      res <- model$filter(time, save_history, private$save_restart_time)
 
       self$log_likelihood_step <- NA_real_
       self$log_likelihood <- self$log_likelihood + res$log_likelihood
-      self$current_step_index <- step_index
+      self$current_time_index <- time_index
       if (save_history) {
         self$history <- list(value = res$trajectories,
                              index = self$history$index)
@@ -186,8 +186,8 @@ particle_filter_state <- R6::R6Class(
     ##' last call to `$step()`.
     log_likelihood_step = NULL,
 
-    ##' @field current_step_index The index of the last completed step.
-    current_step_index = 0L,
+    ##' @field current_time_index The index of the last completed step.
+    current_time_index = 0L,
 
     ##' @description Initialise the particle filter state. Ordinarily
     ##' this should not be called by users, and so arguments are barely
@@ -197,7 +197,7 @@ particle_filter_state <- R6::R6Class(
     ##' @param model If the generator has previously been initialised
     ##' @param data A [mcstate::particle_filter_data] data object
     ##' @param data_split The same data as `data` but split by step
-    ##' @param times A matrix of step beginning and ends
+    ##' @param times A matrix of time step beginning and ends
     ##' @param n_particles Number of particles to use
     ##' @param has_multiple_parameters Compute multiple likelihoods at once?
     ##' @param n_threads The number of threads to use
@@ -209,7 +209,7 @@ particle_filter_state <- R6::R6Class(
     ##' @param seed Initial RNG seed
     ##' @param min_log_likelihood Early termination control
     ##' @param save_history Logical, indicating if we should save history
-    ##' @param save_restart Vector of times to save restart at
+    ##' @param save_restart Vector of time steps to save restart at
     ##' @param stochastic_schedule Vector of times to perform stochastic updates
     ##' @param ode_control Tuning control for stepper
     initialize = function(pars, generator, model, data, data_split, times,
@@ -230,10 +230,11 @@ particle_filter_state <- R6::R6Class(
                                  n_particles = n_particles,
                                  n_threads = n_threads,
                                  seed = seed,
-                                 control = ode_control)
+                                 ode_control = ode_control,
+                                 pars_multi = has_multiple_parameters)
           model$set_stochastic_schedule(stochastic_schedule)
         } else {
-          model <- generator$new(pars = pars, step = times[[1L]],
+          model <- generator$new(pars = pars, time = times[[1L]],
                                  n_particles = n_particles,
                                  n_threads = n_threads,
                                  seed = seed, gpu_config = gpu_config,
@@ -244,11 +245,7 @@ particle_filter_state <- R6::R6Class(
           model$set_data(data_split, data_is_shared)
         }
       } else {
-        if (is_continuous) {
-          model$update_state(pars = pars, time = times[[1L]])
-        } else {
-          model$update_state(pars = pars, step = times[[1L]])
-        }
+        model$update_state(pars = pars, time = times[[1L]])
       }
 
       if (!is.null(initial)) {
@@ -268,11 +265,7 @@ particle_filter_state <- R6::R6Class(
       }
 
       ## The model shape is [n_particles, <any multi-par structure>]
-      if (is_continuous) {
-        shape <- model$n_particles()
-      } else {
-        shape <- model$shape()
-      }
+      shape <- model$shape()
 
       if (save_history) {
         len <- nrow(times) + 1L
@@ -288,8 +281,8 @@ particle_filter_state <- R6::R6Class(
         self$history <- NULL
       }
 
-      save_restart_step <- check_save_restart(save_restart, data)
-      if (length(save_restart_step) > 0) {
+      save_restart_time <- check_save_restart(save_restart, data)
+      if (length(save_restart_time) > 0) {
         stopifnot(!is_continuous)
         self$restart_state <-
           array(NA_real_, c(model$n_state(), shape, length(save_restart)))
@@ -311,7 +304,7 @@ particle_filter_state <- R6::R6Class(
       private$compare <- compare
       private$gpu <- !is.null(gpu_config)
       private$min_log_likelihood <- min_log_likelihood
-      private$save_restart_step <- save_restart_step
+      private$save_restart_time <- save_restart_time
       private$save_restart <- save_restart
       private$support <- support
 
@@ -323,7 +316,7 @@ particle_filter_state <- R6::R6Class(
 
     ##' @description Run the particle filter to the end of the data. This is
     ##' a convenience function around `$step()` which provides the correct
-    ##' value of `step_index`
+    ##' value of `time_index`
     run = function() {
       self$step(nrow(private$times))
     },
@@ -333,7 +326,7 @@ particle_filter_state <- R6::R6Class(
     ##' may correspond to more than one step with your model) and
     ##' returns the likelihood so far.
     ##'
-    ##' @param step_index The step *index* to move to. This is not the same
+    ##' @param time_index The step *index* to move to. This is not the same
     ##' as the model step, nor time, so be careful (it's the index within
     ##' the data provided to the filter). It is an error to provide
     ##' a value here that is lower than the current step index, or past
@@ -341,11 +334,11 @@ particle_filter_state <- R6::R6Class(
     ##'
     ##' @param partial Logical, indicating if we should return the partial
     ##' likelihood, due to this step, rather than the full likelihood so far.
-    step = function(step_index, partial = FALSE) {
+    step = function(time_index, partial = FALSE) {
       if (is.null(private$compare)) {
-        private$step_compiled(step_index, partial)
+        private$step_compiled(time_index, partial)
       } else {
-        private$step_r(step_index, partial)
+        private$step_r(time_index, partial)
       }
     },
 
@@ -388,7 +381,7 @@ particle_filter_state <- R6::R6Class(
 
       particle_filter_update_state(transform_state, self$model, ret$model)
 
-      ret$current_step_index <- self$current_step_index
+      ret$current_time_index <- self$current_time_index
       ret$log_likelihood <- self$log_likelihood
       ret$log_likelihood_step <- self$log_likelihood_step
 
@@ -421,7 +414,7 @@ particle_filter_state <- R6::R6Class(
         seed, private$min_log_likelihood, save_history, private$save_restart)
 
       ## Run it up to the same point
-      ret$step(self$current_step_index)
+      ret$step(self$current_time_index)
 
       ## Set the seed in the parent model
       self$model$set_rng_state(ret$model$rng_state())
@@ -433,19 +426,19 @@ particle_filter_state <- R6::R6Class(
 
 
 ## Used for both the normal and deterministic particle filter
-check_step <- function(curr, step_index, times, name) {
+check_time_step <- function(curr, time_index, times, name) {
   n_times <- nrow(times)
   if (curr >= n_times) {
     stop(sprintf("%s has reached the end of the data", name))
   }
-  if (step_index > n_times) {
-    stop(sprintf("step_index %d is beyond the length of the data (max %d)",
-                 step_index, n_times))
+  if (time_index > n_times) {
+    stop(sprintf("time_index %d is beyond the length of the data (max %d)",
+                 time_index, n_times))
   }
-  if (step_index <= curr) {
+  if (time_index <= curr) {
     stop(sprintf(
       "%s has already run step index %d (to model step %d)",
-      name, step_index, times[step_index, 2]))
+      name, time_index, times[time_index, 2]))
   }
 }
 
@@ -515,8 +508,8 @@ particle_filter_update_state <- function(transform, model_old, model_new) {
     state <- vapply(state_new, identity, state_new[[1]])
   }
 
-  step <- model_old$step()
-  model_new$update_state(state = state, step = step)
+  time <- model_old$time()
+  model_new$update_state(state = state, time = time)
 }
 
 
@@ -525,7 +518,8 @@ particle_filter_update_state <- function(transform, model_old, model_new) {
 pfs_initial_single <- function(model, initial, pars, n_particles) {
   state <- initial(model$info(), n_particles, pars)
   if (is.list(state)) {
-    stop("Setting 'step' from initial no longer supported")
+    ## TODO: are there docs advocating this somewhere?
+    stop("Setting 'time' from initial no longer supported")
   }
   state
 }
@@ -537,8 +531,9 @@ pfs_initial_multiple <- function(model, initial, pars, n_particles) {
     return()
   }
 
+  ## TODO: can be dropped now
   if (any(vlapply(state, is.list))) {
-    stop("Setting 'step' from initial no longer supported")
+    stop("Setting 'time' from initial no longer supported")
   }
 
   len <- lengths(state)

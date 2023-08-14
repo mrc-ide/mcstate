@@ -11,7 +11,7 @@
 ##' gen <- dust::dust_example("sir")
 ##'
 ##' # Some data that we will fit to, using 1 particle:
-##' sir <- gen$new(pars = list(), step = 0, n_particles = 1)
+##' sir <- gen$new(pars = list(), time = 0, n_particles = 1)
 ##' dt <- 1 / 4
 ##' day <- seq(1, 100)
 ##' incidence <- rep(NA, length(day))
@@ -28,7 +28,7 @@
 ##'
 ##' # Convert this into our required format:
 ##' data_raw <- data.frame(day = day, incidence = incidence)
-##' data <- particle_filter_data(data_raw, "day", 4)
+##' data <- particle_filter_data(data_raw, "day", 4, 0)
 ##'
 ##' # A comparison function
 ##' compare <- function(state, observed, pars = NULL) {
@@ -75,7 +75,7 @@ particle_filter <- R6::R6Class(
     ## Control for dust
     seed = NULL,
     n_threads = NULL,
-    ## Control for mode
+    ## Control for ODE models
     ode_control = NULL,
     stochastic_schedule = NULL,
     ## Updated when the model is run
@@ -122,10 +122,11 @@ particle_filter <- R6::R6Class(
     ##'
     ##' @param data The data set to be used for the particle filter,
     ##' created by [particle_filter_data()]. This is essentially
-    ##' a [data.frame()] with at least columns `step_start`
-    ##' and `step_end`, along with any additional data used in the
+    ##' a [data.frame()] with at least columns `time_start`
+    ##' and `time_end`, along with any additional data used in the
     ##' `compare` function, and additional information about how your
-    ##' steps relate to time.
+    ##' dust time steps relate to a more interpretable measure of model
+    ##' time.
     ##'
     ##' @param model A stochastic model to use.  Must be a
     ##' `dust_generator` object.
@@ -167,14 +168,14 @@ particle_filter <- R6::R6Class(
     ##' must return a list, which can have the elements `state`
     ##' (initial model state, passed to the particle filter - either a
     ##' vector or a matrix, and overriding the initial conditions
-    ##' provided by your model) and `step` (the initial step,
-    ##' overriding the first step of your data - this must occur within
-    ##' your first epoch in your `data` provided to the
+    ##' provided by your model) and `time` (the initial time step,
+    ##' overriding the first time step of your data - this must occur
+    ##' within your first epoch in your `data` provided to the
     ##' constructor, i.e., not less than the first element of
-    ##' `step_start` and not more than `step_end`). Your function
+    ##' `time_start` and not more than `time_end`). Your function
     ##' can also return a vector or matrix of `state` and not alter
-    ##' the starting step, which is equivalent to returning
-    ##' `list(state = state, step = NULL)`.
+    ##' the starting time step, which is equivalent to returning
+    ##' `list(state = state, time = NULL)`.
     ##'
     ##' @param constant_log_likelihood An optional function, taking the
     ##' model parameters, that computes the constant part of the
@@ -212,8 +213,12 @@ particle_filter <- R6::R6Class(
     ##' For additional control, provide a list with elements `device_id`
     ##' and `run_block_size`. Further options (and validation) of this
     ##' list will be added in a future version!
-    ##' @param stochastic_schedule Vector of times to perform stochastic updates
-    ##' @param ode_control Tuning control for stepper
+    ##'
+    ##' @param stochastic_schedule Vector of times to perform stochastic
+    ##' updates, for continuous time models.
+    ##'
+    ##' @param ode_control Tuning control for the ODE stepper, for
+    ##' continuous time (ODE) models
     initialize = function(data, model, n_particles, compare,
                           index = NULL, initial = NULL,
                           constant_log_likelihood = NULL,
@@ -245,38 +250,11 @@ particle_filter <- R6::R6Class(
       copy_list_and_lock(check_n_parameters(n_parameters, data),
                          self)
 
-      is_continuous <- inherits(data, "particle_filter_data_continuous")
-      has_multiple_data <- inherits(data, "particle_filter_data_nested")
+      check_time_type(model, data, stochastic_schedule, ode_control)
+      private$stochastic_schedule <- stochastic_schedule
+      private$ode_control <- ode_control
 
-      if (is_continuous && has_multiple_data) {
-        stop("nested data not supported for continuous models")
-      }
-
-      if (!is_continuous) {
-        if (!is.null(stochastic_schedule)) {
-          stop(paste("'stochastic_schedule' provided but 'model' does not",
-           "support this"))
-        }
-        if (!is.null(ode_control)) {
-          stop(paste("'ode_control' provided but 'model' does not",
-                     "support this"))
-        }
-      } else {
-        assert_is_or_null(ode_control, "mode_control")
-        private$stochastic_schedule <- stochastic_schedule
-        private$ode_control <- ode_control
-      }
-
-      if (identical(attr(model, which = "name", exact = TRUE),
-                    "mode_generator") != is_continuous) {
-        mod_type <- if (identical(attr(model, which = "name", exact = TRUE),
-                           "mode_generator")) "continuous" else "discrete"
-        stop(sprintf("'model' is %s but 'data' is of type '%s'",
-                     mod_type,
-                     class(data)[2]))
-      }
-
-      private$times <- attr(data, if (is_continuous) "times" else "steps")
+      private$times <- attr(data, "times")
       private$data_split <- particle_filter_data_split(data, is.null(compare))
 
       private$compare <- compare
@@ -312,7 +290,7 @@ particle_filter <- R6::R6Class(
     ##' @param save_restart An integer vector of time points to save
     ##' restart infomation for. These are in terms of your underlying time
     ##' variable (the `time` column in [particle_filter_data()]) not in
-    ##' terms of steps. The state will be saved after the particle
+    ##' terms of time steps. The state will be saved after the particle
     ##' filtering operation (i.e., at the end of the step).
     ##'
     ##' @param min_log_likelihood Optionally, a numeric value representing the
@@ -431,7 +409,7 @@ particle_filter <- R6::R6Class(
     ##' calling through to the `$statistics()` method of the underlying
     ##' model. This is only available for continuous time (ODE) models,
     ##' and will error if used with discrete time models.
-    statistics = function() {
+    ode_statistics = function() {
       if (!inherits(private$data, "particle_filter_data_continuous")) {
         stop("Statistics are only available for continuous (ODE) models")
       }
@@ -440,7 +418,7 @@ particle_filter <- R6::R6Class(
       }
       ## when/if we support multistage models, more care will be
       ## needed here.
-      private$last_model[[1]]$statistics()
+      private$last_model[[1]]$ode_statistics()
     },
 
     ##' @description
@@ -541,29 +519,43 @@ particle_resample <- function(weights) {
 ## `$inputs()` data, but possibly changing the seed
 particle_filter_from_inputs <- function(inputs, seed = NULL) {
   if (is.null(inputs$n_particles)) {
-    particle_deterministic$new(
-      data = inputs$data,
-      model = inputs$model,
-      compare = inputs$compare,
-      index = inputs$index,
-      initial = inputs$initial,
-      constant_log_likelihood = inputs$constant_log_likelihood,
-      n_threads = inputs$n_threads)
+    particle_filter_from_inputs_deterministic(inputs)
   } else {
-    particle_filter$new(
-      data = inputs$data,
-      model = inputs$model,
-      n_particles = inputs$n_particles,
-      compare = inputs$compare,
-      gpu_config = inputs$gpu_config,
-      index = inputs$index,
-      initial = inputs$initial,
-      constant_log_likelihood = inputs$constant_log_likelihood,
-      n_threads = inputs$n_threads,
-      seed = seed %||% inputs$seed,
-      stochastic_schedule = inputs$stochastic_schedule,
-      ode_control = inputs$ode_control)
+    particle_filter_from_inputs_stochastic(inputs, seed)
   }
+}
+
+
+particle_filter_from_inputs_deterministic <- function(inputs) {
+  particle_deterministic$new(
+    data = inputs$data,
+    model = inputs$model,
+    compare = inputs$compare,
+    index = inputs$index,
+    initial = inputs$initial,
+    constant_log_likelihood = inputs$constant_log_likelihood,
+    n_threads = inputs$n_threads,
+    n_parameters = inputs$n_parameters,
+    stochastic_schedule = inputs$stochastic_schedule,
+    ode_control = inputs$ode_control)
+}
+
+
+particle_filter_from_inputs_stochastic <- function(inputs, seed) {
+  particle_filter$new(
+    data = inputs$data,
+    model = inputs$model,
+    n_particles = inputs$n_particles,
+    compare = inputs$compare,
+    gpu_config = inputs$gpu_config,
+    index = inputs$index,
+    initial = inputs$initial,
+    constant_log_likelihood = inputs$constant_log_likelihood,
+    n_threads = inputs$n_threads,
+    n_parameters = inputs$n_parameters,
+    seed = seed %||% inputs$seed,
+    stochastic_schedule = inputs$stochastic_schedule,
+    ode_control = inputs$ode_control)
 }
 
 
@@ -589,8 +581,7 @@ scale_log_weights <- function(log_weights) {
 
 is_dust_generator <- function(x) {
   inherits(x, "R6ClassGenerator") &&
-    (identical(attr(x, which = "name", exact = TRUE), "dust_generator") ||
-      identical(attr(x, which = "name", exact = TRUE), "mode_generator"))
+    identical(attr(x, which = "name", exact = TRUE), "dust_generator")
 }
 
 
@@ -602,7 +593,7 @@ check_save_restart <- function(save_restart, data) {
   assert_strictly_increasing(save_restart)
   assert_is(data, "particle_filter_data")
 
-  time_end <- attr(data, "times")[, 2]
+  time_end <- attr(data, "model_times")[, 2]
   i <- match(save_restart, time_end)
   if (anyNA(i)) {
     stop(sprintf("'save_restart' contains times not in '%s': %s",
@@ -610,7 +601,7 @@ check_save_restart <- function(save_restart, data) {
                  paste(save_restart[is.na(i)], collapse = ", ")))
   }
 
-  data$step_end[i]
+  data$time_end[i]
 }
 
 
@@ -773,7 +764,7 @@ filter_run_multistage <- function(self, private, pars,
       obj <- obj$fork_multistage(
         models[[i]], stages[[i]]$pars, stages[[i]]$transform_state)
     }
-    obj$step(stages[[i]]$step_index)
+    obj$step(stages[[i]]$time_index)
     models[[i]] <- obj$model
     history[i] <- list(obj$history)
     restart[i] <- list(obj$restart_state)
@@ -928,4 +919,27 @@ check_n_parameters <- function(n_parameters, data) {
        has_multiple_data = has_multiple_data,
        n_parameters = n_parameters,
        n_data = n_data)
+}
+
+
+check_time_type <- function(model, data, stochastic_schedule, ode_control) {
+  data_is_continuous <- inherits(data, "particle_filter_data_continuous")
+  model_is_continuous <- model$public_methods$time_type() == "continuous"
+  if (model_is_continuous != data_is_continuous) {
+    stop(sprintf("'model' is %s but 'data' is of type '%s'",
+                 model$public_methods$time_type(), class(data)[2]))
+  }
+
+  if (!model_is_continuous) {
+    if (!is.null(stochastic_schedule)) {
+      stop(paste("'stochastic_schedule' provided but 'model' does not",
+                 "support this"))
+    }
+    if (!is.null(ode_control)) {
+      stop(paste("'ode_control' provided but 'model' does not",
+                 "support this"))
+    }
+  } else {
+    assert_is_or_null(ode_control, "dust_ode_control")
+  }
 }

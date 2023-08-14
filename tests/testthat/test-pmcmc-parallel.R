@@ -208,3 +208,28 @@ test_that("Can use workers on non-package models", {
   ## failed to load the model.
   expect_s3_class(ans, "mcstate_pmcmc")
 })
+
+
+test_that("can run pmcmc for non-package ode models", {
+  dat <- example_continuous()
+  n_steps <- 5
+  n_particles <- 20
+
+  control1 <- pmcmc_control(n_steps, n_chains = 2,
+                            n_workers = 1, n_threads_total = 1,
+                            progress = FALSE, use_parallel_seed = TRUE)
+  control2 <- pmcmc_control(n_steps, n_chains = 2,
+                            n_workers = 2, n_threads_total = 2,
+                            progress = FALSE, use_parallel_seed = TRUE)
+  filter1 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                                 index = dat$index, seed = 1L)
+  filter2 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                                 index = dat$index, seed = 1L)
+  set.seed(1)
+  ans1 <- pmcmc(dat$pars, filter1, control = control1)
+
+  set.seed(2)
+  ans2 <- pmcmc(dat$pars, filter2, control = control2)
+
+  expect_identical(ans1$pars, ans2$pars)
+})

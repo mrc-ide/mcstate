@@ -267,6 +267,22 @@ test_that("Can reference by name in compare", {
 })
 
 
+test_that("can return inputs, and these are the full interface", {
+  dat <- example_sir()
+  p <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
+  inputs <- p$inputs()
+  expect_setequal(names(inputs), names(formals(p$initialize)))
+
+  ## Can't use mockery to spy on the calls, so check that all args are
+  ## used statically instead; and this trick does not work with the
+  ## way that covr works!
+  testthat::skip_on_covr()
+  exprs <- body(particle_filter_from_inputs_deterministic)
+  args <- names(as.list(exprs[[2]][-1]))
+  expect_setequal(args, names(inputs))
+})
+
+
 test_that("reconstruct deterministic filter from inputs", {
   dat <- example_sir()
   p1 <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
@@ -310,7 +326,7 @@ test_that("Cannot use previous initial condition approach", {
   dat <- example_sir()
   p <- particle_deterministic$new(dat$data, dat$model, dat$compare,
                                   index = dat$index, initial = initial)
-  expect_error(p$run(), "Setting 'step' from initial no longer supported")
+  expect_error(p$run(), "Setting 'time' from initial no longer supported")
 })
 
 
@@ -440,4 +456,14 @@ test_that("Can run an adaptive proposal, increasing acceptance rate", {
 
   expect_lt(coda::rejectionRate(coda::mcmc(res1$pars))[[1]],
             coda::rejectionRate(coda::mcmc(res2$pars))[[1]])
+})
+
+
+test_that("Can run the deterministic filter on ODE model", {
+  dat <- example_continuous()
+
+  p <- particle_deterministic$new(dat$data, dat$model, dat$compare, dat$index)
+  set.seed(1)
+  ll <- p$run(dat$pars$model(dat$pars$initial()))
+  expect_equal(ll, -62466.04)
 })

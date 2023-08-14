@@ -63,7 +63,9 @@ Create the particle filter
   initial = NULL,
   constant_log_likelihood = NULL,
   n_threads = 1L,
-  n_parameters = NULL
+  n_parameters = NULL,
+  stochastic_schedule = NULL,
+  ode_control = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -72,8 +74,8 @@ Create the particle filter
 \describe{
 \item{\code{data}}{The data set to be used for the particle filter,
 created by \code{\link[=particle_filter_data]{particle_filter_data()}}. This is essentially
-a \code{\link[=data.frame]{data.frame()}} with at least columns \code{step_start}
-and \code{step_end}, along with any additional data used in the
+a \code{\link[=data.frame]{data.frame()}} with at least columns \code{time_start}
+and \code{time_end}, along with any additional data used in the
 \code{compare} function, and additional information about how your
 steps relate to time.}
 
@@ -112,14 +114,15 @@ filter is using) and \code{pars} (parameters passed in in the
 must return a list, which can have the elements \code{state}
 (initial model state, passed to the particle filter - either a
 vector or a matrix, and overriding the initial conditions
-provided by your model) and \code{step} (the initial step,
-overriding the first step of your data - this must occur within
+provided by your model) and \code{time} (the initial time,
+overriding the first time step of your data - this must occur within
 your first epoch in your \code{data} provided to the
 constructor, i.e., not less than the first element of
-\code{step_start} and not more than \code{step_end}). Your function
+\code{time_start} and not more than \code{time_end}). Your function
 can also return a vector or matrix of \code{state} and not alter
-the starting step, which is equivalent to returning
-\code{list(state = state, step = NULL)}.}
+the starting time, which is equivalent to returning
+\code{list(state = state, time = NULL)}.
+(TODO: this no longer is allowed, and the docs might be out of date?)}
 
 \item{\code{constant_log_likelihood}}{An optional function, taking the
 model parameters, that computes the constant part of the
@@ -141,6 +144,14 @@ particle for now.}
 with \code{data}, controls the interpretation of how the deterministic
 particle, and importantly will add an additional dimension to
 most outputs (scalars become vectors, vectors become matrices etc).}
+
+\item{\code{stochastic_schedule}}{Vector of times to perform stochastic
+updates, for continuous time models. Note that despite the name,
+these will be applied deterministically (i.e., replacing the
+stochastic draw with its expectation).}
+
+\item{\code{ode_control}}{Tuning control for the ODE stepper, for
+continuous time (ODE) models}
 }
 \if{html}{\out{</div>}}
 }

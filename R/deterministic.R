@@ -12,9 +12,11 @@ particle_deterministic <- R6::R6Class(
   private = list(
     data = NULL,
     data_split = NULL,
-    steps = NULL,
-    n_steps = NULL,
+    times = NULL,
+    n_times = NULL,
     n_threads = NULL,
+    ode_control = NULL,
+    stochastic_schedule = NULL,
     initial = NULL,
     index = NULL,
     compare = NULL,
@@ -59,8 +61,8 @@ particle_deterministic <- R6::R6Class(
     ##'
     ##' @param data The data set to be used for the particle filter,
     ##' created by [particle_filter_data()]. This is essentially
-    ##' a [data.frame()] with at least columns `step_start`
-    ##' and `step_end`, along with any additional data used in the
+    ##' a [data.frame()] with at least columns `time_start`
+    ##' and `time_end`, along with any additional data used in the
     ##' `compare` function, and additional information about how your
     ##' steps relate to time.
     ##'
@@ -99,14 +101,15 @@ particle_deterministic <- R6::R6Class(
     ##' must return a list, which can have the elements `state`
     ##' (initial model state, passed to the particle filter - either a
     ##' vector or a matrix, and overriding the initial conditions
-    ##' provided by your model) and `step` (the initial step,
-    ##' overriding the first step of your data - this must occur within
+    ##' provided by your model) and `time` (the initial time,
+    ##' overriding the first time step of your data - this must occur within
     ##' your first epoch in your `data` provided to the
     ##' constructor, i.e., not less than the first element of
-    ##' `step_start` and not more than `step_end`). Your function
+    ##' `time_start` and not more than `time_end`). Your function
     ##' can also return a vector or matrix of `state` and not alter
-    ##' the starting step, which is equivalent to returning
-    ##' `list(state = state, step = NULL)`.
+    ##' the starting time, which is equivalent to returning
+    ##' `list(state = state, time = NULL)`.
+    ##' (TODO: this no longer is allowed, and the docs might be out of date?)
     ##'
     ##' @param constant_log_likelihood An optional function, taking the
     ##' model parameters, that computes the constant part of the
@@ -128,10 +131,19 @@ particle_deterministic <- R6::R6Class(
     ##'   with `data`, controls the interpretation of how the deterministic
     ##'   particle, and importantly will add an additional dimension to
     ##'   most outputs (scalars become vectors, vectors become matrices etc).
+    ##'
+    ##' @param stochastic_schedule Vector of times to perform stochastic
+    ##'   updates, for continuous time models. Note that despite the name,
+    ##'   these will be applied deterministically (i.e., replacing the
+    ##'   stochastic draw with its expectation).
+    ##'
+    ##' @param ode_control Tuning control for the ODE stepper, for
+    ##'   continuous time (ODE) models
     initialize = function(data, model, compare,
                           index = NULL, initial = NULL,
                           constant_log_likelihood = NULL, n_threads = 1L,
-                          n_parameters = NULL) {
+                          n_parameters = NULL, stochastic_schedule = NULL,
+                          ode_control = NULL) {
       if (!is_dust_generator(model)) {
         stop("'model' must be a dust_generator")
       }
@@ -151,7 +163,11 @@ particle_deterministic <- R6::R6Class(
       copy_list_and_lock(check_n_parameters(n_parameters, data),
                          self)
 
-      private$steps <- attr(data, "steps")
+      check_time_type(model, data, stochastic_schedule, ode_control)
+      private$stochastic_schedule <- stochastic_schedule
+      private$ode_control <- ode_control
+
+      private$times <- attr(data, "times")
       private$data_split <- particle_filter_data_split(data, is.null(compare))
 
       private$compare <- compare
@@ -224,10 +240,11 @@ particle_deterministic <- R6::R6Class(
       }
       particle_deterministic_state$new(
         pars, self$model, private$last_model[[1]], private$data,
-        private$data_split, private$steps, self$has_multiple_parameters,
+        private$data_split, private$times, self$has_multiple_parameters,
         private$n_threads, private$initial, private$index, private$compare,
         private$constant_log_likelihood,
-        save_history, save_restart)
+        save_history, save_restart,
+        private$stochastic_schedule, private$ode_control)
     },
 
     ##' @description Extract the current model state, optionally filtering.
@@ -312,6 +329,11 @@ particle_deterministic <- R6::R6Class(
     ##' filter. These correspond directly to the argument names for the
     ##' constructor and are the same as the input arguments.
     inputs = function() {
+      if (self$has_multiple_parameters) {
+        n_parameters <- self$n_parameters
+      } else {
+        n_parameters <- NULL
+      }
       list(data = private$data,
            model = self$model,
            index = private$index,
@@ -319,7 +341,9 @@ particle_deterministic <- R6::R6Class(
            compare = private$compare,
            constant_log_likelihood = private$constant_log_likelihood,
            n_threads = private$n_threads,
-           seed = filter_current_seed(last(private$last_model), NULL))
+           n_parameters = n_parameters,
+           stochastic_schedule = private$stochastic_schedule,
+           ode_control = private$ode_control)
     },
 
     ##' @description
