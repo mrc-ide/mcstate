@@ -359,7 +359,7 @@ pmcmc_state <- R6::R6Class(
             time, predict$rate, trajectories_state, predicted = FALSE)
         }
       }
-      
+
       if (!is.null(private$adaptive)) {
         adaptive <- list(autocorrelation = private$adaptive$autocorrelation,
                          mean = private$adaptive$mean,

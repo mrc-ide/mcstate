@@ -137,7 +137,7 @@ pmcmc_combine <- function(..., samples = list(...)) {
   } else {
     restart <- combine_state(restart)
   }
-  
+
   if (is.null(adaptive[[1]])) {
     adaptive <- NULL
   } else {
@@ -205,14 +205,14 @@ combine_state <- function(x) {
 combine_adaptive <- function(x) {
   mean <- array_from_list(lapply(x, "[[", "mean"))
   rownames(mean) <- names(x[[1]]$mean)
-  
+
   autocorrelation <- array_from_list(lapply(x, "[[", "autocorrelation"))
   rownames(autocorrelation) <- colnames(autocorrelation) <-
     rownames(x[[1]]$autocorrelation)
-  
+
   scaling <- unlist(lapply(x, "[[", "scaling"))
   weight <- unlist(lapply(x, "[[", "weight"))
-  
+
   list(autocorrelation = autocorrelation,
        mean = mean,
        scaling = scaling,
