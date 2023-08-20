@@ -381,11 +381,20 @@ pmcmc_state <- R6::R6Class(
         }
       }
 
+      if (!is.null(private$adaptive)) {
+        adaptive <- list(autocorrelation = private$adaptive$autocorrelation,
+                         mean = private$adaptive$mean,
+                         scaling = private$adaptive$scaling,
+                         weight = private$adaptive$weight)
+      } else {
+        adaptive <- NULL
+      }
+
       iteration <- seq(private$control$n_burnin + 1,
                        by = private$control$n_steps_every,
                        length.out = private$control$n_steps_retain)
       mcstate_pmcmc(iteration, pars, probabilities, state,
-                    trajectories, restart, predict)
+                    trajectories, restart, predict, adaptive)
     }
   ))
 

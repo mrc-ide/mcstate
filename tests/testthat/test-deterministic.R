@@ -456,6 +456,12 @@ test_that("Can run an adaptive proposal, increasing acceptance rate", {
 
   expect_lt(coda::rejectionRate(coda::mcmc(res1$pars))[[1]],
             coda::rejectionRate(coda::mcmc(res2$pars))[[1]])
+
+  expect_setequal(names(res1$adaptive),
+                  c("autocorrelation", "mean", "scaling", "weight"))
+  expect_equal(dim(res1$adaptive$autocorrelation), c(2, 2))
+  expect_equal(length(res1$adaptive$mean), 2)
+  expect_null(res2$adaptive)
 })
 
 
