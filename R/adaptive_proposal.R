@@ -198,8 +198,19 @@ adaptive_proposal_nested <- R6::R6Class(
       self$weight[[type]] <- self$weight[[type]] + 1
       self$scaling[[type]] <- update_scaling(
         self$scaling[[type]], self$control, accept)
-      self$autocorrelation[[type]] <- update_autocorrelation(
-        theta_type, self$weight[[type]], self$autocorrelation[[type]])
+      if (type == "fixed") {
+        self$autocorrelation[[type]] <- update_autocorrelation(
+          theta_type, self$weight[[type]], self$autocorrelation[[type]])
+        self$mean[[type]] <- update_mean(
+          theta_type, self$weight[[type]], self$mean[[type]])
+      } else if (type == "varied") {
+        self$autocorrelation[[type]][] <- Map(
+          update_autocorrelation, theta_type, self$weight[[type]],
+          self$autocorrelation[[type]])
+        self$mean[[type]][] <- Map(
+          update_mean, theta_type, self$weight[[type]], self$mean[[type]])
+      }
+      
 
       ## This is where we're at now - there's an issue here with how
       ## we want to do the update - we can do it neatly enough with a
@@ -207,11 +218,6 @@ adaptive_proposal_nested <- R6::R6Class(
       ## which is ugly. Alternatively we might be able to nicely store
       ## things as vectors and matrices and recycle more natively but
       ## that affects the vcv step a little.
-      self$mean[[type]][] <- Map(
-        update_mean, theta_type, self$weight[[type]], self$mean[[type]])
-
-      self$mean[[type]] <- update_mean(
-        theta_type, self$weight[[type]], self$mean[[type]])
     }
   ))
 
