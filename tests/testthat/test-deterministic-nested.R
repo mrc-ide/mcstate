@@ -89,15 +89,31 @@ test_that("Can run an mcmc on a nested model", {
 })
 
 
-test_that("Can't use adaptive proposal with nested models", {
+test_that("Can run a nested adaptive proposal, increasing acceptance rate", {
   dat <- example_sir_shared()
 
   p <- particle_deterministic$new(dat$data, dat$model, dat$compare,
                                   dat$index)
-  control <- pmcmc_control(30, adaptive_proposal = TRUE)
-  pmcmc(dat$pars, p, control = control)
-
-  expect_error(
-    pmcmc(dat$pars, p, control = control),
-    "Can't yet use adaptive proposal with nested mcmc")
+  control1 <- pmcmc_control(100, save_trajectories = TRUE,
+                            adaptive_proposal = adaptive_proposal_control(
+                              acceptance_target = 0.5))
+  control2 <- pmcmc_control(100, save_trajectories = TRUE)
+  
+  res1 <- pmcmc(dat$pars, p, NULL, control1)
+  res2 <- pmcmc(dat$pars, p, NULL, control2)
+  
+  expect_lt(coda::rejectionRate(coda::mcmc(res1$pars[, , "a"]))[[1]],
+            coda::rejectionRate(coda::mcmc(res2$pars[, , "a"]))[[1]])
+  expect_lt(coda::rejectionRate(coda::mcmc(res1$pars[, , "a"]))[[2]],
+            coda::rejectionRate(coda::mcmc(res2$pars[, , "a"]))[[2]])
+  expect_lt(coda::rejectionRate(coda::mcmc(res1$pars[, , "b"]))[[2]],
+            coda::rejectionRate(coda::mcmc(res2$pars[, , "b"]))[[2]])
+  
+  expect_setequal(names(res1$adaptive),
+                  c("autocorrelation", "mean", "scaling", "weight"))
+  expect_setequal(names(res1$adaptive$autocorrelation), c("fixed", "varied"))
+  expect_setequal(names(res1$adaptive$mean), c("fixed", "varied"))
+  expect_setequal(names(res1$adaptive$scaling), c("fixed", "varied"))
+  expect_setequal(names(res1$adaptive$weight), c("fixed", "varied"))
+  expect_null(res2$adaptive)
 })

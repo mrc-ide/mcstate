@@ -177,7 +177,7 @@ adaptive_proposal_nested <- R6::R6Class(
         }
         self$pars$propose(theta, type, vcv = vcv)
       } else {
-        self$pars$propose(theta)
+        self$pars$propose(theta, type)
       }
     },
 
