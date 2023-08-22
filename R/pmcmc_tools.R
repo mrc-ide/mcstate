@@ -264,7 +264,7 @@ combine_adaptive <- function(x, nested) {
                    varied = weight_varied)
     
   } else {
-    autocorrelation <- combine_autocorrelation(autocorrelation)
+    autocorrelation <- combine_autocorr(autocorrelation)
     mean <- combine_mean(mean)
     scaling <- unlist(scaling)
     weight <- unlist(weight)
