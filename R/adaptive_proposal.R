@@ -205,7 +205,8 @@ adaptive_proposal_nested <- R6::R6Class(
           update_autocorrelation, theta_type, self$weight[[type]],
           self$autocorrelation[[type]], self$proposal_was_adaptive)
         self$mean[[type]][] <- Map(
-          update_mean, theta_type, self$weight[[type]], self$mean[[type]])
+          update_mean, theta_type, self$weight[[type]], self$mean[[type]],
+          self$proposal_was_adaptive)
         self$weight[[type]][self$proposal_was_adaptive] <-
           self$weight[[type]][self$proposal_was_adaptive] + 1
         self$scaling[[type]] <- update_scaling(
