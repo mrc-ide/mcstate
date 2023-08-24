@@ -92,13 +92,9 @@ adaptive_proposal <- R6::R6Class(
     propose = function(theta) {
       self$proposal_was_adaptive <-
         runif(1) < self$control$adaptive_contribution
-      if (self$proposal_was_adaptive) {
-        vcv <- adaptive_vcv(self$scaling, self$autocorrelation, self$weight,
-                            self$mean, self$proposal_was_adaptive)
-        self$pars$propose(theta, vcv = vcv)
-      } else {
-        self$pars$propose(theta)
-      }
+      vcv <- adaptive_vcv(self$scaling, self$autocorrelation, self$weight,
+                          self$mean, self$proposal_was_adaptive)
+      self$pars$propose(theta, vcv = vcv)
     },
 
     update = function(theta, accept) {
@@ -229,7 +225,7 @@ adaptive_proposal_nested <- R6::R6Class(
 
 
 
-qp <- function(x) {-
+qp <- function(x) {
   outer(x, x)
 }
 
