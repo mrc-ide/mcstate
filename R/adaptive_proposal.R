@@ -92,9 +92,13 @@ adaptive_proposal <- R6::R6Class(
     propose = function(theta) {
       self$proposal_was_adaptive <-
         runif(1) < self$control$adaptive_contribution
-      vcv <- adaptive_vcv(self$scaling, self$autocorrelation, self$weight,
-                          self$mean, self$proposal_was_adaptive)
-      self$pars$propose(theta, vcv = vcv)
+      if (self$proposal_was_adaptive) {
+        vcv <- adaptive_vcv(self$scaling, self$autocorrelation, self$weight,
+                            self$mean, self$proposal_was_adaptive)
+        self$pars$propose(theta, vcv = vcv)
+      } else {
+        self$pars$propose(theta)
+      }
     },
 
     update = function(theta, accept) {
