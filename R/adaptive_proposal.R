@@ -236,7 +236,7 @@ initial_autocorrelation <- function(vcv, weight, mean) {
 
 
 adaptive_vcv <- function(scaling, autocorrelation, weight, mean,
-                         proposal_was_adaptive) {
+                         proposal_was_adaptive = TRUE) {
   if (proposal_was_adaptive) {
     vcv <- scaling * (autocorrelation - weight / (weight - 1) * qp(mean))
   } else {
