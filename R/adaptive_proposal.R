@@ -92,13 +92,10 @@ adaptive_proposal <- R6::R6Class(
     propose = function(theta) {
       self$proposal_was_adaptive <-
         runif(1) < self$control$adaptive_contribution
-      if (self$proposal_was_adaptive) {
-        vcv <- adaptive_vcv(self$scaling, self$autocorrelation, self$weight,
-                            self$mean)
-        self$pars$propose(theta, vcv = vcv)
-      } else {
-        self$pars$propose(theta)
-      }
+      vcv <- adaptive_vcv(self$scaling, self$autocorrelation, self$weight,
+                          self$mean, self$pars$vcv(),
+                          self$proposal_was_adaptive)
+      self$pars$propose(theta, vcv = vcv)
     },
 
     update = function(theta, accept) {
@@ -161,28 +158,32 @@ adaptive_proposal_nested <- R6::R6Class(
     },
 
     propose = function(theta, type) {
-      self$proposal_was_adaptive <-
-        runif(1) < self$control$adaptive_contribution
-      if (self$proposal_was_adaptive) {
-        if (type == "fixed") {
-          vcv <- adaptive_vcv(self$scaling[[type]],
-                              self$autocorrelation[[type]],
-                              self$weight[[type]],
-                              self$mean[[type]])
-        } else if (type == "varied") {
-          vcv <- Map(adaptive_vcv, self$scaling[[type]],
-                     self$autocorrelation[[type]],
-                     self$weight[[type]],
-                     self$mean[[type]])
-        }
-        self$pars$propose(theta, type, vcv = vcv)
-      } else {
-        self$pars$propose(theta, type)
+      if (type == "fixed") {
+        self$proposal_was_adaptive <-
+          runif(1) < self$control$adaptive_contribution
+        vcv <- adaptive_vcv(self$scaling[[type]],
+                            self$autocorrelation[[type]],
+                            self$weight[[type]],
+                            self$mean[[type]],
+                            self$pars$vcv(type),
+                            self$proposal_was_adaptive
+                            )
+      } else if (type == "varied") {
+        n_populations <- length(self$pars$populations())
+        self$proposal_was_adaptive <-
+          runif(n_populations) < self$control$adaptive_contribution
+        vcv <- Map(adaptive_vcv, self$scaling[[type]],
+                   self$autocorrelation[[type]],
+                   self$weight[[type]],
+                   self$mean[[type]],
+                   self$pars$vcv(type),
+                   self$proposal_was_adaptive)
       }
+      self$pars$propose(theta, type, vcv = vcv)
     },
 
     update = function(theta, type, accept) {
-      if (!self$proposal_was_adaptive) {
+      if (all(!self$proposal_was_adaptive)) {
         return(invisible())
       }
 
@@ -195,20 +196,25 @@ adaptive_proposal_nested <- R6::R6Class(
       }
 
       ## Probably we can save this more simply? - minor change on creation
-      self$weight[[type]] <- self$weight[[type]] + 1
-      self$scaling[[type]] <- update_scaling(
-        self$scaling[[type]], self$control, accept)
       if (type == "fixed") {
         self$autocorrelation[[type]] <- update_autocorrelation(
           theta_type, self$weight[[type]], self$autocorrelation[[type]])
         self$mean[[type]] <- update_mean(
           theta_type, self$weight[[type]], self$mean[[type]])
+        self$weight[[type]] <- self$weight[[type]] + 1
+        self$scaling[[type]] <- update_scaling(
+          self$scaling[[type]], self$control, accept)
       } else if (type == "varied") {
         self$autocorrelation[[type]][] <- Map(
           update_autocorrelation, theta_type, self$weight[[type]],
-          self$autocorrelation[[type]])
+          self$autocorrelation[[type]], self$proposal_was_adaptive)
         self$mean[[type]][] <- Map(
           update_mean, theta_type, self$weight[[type]], self$mean[[type]])
+        self$weight[[type]][self$proposal_was_adaptive] <-
+          self$weight[[type]][self$proposal_was_adaptive] + 1
+        self$scaling[[type]] <- update_scaling(
+          self$scaling[[type]], self$control, accept,
+          self$proposal_was_adaptive)
       }
       
 
@@ -223,7 +229,7 @@ adaptive_proposal_nested <- R6::R6Class(
 
 
 
-qp <- function(x) {
+qp <- function(x) {-
   outer(x, x)
 }
 
@@ -233,35 +239,52 @@ initial_autocorrelation <- function(vcv, weight, mean) {
 }
 
 
-adaptive_vcv <- function(scaling, autocorrelation, weight, mean) {
-  scaling * (autocorrelation - weight / (weight - 1) * qp(mean))
+adaptive_vcv <- function(scaling, autocorrelation, weight, mean,
+                         default_vcv, proposal_was_adaptive) {
+  if (proposal_was_adaptive) {
+    vcv <- scaling * (autocorrelation - weight / (weight - 1) * qp(mean))
+  } else {
+    vcv <- default_vcv
+  }
+  vcv
 }
 
 
 
-update_scaling <- function(scaling, control, accept) {
+update_scaling <- function(scaling, control, accept,
+                           proposal_was_adaptive = TRUE) {
   reject <- !accept
   acceptance_target <- control$acceptance_target
   scaling_increment <- control$scaling_increment
 
-  if (any(accept)) {
-    scaling[accept] <-
-      scaling[accept] + (1 - acceptance_target) * scaling_increment
+  if (any(proposal_was_adaptive & accept)) {
+    scaling[proposal_was_adaptive & accept] <-
+      scaling[proposal_was_adaptive & accept] +
+      (1 - acceptance_target) * scaling_increment
   }
-  if (any(reject)) {
-    scaling[reject] <-
-      pmax(scaling[reject] - acceptance_target * scaling_increment,
+  if (any(proposal_was_adaptive & reject)) {
+    scaling[proposal_was_adaptive & reject] <-
+      pmax(scaling[proposal_was_adaptive & reject] -
+           acceptance_target * scaling_increment,
            scaling_increment)
   }
   scaling
 }
 
 
-update_autocorrelation <- function(theta, weight, autocorrelation) {
-  (1 - 1 / (weight - 1)) * autocorrelation + 1 / (weight - 1) * qp(theta)
+update_autocorrelation <- function(theta, weight, autocorrelation,
+                                   proposal_was_adaptive = TRUE) {
+  if (proposal_was_adaptive) {
+    autocorrelation <-
+      (1 - 1 / (weight - 1)) * autocorrelation + 1 / (weight - 1) * qp(theta)
+  }
+  autocorrelation
 }
 
 
-update_mean <- function(theta, weight, mean) {
-  (1 - 1 / weight) * mean + 1 / weight * theta
+update_mean <- function(theta, weight, mean, proposal_was_adaptive = TRUE) {
+  if (proposal_was_adaptive) {
+    mean <- (1 - 1 / weight) * mean + 1 / weight * theta
+  }
+  mean
 }
