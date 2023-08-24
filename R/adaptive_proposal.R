@@ -93,8 +93,7 @@ adaptive_proposal <- R6::R6Class(
       self$proposal_was_adaptive <-
         runif(1) < self$control$adaptive_contribution
       vcv <- adaptive_vcv(self$scaling, self$autocorrelation, self$weight,
-                          self$mean, self$pars$vcv(),
-                          self$proposal_was_adaptive)
+                          self$mean, self$proposal_was_adaptive)
       self$pars$propose(theta, vcv = vcv)
     },
 
@@ -165,9 +164,7 @@ adaptive_proposal_nested <- R6::R6Class(
                             self$autocorrelation[[type]],
                             self$weight[[type]],
                             self$mean[[type]],
-                            self$pars$vcv(type),
-                            self$proposal_was_adaptive
-                            )
+                            self$proposal_was_adaptive)
       } else if (type == "varied") {
         n_populations <- length(self$pars$populations())
         self$proposal_was_adaptive <-
@@ -176,7 +173,6 @@ adaptive_proposal_nested <- R6::R6Class(
                    self$autocorrelation[[type]],
                    self$weight[[type]],
                    self$mean[[type]],
-                   self$pars$vcv(type),
                    self$proposal_was_adaptive)
       }
       self$pars$propose(theta, type, vcv = vcv)
@@ -240,11 +236,11 @@ initial_autocorrelation <- function(vcv, weight, mean) {
 
 
 adaptive_vcv <- function(scaling, autocorrelation, weight, mean,
-                         default_vcv, proposal_was_adaptive) {
+                         proposal_was_adaptive) {
   if (proposal_was_adaptive) {
     vcv <- scaling * (autocorrelation - weight / (weight - 1) * qp(mean))
   } else {
-    vcv <- default_vcv
+    vcv <- NULL
   }
   vcv
 }
