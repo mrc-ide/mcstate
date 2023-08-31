@@ -9,21 +9,21 @@
 
 ## Installation
 
-Install from drat with
+Please install from our [r-universe](https://mrc-ide.r-universe.dev/):
 
 ```
-# install.packages("drat") # -- if you don't have drat installed
-drat:::add("ncov-ic")
-install.packages("mcstate")
+install.packages(
+  "mcstate",
+  repos = c("https://mrc-ide.r-universe.dev", "https://cloud.r-project.org"))
 ```
 
-You will need a compiler to install dependencies for the package, and to build any models.  Use `pkgbuild::check_build_tools()` to see if your system is ok to use.
+If you prefer, you can install from GitHub with remotes:
 
-The development version of the package can be installed directly from GitHub if you prefer with:
-
-```r
-remotes::install_github("mrc-ide/mcstate", upgrade = FALSE)
 ```
+remotes::install_github("mrc-ide/mcstate")
+```
+
+You will need recent versions of the `dust`, `odin`, and `odin.dust` packages to use this package, which can be installed in the same way.
 
 ## License
 
