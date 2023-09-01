@@ -18,7 +18,7 @@ lang_output <- function(x, lang) {
 }
 r_output <- function(x) lang_output(x, "r")
 in_pkgdown <- identical(Sys.getenv("IN_PKGDOWN"), "true")
-devtools::load_all()
+
 ```
 
 While mcstate is primarily designed to work with discrete-time stochastic models written in odin.dust, it is often possible to interact continuous-time deterministic models written in odin (subject to a few restrictions detailed in the [Porting from odin vignette](https://mrc-ide.github.io/odin.dust/articles/porting.html)).
