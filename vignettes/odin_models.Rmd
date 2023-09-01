@@ -65,15 +65,16 @@ data <- read.csv(system.file("sir_prevalence.csv", package = "mcstate"))
 par(bty = "n", mar = c(3, 3, 1, 1), mgp = c(1.5, 0.5, 0))
 test_cols <- c(Tested = "darkorange2", Positive = "green4")
 plot(data$day, data$n_tested, type = "l",
-     xlab = "Day", ylab = "Number of individuals", ylim = c(0, max(data$n_tested)),
-      col = test_cols[1])
+     xlab = "Day", ylab = "Number of individuals",
+     ylim = c(0, max(data$n_tested)), col = test_cols[1])
 lines(data$day, data$n_positive, type = "l", col = test_cols[2])
 legend("left", names(test_cols), fill = test_cols, bty = "n")
 ```
 We first need to process the data into the `mcstate` format. As the `rate` parameter is not meaningful in the context of a continuous time model, we supply a `NULL` value.
 
 ```{r}
-sir_data <- mcstate::particle_filter_data(data = data, time = "day", initial_time = 0, rate = NULL)
+sir_data <- mcstate::particle_filter_data(data = data, time = "day",
+                                          initial_time = 0, rate = NULL)
 
 rmarkdown::paged_table(sir_data)
 ```
@@ -91,7 +92,7 @@ Next, we define the comparison function to calculate the likelihood of the simul
 
 ```{r}
 compare <- function(state, observed, pars = NULL) {
-  prevalence <- state["I", , drop = TRUE] / state["N", , drop = TRUE] 
+  prevalence <- state["I", , drop = TRUE] / state["N", , drop = TRUE]
   dbinom(x = observed$n_positive, size = observed$n_tested, prob = prevalence,
          log = TRUE)
 }
@@ -129,8 +130,9 @@ We can now perform MCMC using the Metropolis-Hastings algorithm to infer the val
 
 ```{r}
 beta <- mcstate::pmcmc_parameter("beta", 0.2, min = 0)
-gamma <- mcstate::pmcmc_parameter("gamma", 0.1, min = 0, prior = function(p)
-  dgamma(p, shape = 1, scale = 0.2, log = TRUE))
+gamma <- mcstate::pmcmc_parameter("gamma", 0.1, min = 0, prior = function(p) {
+  dgamma(p, shape = 1, scale = 0.2, log = TRUE)
+})
 
 proposal_matrix <- diag(1e-2, 2)
 mcmc_pars <- mcstate::pmcmc_parameters$new(list(beta = beta, gamma = gamma),
@@ -156,12 +158,16 @@ mcmc_sample <- mcstate::pmcmc_sample(mcmc_run, n_sample = 500)
 We can visually check the chains have converged and assess the accuracy of our parameter estimates using a sample from the posterior distribution.
 
 ```{r}
-par(mfrow = c(2, 2), mar = c(3, 3, 1 ,1), mgp = c(1.5, 0.5, 0), bty = "n")
-plot(mcmc_run$pars[, "beta"], type = "l", xlab = "Iteration", ylab = expression(beta))
-plot(mcmc_run$pars[, "gamma"], type = "l", xlab = "Iteration", ylab = expression(gamma))
-hist(mcmc_sample$pars[, "beta"], main = "", xlab = expression(beta), freq = FALSE)
+par(mfrow = c(2, 2), mar = c(3, 3, 1, 1), mgp = c(1.5, 0.5, 0), bty = "n")
+plot(mcmc_run$pars[, "beta"], type = "l", xlab = "Iteration",
+     ylab = expression(beta))
+plot(mcmc_run$pars[, "gamma"], type = "l", xlab = "Iteration",
+     ylab = expression(gamma))
+hist(mcmc_sample$pars[, "beta"], main = "", xlab = expression(beta),
+     freq = FALSE)
 abline(v = 0.3, lty = 2, col = "darkred", lwd = 3)
-hist(mcmc_sample$pars[, "gamma"], main = "", xlab = expression(gamma), freq = FALSE)
+hist(mcmc_sample$pars[, "gamma"], main = "", xlab = expression(gamma),
+     freq = FALSE)
 abline(v = 0.1, lty = 2, col = "darkred", lwd = 3)
 legend("topright", legend = "True value", col = "darkred", lty = 2, bty = "n")
 ```
@@ -173,9 +179,10 @@ We can compare our fitted trajectories to the prevalence data by sampling from t
 state <- mcmc_sample$trajectories$state
 
 prevalence <-  t(state["I", , -1] / state["N", , -1])
-modelled_positives <- apply(prevalence, 2, rbinom, n = nrow(data), size = data$n_tested)
+modelled_positives <- apply(prevalence, 2, rbinom, n = nrow(data),
+                            size = data$n_tested)
 
-par(mfrow = c(1, 2), mar = c(3, 3, 1 ,1), mgp = c(1.5, 0.5, 0), bty = "n")
+par(mfrow = c(1, 2), mar = c(3, 3, 1, 1), mgp = c(1.5, 0.5, 0), bty = "n")
 matplot(times, t(state["S", , ]), type = "l", lty = 1, col = cols["S"],
         ylim = c(0, max(state)), xlab = "Day", ylab = "Number of individuals")
 matlines(times, t(state["R", , ]), lty = 1, col = cols["R"])
@@ -185,6 +192,5 @@ legend("left", lwd = 1, col = cols[-4], legend = names(cols)[-4], bty = "n")
 matplot(data$day, modelled_positives, type = "l", lty = 1, col = grey(0.7, 0.2),
         xlab = "Day", ylab = "Number of positive tests")
 points(data$day, data$n_positive, pch = 20)
-
 ```
 
