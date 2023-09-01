@@ -1,0 +1,109 @@
+---
+title: "Fitting a continuous-time model"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Fitting a continuous-time model}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5)
+lang_output <- function(x, lang) {
+  cat(c(sprintf("```%s", lang), x, "```"), sep = "\n")
+}
+r_output <- function(x) lang_output(x, "r")
+in_pkgdown <- identical(Sys.getenv("IN_PKGDOWN"), "true")
+devtools::load_all()
+```
+
+While mcstate is primarily designed to work with discrete-time, stochastic models written in odin.dust,
+it is often possible to work with continuous-time deterministic models written in odin (subject to a 
+few restrictions mentioned below and detailed in the [Porting from odin vignette](https://mrc-ide.github.io/odin.dust/articles/porting.html)). 
+
+In this vignette we will give an example of this functionality.
+
+Considering a simple SIR model, as defined in the [odin documentation](https://mrc-ide.github.io/odin/articles/discrete.html) is:
+$$\begin{align*}
+\frac{dS}{dt} &= -\beta \frac{SI}{N} \\
+\frac{dI}{dt} &= \beta \frac{SI}{N} - \gamma I \\
+\frac{dR}{dt} &= \gamma I \\
+\end{align*}$$
+$S$ is the number of susceptibles, $I$ is the number of infected and $R$ is the number recovered; the total population size $N = S + I + R$ is constant. $\beta$ is the infection rate, $\gamma$ is the recovery rate.
+
+We can write the equivalent deterministic odin model as follows:
+
+```{r}
+sir_code <- "initial(S) <- N - I_init
+             initial(I) <- I_init
+             initial(R) <- 0
+             
+             deriv(S) <- -beta * S * I / N
+             deriv(I) <- beta * S * I / N - gamma * I
+             deriv(R) <- gamma * I
+             
+             beta <- user(0.4)
+             gamma <- user(0.2)
+             N <- user(1e5)
+             I_init <- user(1)"
+```
+
+
+By compiling this model code with `odin.dust` rather than `odin` we can use the calibration functions in mcstate
+
+```{r}
+gen_sir <- odin.dust::odin_dust(sir_code)
+```
+
+We will attempt to infer parameters $\beta$ and $\gamma$ using daily measures of population prevalence:
+
+```{r}
+data <- read.csv(system.file("sir_prevalence.csv", package = "mcstate"))
+
+par(mfrow = c(3, 1))
+plot(data$day, data$n_tested, type = "l",
+     xlab = "Day", ylab = "Number tested")
+plot(data$day, data$n_positive, type = "l",
+     xlab = "Day", ylab = "Number positive")
+plot(data$day, data$n_positive / data$n_tested * 100, type = "l",
+     xlab = "Day", ylab = "% Positive")
+```
+We first need to process the data into the `mcstate` format, although the `rate` parameter is not meaningful in th econtext of a continuous time model, we supply a value of 1.
+
+```{r}
+sir_data <- mcstate::particle_filter_data(data = data, time = "day", initial_time = 0, rate = 1)
+
+rmarkdown::paged_table(sir_data)
+```
+
+We define a simple index function for our model, to provide meaningful parameter names: 
+
+```{r}
+index <- function(info) {
+  idx <- info$index
+  list(run = idx, state = idx)
+}
+```
+
+Next, we define the comparison function to calculate the likelihood of the simulation given the data, which in our case will be a Binomial distribution.
+
+```{r}
+compare <- function(state, observed, pars = NULL) {
+  prevalence <- state["I", , drop = TRUE] / pars$N
+  dbinom(x = data$n_positive, size = data$n_tested, prob = prevalence, log = TRUE)
+}
+```
+
+Although we are fitting a deterministic model, use `mcstate` functionality we still need to define a particle filter object 
+
+```{r}
+
+filter <- mcstate::particle_deterministic$new(data = sir_data,
+                                       model = gen_sir,
+                                       index = index,
+                                       compare = compare)
+```
