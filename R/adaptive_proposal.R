@@ -193,24 +193,24 @@ adaptive_proposal_nested <- R6::R6Class(
 
       ## Probably we can save this more simply? - minor change on creation
       if (type == "fixed") {
+        self$weight[[type]] <- self$weight[[type]] + 1
+        self$scaling[[type]] <- update_scaling(
+          self$scaling[[type]], self$control, accept)
         self$autocorrelation[[type]] <- update_autocorrelation(
           theta_type, self$weight[[type]], self$autocorrelation[[type]])
         self$mean[[type]] <- update_mean(
           theta_type, self$weight[[type]], self$mean[[type]])
-        self$weight[[type]] <- self$weight[[type]] + 1
-        self$scaling[[type]] <- update_scaling(
-          self$scaling[[type]], self$control, accept)
       } else if (type == "varied") {
+        self$weight[[type]][self$proposal_was_adaptive] <-
+          self$weight[[type]][self$proposal_was_adaptive] + 1
+        self$scaling[[type]] <- update_scaling(
+          self$scaling[[type]], self$control, accept,
+          self$proposal_was_adaptive)
         self$autocorrelation[[type]][] <- Map(
           update_autocorrelation, theta_type, self$weight[[type]],
           self$autocorrelation[[type]], self$proposal_was_adaptive)
         self$mean[[type]][] <- Map(
           update_mean, theta_type, self$weight[[type]], self$mean[[type]],
-          self$proposal_was_adaptive)
-        self$weight[[type]][self$proposal_was_adaptive] <-
-          self$weight[[type]][self$proposal_was_adaptive] + 1
-        self$scaling[[type]] <- update_scaling(
-          self$scaling[[type]], self$control, accept,
           self$proposal_was_adaptive)
       }
       
