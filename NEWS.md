@@ -1,3 +1,7 @@
+# mcstate 0.9.19
+
+* New functions to reshape and summarise pmcmc output into Tidy (long) format
+
 # mcstate 0.9.13
 
 * Particle filters now work with irregular and non-unit spaced time series data
