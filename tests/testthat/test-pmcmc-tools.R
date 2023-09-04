@@ -555,7 +555,8 @@ test_that("can tidy and summarise pmcmc chain", {
                     results_chain$probabilities)
 
   n_pop <- 2
-  results_chain_nested <- pmcmc_combine(samples = example_sir_nested_pmcmc()$results)
+  samples <- example_sir_nested_pmcmc()$results
+  results_chain_nested <- pmcmc_combine(samples = samples)
   tidy_chain_nested <- pmcmc_tidy_chains(results_chain_nested)
   expect_equal(tidy_chain_nested$chain,
                c(rep(results_chain_nested$chain, n_par * n_pop),
