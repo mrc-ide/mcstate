@@ -9,7 +9,8 @@ adaptive_proposal_control(
   scaling_increment = 0.01,
   acceptance_target = 0.234,
   initial_weight = 1000,
-  adaptive_contribution = 0.95
+  adaptive_contribution = 0.95,
+  diminishing_adaptation = TRUE
 )
 }
 \arguments{

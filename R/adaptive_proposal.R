@@ -50,12 +50,14 @@ adaptive_proposal_control <- function(initial_scaling = 0.2,
                                       scaling_increment = 0.01,
                                       acceptance_target = 0.234,
                                       initial_weight = 1000,
-                                      adaptive_contribution = 0.95) {
+                                      adaptive_contribution = 0.95,
+                                      diminishing_adaptation = TRUE) {
   ret <- list(initial_scaling = initial_scaling,
               scaling_increment = scaling_increment,
               acceptance_target = acceptance_target,
               initial_weight = initial_weight,
-              adaptive_contribution = adaptive_contribution)
+              adaptive_contribution = adaptive_contribution,
+              diminishing_adaptation = diminishing_adaptation)
   class(ret) <- "adaptive_proposal_control"
   ret
 }
@@ -102,7 +104,8 @@ adaptive_proposal <- R6::R6Class(
         return(invisible())
       }
       self$weight <- self$weight + 1
-      self$scaling <- update_scaling(self$scaling, self$control, accept)
+      self$scaling <- update_scaling(self$scaling, self$weight,
+                                     self$control, accept)
       self$autocorrelation <- update_autocorrelation(
         theta, self$weight, self$autocorrelation)
       self$mean <- update_mean(theta, self$weight, self$mean)
@@ -195,7 +198,7 @@ adaptive_proposal_nested <- R6::R6Class(
       if (type == "fixed") {
         self$weight[[type]] <- self$weight[[type]] + 1
         self$scaling[[type]] <- update_scaling(
-          self$scaling[[type]], self$control, accept)
+          self$scaling[[type]], self$weight[[type]], self$control, accept)
         self$autocorrelation[[type]] <- update_autocorrelation(
           theta_type, self$weight[[type]], self$autocorrelation[[type]])
         self$mean[[type]] <- update_mean(
@@ -204,7 +207,7 @@ adaptive_proposal_nested <- R6::R6Class(
         self$weight[[type]][self$proposal_was_adaptive] <-
           self$weight[[type]][self$proposal_was_adaptive] + 1
         self$scaling[[type]] <- update_scaling(
-          self$scaling[[type]], self$control, accept,
+          self$scaling[[type]], self$weight[[type]], self$control, accept,
           self$proposal_was_adaptive)
         self$autocorrelation[[type]][] <- Map(
           update_autocorrelation, theta_type, self$weight[[type]],
@@ -239,7 +242,7 @@ initial_autocorrelation <- function(vcv, weight, mean) {
 adaptive_vcv <- function(scaling, autocorrelation, weight, mean,
                          proposal_was_adaptive = TRUE) {
   if (proposal_was_adaptive) {
-    vcv <- scaling ^ 2 * (autocorrelation - weight / (weight - 1) * qp(mean))
+    vcv <- scaling * (autocorrelation - weight / (weight - 1) * qp(mean))
   } else {
     vcv <- NULL
   }
@@ -248,22 +251,29 @@ adaptive_vcv <- function(scaling, autocorrelation, weight, mean,
 
 
 
-update_scaling <- function(scaling, control, accept,
+update_scaling <- function(scaling, weight, control, accept,
                            proposal_was_adaptive = TRUE) {
   reject <- !accept
   acceptance_target <- control$acceptance_target
   scaling_increment <- control$scaling_increment
-
-  if (any(proposal_was_adaptive & accept)) {
-    scaling[proposal_was_adaptive & accept] <-
-      scaling[proposal_was_adaptive & accept] +
-      (1 - acceptance_target) * scaling_increment
+  if (control$diminishing_adaptation) {
+    scale_inc <- scaling_increment / sqrt(weight - control$initial_weight)
+  } else {
+    scale_inc <- scaling_increment
   }
-  if (any(proposal_was_adaptive & reject)) {
-    scaling[proposal_was_adaptive & reject] <-
-      pmax(scaling[proposal_was_adaptive & reject] -
-           acceptance_target * scaling_increment,
-           scaling_increment)
+  
+  accept_update <- proposal_was_adaptive & accept
+  if (any(accept_update)) {
+    scaling[accept_update] <-
+      (sqrt(scaling[accept_update]) +
+         (1 - acceptance_target) * scale_inc[accept_update]) ^ 2
+  }
+  reject_update <- proposal_was_adaptive & reject
+  if (any(reject_update)) {
+    scaling[reject_update] <-
+      pmax(sqrt(scaling[reject_update]) -
+             acceptance_target * scale_inc[reject_update],
+           scaling_increment) ^ 2
   }
   scaling
 }
