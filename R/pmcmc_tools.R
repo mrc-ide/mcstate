@@ -255,9 +255,6 @@ quantile_digest <- function(x, at) {
   ## There's a garbage protection bug (possibly in
   ## Rcpp) that is causing the tdigest object to get get collected. In
   ## this case we fall back on quantile.
-  if (anyNA(x)) {
-    x <- x[!is.na(x)]
-  }
   tryCatch(
     tdigest::tquantile(tdigest::tdigest(x), at),
     error = function(e) quantile(x, at, names = FALSE))
