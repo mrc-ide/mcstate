@@ -259,7 +259,7 @@ update_scaling <- function(scaling, weight, control, accept,
   if (control$diminishing_adaptation) {
     scale_inc <- scaling_increment / sqrt(weight - control$initial_weight)
   } else {
-    scale_inc <- scaling_increment
+    scale_inc <- rep(scaling_increment, length(weight))
   }
   
   accept_update <- proposal_was_adaptive & accept
