@@ -194,3 +194,72 @@ combine_state <- function(x) {
   ret$state <- state
   ret
 }
+
+
+##' Convert sampled trajectories from [pmcmc()] to a Tidy (long) format,
+##' and optionally marginalise over particles to produce summary statistics.
+##' Helper function useful for ggplotters.
+##'
+##' @title Convert sampled trajectories from [pmcmc()] to a Tidy (long) format
+##' @param object Results of running [pmcmc()].
+##'
+##' @param summarise Logical indicating whether the trajectories should be
+##' marginalised over particles to produce summary statistics (mean and
+##' user-defined `quantiles`). Default is `FALSE`.
+##'
+##' @param quantiles Optional vector giving quantiles to output if `summarise`
+##' is TRUE defaults to c(0.025, 0.5, 0.975) corresponding to 2.5-, 50-, and
+##' 97.5-percentiles
+##'
+##' @export
+##' @importFrom stats quantile
+##' @importFrom tdigest tdigest
+
+pmcmc_tidy_trajectories <- function(object, summarise = FALSE,
+                       quantiles = c(0.025, 0.5, 0.975)) {
+
+  assert_is(object, "mcstate_pmcmc")
+  assert_scalar_logical(summarise)
+
+  state <- object$trajectories$state
+
+  # create a named list with an entry for each dimension of `state`
+  # the list entries will be dimnames, where they exist, and numeric otherwise
+  grid <- list(state = rownames(state) %||% seq_len(nrow(state)))
+  if (object$nested) grid$population <- colnames(state)
+  if (summarise) {
+    grid$quantile <- c("mean", paste0("q", quantiles * 100))
+  } else {
+    grid$particle <- seq_len(nrow(object$pars))
+  }
+  grid$time <- object$trajectories$time
+
+  if (summarise) {
+    margin <- which(names(grid) != "quantile")
+    state_summary <- apply(state, margin, function(x) {
+      c(mean(x), quantile_digest(x, quantiles))
+    })
+    rownames(state_summary) <- grid$quantile
+    # quantile moves from 1st to penultimate dimension
+    perm <- if (object$nested) c(2, 3, 1, 4) else c(2, 1, 3)
+    state <- aperm(state_summary, perm)
+  }
+
+  ret <- do.call(expand.grid, grid)
+  ret$value <- c(state)
+  ret
+}
+
+
+quantile_digest <- function(x, at) {
+
+  ## There's a garbage protection bug (possibly in
+  ## Rcpp) that is causing the tdigest object to get get collected. In
+  ## this case we fall back on quantile.
+  if (anyNA(x)) {
+    x <- x[!is.na(x)]
+  }
+  tryCatch(
+    tdigest::tquantile(tdigest::tdigest(x), at),
+    error = function(e) quantile(x, at, names = FALSE))
+}
