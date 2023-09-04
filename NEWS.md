@@ -1,6 +1,6 @@
 # mcstate 0.9.19
 
-* New functions to reshape and summarise pmcmc output into Tidy (long) format
+* New functions to reshape and summarise pmcmc output into tidy (long) format
 
 # mcstate 0.9.13
 

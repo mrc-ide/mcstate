@@ -250,7 +250,6 @@ pmcmc_tidy_trajectories <- function(object, summarise = FALSE,
   ret
 }
 
-
 quantile_digest <- function(x, at) {
 
   ## There's a garbage protection bug (possibly in
@@ -262,4 +261,36 @@ quantile_digest <- function(x, at) {
   tryCatch(
     tdigest::tquantile(tdigest::tdigest(x), at),
     error = function(e) quantile(x, at, names = FALSE))
+}
+
+##' Convert sampled parameters and corresponding likeligoods from [pmcmc()]
+##' to a Tidy (long) format. Helper function useful for ggplotters.
+##'
+##' @title Convert sampled parameters and corresponding likelihoods from
+##' [pmcmc()] to a Tidy (long) format
+##' @param object Results of running [pmcmc()].
+##'
+##' @export
+pmcmc_tidy_chains <- function(object) {
+  assert_is(object, "mcstate_pmcmc")
+
+  pars <- pmcmc_tidy_chain_one(object, type = "pars")
+  probabilities <- pmcmc_tidy_chain_one(object, type = "probabilities")
+  rbind(pars, probabilities)
+}
+
+pmcmc_tidy_chain_one <- function(object, type) {
+  assert_is(object, "mcstate_pmcmc")
+  stopifnot(type %in% c("pars", "probabilities"))
+
+  x <- object[[type]]
+  grid <- list(particle = seq_len(nrow(object$pars)),
+               type = type,
+               name = colnames(x))
+  if (object$nested) grid$population <- dimnames(x)[[3]]
+  ret <- do.call(expand.grid, grid)
+  ret$iteration <- object$iteration[ret$particle]
+  ret$chain <- object$chain[ret$particle] %||% 1
+  ret$value <- c(x)
+  ret
 }

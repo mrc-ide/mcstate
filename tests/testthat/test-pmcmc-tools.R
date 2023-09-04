@@ -515,3 +515,72 @@ test_that("can tidy and summarise pmcmc_output", {
    subset(tidy_summary_nested,
           quantile == "q50" & time == max(time) & population == "a")$value)
 })
+
+test_that("can tidy and summarise pmcmc chain", {
+
+  results <- example_sir_pmcmc()$pmcmc
+  tidy_results <- pmcmc_tidy_chains(results)
+  expect_true(all(tidy_results$chain == 1))
+  expect_equivalent(array(subset(tidy_results, type == "pars")$value,
+                          dim(results$pars)), results$pars)
+  expect_equivalent(array(subset(tidy_results, type == "probabilities")$value,
+                          dim(results$probabilities)), results$probabilities)
+  expect_equal(tidy_results$iteration, tidy_results$particle)
+
+  results_nested <- example_sir_nested_pmcmc()$results[[1]]
+  tidy_results_nested <- pmcmc_tidy_chains(results_nested)
+  expect_true(all(tidy_results_nested$chain == 1))
+  expect_equivalent(array(subset(tidy_results_nested, type == "pars")$value,
+                          dim(results_nested$pars)), results_nested$pars)
+  expect_equivalent(array(subset(tidy_results_nested,
+                                 type == "probabilities")$value,
+                          dim(results_nested$probabilities)),
+                    results_nested$probabilities)
+  expect_equal(tidy_results_nested$iteration, tidy_results_nested$particle)
+
+
+  n_par <- 2
+  n_prob <- 3
+
+  results_chain <- pmcmc_combine(samples = example_sir_pmcmc2()$results)
+  tidy_results_chain <- pmcmc_tidy_chains(results_chain)
+  expect_equal(tidy_results_chain$chain,
+               c(rep(results_chain$chain, n_par),
+                 rep(results_chain$chain, n_prob)))
+  expect_equivalent(array(subset(tidy_results_chain, type == "pars")$value,
+                          dim(results_chain$pars)), results_chain$pars)
+  expect_equivalent(array(subset(tidy_results_chain,
+                                 type == "probabilities")$value,
+                          dim(results_chain$probabilities)),
+                    results_chain$probabilities)
+
+  n_pop <- 2
+  results_chain_nested <- 
+    pmcmc_combine(samples = example_sir_nested_pmcmc()$results)
+  tidy_chain_nested <- pmcmc_tidy_chains(results_chain_nested)
+  expect_equal(tidy_chain_nested$chain,
+               c(rep(results_chain_nested$chain, n_par * n_pop),
+                 rep(results_chain_nested$chain, n_prob * n_pop)))
+  expect_equivalent(array(subset(tidy_chain_nested, type == "pars")$value,
+                          dim(results_chain_nested$pars)),
+                    results_chain_nested$pars)
+  expect_equivalent(array(subset(tidy_chain_nested,
+                                 type == "probabilities")$value,
+                          dim(results_chain_nested$probabilities)),
+                    results_chain_nested$probabilities)
+
+
+  results_sample <- pmcmc_sample(results_chain_nested, 10)
+  tidy_sample <- pmcmc_tidy_chains(results_sample)
+
+  expect_equal(tidy_sample$chain,
+               c(rep(results_sample$chain, n_par * n_pop),
+                 rep(results_sample$chain, n_prob * n_pop)))
+  expect_equivalent(array(subset(tidy_sample, type == "pars")$value,
+                          dim(results_sample$pars)),
+                    results_sample$pars)
+  expect_equivalent(array(subset(tidy_sample,
+                                 type == "probabilities")$value,
+                          dim(results_sample$probabilities)),
+                    results_sample$probabilities)
+})
