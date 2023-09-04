@@ -474,3 +474,44 @@ test_that("can combine chains for nested model", {
   expect_equal(res$restart$state[, , i, , drop = FALSE],
                results2$restart$state)
 })
+
+test_that("can tidy and summarise pmcmc_output", {
+  # ordering is preserved when converting from array to long format
+  results <- example_sir_pmcmc()$pmcmc
+  state <- results$trajectories$state
+  tidy_results <- pmcmc_tidy_trajectories(results)
+  expect_equivalent(array(tidy_results$value, dim(state)), state)
+
+  results_nested <- example_sir_nested_pmcmc()$results[[1]]
+  state_nested <- results_nested$trajectories$state
+  tidy_results_nested <- pmcmc_tidy_trajectories(results_nested)
+  expect_equivalent(array(tidy_results_nested$value, dim(state_nested)),
+                    state_nested)
+
+  # summarise functionality works as expected
+  tidy_summary <- pmcmc_tidy_trajectories(results, TRUE)
+  state_mean <- apply(state, c(1, 3), mean)
+  state_median <- apply(state, c(1, 3), median)
+  expect_equal(sum(subset(tidy_summary, quantile == "mean")$value),
+               sum(state_mean))
+  expect_equal(sum(subset(tidy_summary, quantile == "q50")$value),
+               sum(state_median))
+  expect_equal(state_mean[, ncol(state_mean)],
+    subset(tidy_summary, quantile == "mean" & time == max(time))$value)
+  expect_equal(state_median[, ncol(state_median)],
+    subset(tidy_summary, quantile == "q50" & time == max(time))$value)
+
+  tidy_summary_nested <- pmcmc_tidy_trajectories(results_nested, TRUE)
+  state_mean_nested <- apply(state_nested, c(1, 2, 4), mean)
+  state_median_nested <- apply(state_nested, c(1, 2, 4), median)
+  expect_equal(sum(subset(tidy_summary_nested, quantile == "mean")$value),
+               sum(state_mean_nested))
+  expect_equal(sum(subset(tidy_summary_nested, quantile == "q50")$value),
+               sum(state_median_nested))
+  expect_equal(state_mean_nested[, 1, dim(state_mean_nested)[3]],
+    subset(tidy_summary_nested,
+           quantile == "mean" & time == max(time) & population == "a")$value)
+  expect_equal(state_median_nested[, 1, dim(state_median_nested)[3]],
+   subset(tidy_summary_nested,
+          quantile == "q50" & time == max(time) & population == "a")$value)
+})
