@@ -36,6 +36,14 @@ samples will be slower.}
 adaptive part of the proposal. The proposal is based on a
 mixture model, with the non adaptive part used for the proposal
 with a probability 1-adaptive_contribution.}
+
+\item{diminishing_adaptation}{Logical parameter, set to \code{TRUE} as default.
+Indicates whether or not the adaptation of the scaling parameter
+diminishes with each update. Users should switch this option to \code{FALSE}
+with caution, as this will not ensure ergodicity of the MCMC algorithm.
+Thus we would not recommend production of posterior samples with this
+option set to \code{FALSE}, but users may want to use it for exploratory
+purposes.}
 }
 \description{
 Control for adaptive proposals, used in \link{pmcmc_control}
