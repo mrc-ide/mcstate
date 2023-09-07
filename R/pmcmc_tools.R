@@ -290,6 +290,6 @@ pmcmc_tidy_chain_one <- function(object, type) {
   ret <- do.call(expand.grid, grid)
   ret$iteration <- object$iteration[ret$particle]
   ret$chain <- object$chain[ret$particle] %||% 1
-  ret$value <- c(x)
+  ret$value <- c(x) # drops unwanted attributes
   ret
 }
