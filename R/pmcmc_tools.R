@@ -284,7 +284,9 @@ pmcmc_tidy_chain_one <- function(object, type) {
   grid <- list(particle = seq_len(nrow(object$pars)),
                type = type,
                name = colnames(x))
-  if (object$nested) grid$population <- dimnames(x)[[3]]
+  if (object$nested) {
+    grid$population <- dimnames(x)[[3]]
+  }
   ret <- do.call(expand.grid, grid)
   ret$iteration <- object$iteration[ret$particle]
   ret$chain <- object$chain[ret$particle] %||% 1
