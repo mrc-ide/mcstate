@@ -511,7 +511,7 @@ test_that("can tidy and summarise pmcmc_output", {
   state_sd <- apply(state, c(1, 3), sd)
   expect_equal(subset(tidy_summary2, statistic == "mean")$value,
                c(state_mean))
-  expect_equal(subset(tidy_summary2, statistic =="sd")$value,
+  expect_equal(subset(tidy_summary2, statistic == "sd")$value,
                c(state_sd))
 })
 
