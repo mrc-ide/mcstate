@@ -23,8 +23,8 @@ is TRUE defaults to c(0.025, 0.5, 0.975) corresponding to 2.5-, 50-, and
 97.5-percentiles}
 
 \item{summary_function}{Optional function to calculated user-defined
-summary statistics - defaults to calculating mean, median, 2.5\% and 97.5\%
-percentiles}
+summary statistics - defaults to calculating mean, 2.5-, 50-, and
+97.5-percentiles}
 }
 \description{
 Convert sampled trajectories from \code{\link[=pmcmc]{pmcmc()}} to a Tidy (long) format,
