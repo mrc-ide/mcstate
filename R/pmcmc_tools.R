@@ -204,19 +204,23 @@ combine_state <- function(x) {
 ##' @param object Results of running [pmcmc()].
 ##'
 ##' @param summarise Logical indicating whether the trajectories should be
-##' marginalised over particles to produce summary statistics (mean and
-##' user-defined `quantiles`). Default is `FALSE`.
+##' marginalised over particles to produce summary statistics. Default is
+##' `FALSE`.
 ##'
 ##' @param quantiles Optional vector giving quantiles to output if `summarise`
 ##' is TRUE defaults to c(0.025, 0.5, 0.975) corresponding to 2.5-, 50-, and
 ##' 97.5-percentiles
 ##'
+##' @param summary_function Optional function to calculated user-defined
+##' summary statistics - defaults to calculating mean, 2.5-, 50-, and
+##' 97.5-percentiles
+##'
 ##' @export
 ##' @importFrom stats quantile
-##' @importFrom tdigest tdigest
 
 pmcmc_tidy_trajectories <- function(object, summarise = FALSE,
-                       quantiles = c(0.025, 0.5, 0.975)) {
+                                    quantiles = c(0.025, 0.5, 0.975),
+                                    summary_function = NULL) {
 
   assert_is(object, "mcstate_pmcmc")
   assert_scalar_logical(summarise)
@@ -228,20 +232,25 @@ pmcmc_tidy_trajectories <- function(object, summarise = FALSE,
   grid <- list(state = rownames(state) %||% seq_len(nrow(state)))
   if (object$nested) grid$population <- colnames(state)
   if (summarise) {
-    grid$quantile <- c("mean", paste0("q", quantiles * 100))
-  } else {
+    # define summary_function and a vector of output names
+    f <- summary_function %||% pmcmc_summarise_one(quantiles)
+    summary_output <- f(numeric(1))
+    grid$statistic <- names(summary_output) %||% seq_along(summary_output)
+    } else {
     grid$particle <- seq_len(nrow(object$pars))
   }
   grid$time <- object$trajectories$time
 
   if (summarise) {
-    margin <- which(names(grid) != "quantile")
-    state_summary <- apply(state, margin, function(x) {
-      c(mean(x), quantile_digest(x, quantiles))
-    })
-    rownames(state_summary) <- grid$quantile
-    # quantile moves from 1st to penultimate dimension
+    # calculate summary stats
+    margin <- which(names(grid) != "statistic")
+    state_summary <- apply(state, margin, f)
+    rownames(state_summary) <- grid$statistic
+    # statistic moves from 1st to penultimate dimension
     perm <- if (object$nested) c(2, 3, 1, 4) else c(2, 1, 3)
+    # replace state with summarised array with dimensions, where dimension
+    # previously containing particles now contains summary statistics, i.e.
+    # [state, (if nested) population, statistic, time]
     state <- aperm(state_summary, perm)
   }
 
@@ -250,14 +259,11 @@ pmcmc_tidy_trajectories <- function(object, summarise = FALSE,
   ret
 }
 
-quantile_digest <- function(x, at) {
-
-  ## There's a garbage protection bug (possibly in
-  ## Rcpp) that is causing the tdigest object to get get collected. In
-  ## this case we fall back on quantile.
-  tryCatch(
-    tdigest::tquantile(tdigest::tdigest(x), at),
-    error = function(e) quantile(x, at, names = FALSE))
+pmcmc_summarise_one <- function(quantiles) {
+  function(x) {
+    ret <- c(mean(x), quantile(x, quantiles, names = FALSE))
+    set_names(ret, c("mean", paste0("q", quantiles * 100)))
+  }
 }
 
 ##' Convert sampled parameters and corresponding likeligoods from [pmcmc()]

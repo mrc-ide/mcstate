@@ -492,31 +492,30 @@ test_that("can tidy and summarise pmcmc_output", {
   tidy_summary <- pmcmc_tidy_trajectories(results, TRUE)
   state_mean <- apply(state, c(1, 3), mean)
   state_median <- apply(state, c(1, 3), median)
-  expect_equal(sum(subset(tidy_summary, quantile == "mean")$value),
-               sum(state_mean))
-  expect_equal(sum(subset(tidy_summary, quantile == "q50")$value),
-               sum(state_median))
-  expect_equal(state_mean[, ncol(state_mean)],
-    subset(tidy_summary, quantile == "mean" & time == max(time))$value)
-  expect_equal(state_median[, ncol(state_median)],
-    subset(tidy_summary, quantile == "q50" & time == max(time))$value)
+  expect_equal(subset(tidy_summary, statistic == "mean")$value,
+               c(state_mean))
+  expect_equal(subset(tidy_summary, statistic == "q50")$value,
+               c(state_median))
 
   tidy_summary_nested <- pmcmc_tidy_trajectories(results_nested, TRUE)
   state_mean_nested <- apply(state_nested, c(1, 2, 4), mean)
   state_median_nested <- apply(state_nested, c(1, 2, 4), median)
-  expect_equal(sum(subset(tidy_summary_nested, quantile == "mean")$value),
-               sum(state_mean_nested))
-  expect_equal(sum(subset(tidy_summary_nested, quantile == "q50")$value),
-               sum(state_median_nested))
-  expect_equal(state_mean_nested[, 1, dim(state_mean_nested)[3]],
-    subset(tidy_summary_nested,
-           quantile == "mean" & time == max(time) & population == "a")$value)
-  expect_equal(state_median_nested[, 1, dim(state_median_nested)[3]],
-   subset(tidy_summary_nested,
-          quantile == "q50" & time == max(time) & population == "a")$value)
+  expect_equal(subset(tidy_summary_nested, statistic == "mean")$value,
+               c(state_mean_nested))
+  expect_equal(subset(tidy_summary_nested, statistic == "q50")$value,
+               c(state_median_nested))
+
+  ## summarise function works with user defined output
+  f <- function(x) c(mean = mean(x), sd = sd(x))
+  tidy_summary2 <- pmcmc_tidy_trajectories(results, TRUE, summary_function = f)
+  state_sd <- apply(state, c(1, 3), sd)
+  expect_equal(subset(tidy_summary2, statistic == "mean")$value,
+               c(state_mean))
+  expect_equal(subset(tidy_summary2, statistic =="sd")$value,
+               c(state_sd))
 })
 
-test_that("can tidy and summarise pmcmc chain", {
+test_that("can tidy a pmcmc chain", {
 
   results <- example_sir_pmcmc()$pmcmc
   tidy_results <- pmcmc_tidy_chains(results)

@@ -24,8 +24,7 @@ Imports:
     callr (>= 3.7.0),
     dust (>= 0.13.12),
     processx,
-    progress (>= 1.2.0),
-    tdigest
+    progress (>= 1.2.0)
 Suggests:
     brio,
     coda,
