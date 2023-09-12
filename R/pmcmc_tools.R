@@ -208,8 +208,11 @@ combine_state <- function(x) {
 ##' `FALSE`.
 ##'
 ##' @param summary Optional function to calculate user-defined
-##' summary statistics - defaults to calculating mean, 2.5-, 50-, and
-##' 97.5-percentiles
+##' summary statistics. A user-supplied function should take a single argument
+##' (which will be a numeric vector of length `n_particles` corresponding to a
+##' single state, for a single population, at a single time point) and return a
+##' named numeric vector of summary statistics. The default calculates the mean,
+##' 2.5-, 50-, and 97.5-percentiles
 ##'
 ##' @export
 ##' @importFrom stats quantile
