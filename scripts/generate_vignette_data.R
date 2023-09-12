@@ -127,3 +127,19 @@ incidence_data <- data.frame(cases = as.numeric(incidence),
 # Save outputs
 write.csv(incidence_data, "inst/nested_sir_incidence.csv", row.names = FALSE)
 saveRDS(true_history, "vignettes/nested_sir_true_history.rds", version = 2)
+
+## Generate prevalence data for continuous-time odin vignette
+
+sir_gen_odin <- odin::odin(sir_code)
+mod <- sir_gen_odin$new(user = list(beta = 0.3, gamma = 0.1))
+n <- 100
+day <- seq(0, n, by = 7)
+y <- mod$run(t = day)
+
+set.seed(1)
+data <- data.frame(day = day,
+                   n_tested = rpois(length(day), 1e2))
+data$n_positive <- rbinom(length(day), data$n_tested, y[, "I"] / y[, "N"])
+data <- data[data$day > 40, ]
+
+write.csv(data, "inst/sir_prevalence.csv", row.names = FALSE)
