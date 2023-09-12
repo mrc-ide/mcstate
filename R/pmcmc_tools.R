@@ -207,64 +207,56 @@ combine_state <- function(x) {
 ##' marginalised over particles to produce summary statistics. Default is
 ##' `FALSE`.
 ##'
-##' @param quantiles Optional vector giving quantiles to output if `summarise`
-##' is TRUE defaults to c(0.025, 0.5, 0.975) corresponding to 2.5-, 50-, and
-##' 97.5-percentiles
-##'
-##' @param summary_function Optional function to calculated user-defined
+##' @param summary Optional function to calculate user-defined
 ##' summary statistics - defaults to calculating mean, 2.5-, 50-, and
 ##' 97.5-percentiles
 ##'
 ##' @export
 ##' @importFrom stats quantile
 
-pmcmc_tidy_trajectories <- function(object, summarise = FALSE,
-                                    quantiles = c(0.025, 0.5, 0.975),
-                                    summary_function = NULL) {
+pmcmc_tidy_trajectories <- function(object, summarise = FALSE, summary = NULL) {
 
   assert_is(object, "mcstate_pmcmc")
   assert_scalar_logical(summarise)
 
   state <- object$trajectories$state
 
+  if (is.null(summary)) {
+    summary <- function(x) {
+      quantiles <- c(0.025, 0.5, 0.975)
+      ret <- c(mean(x), quantile(x, quantiles, names = FALSE))
+      set_names(ret, c("mean", paste0("q", quantiles * 100)))
+    }
+  }
+
   # create a named list with an entry for each dimension of `state`
   # the list entries will be dimnames, where they exist, and numeric otherwise
   grid <- list(state = rownames(state) %||% seq_len(nrow(state)))
   if (object$nested) grid$population <- colnames(state)
-  if (summarise) {
-    # define summary_function and a vector of output names
-    f <- summary_function %||% pmcmc_summarise_one(quantiles)
-    summary_output <- f(numeric(1))
-    grid$statistic <- names(summary_output) %||% seq_along(summary_output)
-    } else {
-    grid$particle <- seq_len(nrow(object$pars))
-  }
-  grid$time <- object$trajectories$time
 
   if (summarise) {
-    # calculate summary stats
-    margin <- which(names(grid) != "statistic")
-    state_summary <- apply(state, margin, f)
-    rownames(state_summary) <- grid$statistic
+    # marginalise over particles
+    margin <- if (object$nested) c(1, 2, 4) else c(1, 3)
+    state_summary <- apply(state, margin, summary)
     # statistic moves from 1st to penultimate dimension
     perm <- if (object$nested) c(2, 3, 1, 4) else c(2, 1, 3)
     # replace state with summarised array with dimensions, where dimension
     # previously containing particles now contains summary statistics, i.e.
     # [state, (if nested) population, statistic, time]
     state <- aperm(state_summary, perm)
+
+    # define summary_function and a vector of output names
+    grid$statistic <- rownames(state_summary) %||% seq_len(nrow(state_summary))
+    } else {
+    grid$particle <- seq_len(nrow(object$pars))
   }
+  grid$time <- object$trajectories$time
 
   ret <- do.call(expand.grid, grid)
   ret$value <- c(state)
   ret
 }
 
-pmcmc_summarise_one <- function(quantiles) {
-  function(x) {
-    ret <- c(mean(x), quantile(x, quantiles, names = FALSE))
-    set_names(ret, c("mean", paste0("q", quantiles * 100)))
-  }
-}
 
 ##' Convert sampled parameters and corresponding likeligoods from [pmcmc()]
 ##' to a Tidy (long) format. Helper function useful for ggplotters.

@@ -507,7 +507,7 @@ test_that("can tidy and summarise pmcmc_output", {
 
   ## summarise function works with user defined output
   f <- function(x) c(mean = mean(x), sd = sd(x))
-  tidy_summary2 <- pmcmc_tidy_trajectories(results, TRUE, summary_function = f)
+  tidy_summary2 <- pmcmc_tidy_trajectories(results, TRUE, summary = f)
   state_sd <- apply(state, c(1, 3), sd)
   expect_equal(subset(tidy_summary2, statistic == "mean")$value,
                c(state_mean))

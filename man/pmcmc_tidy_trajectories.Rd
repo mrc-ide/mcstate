@@ -4,12 +4,7 @@
 \alias{pmcmc_tidy_trajectories}
 \title{Convert sampled trajectories from \code{\link[=pmcmc]{pmcmc()}} to a Tidy (long) format}
 \usage{
-pmcmc_tidy_trajectories(
-  object,
-  summarise = FALSE,
-  quantiles = c(0.025, 0.5, 0.975),
-  summary_function = NULL
-)
+pmcmc_tidy_trajectories(object, summarise = FALSE, summary = NULL)
 }
 \arguments{
 \item{object}{Results of running \code{\link[=pmcmc]{pmcmc()}}.}
@@ -18,11 +13,7 @@ pmcmc_tidy_trajectories(
 marginalised over particles to produce summary statistics. Default is
 \code{FALSE}.}
 
-\item{quantiles}{Optional vector giving quantiles to output if \code{summarise}
-is TRUE defaults to c(0.025, 0.5, 0.975) corresponding to 2.5-, 50-, and
-97.5-percentiles}
-
-\item{summary_function}{Optional function to calculated user-defined
+\item{summary}{Optional function to calculated user-defined
 summary statistics - defaults to calculating mean, 2.5-, 50-, and
 97.5-percentiles}
 }
