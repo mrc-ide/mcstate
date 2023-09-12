@@ -70,7 +70,7 @@ plot(data$day, data$n_tested, type = "l",
 lines(data$day, data$n_positive, type = "l", col = test_cols[2])
 legend("left", names(test_cols), fill = test_cols, bty = "n")
 ```
-We first need to process the data into the `mcstate` format. As the `rate` parameter is not meaningful in the context of a continuous time model, we supply a `NULL` value.
+We first need to process the data into the `mcstate` format. As the `rate` parameter is not meaningful in the context of a continuous time model, we must supply a `NULL` value.
 
 ```{r}
 sir_data <- mcstate::particle_filter_data(data = data, time = "day",
