@@ -57,6 +57,9 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
+      <a href="../articles/continuous.html">Fitting a continuous-time model</a>
+    </li>
+    <li>
       <a href="../articles/deterministic.html">Deterministic models</a>
     </li>
     <li>
@@ -215,7 +218,7 @@
 <code class="sourceCode R"><span><span class="va">pars_series</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">result</span><span class="op">$</span><span class="va">pars</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="va">pars_series</span><span class="op">[</span>, , <span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">pars_series</span><span class="op">)</span><span class="op">[[</span><span class="fl">3</span><span class="op">]</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt;       beta      gamma </span></span>
-<span><span class="co">#&gt; 0.16123417 0.02553154</span></span></code></pre></div>
+<span><span class="co">#&gt; 0.29840165 0.05095707</span></span></code></pre></div>
 <p>We can also run particle filters at each final parameter estimate to get an estimate of the model likelihood, showing the mean value in red:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">n_particles</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
