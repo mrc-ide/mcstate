@@ -41,26 +41,54 @@ test_that("mean converges to weighted mean, regardless of acceptance", {
 })
 
 
-test_that("Scaling converges to expected limits", {
-  control <- adaptive_proposal_control(initial_weight = 50)
+test_that("Scaling converges to expected limits - no diminishing adaptation", {
+  control <- adaptive_proposal_control(initial_weight = 50,
+                                       diminishing_adaptation = FALSE)
   pars <- example_sir()$pars
   obj <- adaptive_proposal$new(pars, control)
   obj$proposal_was_adaptive <- TRUE
   p <- pars$mean()
-  for (i in 1:100) {
+  for (i in 1:1000) {
     obj$update(p, TRUE)
   }
   expect_equal(
     obj$scaling,
-    control$initial_scaling +
-    100 * (1 - control$acceptance_target) * control$scaling_increment)
+    (sqrt(control$initial_scaling) +
+     1000 * (1 - control$acceptance_target) * control$scaling_increment) ^ 2) 
 
   obj <- adaptive_proposal$new(pars, control)
   obj$proposal_was_adaptive <- TRUE
-  for (i in 1:100) {
+  for (i in 1:1000) {
     obj$update(p, FALSE)
   }
   expect_equal(
     obj$scaling,
-    control$scaling_increment)
+    control$scaling_increment ^ 2)
+})
+
+
+test_that("Scaling converges to expected limits - diminishing adaptation", {
+  control <- adaptive_proposal_control(initial_weight = 50,
+                                       diminishing_adaptation = TRUE)
+  pars <- example_sir()$pars
+  obj <- adaptive_proposal$new(pars, control)
+  obj$proposal_was_adaptive <- TRUE
+  p <- pars$mean()
+  for (i in 1:1000) {
+    obj$update(p, TRUE)
+  }
+  expect_equal(
+    obj$scaling,
+    (sqrt(control$initial_scaling) + sum(1 / sqrt(seq_len(1000))) *
+       (1 - control$acceptance_target) * control$scaling_increment) ^ 2) 
+  
+  obj <- adaptive_proposal$new(pars, control)
+  obj$proposal_was_adaptive <- TRUE
+  for (i in 1:1000) {
+    obj$update(p, FALSE)
+  }
+  expect_equal(
+    obj$scaling,
+    (sqrt(control$initial_scaling) - sum(1 / sqrt(seq_len(1000))) *
+      control$acceptance_target * control$scaling_increment) ^ 2)
 })

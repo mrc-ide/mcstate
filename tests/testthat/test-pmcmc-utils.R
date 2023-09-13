@@ -4,7 +4,7 @@ test_that("format and print the simplest object", {
   pars <- matrix(NA_real_, 10, 4,
                  dimnames = list(NULL, c("a", "b", "c", "d")))
   probs <- matrix(NA_real_, 10, 3, dimnames = list(NULL, c("x", "y", "z")))
-  x <- mcstate_pmcmc(1:10, pars, probs, NULL, NULL, NULL, NULL)
+  x <- mcstate_pmcmc(1:10, pars, probs, NULL, NULL, NULL, NULL, NULL)
 
   expected <- c(
     "<mcstate_pmcmc> (10 samples)",
@@ -29,8 +29,10 @@ test_that("format and print with state", {
   trajectories <- list(state = array(NA_real_, c(4, 10, 20)))
   predict <- NULL
   restart <- list(date = 1, state = array(NA_real_, c(4, 10, 1)))
+  adaptive <- NULL
 
-  x <- mcstate_pmcmc(1:10, pars, probs, state, trajectories, restart, predict)
+  x <- mcstate_pmcmc(1:10, pars, probs, state, trajectories, restart, predict,
+                     adaptive)
 
   expected <- c(
     "<mcstate_pmcmc> (10 samples)",
@@ -56,8 +58,10 @@ test_that("format and print nested object", {
   trajectories <- list(state = array(NA_real_, c(4, 2, 10, 20)))
   predict <- NULL
   restart <- list(date = 1, state = array(NA_real_, c(4, 2, 10, 1)))
+  adaptive <- NULL
 
-  x <- mcstate_pmcmc(1:10, pars, probs, state, trajectories, restart, predict)
+  x <- mcstate_pmcmc(1:10, pars, probs, state, trajectories, restart, predict,
+                     adaptive)
 
   expected <- c(
     "<mcstate_pmcmc> (10 samples)",
@@ -100,7 +104,7 @@ test_that("wrap long variable names nicely", {
   probs <- matrix(NA_real_, 10, 3, dimnames = list(NULL, c("x", "y", "z")))
   x <- withr::with_options(
     list(width = 80),
-    format(mcstate_pmcmc(1:10, pars, probs, NULL, NULL, NULL, NULL)))
+    format(mcstate_pmcmc(1:10, pars, probs, NULL, NULL, NULL, NULL, NULL)))
   expect_equal(
     x[[3]],
     "    aaaaaaaaaa, bbbbbbbbbbbbbbbbbbbb, cccccccccccccccccccccccccccccc,")

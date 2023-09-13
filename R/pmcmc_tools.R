@@ -110,6 +110,7 @@ pmcmc_combine <- function(..., samples = list(...)) {
   state <- lapply(samples, "[[", "state")
   trajectories <- lapply(samples, "[[", "trajectories")
   restart <- lapply(samples, "[[", "restart")
+  adaptive <- lapply(samples, "[[", "adaptive")
 
   check_combine(samples, iteration, state, trajectories, restart)
 
@@ -137,6 +138,13 @@ pmcmc_combine <- function(..., samples = list(...)) {
     restart <- combine_state(restart)
   }
 
+  if (is.null(adaptive[[1]])) {
+    adaptive <- NULL
+  } else {
+    nested <- samples[[1]]$nested
+    adaptive <- combine_adaptive(adaptive, nested)
+  }
+
   ## Use the last state for predict as that will probably have most
   ## advanced seed.
   ##
@@ -144,7 +152,7 @@ pmcmc_combine <- function(..., samples = list(...)) {
   predict <- last(samples)$predict
 
   mcstate_pmcmc(iteration, pars, probabilities, state, trajectories,
-                restart, predict, chain)
+                restart, predict, adaptive, chain)
 }
 
 check_combine <- function(samples, iteration, state, trajectories, restart) {
@@ -193,4 +201,77 @@ combine_state <- function(x) {
   ret <- x[[1]]
   ret$state <- state
   ret
+}
+
+combine_adaptive <- function(x, nested) {
+  autocorrelation <- lapply(x, "[[", "autocorrelation")
+  mean <- lapply(x, "[[", "mean")
+  scaling <- lapply(x, "[[", "scaling")
+  weight <- lapply(x, "[[", "weight")
+  
+  combine_autocorr <- function(y) {
+    y_names <- rownames(y[[1]])
+    ret <- array_from_list(y)
+    rownames(ret) <- colnames(ret) <- y_names
+    ret
+  }
+  
+  combine_mean <- function(y) {
+    y_names <- names(y[[1]])
+    ret <- array_from_list(y)
+    rownames(ret) <- y_names
+    ret
+  }
+  
+  if (nested) {
+    populations <- names(mean[[1]]$varied)
+    
+    autocorr_fixed <- combine_autocorr(lapply(autocorrelation, "[[", "fixed"))
+    autocorr_varied <- lapply(autocorrelation, "[[", "varied")
+    autocorr_varied <-
+      lapply(populations,
+             function (nm) combine_autocorr(lapply(autocorr_varied, "[[", nm)))
+    names(autocorr_varied) <- populations
+    autocorrelation <- list(fixed = autocorr_fixed,
+                            varied = autocorr_varied)
+      
+    mean_fixed <- combine_mean(lapply(mean, "[[", "fixed"))
+    mean_varied <- lapply(mean, "[[", "varied")
+    mean_varied <-
+      lapply(populations,
+             function (nm) combine_mean(lapply(mean_varied, "[[", nm)))
+    names(mean_varied) <- populations
+    mean <- list(fixed = mean_fixed,
+                 varied = mean_varied)
+    
+    scaling_fixed <- unlist(lapply(scaling, "[[", "fixed"))
+    scaling_varied <- lapply(scaling, "[[", "varied")
+    scaling_varied <-
+      lapply(populations,
+             function (nm) unlist(lapply(scaling_varied, "[[", nm)))
+    names(scaling_varied) <- populations
+    scaling <- list(fixed = scaling_fixed,
+                    varied = scaling_varied)
+    
+    
+    weight_fixed <- unlist(lapply(weight, "[[", "fixed"))
+    weight_varied <- lapply(weight, "[[", "varied")
+    weight_varied <-
+      lapply(populations,
+             function (nm) unlist(lapply(weight_varied, "[[", nm)))
+    names(weight_varied) <- populations
+    weight <- list(fixed = weight_fixed,
+                   varied = weight_varied)
+    
+  } else {
+    autocorrelation <- combine_autocorr(autocorrelation)
+    mean <- combine_mean(mean)
+    scaling <- unlist(scaling)
+    weight <- unlist(weight)
+  }
+  
+  list(autocorrelation = autocorrelation,
+       mean = mean,
+       scaling = scaling,
+       weight = weight)
 }
