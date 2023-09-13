@@ -926,8 +926,10 @@ check_time_type <- function(model, data, stochastic_schedule, ode_control) {
   data_is_continuous <- inherits(data, "particle_filter_data_continuous")
   model_is_continuous <- model$public_methods$time_type() == "continuous"
   if (model_is_continuous != data_is_continuous) {
-    stop(sprintf("'model' is %s but 'data' is of type '%s'",
-                 model$public_methods$time_type(), class(data)[2]))
+    stop(sprintf("'model' is %s but 'data' is of type '%s', ensure %s %s",
+                 model$public_methods$time_type(), class(data)[2],
+         ifelse(model_is_continuous, "rate = NULL", "rate != NULL"),
+         "in 'particle_filter_data' function"))
   }
 
   if (!model_is_continuous) {
