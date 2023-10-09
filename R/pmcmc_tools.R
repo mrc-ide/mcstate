@@ -194,3 +194,103 @@ combine_state <- function(x) {
   ret$state <- state
   ret
 }
+
+
+##' Convert sampled trajectories from [pmcmc()] to a Tidy (long) format,
+##' and optionally marginalise over particles to produce summary statistics.
+##' Helper function useful for ggplotters.
+##'
+##' @title Convert sampled trajectories from [pmcmc()] to a Tidy (long) format
+##' @param object Results of running [pmcmc()].
+##'
+##' @param summarise Logical indicating whether the trajectories should be
+##' marginalised over particles to produce summary statistics. Default is
+##' `FALSE`.
+##'
+##' @param summary Optional function to calculate user-defined
+##' summary statistics. A user-supplied function should take a single argument
+##' (which will be a numeric vector of length `n_particles` corresponding to a
+##' single state, for a single population, at a single time point) and return a
+##' named numeric vector of summary statistics. The default calculates the mean,
+##' 2.5-, 50-, and 97.5-percentiles
+##'
+##' @export
+##' @importFrom stats quantile
+
+pmcmc_tidy_trajectories <- function(object, summarise = FALSE, summary = NULL) {
+
+  assert_is(object, "mcstate_pmcmc")
+  assert_scalar_logical(summarise)
+
+  state <- object$trajectories$state
+
+  if (is.null(summary)) {
+    summary <- function(x) {
+      quantiles <- c(0.025, 0.5, 0.975)
+      ret <- c(mean(x), quantile(x, quantiles, names = FALSE))
+      set_names(ret, c("mean", paste0("q", quantiles * 100)))
+    }
+  }
+
+  # create a named list with an entry for each dimension of `state`
+  # the list entries will be dimnames, where they exist, and numeric otherwise
+  grid <- list(state = rownames(state) %||% seq_len(nrow(state)))
+  if (object$nested) grid$population <- colnames(state)
+
+  if (summarise) {
+    # marginalise over particles
+    margin <- if (object$nested) c(1, 2, 4) else c(1, 3)
+    state_summary <- apply(state, margin, summary)
+    # statistic moves from 1st to penultimate dimension
+    perm <- if (object$nested) c(2, 3, 1, 4) else c(2, 1, 3)
+    # replace state with summarised array with dimensions, where dimension
+    # previously containing particles now contains summary statistics, i.e.
+    # [state, (if nested) population, statistic, time]
+    state <- aperm(state_summary, perm)
+
+    # define summary_function and a vector of output names
+    grid$statistic <- rownames(state_summary) %||% seq_len(nrow(state_summary))
+    } else {
+    grid$particle <- seq_len(nrow(object$pars))
+  }
+  grid$time <- object$trajectories$time
+
+  ret <- do.call(expand.grid, grid)
+  ret$value <- c(state)
+  ret
+}
+
+
+##' Convert sampled parameters and corresponding likeligoods from [pmcmc()]
+##' to a Tidy (long) format. Helper function useful for ggplotters.
+##'
+##' @title Convert sampled parameters and corresponding likelihoods from
+##' [pmcmc()] to a Tidy (long) format
+##' @param object Results of running [pmcmc()].
+##'
+##' @export
+pmcmc_tidy_chains <- function(object) {
+  assert_is(object, "mcstate_pmcmc")
+
+  pars <- pmcmc_tidy_chain_one(object, type = "pars")
+  probabilities <- pmcmc_tidy_chain_one(object, type = "probabilities")
+  rbind(pars, probabilities)
+}
+
+pmcmc_tidy_chain_one <- function(object, type) {
+  assert_is(object, "mcstate_pmcmc")
+  stopifnot(type %in% c("pars", "probabilities"))
+
+  x <- object[[type]]
+  grid <- list(particle = seq_len(nrow(object$pars)),
+               type = type,
+               name = colnames(x))
+  if (object$nested) {
+    grid$population <- dimnames(x)[[3]]
+  }
+  ret <- do.call(expand.grid, grid)
+  ret$iteration <- object$iteration[ret$particle]
+  ret$chain <- object$chain[ret$particle] %||% 1
+  ret$value <- c(x) # drops unwanted attributes
+  ret
+}
