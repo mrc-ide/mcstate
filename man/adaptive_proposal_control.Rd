@@ -8,8 +8,8 @@ adaptive_proposal_control(
   initial_scaling = 0.2,
   scaling_increment = 0.01,
   acceptance_target = 0.234,
-  initial_weight = 1000,
-  adaptive_contribution = 0.95,
+  initial_vcv_weight = 1000,
+  forget_rate = 0.2,
   diminishing_adaptation = TRUE
 )
 }
@@ -26,6 +26,14 @@ after each adaptive step.}
 that should be accepted (optimally) for the adaptive part of the
 mixture model.}
 
+\item{diminishing_adaptation}{Logical parameter, set to \code{TRUE} as default.
+Indicates whether or not the adaptation of the scaling parameter
+diminishes with each update. Users should switch this option to \code{FALSE}
+with caution, as this will not ensure ergodicity of the MCMC algorithm.
+Thus we would not recommend production of posterior samples with this
+option set to \code{FALSE}, but users may want to use it for exploratory
+purposes.}
+
 \item{initial_weight}{Initial weight of the variance-covariance
 matrix used to build the proposal of the random-walk. Higher
 values translate into higher confidence of the initial
@@ -36,14 +44,6 @@ samples will be slower.}
 adaptive part of the proposal. The proposal is based on a
 mixture model, with the non adaptive part used for the proposal
 with a probability 1-adaptive_contribution.}
-
-\item{diminishing_adaptation}{Logical parameter, set to \code{TRUE} as default.
-Indicates whether or not the adaptation of the scaling parameter
-diminishes with each update. Users should switch this option to \code{FALSE}
-with caution, as this will not ensure ergodicity of the MCMC algorithm.
-Thus we would not recommend production of posterior samples with this
-option set to \code{FALSE}, but users may want to use it for exploratory
-purposes.}
 }
 \description{
 Control for adaptive proposals, used in \link{pmcmc_control}

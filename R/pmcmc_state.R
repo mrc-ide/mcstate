@@ -97,7 +97,7 @@ pmcmc_state <- R6::R6Class(
                          min_log_likelihood)
     },
 
-    update_simple = function() {
+    update_simple = function(i) {
       is_adaptive <- !is.null(private$adaptive)
       if (is_adaptive) {
         prop_pars <- private$adaptive$propose(private$curr_pars)
@@ -123,7 +123,8 @@ pmcmc_state <- R6::R6Class(
       }
 
       if (is_adaptive) {
-        private$adaptive$update(private$curr_pars, accept)
+        private$adaptive$update(private$curr_pars, accept,
+                                private$history_pars$get(), i)
       }
     },
 
@@ -422,7 +423,7 @@ history_collector <- function(n) {
 
 
 update_single <- function(f) {
-  function(i) f()
+  function(i) f(i)
 }
 
 

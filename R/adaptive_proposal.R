@@ -57,14 +57,14 @@
 adaptive_proposal_control <- function(initial_scaling = 0.2,
                                       scaling_increment = 0.01,
                                       acceptance_target = 0.234,
-                                      initial_weight = 1000,
-                                      adaptive_contribution = 0.95,
+                                      initial_vcv_weight = 1000,
+                                      forget_rate = 0.2,
                                       diminishing_adaptation = TRUE) {
   ret <- list(initial_scaling = initial_scaling,
               scaling_increment = scaling_increment,
               acceptance_target = acceptance_target,
-              initial_weight = initial_weight,
-              adaptive_contribution = adaptive_contribution,
+              initial_vcv_weight = initial_vcv_weight,
+              forget_rate = forget_rate,
               diminishing_adaptation = diminishing_adaptation)
   class(ret) <- "adaptive_proposal_control"
   ret
@@ -82,41 +82,50 @@ adaptive_proposal <- R6::R6Class(
     autocorrelation = NULL,
     weight = NULL,
     scaling = NULL,
-    proposal_was_adaptive = NULL,
-
+    iteration = NULL,
+    included = NULL,
+    
     initialize = function(pars, control) {
       assert_is(pars, "pmcmc_parameters")
       self$pars <- pars
       self$control <- control
 
       self$scaling <- control$initial_scaling
-      self$weight <- control$initial_weight
-
+      
       vcv <- pars$vcv()
+      
+      autocorrelation <- vcv
+      autocorrelation[, ] <- 0
 
+      self$iteration <- 0
+      self$weight <- 0
       self$mean <- pars$mean()
-      self$autocorrelation <-
-        initial_autocorrelation(vcv, self$weight, self$mean)
+      self$autocorrelation <- autocorrelation
+      self$included <- c()
     },
 
     propose = function(theta) {
-      self$proposal_was_adaptive <-
-        runif(1) < self$control$adaptive_contribution
       vcv <- adaptive_vcv(self$scaling, self$autocorrelation, self$weight,
-                          self$mean, self$proposal_was_adaptive)
+                          self$mean, self$pars$vcv(),
+                          self$control$initial_vcv_weight)
       self$pars$propose(theta, vcv = vcv)
     },
 
-    update = function(theta, accept) {
-      if (!self$proposal_was_adaptive) {
-        return(invisible())
+    update = function(theta, accept, theta_history, i) {
+      is_replacement <-
+        check_replacement(i, self$control$forget_rate)
+      if (!is_replacement) {
+        self$weight <- self$weight + 1 
       }
-      self$weight <- self$weight + 1
-      self$scaling <- update_scaling(self$scaling, self$weight,
+      
+      self$scaling <- update_scaling(self$scaling, i,
                                      self$control, accept)
       self$autocorrelation <- update_autocorrelation(
-        theta, self$weight, self$autocorrelation)
-      self$mean <- update_mean(theta, self$weight, self$mean)
+        theta, self$weight, self$autocorrelation, self$included, theta_history, 
+        is_replacement)
+      self$mean <- update_mean(theta, self$weight, self$mean, self$included,
+                               theta_history, is_replacement)
+      self$included <- update_included(self$included, i, is_replacement)
     }
   ))
 
@@ -246,60 +255,89 @@ initial_autocorrelation <- function(vcv, weight, mean) {
   vcv + weight / (weight - 1) * qp(mean)
 }
 
+check_replacement <- function(iteration, forget_rate) {
+  floor(forget_rate * iteration) > floor(forget_rate * (iteration - 1))
+}
 
-adaptive_vcv <- function(scaling, autocorrelation, weight, mean,
-                         proposal_was_adaptive = TRUE) {
-  if (proposal_was_adaptive) {
-    vcv <- scaling * (autocorrelation - weight / (weight - 1) * qp(mean))
+adaptive_vcv <- function(scaling, autocorrelation, weight, mean, initial_vcv,
+                         initial_vcv_weight) {
+  if (weight > 1) {
+    vcv <- autocorrelation - weight / (weight - 1) * qp(mean)
   } else {
-    vcv <- NULL
+    vcv <- autocorrelation
+    vcv[, ] <- 0
   }
-  vcv
+  
+  d <- length(mean)
+  
+  scaling * ((weight - 1) * vcv + (initial_vcv_weight + d + 1) * initial_vcv) /
+    (weight + initial_vcv_weight + d + 1) 
+    
 }
 
 
 
-update_scaling <- function(scaling, weight, control, accept,
-                           proposal_was_adaptive = TRUE) {
+update_scaling <- function(scaling, iteration, control, accept) {
   reject <- !accept
   acceptance_target <- control$acceptance_target
   scaling_increment <- control$scaling_increment
   if (control$diminishing_adaptation) {
-    scale_inc <- scaling_increment / sqrt(weight - control$initial_weight)
+    scale_inc <- scaling_increment / sqrt(iteration)
   } else {
-    scale_inc <- rep(scaling_increment, length(weight))
+    scale_inc <- rep(scaling_increment, length(iteration))
   }
   
-  accept_update <- proposal_was_adaptive & accept
-  if (any(accept_update)) {
-    scaling[accept_update] <-
-      (sqrt(scaling[accept_update]) +
-         (1 - acceptance_target) * scale_inc[accept_update]) ^ 2
+  if (any(accept)) {
+    scaling[accept] <-
+      (sqrt(scaling[accept]) +
+         (1 - acceptance_target) * scale_inc[accept]) ^ 2
   }
-  reject_update <- proposal_was_adaptive & reject
-  if (any(reject_update)) {
-    scaling[reject_update] <-
-      pmax(sqrt(scaling[reject_update]) -
-             acceptance_target * scale_inc[reject_update],
+  
+  if (any(reject)) {
+    scaling[reject] <-
+      pmax(sqrt(scaling[reject]) -
+             acceptance_target * scale_inc[reject],
            scaling_increment) ^ 2
   }
   scaling
 }
 
 
-update_autocorrelation <- function(theta, weight, autocorrelation,
-                                   proposal_was_adaptive = TRUE) {
-  if (proposal_was_adaptive) {
-    autocorrelation <-
-      (1 - 1 / (weight - 1)) * autocorrelation + 1 / (weight - 1) * qp(theta)
+update_autocorrelation <- function(theta, weight, autocorrelation, included,
+                                   theta_history, is_replacement) {
+  if (weight > 1) {
+    if (is_replacement) {
+      theta_remove <- theta_history[[included[1L]]]
+      autocorrelation <-
+        autocorrelation + 1 / (weight - 1) * (qp(theta) - qp(theta_remove))
+    } else {
+      autocorrelation <-
+        (1 - 1 / (weight - 1)) * autocorrelation + 1 / (weight - 1) * qp(theta)
+    }
+    
+  } else {
+    autocorrelation <- 1 / 2 * qp(theta)
   }
   autocorrelation
 }
 
 
-update_mean <- function(theta, weight, mean, proposal_was_adaptive = TRUE) {
-  if (proposal_was_adaptive) {
+update_mean <- function(theta, weight, mean, included, theta_history,
+                        is_replacement) {
+  if (is_replacement) {
+    theta_remove <- theta_history[[included[1L]]]
+    mean <- mean + 1 / weight * (theta - theta_remove)
+  } else {
     mean <- (1 - 1 / weight) * mean + 1 / weight * theta
   }
   mean
+}
+
+update_included <- function(included, i, is_replacement) {
+  if (is_replacement) {
+    included <- c(included[-1L], i)
+  } else {
+    included <- c(included, i)
+  }
+  included
 }
