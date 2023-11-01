@@ -305,19 +305,24 @@ update_scaling <- function(scaling, iteration, control, accept) {
 
 update_autocorrelation <- function(theta, weight, autocorrelation, included,
                                    theta_history, is_replacement) {
-  if (weight > 1) {
-    if (is_replacement) {
-      theta_remove <- theta_history[[included[1L]]]
+    
+  if (is_replacement) {
+    theta_remove <- theta_history[[included[1L]]]
+    if (weight > 2) {
       autocorrelation <-
         autocorrelation + 1 / (weight - 1) * (qp(theta) - qp(theta_remove))
     } else {
+      autocorrelation <- autocorrelation + qp(theta) - qp(theta_remove)
+    }
+  } else {
+    if (weight > 2) {
       autocorrelation <-
         (1 - 1 / (weight - 1)) * autocorrelation + 1 / (weight - 1) * qp(theta)
+    } else {
+      autocorrelation <- autocorrelation + qp(theta)
     }
-    
-  } else {
-    autocorrelation <- 1 / 2 * qp(theta)
   }
+  
   autocorrelation
 }
 
