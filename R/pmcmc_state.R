@@ -128,7 +128,7 @@ pmcmc_state <- R6::R6Class(
       }
     },
 
-    update_combined = function(type) {
+    update_combined = function(type, i) {
       is_adaptive <- !is.null(private$adaptive)
       if (is_adaptive) {
         prop_pars <- private$adaptive$propose(private$curr_pars, type = type)
@@ -153,19 +153,20 @@ pmcmc_state <- R6::R6Class(
       }
 
       if (is_adaptive) {
-        private$adaptive$update(private$curr_pars, type = type, accept)
+        private$adaptive$update(private$curr_pars, type = type, accept,
+                                private$history_pars$get(), i)
       }
     },
 
-    update_fixed = function() {
-      private$update_combined("fixed")
+    update_fixed = function(i) {
+      private$update_combined("fixed", i)
     },
 
-    update_both = function() {
-      private$update_combined("both")
+    update_both = function(i) {
+      private$update_combined("both", i)
     },
 
-    update_varied = function() {
+    update_varied = function(i) {
       type <- "varied"
       is_adaptive <- !is.null(private$adaptive)
       if (is_adaptive) {
@@ -191,7 +192,8 @@ pmcmc_state <- R6::R6Class(
       }
 
       if (is_adaptive) {
-        private$adaptive$update(private$curr_pars, type = type, accept)
+        private$adaptive$update(private$curr_pars, type = type, accept,
+                                private$history_pars$get(), i)
       }
     }
   ),
@@ -434,9 +436,9 @@ update_alternate <- function(f, g, ratio) {
 
   function(i) {
     if (i %% (ratio + 1) == 0) {
-      g()
+      g(i)
     } else {
-      f()
+      f(i)
     }
   }
 }
