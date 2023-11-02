@@ -109,6 +109,7 @@ adaptive_proposal <- R6::R6Class(
     },
 
     update = function(theta, accept, theta_history, i) {
+      self$iteration <- self$iteration + 1
       is_replacement <-
         check_replacement(i, self$control$forget_rate)
       if (is_replacement) {
@@ -118,7 +119,7 @@ adaptive_proposal <- R6::R6Class(
         self$weight <- self$weight + 1 
       }
       
-      self$scaling <- update_scaling(self$scaling, i,
+      self$scaling <- update_scaling(self$scaling, self$iteration,
                                      self$control, accept)
       self$autocorrelation <- update_autocorrelation(
         theta, self$weight, self$autocorrelation, theta_remove)

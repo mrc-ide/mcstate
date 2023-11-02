@@ -386,16 +386,14 @@ pmcmc_state <- R6::R6Class(
 
       if (!is.null(private$adaptive)) {
         scaling <- private$adaptive$scaling
-        weight <- private$adaptive$weight
         if (private$nested) {
           scaling$varied <- split(scaling$varied, private$pars$populations())
-          weight$varied <- split(weight$varied, private$pars$populations())
         }
         
         adaptive <- list(autocorrelation = private$adaptive$autocorrelation,
                          mean = private$adaptive$mean,
                          scaling = scaling,
-                         weight = weight
+                         weight = private$adaptive$weight
                          )
       } else {
         adaptive <- NULL
