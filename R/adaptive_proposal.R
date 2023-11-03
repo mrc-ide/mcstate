@@ -27,7 +27,7 @@
 ##'   proposal for the random-walk Metropolis-Hasting algorithm.
 ##'
 ##' @param scaling_increment The scaling increment which is added or
-##'   substracted to the scaling factor of the variance-covariance
+##'   subtracted to the scaling factor of the variance-covariance
 ##'   after each adaptive step.
 ##'
 ##' @param acceptance_target The target for the fraction of proposals
@@ -59,12 +59,14 @@ adaptive_proposal_control <- function(initial_scaling = 0.2,
                                       acceptance_target = 0.234,
                                       initial_vcv_weight = 1000,
                                       forget_rate = 0.2,
+                                      forget_end = Inf,
                                       diminishing_adaptation = TRUE) {
   ret <- list(initial_scaling = initial_scaling,
               scaling_increment = scaling_increment,
               acceptance_target = acceptance_target,
               initial_vcv_weight = initial_vcv_weight,
               forget_rate = forget_rate,
+              forget_end = forget_end,
               diminishing_adaptation = diminishing_adaptation)
   class(ret) <- "adaptive_proposal_control"
   ret
@@ -110,8 +112,7 @@ adaptive_proposal <- R6::R6Class(
 
     update = function(theta, accept, theta_history, i) {
       self$iteration <- self$iteration + 1
-      is_replacement <-
-        check_replacement(i, self$control$forget_rate)
+      is_replacement <- check_replacement(i, self$iteration, self$control)
       if (is_replacement) {
         theta_remove <- theta_history[[self$included[1]]]
       } else {
@@ -150,6 +151,12 @@ adaptive_proposal_nested <- R6::R6Class(
     initialize = function(pars, control) {
       assert_is(pars, "pmcmc_parameters_nested")
       self$pars <- pars
+      
+      if (length(control$initial_vcv_weight) == 1) {
+        control$initial_vcv_weight <-
+          list(fixed = control$initial_vcv_weight,
+               varied = control$initial_vcv_weight)
+      }
       self$control <- control
 
       nms <- pars$names("both")
@@ -186,14 +193,14 @@ adaptive_proposal_nested <- R6::R6Class(
                             self$weight[[type]],
                             self$mean[[type]],
                             self$pars$vcv("fixed"),
-                            self$control$initial_vcv_weight)
+                            self$control$initial_vcv_weight[[type]])
       } else if (type == "varied") {
         vcv <- Map(adaptive_vcv, self$scaling[[type]],
                    self$autocorrelation[[type]],
                    self$weight[[type]],
                    self$mean[[type]],
                    self$pars$vcv("varied"),
-                   self$control$initial_vcv_weight)
+                   self$control$initial_vcv_weight[[type]])
       }
       self$pars$propose(theta, type, vcv = vcv)
     },
@@ -211,7 +218,7 @@ adaptive_proposal_nested <- R6::R6Class(
       ## Probably we can save this more simply? - minor change on creation
       self$iteration[[type]] <- self$iteration[[type]] + 1
       is_replacement <- 
-        check_replacement(self$iteration[[type]], self$control$forget_rate)
+        check_replacement(i, self$iteration[[type]], self$control)
       if (is_replacement) {
         theta_remove <- theta_history[[self$included[[type]][1]]]
         if (type == "fixed") {
@@ -274,8 +281,12 @@ initial_autocorrelation <- function(vcv, weight, mean) {
   vcv + weight / (weight - 1) * qp(mean)
 }
 
-check_replacement <- function(iteration, forget_rate) {
-  floor(forget_rate * iteration) > floor(forget_rate * (iteration - 1))
+check_replacement <- function(i, iteration, control) {
+  is_forget_step <- floor(control$forget_rate * iteration) >
+    floor(control$forget_rate * (iteration - 1))
+  is_before_forget_end <- i <= control$forget_end
+  
+  is_forget_step & is_before_forget_end
 }
 
 adaptive_vcv <- function(scaling, autocorrelation, weight, mean, initial_vcv,

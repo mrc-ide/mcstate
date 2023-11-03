@@ -10,6 +10,7 @@ adaptive_proposal_control(
   acceptance_target = 0.234,
   initial_vcv_weight = 1000,
   forget_rate = 0.2,
+  forget_end = Inf,
   diminishing_adaptation = TRUE
 )
 }
@@ -19,7 +20,7 @@ covariance matrix to be used to generate the multivariate normal
 proposal for the random-walk Metropolis-Hasting algorithm.}
 
 \item{scaling_increment}{The scaling increment which is added or
-substracted to the scaling factor of the variance-covariance
+subtracted to the scaling factor of the variance-covariance
 after each adaptive step.}
 
 \item{acceptance_target}{The target for the fraction of proposals

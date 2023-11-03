@@ -42,14 +42,14 @@ test_that("mean converges to weighted mean, regardless of acceptance", {
 
 
 test_that("Scaling converges to expected limits - no diminishing adaptation", {
-  control <- adaptive_proposal_control(initial_weight = 50,
+  control <- adaptive_proposal_control(initial_vcv_weight = 50,
+                                       forget_rate = 0,
                                        diminishing_adaptation = FALSE)
   pars <- example_sir()$pars
   obj <- adaptive_proposal$new(pars, control)
-  obj$proposal_was_adaptive <- TRUE
   p <- pars$mean()
   for (i in 1:1000) {
-    obj$update(p, TRUE)
+    obj$update(p, TRUE, NULL, i)
   }
   expect_equal(
     obj$scaling,
@@ -57,9 +57,8 @@ test_that("Scaling converges to expected limits - no diminishing adaptation", {
      1000 * (1 - control$acceptance_target) * control$scaling_increment) ^ 2) 
 
   obj <- adaptive_proposal$new(pars, control)
-  obj$proposal_was_adaptive <- TRUE
   for (i in 1:1000) {
-    obj$update(p, FALSE)
+    obj$update(p, FALSE, NULL, i)
   }
   expect_equal(
     obj$scaling,
@@ -68,14 +67,14 @@ test_that("Scaling converges to expected limits - no diminishing adaptation", {
 
 
 test_that("Scaling converges to expected limits - diminishing adaptation", {
-  control <- adaptive_proposal_control(initial_weight = 50,
+  control <- adaptive_proposal_control(initial_vcv_weight = 50,
+                                       forget_rate = 0,
                                        diminishing_adaptation = TRUE)
   pars <- example_sir()$pars
   obj <- adaptive_proposal$new(pars, control)
-  obj$proposal_was_adaptive <- TRUE
   p <- pars$mean()
   for (i in 1:1000) {
-    obj$update(p, TRUE)
+    obj$update(p, TRUE, NULL, i)
   }
   expect_equal(
     obj$scaling,
@@ -83,9 +82,8 @@ test_that("Scaling converges to expected limits - diminishing adaptation", {
        (1 - control$acceptance_target) * control$scaling_increment) ^ 2) 
   
   obj <- adaptive_proposal$new(pars, control)
-  obj$proposal_was_adaptive <- TRUE
   for (i in 1:1000) {
-    obj$update(p, FALSE)
+    obj$update(p, FALSE, NULL, i)
   }
   expect_equal(
     obj$scaling,
