@@ -255,11 +255,7 @@ combine_adaptive <- function(x, nested) {
     
     
     weight_fixed <- unlist(lapply(weight, "[[", "fixed"))
-    weight_varied <- lapply(weight, "[[", "varied")
-    weight_varied <-
-      lapply(populations,
-             function (nm) unlist(lapply(weight_varied, "[[", nm)))
-    names(weight_varied) <- populations
+    weight_varied <- unlist(lapply(weight, "[[", "varied"))
     weight <- list(fixed = weight_fixed,
                    varied = weight_varied)
     
