@@ -113,7 +113,8 @@ pmcmc_state <- R6::R6Class(
       prop_llik <- private$run_filter(prop_pars, min_llik)
       prop_lpost <- prop_lprior + prop_llik
 
-      accept <- u < exp(prop_lpost - private$curr_lpost)
+      accept_prob <- pmin(1, exp(prop_lpost - private$curr_lpost))
+      accept <- u < accept_prob
       if (accept) {
         private$curr_pars <- prop_pars
         private$curr_lprior <- prop_lprior
@@ -123,7 +124,7 @@ pmcmc_state <- R6::R6Class(
       }
 
       if (is_adaptive) {
-        private$adaptive$update(private$curr_pars, accept,
+        private$adaptive$update(private$curr_pars, accept_prob,
                                 private$history_pars$get(), i)
       }
     },
@@ -143,7 +144,8 @@ pmcmc_state <- R6::R6Class(
       prop_llik <- private$run_filter(prop_pars, min_llik)
       prop_lpost <- prop_lprior + prop_llik
 
-      accept <- u < exp(sum(prop_lpost - private$curr_lpost))
+      accept_prob <- pmin(1, exp(sum(prop_lpost - private$curr_lpost)))
+      accept <- u < accept_prob
       if (accept) {
         private$curr_pars <- prop_pars
         private$curr_lprior <- prop_lprior
@@ -153,7 +155,7 @@ pmcmc_state <- R6::R6Class(
       }
 
       if (is_adaptive) {
-        private$adaptive$update(private$curr_pars, type = type, accept,
+        private$adaptive$update(private$curr_pars, type = type, accept_prob,
                                 private$history_pars$get(), i)
       }
     },
@@ -182,7 +184,8 @@ pmcmc_state <- R6::R6Class(
       prop_llik <- private$run_filter(prop_pars, min_llik)
       prop_lpost <- prop_lprior + prop_llik
 
-      accept <- u < exp(prop_lpost - private$curr_lpost)
+      accept_prob <- pmin(1, exp(prop_lpost - private$curr_lpost))
+      accept <- u < accept_prob
       if (any(accept)) {
         private$curr_pars[, accept] <- prop_pars[, accept]
         private$curr_lprior[accept] <- prop_lprior[accept]
@@ -192,7 +195,7 @@ pmcmc_state <- R6::R6Class(
       }
 
       if (is_adaptive) {
-        private$adaptive$update(private$curr_pars, type = type, accept,
+        private$adaptive$update(private$curr_pars, type = type, accept_prob,
                                 private$history_pars$get(), i)
       }
     }

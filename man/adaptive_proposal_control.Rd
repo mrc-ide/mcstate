@@ -5,16 +5,18 @@
 \title{Adaptive proposal control}
 \usage{
 adaptive_proposal_control(
-  initial_scaling = 0.2,
-  scaling_increment = 0.01,
+  min_scaling = 1,
   acceptance_target = 0.234,
   initial_vcv_weight = 1000,
   forget_rate = 0.2,
-  forget_end = Inf,
-  diminishing_adaptation = TRUE
+  forget_end = Inf
 )
 }
 \arguments{
+\item{acceptance_target}{The target for the fraction of proposals
+that should be accepted (optimally) for the adaptive part of the
+mixture model.}
+
 \item{initial_scaling}{The initial scaling of the variance
 covariance matrix to be used to generate the multivariate normal
 proposal for the random-walk Metropolis-Hasting algorithm.}
@@ -22,18 +24,6 @@ proposal for the random-walk Metropolis-Hasting algorithm.}
 \item{scaling_increment}{The scaling increment which is added or
 subtracted to the scaling factor of the variance-covariance
 after each adaptive step.}
-
-\item{acceptance_target}{The target for the fraction of proposals
-that should be accepted (optimally) for the adaptive part of the
-mixture model.}
-
-\item{diminishing_adaptation}{Logical parameter, set to \code{TRUE} as default.
-Indicates whether or not the adaptation of the scaling parameter
-diminishes with each update. Users should switch this option to \code{FALSE}
-with caution, as this will not ensure ergodicity of the MCMC algorithm.
-Thus we would not recommend production of posterior samples with this
-option set to \code{FALSE}, but users may want to use it for exploratory
-purposes.}
 
 \item{initial_weight}{Initial weight of the variance-covariance
 matrix used to build the proposal of the random-walk. Higher
@@ -45,6 +35,14 @@ samples will be slower.}
 adaptive part of the proposal. The proposal is based on a
 mixture model, with the non adaptive part used for the proposal
 with a probability 1-adaptive_contribution.}
+
+\item{diminishing_adaptation}{Logical parameter, set to \code{TRUE} as default.
+Indicates whether or not the adaptation of the scaling parameter
+diminishes with each update. Users should switch this option to \code{FALSE}
+with caution, as this will not ensure ergodicity of the MCMC algorithm.
+Thus we would not recommend production of posterior samples with this
+option set to \code{FALSE}, but users may want to use it for exploratory
+purposes.}
 }
 \description{
 Control for adaptive proposals, used in \link{pmcmc_control}

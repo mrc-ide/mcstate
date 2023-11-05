@@ -54,20 +54,16 @@
 ##'   purposes.
 ##'
 ##' @export
-adaptive_proposal_control <- function(initial_scaling = 0.2,
-                                      scaling_increment = 0.01,
+adaptive_proposal_control <- function(min_scaling = 1,
                                       acceptance_target = 0.234,
                                       initial_vcv_weight = 1000,
                                       forget_rate = 0.2,
-                                      forget_end = Inf,
-                                      diminishing_adaptation = TRUE) {
-  ret <- list(initial_scaling = initial_scaling,
-              scaling_increment = scaling_increment,
+                                      forget_end = Inf) {
+  ret <- list(min_scaling = min_scaling,
               acceptance_target = acceptance_target,
               initial_vcv_weight = initial_vcv_weight,
               forget_rate = forget_rate,
-              forget_end = forget_end,
-              diminishing_adaptation = diminishing_adaptation)
+              forget_end = forget_end)
   class(ret) <- "adaptive_proposal_control"
   ret
 }
@@ -83,17 +79,18 @@ adaptive_proposal <- R6::R6Class(
     mean = NULL,
     autocorrelation = NULL,
     weight = NULL,
-    scaling = NULL,
     iteration = NULL,
     included = NULL,
+    scaling = NULL,
+    scaling_increment = NULL,
+    scaling_start = NULL,
+    n_start = NULL,
     
     initialize = function(pars, control) {
       assert_is(pars, "pmcmc_parameters")
       self$pars <- pars
       self$control <- control
 
-      self$scaling <- control$initial_scaling
-      
       vcv <- pars$vcv()
 
       self$iteration <- 0
@@ -101,6 +98,12 @@ adaptive_proposal <- R6::R6Class(
       self$mean <- pars$mean()
       self$autocorrelation <- 0 * vcv
       self$included <- c()
+      
+      self$scaling <- 1
+      self$scaling_increment <- 
+        calc_scaling_increment(length(self$mean), control$acceptance_target)
+      self$scaling_start <- self$scaling
+      self$n_start <- update_n_start(0, 0, control$acceptance_target, TRUE)
     },
 
     propose = function(theta) {
@@ -110,7 +113,7 @@ adaptive_proposal <- R6::R6Class(
       self$pars$propose(theta, vcv = vcv)
     },
 
-    update = function(theta, accept, theta_history, i) {
+    update = function(theta, accept_prob, theta_history, i) {
       self$iteration <- self$iteration + 1
       is_replacement <- check_replacement(i, self$iteration, self$control)
       if (is_replacement) {
@@ -121,11 +124,18 @@ adaptive_proposal <- R6::R6Class(
       }
       
       self$scaling <- update_scaling(self$scaling, self$iteration,
-                                     self$control, accept)
+                                     self$control, accept_prob,
+                                     self$scaling_increment, self$n_start)
       self$autocorrelation <- update_autocorrelation(
         theta, self$weight, self$autocorrelation, theta_remove)
       self$mean <- update_mean(theta, self$weight, self$mean, theta_remove)
       self$included <- update_included(self$included, i, is_replacement)
+      
+      restart <- abs(log(self$scaling) - log(self$scaling_start)) > log(3)
+      self$scaling_start <- 
+        update_scaling_start(self$scaling_start, self$scaling, restart)
+      self$n_start <- update_n_start(self$n_start, self$iteration,
+                                     acceptance_target, restart)
     }
   ))
 
@@ -144,9 +154,12 @@ adaptive_proposal_nested <- R6::R6Class(
     mean = NULL,
     autocorrelation = NULL,
     weight = NULL,
-    scaling = NULL,
     iteration = NULL,
     included = NULL,
+    scaling = NULL,
+    scaling_increment = NULL,
+    scaling_start = NULL,
+    n_start = NULL,
 
     initialize = function(pars, control) {
       assert_is(pars, "pmcmc_parameters_nested")
@@ -163,11 +176,11 @@ adaptive_proposal_nested <- R6::R6Class(
       private$index <- list(fixed = match(pars$names("fixed"), nms),
                             varied = match(pars$names("varied"), nms))
 
+      n_fixed <- length(private$index$fixed)
       n_varied <- length(private$index$varied)
       n_populations <- length(pars$populations())
 
-      self$scaling <- list(fixed = control$initial_scaling,
-                           varied = rep(control$initial_scaling, n_populations))
+      self$scaling <- 
       self$weight <- list(fixed = 0,
                           varied = 0)
       
@@ -184,6 +197,17 @@ adaptive_proposal_nested <- R6::R6Class(
       self$autocorrelation <- list(
         fixed = 0 * vcv$fixed,
         varied = Map(function (x) 0 * x, vcv$varied))
+      
+      self$scaling <- list(fixed = 1,
+                           varied = rep(1, n_populations))
+      self$scaling_increment <- list(
+        fixed = calc_scaling_increment(n_fixed, control$acceptance_target),
+        varied = calc_scaling_increment(n_varied, control$acceptance_target)
+      )
+      self$scaling_start <- self$scaling
+      n_start <- update_n_start(0, 0, control$acceptance_target, TRUE)
+      self$n_start <- list(fixed = n_start,
+                           varied = rep(n_start, n_populations))
     },
 
     propose = function(theta, type) {
@@ -205,8 +229,7 @@ adaptive_proposal_nested <- R6::R6Class(
       self$pars$propose(theta, type, vcv = vcv)
     },
 
-    update = function(theta, type, accept, theta_history, i) {
-      
+    update = function(theta, type, accept_prob, theta_history, i) {
       idx <- private$index[[type]]
       if (type == "fixed") {
         theta_type <- theta[idx, 1, drop = TRUE]
@@ -239,7 +262,8 @@ adaptive_proposal_nested <- R6::R6Class(
       
       if (type == "fixed") {
         self$scaling[[type]] <- update_scaling(
-          self$scaling[[type]], self$iteration[[type]], self$control, accept)
+          self$scaling[[type]], self$iteration[[type]], self$control,
+          accept_prob, self$scaling_increment[[type]], self$n_start[[type]])
         self$autocorrelation[[type]] <- update_autocorrelation(
           theta_type, self$weight[[type]], self$autocorrelation[[type]],
           theta_remove)
@@ -247,9 +271,18 @@ adaptive_proposal_nested <- R6::R6Class(
           theta_type, self$weight[[type]], self$mean[[type]], theta_remove)
         self$included[[type]] <- 
           update_included(self$included[[type]], i, is_replacement)
+        
+        restart <- abs(log(self$scaling[[type]]) - 
+                         log(self$scaling_start[[type]])) > log(3)
+        self$scaling_start[[type]] <- update_scaling_start(
+          self$scaling_start[[type]], self$scaling[[type]], restart)
+        self$n_start[[type]] <- 
+          update_n_start(self$n_start[[type]], self$iteration[[type]], 
+                         acceptance_target, restart)
       } else if (type == "varied") {
         self$scaling[[type]] <- update_scaling(
-          self$scaling[[type]], self$iteration[[type]], self$control, accept)
+          self$scaling[[type]], self$iteration[[type]], self$control,
+          accept_prob, self$scaling_increment[[type]], self$n_start[[type]])
         self$autocorrelation[[type]][] <- Map(
           update_autocorrelation, theta_type, self$weight[[type]],
           self$autocorrelation[[type]], theta_remove)
@@ -258,6 +291,14 @@ adaptive_proposal_nested <- R6::R6Class(
           theta_remove)
         self$included[[type]] <- 
           update_included(self$included[[type]], i, is_replacement)
+        
+        restart <- abs(log(self$scaling[[type]]) - 
+                         log(self$scaling_start[[type]])) > log(3)
+        self$scaling_start[[type]] <- update_scaling_start(
+          self$scaling_start[[type]], self$scaling[[type]], restart)
+        self$n_start[[type]] <- 
+          update_n_start(self$n_start[[type]], self$iteration[[type]], 
+                         acceptance_target, restart)
       }
       
 
@@ -277,9 +318,13 @@ qp <- function(x) {
 }
 
 
-initial_autocorrelation <- function(vcv, weight, mean) {
-  vcv + weight / (weight - 1) * qp(mean)
+calc_scaling_increment <- function(d, acceptance_target) {
+  A <- - qnorm(acceptance_target / 2)
+  
+  (1 - 1 / d) * (sqrt(2 * pi) * exp(A ^ 2 / 2)) / (2 * A) + 
+    1 / (d * acceptance_target + (1 - acceptance_target))
 }
+
 
 check_replacement <- function(i, iteration, control) {
   is_forget_step <- floor(control$forget_rate * iteration) >
@@ -288,6 +333,7 @@ check_replacement <- function(i, iteration, control) {
   
   is_forget_step & is_before_forget_end
 }
+
 
 adaptive_vcv <- function(scaling, autocorrelation, weight, mean, initial_vcv,
                          initial_vcv_weight) {
@@ -299,36 +345,41 @@ adaptive_vcv <- function(scaling, autocorrelation, weight, mean, initial_vcv,
   
   d <- length(mean)
   
-  scaling * ((weight - 1) * vcv + (initial_vcv_weight + d + 1) * initial_vcv) /
-    (weight + initial_vcv_weight + d + 1) 
+  weighted_vcv <-
+    ((weight - 1) * vcv + (initial_vcv_weight + d + 1) * initial_vcv) /
+    (weight + initial_vcv_weight + d + 1)
+  
+  2.38 ^ 2 / d * scaling * weighted_vcv
     
 }
 
 
-
-update_scaling <- function(scaling, iteration, control, accept) {
-  reject <- !accept
+update_scaling <- function(scaling, iteration, control, accept_prob,
+                           scaling_increment, n_start) {
   acceptance_target <- control$acceptance_target
-  scaling_increment <- control$scaling_increment
-  if (control$diminishing_adaptation) {
-    scale_inc <- scaling_increment / sqrt(iteration)
-  } else {
-    scale_inc <- rep(scaling_increment, length(iteration))
-  }
+  min_scaling <- control$min_scaling
   
-  if (any(accept)) {
-    scaling[accept] <-
-      (sqrt(scaling[accept]) +
-         (1 - acceptance_target) * scale_inc) ^ 2
-  }
+  log_scaling_change <- scaling_increment / (iteration + n_start) * 
+    (accept_prob - acceptance_target)
   
-  if (any(reject)) {
-    scaling[reject] <-
-      pmax(sqrt(scaling[reject]) -
-             acceptance_target * scale_inc,
-           scaling_increment) ^ 2
+  pmax(min_scaling, scaling * exp(log_scaling_change))
+}
+
+
+update_n_start <- function(n_start, n, acceptance_target, restart) {
+  if (any(restart)) {
+    n_start[restart] <-
+      5 / (acceptance_target * (1 - acceptance_target)) - n[restart]
   }
-  scaling
+  n_start
+}
+
+
+update_scaling_start <- function(scaling_start, scaling, restart) {
+  if (any(restart)) {
+    scaling_start[restart] <- scaling[restart]
+  }
+  scaling_start
 }
 
 
@@ -362,6 +413,7 @@ update_mean <- function(theta, weight, mean, theta_remove) {
   }
   mean
 }
+
 
 update_included <- function(included, i, is_replacement) {
   if (is_replacement) {
