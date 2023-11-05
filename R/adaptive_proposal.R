@@ -180,7 +180,6 @@ adaptive_proposal_nested <- R6::R6Class(
       n_varied <- length(private$index$varied)
       n_populations <- length(pars$populations())
 
-      self$scaling <- 
       self$weight <- list(fixed = 0,
                           varied = 0)
       
@@ -322,7 +321,7 @@ calc_scaling_increment <- function(d, acceptance_target) {
   A <- - qnorm(acceptance_target / 2)
   
   (1 - 1 / d) * (sqrt(2 * pi) * exp(A ^ 2 / 2)) / (2 * A) + 
-    1 / (d * acceptance_target + (1 - acceptance_target))
+    1 / (d * acceptance_target * (1 - acceptance_target))
 }
 
 
