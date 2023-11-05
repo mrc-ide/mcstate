@@ -135,7 +135,7 @@ adaptive_proposal <- R6::R6Class(
       self$scaling_start <- 
         update_scaling_start(self$scaling_start, self$scaling, restart)
       self$n_start <- update_n_start(self$n_start, self$iteration,
-                                     acceptance_target, restart)
+                                     self$control$acceptance_target, restart)
     }
   ))
 
@@ -278,7 +278,7 @@ adaptive_proposal_nested <- R6::R6Class(
           self$scaling_start[[type]], self$scaling[[type]], restart)
         self$n_start[[type]] <- 
           update_n_start(self$n_start[[type]], self$iteration[[type]], 
-                         acceptance_target, restart)
+                         self$control$acceptance_target, restart)
       } else if (type == "varied") {
         self$scaling[[type]] <- update_scaling(
           self$scaling[[type]], self$iteration[[type]], self$control,
@@ -298,7 +298,7 @@ adaptive_proposal_nested <- R6::R6Class(
           self$scaling_start[[type]], self$scaling[[type]], restart)
         self$n_start[[type]] <- 
           update_n_start(self$n_start[[type]], self$iteration[[type]], 
-                         acceptance_target, restart)
+                         self$control$acceptance_target, restart)
       }
       
 
