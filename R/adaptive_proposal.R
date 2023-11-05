@@ -361,15 +361,16 @@ update_scaling <- function(scaling, iteration, control, accept_prob,
   log_scaling_change <- scaling_increment / (iteration + n_start) * 
     (accept_prob - acceptance_target)
   
-  pmax(min_scaling, scaling * exp(log_scaling_change))
+  out <- pmax(min_scaling, scaling * exp(log_scaling_change))
 }
 
 
 update_n_start <- function(n_start, n, acceptance_target, restart) {
   if (any(restart)) {
     n_start[restart] <-
-      5 / (acceptance_target * (1 - acceptance_target)) - n[restart]
+      5 / (acceptance_target * (1 - acceptance_target)) - n
   }
+  
   n_start
 }
 
