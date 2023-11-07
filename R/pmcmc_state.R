@@ -14,6 +14,7 @@ pmcmc_state <- R6::R6Class(
     history_state = NULL,
     history_restart = NULL,
     history_trajectories = NULL,
+    history_adaptive_scaling = NULL,
 
     curr_step = NULL,
     curr_pars = NULL,
@@ -57,6 +58,10 @@ pmcmc_state <- R6::R6Class(
         p <- c(private$curr_lprior, private$curr_llik, private$curr_lpost)
       }
       private$history_probabilities$add(i, p)
+      
+      if(!is.null(private$adaptive)) {
+        private$history_adaptive_scaling$add(i, private$adaptive$scaling)
+      }
 
       control <- private$control
       i <- i - control$n_burnin - 1
@@ -72,6 +77,7 @@ pmcmc_state <- R6::R6Class(
           private$history_restart$add(j, private$curr_restart)
         }
       }
+      
     },
 
     ## Computing the acceptance thresold, where u is a random uniform
@@ -218,19 +224,6 @@ pmcmc_state <- R6::R6Class(
         stop("'pars' and 'filter' disagree on nestedness")
       }
 
-      if (!is.null(control$adaptive_proposal)) {
-        if (!private$deterministic) {
-          stop("Adaptive proposal only allowed in deterministic models")
-        }
-        if (private$nested) {
-          private$adaptive <- adaptive_proposal_nested$new(
-            pars, control$adaptive_proposal)
-        } else {
-          private$adaptive <- adaptive_proposal$new(
-            pars, control$adaptive_proposal)
-        }
-      }
-
       private$tick <- pmcmc_progress(control$n_steps, control$progress,
                                      control$progress_simple)
 
@@ -254,6 +247,20 @@ pmcmc_state <- R6::R6Class(
       }
       if (length(control$save_restart) > 0) {
         private$history_restart <- history_collector(n_history)
+      }
+      
+      if (!is.null(control$adaptive_proposal)) {
+        if (!private$deterministic) {
+          stop("Adaptive proposal only allowed in deterministic models")
+        }
+        if (private$nested) {
+          private$adaptive <- adaptive_proposal_nested$new(
+            pars, control$adaptive_proposal)
+        } else {
+          private$adaptive <- adaptive_proposal$new(
+            pars, control$adaptive_proposal)
+        }
+        private$history_adaptive_scaling <- history_collector(n_steps)
       }
 
       if (!private$nested) {
@@ -390,7 +397,15 @@ pmcmc_state <- R6::R6Class(
       if (!is.null(private$adaptive)) {
         scaling <- private$adaptive$scaling
         if (private$nested) {
-          scaling$varied <- split(scaling$varied, private$pars$populations())
+          scaling <- private$history_adaptive_scaling$get()
+          scaling_fixed <- unlist(lapply(scaling, "[[", "fixed"))
+          scaling_varied <- 
+            split(array_from_list(lapply(scaling, "[[", "varied")),
+                  private$pars$populations())
+          scaling <- list(fixed = scaling_fixed,
+                          varied = scaling_varied)
+        } else {
+          scaling <- unlist(private$history_adaptive_scaling$get())
         }
         
         adaptive <- list(autocorrelation = private$adaptive$autocorrelation,
