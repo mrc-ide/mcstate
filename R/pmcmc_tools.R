@@ -244,11 +244,11 @@ combine_adaptive <- function(x, nested) {
     mean <- list(fixed = mean_fixed,
                  varied = mean_varied)
     
-    scaling_fixed <- unlist(lapply(scaling, "[[", "fixed"))
+    scaling_fixed <- array_from_list(lapply(scaling, "[[", "fixed"))
     scaling_varied <- lapply(scaling, "[[", "varied")
     scaling_varied <-
       lapply(populations,
-             function (nm) unlist(lapply(scaling_varied, "[[", nm)))
+             function (nm) array_from_list(lapply(scaling_varied, "[[", nm)))
     names(scaling_varied) <- populations
     scaling <- list(fixed = scaling_fixed,
                     varied = scaling_varied)
@@ -262,7 +262,7 @@ combine_adaptive <- function(x, nested) {
   } else {
     autocorrelation <- combine_autocorr(autocorrelation)
     mean <- combine_mean(mean)
-    scaling <- unlist(scaling)
+    scaling <- array_from_list(scaling)
     weight <- unlist(weight)
   }
   
