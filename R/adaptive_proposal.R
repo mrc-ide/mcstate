@@ -348,7 +348,7 @@ adaptive_vcv <- function(scaling, autocorrelation, weight, mean, initial_vcv,
     ((weight - 1) * vcv + (initial_vcv_weight + d + 1) * initial_vcv) /
     (weight + initial_vcv_weight + d + 1)
   
-  2.38 ^ 2 / d * scaling * weighted_vcv
+  2.38 ^ 2 / d * scaling ^ 2 * weighted_vcv
     
 }
 
