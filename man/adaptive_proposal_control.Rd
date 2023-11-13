@@ -71,12 +71,12 @@ variance-covariance matrix and rescale it at each adaptive step of
 the MCMC.
 
 Our implementation of an adaptive MCMC algorithm is based on an
-adaptation of the "BlkAdpMul" algorithm in Sherlock et
-al. (ALGORITHM 6). The algorithm is based on a random-walk
-Metropolis-Hasting algorithm where the proposal is a multi-variate
-Normal distribution centered on the current point.
+adaptation of the "accelerated shaping" algorithm in Spencer (2021).
+The algorithm is based on a random-walk Metropolis-Hasting algorithm where
+the proposal is a multi-variate Normal distribution centered on the current
+point.
 
-Sherlock C, Fearnhead P, Roberts GO (2010) The Random Walk
-Metropolis: Linking Theory and Practice Through a Case
-Study. Statistical Science 25:172–190.
+Spencer SEF (2021) Accelerating adaptation in the adaptive
+Metropolis–Hastings random walk algorithm. Australian & New Zealand Journal
+of Statistics 63:468-484.
 }
