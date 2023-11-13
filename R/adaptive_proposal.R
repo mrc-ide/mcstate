@@ -34,24 +34,34 @@
 ##'   that should be accepted (optimally) for the adaptive part of the
 ##'   mixture model.
 ##'
-##' @param initial_weight Initial weight of the variance-covariance
+##' @param initial_vcv_weight Initial weight of the variance-covariance
 ##'   matrix used to build the proposal of the random-walk. Higher
 ##'   values translate into higher confidence of the initial
 ##'   variance-covariance matrix and means that update from additional
 ##'   samples will be slower.
-##'
-##' @param adaptive_contribution The fractional contribution of the
-##'   adaptive part of the proposal. The proposal is based on a
-##'   mixture model, with the non adaptive part used for the proposal
-##'   with a probability 1-adaptive_contribution.
 ##'   
-##' @param diminishing_adaptation Logical parameter, set to `TRUE` as default.
-##'   Indicates whether or not the adaptation of the scaling parameter
-##'   diminishes with each update. Users should switch this option to `FALSE`
-##'   with caution, as this will not ensure ergodicity of the MCMC algorithm.
-##'   Thus we would not recommend production of posterior samples with this
-##'   option set to `FALSE`, but users may want to use it for exploratory
-##'   purposes.
+##' @param forget_rate The rate of forgetting early parameter sets from the 
+##'   empirical variance-covariance matrix in the MCMC chains. For example,
+##'   `forget_rate = 0.2` (the default) means that once in every 5th updates
+##'   we remove the earliest parameter set included, so would remove the 1st
+##'   parameter set on the 5th update, the 2nd on the 10th update, and so
+##'   on. Setting `forget_rate = 0` means early parameter sets are never
+##'   forgotten.
+##'   
+##' @param forget_end The final update number at which early parameter sets can
+##'   be forgotten. Setting `forget_rate = Inf` (the default) means that the
+##'   forgetting mechanism continues throughout the chains. Forgetting early
+##'   parameter sets becomes less useful once the chains have settled into the
+##'   posterior mode, so this parameter might be set as an estimate of how long
+##'   that would take
+##'   
+##' @param pre_diminish The number of updates before adaptation of the scaling
+##'   parameter starts to diminish. Setting `pre_diminish = 0` means there is
+##'   diminishing adaptation of the scaling parameter from the offset, while
+##'   `pre_diminish = Inf` would mean there is never diminishing adaptation.
+##'   Diminishing adaptation should help the scaling parameter to converge
+##'   better, but while the chains find the location and scale of the posterior
+##'   mode it might be useful to explore with it switched off
 ##'
 ##' @export
 adaptive_proposal_control <- function(initial_scaling = 0.2,
