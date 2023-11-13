@@ -44,7 +44,7 @@ test_that("mean converges to weighted mean, regardless of acceptance", {
 test_that("Scaling converges to expected limits - no diminishing adaptation", {
   control <- adaptive_proposal_control(initial_vcv_weight = 50,
                                        forget_rate = 0,
-                                       diminishing_adaptation = FALSE)
+                                       pre_diminish = Inf)
   pars <- example_sir()$pars
   obj <- adaptive_proposal$new(pars, control)
   p <- pars$mean()
@@ -69,7 +69,7 @@ test_that("Scaling converges to expected limits - no diminishing adaptation", {
 test_that("Scaling converges to expected limits - diminishing adaptation", {
   control <- adaptive_proposal_control(initial_vcv_weight = 50,
                                        forget_rate = 0,
-                                       diminishing_adaptation = TRUE)
+                                       pre_diminish = 0)
   pars <- example_sir()$pars
   obj <- adaptive_proposal$new(pars, control)
   p <- pars$mean()
