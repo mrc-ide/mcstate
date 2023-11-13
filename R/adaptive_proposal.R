@@ -60,14 +60,14 @@ adaptive_proposal_control <- function(initial_scaling = 0.2,
                                       initial_vcv_weight = 1000,
                                       forget_rate = 0.2,
                                       forget_end = Inf,
-                                      diminishing_adaptation = TRUE) {
+                                      pre_diminish = 0) {
   ret <- list(initial_scaling = initial_scaling,
               scaling_increment = scaling_increment,
               acceptance_target = acceptance_target,
               initial_vcv_weight = initial_vcv_weight,
               forget_rate = forget_rate,
               forget_end = forget_end,
-              diminishing_adaptation = diminishing_adaptation)
+              pre_diminish = pre_diminish)
   class(ret) <- "adaptive_proposal_control"
   ret
 }
@@ -310,11 +310,9 @@ update_scaling <- function(scaling, iteration, control, accept) {
   reject <- !accept
   acceptance_target <- control$acceptance_target
   scaling_increment <- control$scaling_increment
-  if (control$diminishing_adaptation) {
-    scale_inc <- scaling_increment / sqrt(iteration)
-  } else {
-    scale_inc <- rep(scaling_increment, length(iteration))
-  }
+  pre_diminish <- control$pre_diminish
+  
+  scale_inc <- scaling_increment / sqrt(max(1, iteration - pre_diminish))
   
   if (any(accept)) {
     scaling[accept] <-
