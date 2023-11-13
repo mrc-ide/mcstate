@@ -9,7 +9,8 @@ adaptive_proposal_control(
   acceptance_target = 0.234,
   initial_vcv_weight = 1000,
   forget_rate = 0.2,
-  forget_end = Inf
+  forget_end = Inf,
+  pre_diminish = 0
 )
 }
 \arguments{

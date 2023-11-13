@@ -58,12 +58,14 @@ adaptive_proposal_control <- function(min_scaling = 1,
                                       acceptance_target = 0.234,
                                       initial_vcv_weight = 1000,
                                       forget_rate = 0.2,
-                                      forget_end = Inf) {
+                                      forget_end = Inf,
+                                      pre_diminish = 0) {
   ret <- list(min_scaling = min_scaling,
               acceptance_target = acceptance_target,
               initial_vcv_weight = initial_vcv_weight,
               forget_rate = forget_rate,
-              forget_end = forget_end)
+              forget_end = forget_end,
+              pre_diminish = pre_diminish)
   class(ret) <- "adaptive_proposal_control"
   ret
 }
@@ -357,8 +359,9 @@ update_scaling <- function(scaling, iteration, control, accept_prob,
                            scaling_increment, n_start) {
   acceptance_target <- control$acceptance_target
   min_scaling <- control$min_scaling
+  pre_diminish <- control$pre_diminish
   
-  log_scaling_change <- scaling_increment / (iteration + n_start) * 
+  log_scaling_change <- scaling_increment / max(1, iteration - pre_diminish) * 
     (accept_prob - acceptance_target)
   
   pmax(min_scaling, scaling * exp(log_scaling_change))
@@ -370,7 +373,7 @@ update_n_start <- function(n_start, n, acceptance_target, restart) {
     n_start[restart] <-
       5 / (acceptance_target * (1 - acceptance_target)) - n
   }
-  
+
   n_start
 }
 
