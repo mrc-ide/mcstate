@@ -11,14 +11,14 @@
 ##' the MCMC.
 ##'
 ##' Our implementation of an adaptive MCMC algorithm is based on an
-##' adaptation of the "BlkAdpMul" algorithm in Sherlock et
-##' al. (ALGORITHM 6). The algorithm is based on a random-walk
-##' Metropolis-Hasting algorithm where the proposal is a multi-variate
-##' Normal distribution centered on the current point.
+##' adaptation of the "accelerated shaping" algorithm in Spencer (2021).
+##' The algorithm is based on a random-walk Metropolis-Hasting algorithm where
+##' the proposal is a multi-variate Normal distribution centered on the current
+##' point.
 ##'
-##' Sherlock C, Fearnhead P, Roberts GO (2010) The Random Walk
-##' Metropolis: Linking Theory and Practice Through a Case
-##' Study. Statistical Science 25:172–190.
+##' Spencer SEF (2021) Accelerating adaptation in the adaptive 
+##' Metropolis–Hastings random walk algorithm. Australian & New Zealand Journal
+##' of Statistics 63:468-484.
 ##'
 ##' @title Adaptive proposal control
 ##'
@@ -127,7 +127,7 @@ adaptive_proposal <- R6::R6Class(
 
     update = function(theta, accept_prob, theta_history, i) {
       self$iteration <- self$iteration + 1
-      is_replacement <- check_replacement(i, self$iteration, self$control)
+      is_replacement <- check_replacement(self$iteration, self$control)
       if (is_replacement) {
         theta_remove <- theta_history[[self$included[1]]]
       } else {
@@ -245,21 +245,21 @@ adaptive_proposal_nested <- R6::R6Class(
       if (type == "fixed") {
         theta_type <- theta[idx, 1, drop = TRUE]
       } else {
-        theta_type <- lapply(seq_len(ncol(theta)), function(i)
-                             theta[idx, i, drop = TRUE])
+        theta_type <- lapply(seq_len(ncol(theta)), function(j)
+                             theta[idx, j, drop = TRUE])
       }
       
       ## Probably we can save this more simply? - minor change on creation
       self$iteration[[type]] <- self$iteration[[type]] + 1
       is_replacement <- 
-        check_replacement(i, self$iteration[[type]], self$control)
+        check_replacement(self$iteration[[type]], self$control)
       if (is_replacement) {
         theta_remove <- theta_history[[self$included[[type]][1]]]
         if (type == "fixed") {
           theta_remove <- theta_remove[idx, 1, drop = TRUE]
         } else {
-          theta_remove <- lapply(seq_len(ncol(theta_remove)), function(i)
-            theta_remove[idx, i, drop = TRUE])
+          theta_remove <- lapply(seq_len(ncol(theta_remove)), function(j)
+            theta_remove[idx, j, drop = TRUE])
         }
       } else {
         self$weight[[type]] <- self$weight[[type]] + 1
@@ -336,11 +336,10 @@ calc_scaling_increment <- function(d, acceptance_target) {
     1 / (d * acceptance_target * (1 - acceptance_target))
 }
 
-
-check_replacement <- function(i, iteration, control) {
+check_replacement <- function(iteration, control) {
   is_forget_step <- floor(control$forget_rate * iteration) >
     floor(control$forget_rate * (iteration - 1))
-  is_before_forget_end <- i <= control$forget_end
+  is_before_forget_end <- iteration <= control$forget_end
   
   is_forget_step & is_before_forget_end
 }
