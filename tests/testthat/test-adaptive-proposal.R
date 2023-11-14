@@ -7,37 +7,52 @@ test_that("Can construct adaptive proposal", {
 })
 
 
-test_that("If mean is zero, autocorrelation is the vcv", {
-  control <- adaptive_proposal_control()
-  pars <- pmcmc_parameters$new(
-    list(pmcmc_parameter("beta", 0.2, mean = 0),
-         pmcmc_parameter("gamma", 0.1, mean = 0)),
-    proposal = rbind(c(0.00057, 0.00034), c(0.00034, 0.00026)))
-
-  obj <- adaptive_proposal$new(pars, control)
-  expect_equal(unname(obj$autocorrelation), pars$vcv())
-})
-
-## initial autocor is zero if mean is zero
-
-## weight needs to be at least 2 to start sensibly (w / (w - 1) is not
-## well defined for w <= 1)
-
-test_that("mean converges to weighted mean, regardless of acceptance", {
-  control <- adaptive_proposal_control(initial_weight = 50)
+test_that("mean and autocorrelation calculated correctly", {
   pars <- example_sir()$pars
-  p <- pars$mean() * 2
-
+  set.seed(1)
+  n_pars <- 100
+  d <- length(pars$mean())
+  p <- t(replicate(n_pars, pars$propose(pars$mean())))
+  p_list <- split(p, rep(seq_len(n_pars), d))
+  
+  control <- adaptive_proposal_control(initial_vcv_weight = 50,
+                                       forget_rate = 0.1)
   obj <- adaptive_proposal$new(pars, control)
-  obj$proposal_was_adaptive <- TRUE
   for (i in 1:100) {
-    obj$update(p, TRUE)
+    obj$update(p[i, ], TRUE, p_list, i)
   }
-  expect_equal(obj$mean, pars$mean() * 50 / 150 + p * 100 / 150)
+  ## forget_rate = 0.1 so mean and autocorrelation should exclude first 10
+  ## parameter sets
+  expect_equal(obj$weight, 90)
+  expect_equal(obj$included, seq(11, 100))
+  expected_mean <- colMeans(p[11:100, ])
+  expect_equal(obj$mean, expected_mean)
+  expected_vcv <- cov(p[11:100, ])
+  vcv <- obj$autocorrelation - obj$weight / (obj$weight - 1) * qp(obj$mean)
+  expect_equal(vcv, expected_vcv)
+  expect_equal(adaptive_vcv(0.5, obj$autocorrelation, obj$weight, obj$mean,
+                            pars$vcv(), obj$control$initial_vcv_weight),
+               0.5 * (89 * vcv + (50 + d + 1) * pars$vcv()) / (90 + 50 + d + 1))
+  
+  control <- adaptive_proposal_control(initial_vcv_weight = 50,
+                                       forget_rate = 0.5,
+                                       forget_end = 50)
+  obj <- adaptive_proposal$new(pars, control)
   for (i in 1:100) {
-    obj$update(p, FALSE)
+    obj$update(p[i, ], TRUE, p_list, i)
   }
-  expect_equal(obj$mean, pars$mean() * 50 / 250 + p * 200 / 250)
+  ## forget_rate = 0.5 and forget_end = 50, so mean and autocorrelation should
+  ## exclude first 25 parameter sets (half of the first 50)
+  expect_equal(obj$weight, 75)
+  expect_equal(obj$included, seq(26, 100))
+  expected_mean <- colMeans(p[26:100, ])
+  expect_equal(obj$mean, expected_mean)
+  expected_vcv <- cov(p[26:100, ])
+  vcv <- obj$autocorrelation - obj$weight / (obj$weight - 1) * qp(obj$mean)
+  expect_equal(vcv, expected_vcv)
+  expect_equal(adaptive_vcv(0.5, obj$autocorrelation, obj$weight, obj$mean,
+                            pars$vcv(), obj$control$initial_vcv_weight),
+               0.5 * (74 * vcv + (50 + d + 1) * pars$vcv()) / (75 + 50 + d + 1))
 })
 
 
