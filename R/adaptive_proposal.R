@@ -287,10 +287,6 @@ qp <- function(x) {
 }
 
 
-initial_autocorrelation <- function(vcv, weight, mean) {
-  vcv + weight / (weight - 1) * qp(mean)
-}
-
 check_replacement <- function(iteration, control) {
   is_forget_step <- floor(control$forget_rate * iteration) >
     floor(control$forget_rate * (iteration - 1))
@@ -298,6 +294,7 @@ check_replacement <- function(iteration, control) {
   
   is_forget_step & is_before_forget_end
 }
+
 
 adaptive_vcv <- function(scaling, autocorrelation, weight, mean, initial_vcv,
                          initial_vcv_weight) {
@@ -313,7 +310,6 @@ adaptive_vcv <- function(scaling, autocorrelation, weight, mean, initial_vcv,
     (weight + initial_vcv_weight + d + 1) 
     
 }
-
 
 
 update_scaling <- function(scaling, iteration, control, accept) {
