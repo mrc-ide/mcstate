@@ -40,7 +40,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.18</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.19</span>
       </span>
     </div>
 
@@ -161,7 +161,7 @@
 <span>  <span class="fu">compare</span><span class="op">(</span><span class="va">n_positive</span><span class="op">)</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">binomial</a></span><span class="op">(</span><span class="va">n_tested</span>, <span class="va">I</span> <span class="op">/</span> <span class="va">N</span><span class="op">)</span> </span>
 <span><span class="op">}</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Loading required namespace: pkgbuild</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 20 functions decorated with [[cpp11::register]]</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 21 functions decorated with [[cpp11::register]]</span></span>
 <span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> generated file <span style="color: #0000BB;">cpp11.R</span></span></span>
 <span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> generated file <span style="color: #0000BB;">cpp11.cpp</span></span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Re-compiling <span style="color: #0000BB;">odin4ebc392f</span></span></span>
@@ -177,9 +177,9 @@
 <span><span class="co">#&gt;   internal_type internal;</span></span>
 <span><span class="co">#&gt; <span style="color: #00BB00; font-weight: bold;">                ^</span></span></span>
 <span><span class="co"><span style="color: #00BB00; font-weight: bold;">#&gt; </span>1 warning generated.</span></span>
-<span><span class="co">#&gt; clang++ -arch x86_64 -std=gnu++17 -dynamiclib -Wl,-headerpad_max_install_names -undefined dynamic_lookup -single_module -multiply_defined suppress -L/Library/Frameworks/R.framework/Resources/lib -L/opt/R/x86_64/lib -o odin4ebc392f.so cpp11.o dust.o -F/Library/Frameworks/R.framework/.. -framework R -Wl,-framework -Wl,CoreFoundation</span></span>
+<span><span class="co">#&gt; clang++ -arch x86_64 -std=gnu++17 -dynamiclib -Wl,-headerpad_max_install_names -undefined dynamic_lookup -L/Library/Frameworks/R.framework/Resources/lib -L/opt/R/x86_64/lib -o odin4ebc392f.so cpp11.o dust.o -F/Library/Frameworks/R.framework/.. -framework R -Wl,-framework -Wl,CoreFoundation</span></span>
 <span><span class="co">#&gt; ld: warning: -undefined dynamic_lookup may not work with chained fixups</span></span>
-<span><span class="co">#&gt; installing to /private/var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T/RtmpLdjWh4/devtools_install_81560f50d41/00LOCK-file81573207680/00new/odin4ebc392f/libs</span></span>
+<span><span class="co">#&gt; installing to /private/var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T/RtmpzpFewj/devtools_install_9d1730bc010/00LOCK-file9d133f9f5ad/00new/odin4ebc392f/libs</span></span>
 <span><span class="co">#&gt; ** checking absolute paths in shared objects and dynamic libraries</span></span>
 <span><span class="co">#&gt; * DONE (odin4ebc392f)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Loading <span style="color: #0000BB;">odin4ebc392f</span></span></span></code></pre></div>
@@ -249,7 +249,7 @@
 <span>                                  save_trajectories <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>                                  progress <span class="op">=</span> <span class="cn">TRUE</span>, <span class="op">)</span></span>
 <span><span class="va">mcmc_run</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc.html">pmcmc</a></span><span class="op">(</span><span class="va">mcmc_pars</span>, <span class="va">filter</span>, control <span class="op">=</span> <span class="va">control</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Finished 40000 steps in 24 secs</span></span>
+<span><span class="co">#&gt; Finished 40000 steps in 34 secs</span></span>
 <span><span class="va">mcmc_sample</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_thin.html">pmcmc_sample</a></span><span class="op">(</span><span class="va">mcmc_run</span>, n_sample <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span></code></pre></div>
 <p>We can visually check the chains have converged and assess the accuracy of our parameter estimates using a sample from the posterior distribution.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
