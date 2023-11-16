@@ -215,7 +215,8 @@ pmcmc_parameters_nested <- R6::R6Class(
 
       nms_fixed <- self$names("fixed")
       if (length(nms_fixed) > 0) {
-        ret <- ret + private$inner$fixed$prior(theta[nms_fixed, 1])
+        ret <- ret + 
+          private$inner$fixed$prior(theta[nms_fixed, 1]) / length(pops)
       }
 
       nms_varied <- self$names("varied")
