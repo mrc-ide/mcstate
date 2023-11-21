@@ -336,6 +336,7 @@ calc_scaling_increment <- function(d, acceptance_target) {
     1 / (d * acceptance_target * (1 - acceptance_target))
 }
 
+
 check_replacement <- function(iteration, control) {
   is_forget_step <- floor(control$forget_rate * iteration) >
     floor(control$forget_rate * (iteration - 1))

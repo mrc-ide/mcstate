@@ -297,7 +297,7 @@ test_that("pmcmc_parameters_nested prior", {
   p <- pmcmc_parameters_nested$new(parameters, proposal_varied, proposal_fixed)
 
   init <- p$initial()
-  expect_equal(p$prior(init), set_names(c(15, 17), c("p1", "p2")))
+  expect_equal(p$prior(init), set_names(c(9.5, 11.5), c("p1", "p2")))
 
   parameters <- list(
     a = pmcmc_varied_parameter("a", c("p1", "p2"), 1:2,
@@ -311,7 +311,8 @@ test_that("pmcmc_parameters_nested prior", {
 
   init <- p$initial()
   expect_equal(p$prior(init),
-               set_names(c(11 + dnorm(1) + dlnorm(3), 11 + dexp(2) + dlnorm(4)),
+               set_names(c(5.5 + dnorm(1) + dlnorm(3),
+                           5.5 + dexp(2) + dlnorm(4)),
                          c("p1", "p2")))
 })
 
