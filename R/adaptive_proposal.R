@@ -373,7 +373,7 @@ update_scaling <- function(scaling, iteration, control, accept_prob,
   n_start <- 5 / acceptance_target * (1 - acceptance_target) 
   
   log_scaling_change <- scaling_increment * (accept_prob - acceptance_target) /
-    (n_start + max(0, iteration - pre_diminish))
+    sqrt(n_start + max(0, iteration - pre_diminish))
   
   pmax(min_scaling, scaling * exp(log_scaling_change))
 }
