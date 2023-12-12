@@ -370,7 +370,7 @@ update_scaling <- function(scaling, iteration, control, accept_prob,
   acceptance_target <- control$acceptance_target
   min_scaling <- control$min_scaling
   pre_diminish <- control$pre_diminish
-  n_start <- 5 / acceptance_target * (1 - acceptance_target) 
+  n_start <- (5 / acceptance_target * (1 - acceptance_target) ) ^ 2
   
   log_scaling_change <- scaling_increment * (accept_prob - acceptance_target) /
     sqrt(n_start + max(0, iteration - pre_diminish))
