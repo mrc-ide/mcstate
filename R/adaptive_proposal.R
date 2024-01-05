@@ -71,6 +71,7 @@ adaptive_proposal_control <- function(initial_scaling = 1,
                                       initial_vcv_weight = 1000,
                                       forget_rate = 0.2,
                                       forget_end = Inf,
+                                      adapt_end = Inf,
                                       pre_diminish = 0) {
   ret <- list(initial_scaling = initial_scaling,
               min_scaling = min_scaling,
@@ -79,6 +80,7 @@ adaptive_proposal_control <- function(initial_scaling = 1,
               initial_vcv_weight = initial_vcv_weight,
               forget_rate = forget_rate,
               forget_end = forget_end,
+              adapt_end = adapt_end,
               pre_diminish = pre_diminish)
   class(ret) <- "adaptive_proposal_control"
   ret
@@ -129,6 +131,9 @@ adaptive_proposal <- R6::R6Class(
 
     update = function(theta, accept_prob, theta_history, i) {
       self$iteration <- self$iteration + 1
+      if (self$iteration > self$control$adapt_end) {
+        return(invisible())
+      }
       is_replacement <- check_replacement(self$iteration, self$control)
       if (is_replacement) {
         theta_remove <- theta_history[[self$included[1]]]
@@ -245,6 +250,10 @@ adaptive_proposal_nested <- R6::R6Class(
       
       ## Probably we can save this more simply? - minor change on creation
       self$iteration[[type]] <- self$iteration[[type]] + 1
+      if (self$iteration[[type]] > self$control$adapt_end) {
+        return(invisible())
+      }
+      
       is_replacement <- 
         check_replacement(self$iteration[[type]], self$control)
       if (is_replacement) {

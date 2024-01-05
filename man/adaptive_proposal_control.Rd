@@ -12,6 +12,7 @@ adaptive_proposal_control(
   initial_vcv_weight = 1000,
   forget_rate = 0.2,
   forget_end = Inf,
+  adapt_end = Inf,
   pre_diminish = 0
 )
 }
