@@ -64,13 +64,17 @@
 ##'   mode it might be useful to explore with it switched off
 ##'
 ##' @export
-adaptive_proposal_control <- function(min_scaling = 1,
+adaptive_proposal_control <- function(initial_scaling = 1,
+                                      min_scaling = 0,
+                                      scaling_increment = NULL,
                                       acceptance_target = 0.234,
                                       initial_vcv_weight = 1000,
                                       forget_rate = 0.2,
                                       forget_end = Inf,
                                       pre_diminish = 0) {
-  ret <- list(min_scaling = min_scaling,
+  ret <- list(initial_scaling = initial_scaling,
+              min_scaling = min_scaling,
+              scaling_increment = scaling_increment,
               acceptance_target = acceptance_target,
               initial_vcv_weight = initial_vcv_weight,
               forget_rate = forget_rate,
@@ -95,7 +99,6 @@ adaptive_proposal <- R6::R6Class(
     included = NULL,
     scaling = NULL,
     scaling_increment = NULL,
-    scaling_start = NULL,
     n_start = NULL,
     
     initialize = function(pars, control) {
@@ -111,11 +114,10 @@ adaptive_proposal <- R6::R6Class(
       self$autocorrelation <- 0 * vcv
       self$included <- c()
       
-      self$scaling <- 1
-      self$scaling_increment <- 
+      self$scaling <- control$initial_scaling
+      self$scaling_increment <- control$scaling_increment %||%
         calc_scaling_increment(length(self$mean), control$acceptance_target)
-      self$scaling_start <- self$scaling
-      self$n_start <- update_n_start(0, 0, control$acceptance_target, TRUE)
+      self$n_start <- calc_n_start(control$acceptance_target)
     },
 
     propose = function(theta) {
@@ -142,12 +144,6 @@ adaptive_proposal <- R6::R6Class(
         theta, self$weight, self$autocorrelation, theta_remove)
       self$mean <- update_mean(theta, self$weight, self$mean, theta_remove)
       self$included <- update_included(self$included, i, is_replacement)
-      
-      restart <- abs(log(self$scaling) - log(self$scaling_start)) > log(3)
-      self$scaling_start <- 
-        update_scaling_start(self$scaling_start, self$scaling, restart)
-      self$n_start <- update_n_start(self$n_start, self$iteration,
-                                     self$control$acceptance_target, restart)
     }
   ))
 
@@ -170,7 +166,6 @@ adaptive_proposal_nested <- R6::R6Class(
     included = NULL,
     scaling = NULL,
     scaling_increment = NULL,
-    scaling_start = NULL,
     n_start = NULL,
 
     initialize = function(pars, control) {
@@ -209,16 +204,15 @@ adaptive_proposal_nested <- R6::R6Class(
         fixed = 0 * vcv$fixed,
         varied = Map(function (x) 0 * x, vcv$varied))
       
-      self$scaling <- list(fixed = 1,
-                           varied = rep(1, n_populations))
+      self$scaling <- list(fixed = control$initial_scaling,
+                           varied = rep(control$initial_scaling, n_populations))
       self$scaling_increment <- list(
-        fixed = calc_scaling_increment(n_fixed, control$acceptance_target),
-        varied = calc_scaling_increment(n_varied, control$acceptance_target)
+        fixed = control$scaling_increment %||% 
+          calc_scaling_increment(n_fixed, control$acceptance_target),
+        varied = control$scaling_increment %||% 
+          calc_scaling_increment(n_varied, control$acceptance_target)
       )
-      self$scaling_start <- self$scaling
-      n_start <- update_n_start(0, 0, control$acceptance_target, TRUE)
-      self$n_start <- list(fixed = n_start,
-                           varied = rep(n_start, n_populations))
+      self$n_start <- calc_n_start(control$acceptance_target)
     },
 
     propose = function(theta, type) {
@@ -274,7 +268,7 @@ adaptive_proposal_nested <- R6::R6Class(
       if (type == "fixed") {
         self$scaling[[type]] <- update_scaling(
           self$scaling[[type]], self$iteration[[type]], self$control,
-          accept_prob, self$scaling_increment[[type]], self$n_start[[type]])
+          accept_prob, self$scaling_increment[[type]], self$n_start)
         self$autocorrelation[[type]] <- update_autocorrelation(
           theta_type, self$weight[[type]], self$autocorrelation[[type]],
           theta_remove)
@@ -282,18 +276,10 @@ adaptive_proposal_nested <- R6::R6Class(
           theta_type, self$weight[[type]], self$mean[[type]], theta_remove)
         self$included[[type]] <- 
           update_included(self$included[[type]], i, is_replacement)
-        
-        restart <- abs(log(self$scaling[[type]]) - 
-                         log(self$scaling_start[[type]])) > log(3)
-        self$scaling_start[[type]] <- update_scaling_start(
-          self$scaling_start[[type]], self$scaling[[type]], restart)
-        self$n_start[[type]] <- 
-          update_n_start(self$n_start[[type]], self$iteration[[type]], 
-                         self$control$acceptance_target, restart)
       } else if (type == "varied") {
         self$scaling[[type]] <- update_scaling(
           self$scaling[[type]], self$iteration[[type]], self$control,
-          accept_prob, self$scaling_increment[[type]], self$n_start[[type]])
+          accept_prob, self$scaling_increment[[type]], self$n_start)
         self$autocorrelation[[type]][] <- Map(
           update_autocorrelation, theta_type, self$weight[[type]],
           self$autocorrelation[[type]], theta_remove)
@@ -302,14 +288,6 @@ adaptive_proposal_nested <- R6::R6Class(
           theta_remove)
         self$included[[type]] <- 
           update_included(self$included[[type]], i, is_replacement)
-        
-        restart <- abs(log(self$scaling[[type]]) - 
-                         log(self$scaling_start[[type]])) > log(3)
-        self$scaling_start[[type]] <- update_scaling_start(
-          self$scaling_start[[type]], self$scaling[[type]], restart)
-        self$n_start[[type]] <- 
-          update_n_start(self$n_start[[type]], self$iteration[[type]], 
-                         self$control$acceptance_target, restart)
       }
       
 
@@ -370,7 +348,6 @@ update_scaling <- function(scaling, iteration, control, accept_prob,
   acceptance_target <- control$acceptance_target
   min_scaling <- control$min_scaling
   pre_diminish <- control$pre_diminish
-  n_start <- 5 / acceptance_target * (1 - acceptance_target) 
   
   log_scaling_change <- scaling_increment * (accept_prob - acceptance_target) /
     sqrt(n_start + max(0, iteration - pre_diminish))
@@ -379,21 +356,8 @@ update_scaling <- function(scaling, iteration, control, accept_prob,
 }
 
 
-update_n_start <- function(n_start, n, acceptance_target, restart) {
-  if (any(restart)) {
-    n_start[restart] <-
-      5 / (acceptance_target * (1 - acceptance_target)) - n
-  }
-
-  n_start
-}
-
-
-update_scaling_start <- function(scaling_start, scaling, restart) {
-  if (any(restart)) {
-    scaling_start[restart] <- scaling[restart]
-  }
-  scaling_start
+calc_n_start <- function(acceptance_target) {
+  5 / (acceptance_target * (1 - acceptance_target))
 }
 
 

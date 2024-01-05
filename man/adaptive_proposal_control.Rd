@@ -5,7 +5,9 @@
 \title{Adaptive proposal control}
 \usage{
 adaptive_proposal_control(
-  min_scaling = 1,
+  initial_scaling = 1,
+  min_scaling = 0,
+  scaling_increment = NULL,
   acceptance_target = 0.234,
   initial_vcv_weight = 1000,
   forget_rate = 0.2,
@@ -14,6 +16,14 @@ adaptive_proposal_control(
 )
 }
 \arguments{
+\item{initial_scaling}{The initial scaling of the variance
+covariance matrix to be used to generate the multivariate normal
+proposal for the random-walk Metropolis-Hasting algorithm.}
+
+\item{scaling_increment}{The scaling increment which is added or
+subtracted to the scaling factor of the variance-covariance
+after each adaptive step.}
+
 \item{acceptance_target}{The target for the fraction of proposals
 that should be accepted (optimally) for the adaptive part of the
 mixture model.}
@@ -46,14 +56,6 @@ diminishing adaptation of the scaling parameter from the offset, while
 Diminishing adaptation should help the scaling parameter to converge
 better, but while the chains find the location and scale of the posterior
 mode it might be useful to explore with it switched off}
-
-\item{initial_scaling}{The initial scaling of the variance
-covariance matrix to be used to generate the multivariate normal
-proposal for the random-walk Metropolis-Hasting algorithm.}
-
-\item{scaling_increment}{The scaling increment which is added or
-subtracted to the scaling factor of the variance-covariance
-after each adaptive step.}
 }
 \description{
 Control for adaptive proposals, used in \link{pmcmc_control}
