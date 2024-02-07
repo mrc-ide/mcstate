@@ -157,6 +157,7 @@ particle_filter_state <- R6::R6Class(
         self$history <- list(value = res$trajectories,
                              index = self$history$index)
       }
+      
       self$restart_state <- res$snapshots
       self$log_likelihood
     }

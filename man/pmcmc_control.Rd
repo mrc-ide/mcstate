@@ -19,6 +19,7 @@ pmcmc_control(
   nested_step_ratio = 1,
   nested_update_both = FALSE,
   filter_early_exit = FALSE,
+  restart_match = FALSE,
   n_burnin = NULL,
   n_steps_retain = NULL,
   adaptive_proposal = NULL,

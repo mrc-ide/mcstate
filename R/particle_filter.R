@@ -388,7 +388,7 @@ particle_filter <- R6::R6Class(
       if (is.null(private$last_history)) {
         stop("Can't get history as model was run with save_history = FALSE")
       }
-
+      
       history_value <- private$last_history$value
       history_order <- private$last_history$order
       history_index <- private$last_history$index
@@ -441,11 +441,13 @@ particle_filter <- R6::R6Class(
     ##'
     ##' @param index_particle Optional vector of particle indices to return.
     ##' If `NULL` we return all particles' states.
-    restart_state = function(index_particle = NULL) {
+    restart_state = function(index_particle = NULL, save_restart = NULL,
+                             restart_match = FALSE) {
       if (is.null(private$last_model)) {
         stop("Model has not yet been run")
       }
       restart_state <- private$last_restart_state
+      history_order <- private$last_history$order
       if (is.null(restart_state)) {
         stop("Can't get history as model was run with save_restart = NULL")
       }
@@ -453,7 +455,9 @@ particle_filter <- R6::R6Class(
         if (length(dim(restart_state)) == 4) {
           restart_state <- restart_state[, index_particle, , , drop = FALSE]
         } else {
-          restart_state <- restart_state[, index_particle, , drop = FALSE]
+          restart_state <- restart_single(restart_state, index_particle,
+                                          save_restart, restart_match,
+                                          history_order)
         }
       }
       restart_state
@@ -702,6 +706,36 @@ history_multiple <- function(history_value, history_order, history_index,
     }
   }
   rownames(ret) <- names(history_index)
+  ret
+}
+
+
+restart_single <- function(restart_state, index_particle, save_restart,
+                           restart_match, history_order) {
+  if (is.null(history_order) || !restart_match) {
+    if (is.null(index_particle)) {
+      ret <- restart_state
+    } else {
+      ret <- restart_state[, index_particle, , drop = FALSE]
+    }
+  } else {
+    if (is.null(index_particle)) {
+      index_particle <- seq_len(nrow(history_order))
+    }
+    
+    nstate <- nrow(restart_state)
+    np <- length(index_particle)
+    nt <- ncol(history_order)
+    
+    idx <- matrix(NA_integer_, np, nt)
+    for (i in rev(seq_len(ncol(idx)))) {
+      index_particle <- idx[, i] <- history_order[index_particle, i]
+    }
+    
+    ret <- vapply(seq_along(save_restart),
+                  function (i) restart_state[, idx[, save_restart[i] + 2], i],
+                  array(0, c(nstate, np)))
+  }
   ret
 }
 

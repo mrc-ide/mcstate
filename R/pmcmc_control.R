@@ -186,7 +186,7 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
                           save_state = TRUE, save_restart = NULL,
                           save_trajectories = FALSE, progress = FALSE,
                           nested_step_ratio = 1, nested_update_both = FALSE,
-                          filter_early_exit = FALSE,
+                          filter_early_exit = FALSE, restart_match = FALSE,
                           n_burnin = NULL, n_steps_retain = NULL,
                           adaptive_proposal = NULL, path = NULL) {
   assert_scalar_positive_integer(n_steps)
@@ -275,6 +275,7 @@ pmcmc_control <- function(n_steps, n_chains = 1L, n_threads_total = NULL,
               path = path,
               adaptive_proposal = adaptive_proposal,
               filter_early_exit = filter_early_exit,
+              restart_match = restart_match,
               nested_update_both = nested_update_both,
               nested_step_ratio = nested_step_ratio)
   ret[names(filter)] <- filter
