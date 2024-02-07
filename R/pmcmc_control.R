@@ -143,7 +143,7 @@
 ##'   between steps. This will the the case where your likelihood
 ##'   calculation is a sum of discrete normalised probability
 ##'   distributions, but may not be for continuous distributions!
-##'   
+##'
 ##' @param restart_match Logical, indicating whether the restart state saved
 ##'   from the particle filter should match the trajectory saved, otherwise
 ##'   the restart state will be randomly drawn from the states of the particle
