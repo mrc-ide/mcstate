@@ -749,7 +749,7 @@ restart_multiple <- function(restart_state, index_particle, index_save_restart,
                              restart_match, history_order) {
   ny <- nrow(restart_state)
   npop <- nlayer(restart_state)
-  
+
   if (is.null(history_order) || !restart_match) {
     if (is.null(index_particle)) {
       ret <- restart_state
@@ -769,7 +769,7 @@ restart_multiple <- function(restart_state, index_particle, index_save_restart,
   } else {
     ## mcstate particle filter; need to sort the history
     nt <- nlayer(history_order)
-    
+
     if (is.null(index_particle)) {
       index_particle <- matrix(seq_len(ncol(history_value)),
                                ncol(history_value), npop)
@@ -784,7 +784,7 @@ restart_multiple <- function(restart_state, index_particle, index_save_restart,
                                  ncol = npop)
       }
     }
-    
+
     np <- nrow(index_particle)
     nr <- length(index_save_restart)
     
@@ -799,7 +799,7 @@ restart_multiple <- function(restart_state, index_particle, index_save_restart,
     ret <- array(NA_real_, c(ny, np, npop, nr))
     for (i in seq_len(npop)) {
       for (j in seq_len(nr)) {
-        ret[, , i, j] <- 
+        ret[, , i, j] <-
           restart_state[, idx[, i, index_save_restart[j] + 1], i, j]
       }
     }
