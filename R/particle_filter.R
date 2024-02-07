@@ -452,11 +452,13 @@ particle_filter <- R6::R6Class(
         stop("Can't get history as model was run with save_restart = NULL")
       }
       if (!is.null(index_particle)) {
+        save_restart_times <- check_save_restart(save_restart, private$data)
+        index_save_restart <- match(save_restart_times, private$times[, 1])
         if (length(dim(restart_state)) == 4) {
           restart_state <- restart_state[, index_particle, , , drop = FALSE]
         } else {
           restart_state <- restart_single(restart_state, index_particle,
-                                          save_restart, restart_match,
+                                          index_save_restart, restart_match,
                                           history_order)
         }
       }
@@ -710,7 +712,7 @@ history_multiple <- function(history_value, history_order, history_index,
 }
 
 
-restart_single <- function(restart_state, index_particle, save_restart,
+restart_single <- function(restart_state, index_particle, index_save_restart,
                            restart_match, history_order) {
   if (is.null(history_order) || !restart_match) {
     if (is.null(index_particle)) {
@@ -732,9 +734,10 @@ restart_single <- function(restart_state, index_particle, save_restart,
       index_particle <- idx[, i] <- history_order[index_particle, i]
     }
     
-    ret <- vapply(seq_along(save_restart),
-                  function (i) restart_state[, idx[, save_restart[i] + 2], i],
-                  array(0, c(nstate, np)))
+    ret <- 
+      vapply(seq_along(index_save_restart),
+             function (i) restart_state[, idx[, index_save_restart[i] + 1], i],
+             array(0, c(nstate, np)))
   }
   ret
 }
