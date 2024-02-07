@@ -131,6 +131,11 @@ between steps. This will the the case where your likelihood
 calculation is a sum of discrete normalised probability
 distributions, but may not be for continuous distributions!}
 
+\item{restart_match}{Logical, indicating whether the restart state saved
+from the particle filter should match the trajectory saved, otherwise
+the restart state will be randomly drawn from the states of the particle
+filter after filtering to the restart time point.}
+
 \item{n_burnin}{Optionally, the number of points to discard as
 burnin.  This happens separately to the burnin in
 \link{pmcmc_thin} or \link{pmcmc_sample}.  See Details.}
