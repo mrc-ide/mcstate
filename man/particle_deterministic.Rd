@@ -305,7 +305,11 @@ because earlier saved state is not filtered by later filtering,
 but in the deterministic model we run with a single particle so it
 \emph{is} the same.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_deterministic$restart_state(index_particle = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{particle_deterministic$restart_state(
+  index_particle = NULL,
+  save_restart = NULL,
+  restart_match = FALSE
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
