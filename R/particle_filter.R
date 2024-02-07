@@ -388,7 +388,7 @@ particle_filter <- R6::R6Class(
       if (is.null(private$last_history)) {
         stop("Can't get history as model was run with save_history = FALSE")
       }
-      
+
       history_value <- private$last_history$value
       history_order <- private$last_history$order
       history_index <- private$last_history$index
