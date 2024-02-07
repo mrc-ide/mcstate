@@ -724,19 +724,19 @@ restart_single <- function(restart_state, index_particle, index_save_restart,
     if (is.null(index_particle)) {
       index_particle <- seq_len(nrow(history_order))
     }
-    
+
     nstate <- nrow(restart_state)
     np <- length(index_particle)
     nt <- ncol(history_order)
-    
+
     idx <- matrix(NA_integer_, np, nt)
     for (i in rev(seq_len(ncol(idx)))) {
       index_particle <- idx[, i] <- history_order[index_particle, i]
     }
-    
-    ret <- 
+
+    ret <-
       vapply(seq_along(index_save_restart),
-             function (i) restart_state[, idx[, index_save_restart[i] + 1], i],
+             function(i) restart_state[, idx[, index_save_restart[i] + 1], i],
              array(0, c(nstate, np)))
   }
   ret

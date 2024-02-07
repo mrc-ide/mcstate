@@ -469,8 +469,8 @@ test_that("Can save intermediate state to restart", {
   expect_equal(dim(res3$restart$state), c(5, 30, 2))
 
   expect_equal(res3$restart$state[, , 1], res2$restart$state[, , 1])
-  
-  expect_equal(res4$restart$state[1:3, , ], 
+
+  expect_equal(res4$restart$state[1:3, , ],
                res4$trajectories$state[, , c(21, 31)])
 })
 
