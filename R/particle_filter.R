@@ -749,7 +749,7 @@ restart_multiple <- function(restart_state, index_particle, index_save_restart,
                              restart_match, history_order) {
   ny <- nrow(restart_state)
   npop <- nlayer(restart_state)
-
+  
   if (is.null(history_order) || !restart_match) {
     if (is.null(index_particle)) {
       ret <- restart_state
