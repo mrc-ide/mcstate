@@ -21,7 +21,7 @@ as the order of the arguments may change in future."><meta property="og:image" c
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.19</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.20</span>
       </span>
     </div>
 
@@ -107,6 +107,7 @@ as the order of the arguments may change in future.</p>
 <span>  nested_step_ratio <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  nested_update_both <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  filter_early_exit <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  restart_match <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  n_burnin <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  n_steps_retain <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  adaptive_proposal <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -216,7 +217,7 @@ particle will be selected for each.</p></dd>
 
 <dt>progress</dt>
 <dd><p>Logical, indicating if a progress bar should be
-displayed, using <code><a href="https://rdrr.io/pkg/progress/man/progress_bar.html" class="external-link">progress::progress_bar</a></code>.</p></dd>
+displayed, using <code><a href="http://r-lib.github.io/progress/reference/progress_bar.html" class="external-link">progress::progress_bar</a></code>.</p></dd>
 
 
 <dt>nested_step_ratio</dt>
@@ -246,6 +247,13 @@ accepted. Only use this if your log-likelihood never increases
 between steps. This will the the case where your likelihood
 calculation is a sum of discrete normalised probability
 distributions, but may not be for continuous distributions!</p></dd>
+
+
+<dt>restart_match</dt>
+<dd><p>Logical, indicating whether the restart state saved
+from the particle filter should match the trajectory saved, otherwise
+the restart state will be randomly drawn from the states of the particle
+filter after filtering to the restart time point.</p></dd>
 
 
 <dt>n_burnin</dt>
@@ -360,6 +368,9 @@ relate to the filtered samples.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $filter_early_exit</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $restart_match</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $nested_update_both</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -425,6 +436,9 @@ relate to the filtered samples.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $filter_early_exit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $restart_match</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $nested_update_both</span>
@@ -494,6 +508,9 @@ relate to the filtered samples.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $filter_early_exit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $restart_match</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $nested_update_both</span>

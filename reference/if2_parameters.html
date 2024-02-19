@@ -21,7 +21,7 @@ used."><meta property="og:image" content="/logo.png"><!-- mathjax --><script src
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.19</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.20</span>
       </span>
     </div>
 
@@ -262,16 +262,16 @@ object with <code>pars_multi = TRUE</code></p><div class="section">
 <span class="r-in"><span><span class="va">pars_sd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"a"</span> <span class="op">=</span> <span class="fl">0.02</span>, <span class="st">"b"</span> <span class="op">=</span> <span class="fl">0.02</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p_mat</span> <span class="op">&lt;-</span> <span class="va">pars</span><span class="op">$</span><span class="fu">walk_initialise</span><span class="op">(</span><span class="va">n_par_sets</span>, <span class="va">pars_sd</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p_mat</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          [,1]       [,2]        [,3]        [,4]        [,5]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> a  0.06195416 0.05962612  0.09927618  0.07004695  0.08524579</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> b -0.03949787 0.01420539 -0.01353528 -0.00236685 -0.01409057</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           [,1]        [,2]        [,3]       [,4]        [,5]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> a  0.095039469  0.07334459 0.116361301 0.12941940 0.104585662</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> b -0.007306416 -0.01133474 0.006297038 0.02415437 0.001534398</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Propose a new parameter set</span></span></span>
 <span class="r-in"><span><span class="va">p_mat</span> <span class="op">&lt;-</span> <span class="va">pars</span><span class="op">$</span><span class="fu">walk</span><span class="op">(</span><span class="va">p_mat</span>, <span class="va">pars_sd</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p_mat</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          [,1]       [,2]        [,3]       [,4]        [,5]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> a  0.08311804 0.03616717 0.075063624 0.08238640 0.079757577</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> b -0.04033958 0.04965804 0.001771775 0.00422381 0.003780826</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          [,1]         [,2]        [,3]       [,4]        [,5]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> a  0.10590882  0.101096316  0.13392404 0.13027376  0.07802785</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> b -0.02957219 -0.008500499 -0.01550211 0.03416819 -0.00691448</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Information about parameters:</span></span></span>
 <span class="r-in"><span><span class="va">pars</span><span class="op">$</span><span class="fu">names</span><span class="op">(</span><span class="op">)</span></span></span>
@@ -283,48 +283,48 @@ object with <code>pars_multi = TRUE</code></p><div class="section">
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Compute prior</span></span></span>
 <span class="r-in"><span><span class="va">pars</span><span class="op">$</span><span class="fu">prior</span><span class="op">(</span><span class="va">p_mat</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -2.088876 -2.921153 -2.190478 -2.097396 -2.129824</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -1.846409 -1.892754 -1.611588 -1.639408 -2.151757</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Transform data for your model</span></span></span>
 <span class="r-in"><span><span class="va">pars</span><span class="op">$</span><span class="fu">model</span><span class="op">(</span><span class="va">p_mat</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]$a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.08311804</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.1059088</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]$b</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.04033958</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.02957219</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[2]]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[2]]$a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.03616717</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.1010963</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[2]]$b</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.04965804</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.008500499</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[3]]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[3]]$a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.07506362</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.133924</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[3]]$b</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.001771775</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.01550211</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[4]]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[4]]$a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.0823864</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.1302738</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[4]]$b</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.00422381</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.03416819</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[5]]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[5]]$a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.07975758</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.07802785</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[5]]$b</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.003780826</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.00691448</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 </code></pre></div>
