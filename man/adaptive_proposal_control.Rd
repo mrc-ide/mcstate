@@ -5,12 +5,14 @@
 \title{Adaptive proposal control}
 \usage{
 adaptive_proposal_control(
-  initial_scaling = 0.2,
-  scaling_increment = 0.01,
+  initial_scaling = 1,
+  min_scaling = 0,
+  scaling_increment = NULL,
   acceptance_target = 0.234,
   initial_vcv_weight = 1000,
   forget_rate = 0.2,
   forget_end = Inf,
+  adapt_end = Inf,
   pre_diminish = 0
 )
 }

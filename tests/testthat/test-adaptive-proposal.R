@@ -30,9 +30,14 @@ test_that("mean and autocorrelation calculated correctly", {
   expected_vcv <- cov(p[11:100, ])
   vcv <- obj$autocorrelation - obj$weight / (obj$weight - 1) * qp(obj$mean)
   expect_equal(vcv, expected_vcv)
-  expect_equal(adaptive_vcv(0.5, obj$autocorrelation, obj$weight, obj$mean,
+  
+  scaling <- 0.5
+  expected_adaptive_vcv <- 
+    2.38 ^ 2 / d * scaling ^ 2 * 
+    (89 * vcv + (50 + d + 1) * pars$vcv()) / (90 + 50 + d + 1)
+  expect_equal(adaptive_vcv(scaling, obj$autocorrelation, obj$weight, obj$mean,
                             pars$vcv(), obj$control$initial_vcv_weight),
-               0.5 * (89 * vcv + (50 + d + 1) * pars$vcv()) / (90 + 50 + d + 1))
+               expected_adaptive_vcv)
   
   control <- adaptive_proposal_control(initial_vcv_weight = 50,
                                        forget_rate = 0.5,
@@ -50,9 +55,13 @@ test_that("mean and autocorrelation calculated correctly", {
   expected_vcv <- cov(p[26:100, ])
   vcv <- obj$autocorrelation - obj$weight / (obj$weight - 1) * qp(obj$mean)
   expect_equal(vcv, expected_vcv)
-  expect_equal(adaptive_vcv(0.5, obj$autocorrelation, obj$weight, obj$mean,
+  
+  expected_adaptive_vcv <- 
+    2.38 ^ 2 / d * scaling ^ 2 * 
+    (74 * vcv + (50 + d + 1) * pars$vcv()) / (75 + 50 + d + 1)
+  expect_equal(adaptive_vcv(scaling, obj$autocorrelation, obj$weight, obj$mean,
                             pars$vcv(), obj$control$initial_vcv_weight),
-               0.5 * (74 * vcv + (50 + d + 1) * pars$vcv()) / (75 + 50 + d + 1))
+               expected_adaptive_vcv)
 })
 
 
