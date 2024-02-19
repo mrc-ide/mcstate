@@ -308,7 +308,8 @@ particle_deterministic <- R6::R6Class(
     ##' only valid value of index_particle is "1", this has no effect and
     ##' it is included primarily for compatibility with the stochastic
     ##' interface.
-    restart_state = function(index_particle = NULL) {
+    restart_state = function(index_particle = NULL, save_restart = NULL,
+                             restart_match = FALSE) {
       if (is.null(private$last_model)) {
         stop("Model has not yet been run")
       }

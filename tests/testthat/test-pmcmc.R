@@ -436,17 +436,23 @@ test_that("Can save intermediate state to restart", {
                             index = dat$index)
   p3 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
                             index = dat$index)
+  p4 <- particle_filter$new(dat$data, dat$model, n_particles, dat$compare,
+                            index = dat$index)
   control1 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE)
   control2 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE,
                             save_restart = 20)
   control3 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE,
                             save_restart = c(20, 30))
+  control4 <- pmcmc_control(30, save_trajectories = TRUE, save_state = TRUE,
+                            save_restart = c(20, 30), restart_match = TRUE)
   set.seed(1)
   res1 <- pmcmc(dat$pars, p1, control = control1)
   set.seed(1)
   res2 <- pmcmc(dat$pars, p2, control = control2)
   set.seed(1)
   res3 <- pmcmc(dat$pars, p3, control = control3)
+  set.seed(1)
+  res4 <- pmcmc(dat$pars, p4, control = control4)
 
   ## Same actual run
   expect_identical(res1$trajectories, res2$trajectories)
@@ -463,6 +469,9 @@ test_that("Can save intermediate state to restart", {
   expect_equal(dim(res3$restart$state), c(5, 30, 2))
 
   expect_equal(res3$restart$state[, , 1], res2$restart$state[, , 1])
+
+  expect_equal(res4$restart$state[1:3, , ],
+               res4$trajectories$state[, , c(21, 31)])
 })
 
 
