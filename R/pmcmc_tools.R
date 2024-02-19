@@ -110,6 +110,7 @@ pmcmc_combine <- function(..., samples = list(...)) {
   state <- lapply(samples, "[[", "state")
   trajectories <- lapply(samples, "[[", "trajectories")
   restart <- lapply(samples, "[[", "restart")
+  adaptive <- lapply(samples, "[[", "adaptive")
 
   check_combine(samples, iteration, state, trajectories, restart)
 
@@ -137,6 +138,12 @@ pmcmc_combine <- function(..., samples = list(...)) {
     restart <- combine_state(restart)
   }
 
+  if (is.null(adaptive[[1]])) {
+    adaptive <- NULL
+  } else {
+    adaptive <- combine_adaptive(adaptive)
+  }
+
   ## Use the last state for predict as that will probably have most
   ## advanced seed.
   ##
@@ -144,7 +151,7 @@ pmcmc_combine <- function(..., samples = list(...)) {
   predict <- last(samples)$predict
 
   mcstate_pmcmc(iteration, pars, probabilities, state, trajectories,
-                restart, predict, chain)
+                restart, predict, adaptive, chain)
 }
 
 check_combine <- function(samples, iteration, state, trajectories, restart) {
@@ -193,4 +200,21 @@ combine_state <- function(x) {
   ret <- x[[1]]
   ret$state <- state
   ret
+}
+
+combine_adaptive <- function(x) {
+  mean <- array_from_list(lapply(x, "[[", "mean"))
+  rownames(mean) <- names(x[[1]]$mean)
+
+  autocorrelation <- array_from_list(lapply(x, "[[", "autocorrelation"))
+  rownames(autocorrelation) <- colnames(autocorrelation) <-
+    rownames(x[[1]]$autocorrelation)
+
+  scaling <- unlist(lapply(x, "[[", "scaling"))
+  weight <- unlist(lapply(x, "[[", "weight"))
+
+  list(autocorrelation = autocorrelation,
+       mean = mean,
+       scaling = scaling,
+       weight = weight)
 }
