@@ -44,7 +44,9 @@ pmcmc_state <- R6::R6Class(
           array_drop(array_nth_dimension(private$filter$state(), 2, i), 2)
       }
       if (length(private$control$save_restart) > 0) {
-        private$curr_restart <- array_drop(private$filter$restart_state(i), 2)
+        private$curr_restart <- array_drop(
+          private$filter$restart_state(i, private$control$save_restart,
+                                       private$control$restart_match), 2)
       }
     },
 

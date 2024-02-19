@@ -415,7 +415,11 @@ particles at the requested point, regardless if they appear in
 the set of particles that make it to the end of the
 simulation).
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{particle_filter$restart_state(index_particle = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{particle_filter$restart_state(
+  index_particle = NULL,
+  save_restart = NULL,
+  restart_match = FALSE
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

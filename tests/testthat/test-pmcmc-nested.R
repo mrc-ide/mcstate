@@ -249,9 +249,11 @@ test_that("pmcmc nested sir - 2 chains", {
 
   control1 <- pmcmc_control(50, save_state = TRUE, n_chains = 1,
                             save_restart = c(10, 20, 30, 40),
+                            restart_match = TRUE,
                             save_trajectories = TRUE)
   control2 <- pmcmc_control(50, n_chains = 3, save_state = TRUE,
                             save_restart = c(10, 20, 30, 40),
+                            restart_match = TRUE,
                             save_trajectories = TRUE)
 
   set.seed(1)
