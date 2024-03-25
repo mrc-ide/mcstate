@@ -143,7 +143,7 @@ adaptive_proposal <- R6::R6Class(
       self$mean <- pars$mean()
       self$initial_vcv <- pars$vcv()
       n_pars <- length(self$mean)
-      self$autocorrelation <- 
+      self$autocorrelation <-
         matrix(0, n_pars, n_pars, dimnames = dimnames(self$initial_vcv))
       self$vcv <- update_vcv(self$mean, self$autocorrelation, self$weight)
       
@@ -158,7 +158,7 @@ adaptive_proposal <- R6::R6Class(
     },
 
     propose = function(theta) {
-      proposal_vcv <- 
+      proposal_vcv <-
         calc_proposal_vcv(self$scaling, self$vcv, self$weight,
                           self$initial_vcv, self$control$initial_vcv_weight)
       self$pars$propose(theta, vcv = proposal_vcv)
@@ -255,8 +255,8 @@ adaptive_proposal_nested <- R6::R6Class(
         fixed = matrix(0, n_fixed, n_fixed,
                        dimnames = dimnames(self$initial_vcv$fixed)),
         varied = lapply(self$initial_vcv$varied,
-                        function(x) matrix(0, n_varied, n_varied,
-                                           dimnames = dimnames(x))))
+                        function(x) {matrix(0, n_varied, n_varied,
+                                            dimnames = dimnames(x))}))
       self$vcv <- list(
         fixed = update_vcv(self$mean$fixed, self$autocorrelation$fixed,
                            self$weight$fixed),
@@ -288,7 +288,7 @@ adaptive_proposal_nested <- R6::R6Class(
                             self$weight[[type]], self$initial_vcv[[type]],
                             self$control$initial_vcv_weight[[type]])
       } else if (type == "varied") {
-        proposal_vcv <- 
+        proposal_vcv <-
           Map(calc_proposal_vcv, self$scaling[[type]], self$vcv[[type]],
               self$weight[[type]], self$initial_vcv[[type]],
               self$control$initial_vcv_weight[[type]])
@@ -364,11 +364,11 @@ adaptive_proposal_nested <- R6::R6Class(
         self$mean[[type]][] <- Map(
           update_mean, theta_type, self$weight[[type]], self$mean[[type]],
           theta_remove)
-        self$vcv[[type]] <- 
-          Map(update_vcv, self$mean[[type]], self$autocorrelation[[type]], 
+        self$vcv[[type]] <-
+          Map(update_vcv, self$mean[[type]], self$autocorrelation[[type]],
               self$weight[[type]])
       }
-      
+
     }
   ))
 
@@ -383,14 +383,14 @@ calc_scaling_increment <- function(n_pars, acceptance_target,
                                    log_scaling_update) {
   if (log_scaling_update) {
     A <- -qnorm(acceptance_target / 2)
-    
+
     scaling_increment <-
       (1 - 1 / n_pars) * (sqrt(2 * pi) * exp(A^2 / 2)) / (2 * A) +
       1 / (n_pars * acceptance_target * (1 - acceptance_target))
   } else {
     scaling_increment <- 1 / 100
   }
-  
+
   scaling_increment
 }
 
@@ -398,7 +398,7 @@ calc_scaling_increment <- function(n_pars, acceptance_target,
 calc_proposal_vcv <- function(scaling, vcv, weight, initial_vcv,
                               initial_vcv_weight) {
   n_pars <- nrow(vcv)
-  
+
   if (weight == 0) {
     weighted_vcv <- initial_vcv
   } else {
@@ -406,8 +406,8 @@ calc_proposal_vcv <- function(scaling, vcv, weight, initial_vcv,
       ((weight - 1) * vcv + (initial_vcv_weight + n_pars + 1) * initial_vcv) /
       (weight + initial_vcv_weight + n_pars + 1)
   }
-  
-  
+
+
   2.38^2 / n_pars * scaling^2 * weighted_vcv
 }
 
@@ -416,7 +416,7 @@ check_replacement <- function(iteration, control) {
   is_forget_step <- floor(control$forget_rate * iteration) >
     floor(control$forget_rate * (iteration - 1))
   is_before_forget_end <- iteration <= control$forget_end
-  
+
   is_forget_step & is_before_forget_end
 }
 
@@ -426,13 +426,13 @@ update_scaling <- function(scaling, scaling_weight, accept_prob,
                            acceptance_target, log_scaling_update) {
   scaling_change <- scaling_increment * (accept_prob - acceptance_target) /
     sqrt(scaling_weight)
-  
+
   if (log_scaling_update) {
     pmax(min_scaling, scaling * exp(scaling_change))
   } else {
     pmax(min_scaling, scaling + scaling_change)
   }
-  
+
 }
 
 
@@ -453,7 +453,7 @@ update_autocorrelation <- function(theta, weight, autocorrelation,
       autocorrelation <- autocorrelation + qp(theta)
     }
   }
-  
+
   autocorrelation
 }
 
@@ -474,7 +474,7 @@ update_vcv <- function(mean, autocorrelation, weight) {
   } else {
     vcv <- 0 * autocorrelation
   }
-  
+
   vcv
 }
 
