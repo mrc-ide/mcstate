@@ -477,13 +477,3 @@ update_vcv <- function(mean, autocorrelation, weight) {
 
   vcv
 }
-
-
-update_included <- function(included, i, is_replacement) {
-  if (is_replacement) {
-    included <- c(included[-1L], i)
-  } else {
-    included <- c(included, i)
-  }
-  included
-}
