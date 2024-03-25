@@ -28,16 +28,7 @@ test_that("mean and autocorrelation calculated correctly", {
   expected_mean <- colMeans(p[11:100, ])
   expect_equal(obj$mean, expected_mean)
   expected_vcv <- cov(p[11:100, ])
-  vcv <- obj$autocorrelation - obj$weight / (obj$weight - 1) * qp(obj$mean)
-  expect_equal(vcv, expected_vcv)
-  
-  scaling <- 0.5
-  expected_adaptive_vcv <- 
-    2.38 ^ 2 / d * scaling ^ 2 * 
-    (89 * vcv + (50 + d + 1) * pars$vcv()) / (90 + 50 + d + 1)
-  expect_equal(adaptive_vcv(scaling, obj$autocorrelation, obj$weight, obj$mean,
-                            pars$vcv(), obj$control$initial_vcv_weight),
-               expected_adaptive_vcv)
+  expect_equal(obj$vcv, expected_vcv)
   
   control <- adaptive_proposal_control(initial_vcv_weight = 50,
                                        forget_rate = 0.5,
@@ -53,15 +44,7 @@ test_that("mean and autocorrelation calculated correctly", {
   expected_mean <- colMeans(p[26:100, ])
   expect_equal(obj$mean, expected_mean)
   expected_vcv <- cov(p[26:100, ])
-  vcv <- obj$autocorrelation - obj$weight / (obj$weight - 1) * qp(obj$mean)
-  expect_equal(vcv, expected_vcv)
-  
-  expected_adaptive_vcv <- 
-    2.38 ^ 2 / d * scaling ^ 2 * 
-    (74 * vcv + (50 + d + 1) * pars$vcv()) / (75 + 50 + d + 1)
-  expect_equal(adaptive_vcv(scaling, obj$autocorrelation, obj$weight, obj$mean,
-                            pars$vcv(), obj$control$initial_vcv_weight),
-               expected_adaptive_vcv)
+  expect_equal(obj$vcv, expected_vcv)
 })
 
 
@@ -73,20 +56,27 @@ test_that("Scaling converges to expected limits - no diminishing adaptation", {
   obj <- adaptive_proposal$new(pars, control)
   p <- pars$mean()
   for (i in 1:1000) {
-    obj$update(p, TRUE, NULL, i)
+    obj$update(p, 0.25, NULL, i)
   }
-  expect_equal(
-    obj$scaling,
-    (sqrt(control$initial_scaling) +
-     1000 * (1 - control$acceptance_target) * control$scaling_increment) ^ 2) 
+  expected_scaling <-
+    exp(log(control$initial_scaling) + 1000 * (0.25 - control$acceptance_target)
+        * obj$scaling_increment / sqrt(obj$scaling_weight))
+  expect_equal(obj$scaling, expected_scaling) 
 
+  control <- adaptive_proposal_control(initial_vcv_weight = 50,
+                                       forget_rate = 0,
+                                       pre_diminish = Inf,
+                                       log_scaling_update = FALSE)
+  pars <- example_sir()$pars
   obj <- adaptive_proposal$new(pars, control)
+  p <- pars$mean()
   for (i in 1:1000) {
-    obj$update(p, FALSE, NULL, i)
+    obj$update(p, 0.25, NULL, i)
   }
-  expect_equal(
-    obj$scaling,
-    control$scaling_increment ^ 2)
+  expected_scaling <-
+    control$initial_scaling + 1000 * (0.25 - control$acceptance_target) * 
+    obj$scaling_increment / sqrt(obj$scaling_weight)
+  expect_equal(obj$scaling, expected_scaling) 
 })
 
 
@@ -96,21 +86,30 @@ test_that("Scaling converges to expected limits - diminishing adaptation", {
                                        pre_diminish = 0)
   pars <- example_sir()$pars
   obj <- adaptive_proposal$new(pars, control)
+  initial_scaling_weight <- obj$scaling_weight
   p <- pars$mean()
   for (i in 1:1000) {
-    obj$update(p, TRUE, NULL, i)
+    obj$update(p, 0.25, NULL, i)
   }
-  expect_equal(
-    obj$scaling,
-    (sqrt(control$initial_scaling) + sum(1 / sqrt(seq_len(1000))) *
-       (1 - control$acceptance_target) * control$scaling_increment) ^ 2) 
+  expected_scaling <-
+    exp(log(control$initial_scaling) + (0.25 - control$acceptance_target)
+        * sum(obj$scaling_increment / 
+                sqrt(initial_scaling_weight + seq_len(1000))))
+  expect_equal(obj$scaling, expected_scaling) 
   
+  control <- adaptive_proposal_control(initial_vcv_weight = 50,
+                                       forget_rate = 0,
+                                       pre_diminish = 0,
+                                       log_scaling_update = FALSE)
+  pars <- example_sir()$pars
   obj <- adaptive_proposal$new(pars, control)
+  initial_scaling_weight <- obj$scaling_weight
+  p <- pars$mean()
   for (i in 1:1000) {
-    obj$update(p, FALSE, NULL, i)
+    obj$update(p, 0.25, NULL, i)
   }
-  expect_equal(
-    obj$scaling,
-    (sqrt(control$initial_scaling) - sum(1 / sqrt(seq_len(1000))) *
-      control$acceptance_target * control$scaling_increment) ^ 2)
+  expected_scaling <-
+    control$initial_scaling + (0.25 - control$acceptance_target) * 
+    sum(obj$scaling_increment / sqrt(initial_scaling_weight + seq_len(1000)))
+  expect_equal(obj$scaling, expected_scaling)
 })
