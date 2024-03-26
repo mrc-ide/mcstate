@@ -97,7 +97,7 @@ test_that("Can run a nested adaptive proposal, increasing acceptance rate", {
   control1 <- pmcmc_control(100, save_trajectories = TRUE,
                             adaptive_proposal = adaptive_proposal_control(
                               acceptance_target = 0.5,
-                              adapt_end = 90))
+                              adapt_end = 40))
   control2 <- pmcmc_control(100, save_trajectories = TRUE)
   
   res1 <- pmcmc(dat$pars, p, NULL, control1)
@@ -111,10 +111,11 @@ test_that("Can run a nested adaptive proposal, increasing acceptance rate", {
             coda::rejectionRate(coda::mcmc(res2$pars[, , "b"]))[[2]])
   
   expect_setequal(names(res1$adaptive),
-                  c("autocorrelation", "mean", "scaling", "weight"))
+                  c("autocorrelation", "mean", "scaling", "vcv", "weight"))
   expect_setequal(names(res1$adaptive$autocorrelation), c("fixed", "varied"))
   expect_setequal(names(res1$adaptive$mean), c("fixed", "varied"))
   expect_setequal(names(res1$adaptive$scaling), c("fixed", "varied"))
+  expect_setequal(names(res1$adaptive$vcv), c("fixed", "varied"))
   expect_setequal(names(res1$adaptive$weight), c("fixed", "varied"))
   expect_null(res2$adaptive)
   
@@ -128,6 +129,9 @@ test_that("Can run a nested adaptive proposal, increasing acceptance rate", {
   expect_equal(dim(combined$adaptive$scaling$fixed), c(100, 3))
   expect_equal(dim(combined$adaptive$scaling$varied$a), c(100, 3))
   expect_equal(dim(combined$adaptive$scaling$varied$b), c(100, 3))
+  expect_equal(dim(combined$adaptive$vcv$fixed), c(1, 1, 3)) 
+  expect_equal(dim(combined$adaptive$vcv$varied$a), c(1, 1, 3))
+  expect_equal(dim(combined$adaptive$vcv$varied$b), c(1, 1, 3))
   expect_equal(length(combined$adaptive$weight$fixed), 3)
   expect_equal(length(combined$adaptive$weight$varied), 3)
 })

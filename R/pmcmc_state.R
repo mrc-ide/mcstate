@@ -413,6 +413,7 @@ pmcmc_state <- R6::R6Class(
         adaptive <- list(autocorrelation = private$adaptive$autocorrelation,
                          mean = private$adaptive$mean,
                          scaling = scaling,
+                         vcv = private$adaptive$vcv,
                          weight = private$adaptive$weight
                          )
       } else {

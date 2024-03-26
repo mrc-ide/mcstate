@@ -207,9 +207,10 @@ combine_adaptive <- function(x, nested) {
   autocorrelation <- lapply(x, "[[", "autocorrelation")
   mean <- lapply(x, "[[", "mean")
   scaling <- lapply(x, "[[", "scaling")
+  vcv <- lapply(x, "[[", "vcv")
   weight <- lapply(x, "[[", "weight")
   
-  combine_autocorr <- function(y) {
+  combine_mat <- function(y) {
     y_names <- rownames(y[[1]])
     ret <- array_from_list(y)
     rownames(ret) <- colnames(ret) <- y_names
@@ -226,11 +227,11 @@ combine_adaptive <- function(x, nested) {
   if (nested) {
     populations <- names(mean[[1]]$varied)
     
-    autocorr_fixed <- combine_autocorr(lapply(autocorrelation, "[[", "fixed"))
+    autocorr_fixed <- combine_mat(lapply(autocorrelation, "[[", "fixed"))
     autocorr_varied <- lapply(autocorrelation, "[[", "varied")
     autocorr_varied <-
       lapply(populations,
-             function (nm) combine_autocorr(lapply(autocorr_varied, "[[", nm)))
+             function (nm) combine_mat(lapply(autocorr_varied, "[[", nm)))
     names(autocorr_varied) <- populations
     autocorrelation <- list(fixed = autocorr_fixed,
                             varied = autocorr_varied)
@@ -253,6 +254,14 @@ combine_adaptive <- function(x, nested) {
     scaling <- list(fixed = scaling_fixed,
                     varied = scaling_varied)
     
+    vcv_fixed <- combine_mat(lapply(vcv, "[[", "fixed"))
+    vcv_varied <- lapply(vcv, "[[", "varied")
+    vcv_varied <-
+      lapply(populations,
+             function (nm) combine_mat(lapply(vcv_varied, "[[", nm)))
+    names(vcv_varied) <- populations
+    vcv <- list(fixed = vcv_fixed,
+                varied = vcv_varied)
     
     weight_fixed <- unlist(lapply(weight, "[[", "fixed"))
     weight_varied <- unlist(lapply(weight, "[[", "varied"))
@@ -260,14 +269,16 @@ combine_adaptive <- function(x, nested) {
                    varied = weight_varied)
     
   } else {
-    autocorrelation <- combine_autocorr(autocorrelation)
+    autocorrelation <- combine_mat(autocorrelation)
     mean <- combine_mean(mean)
     scaling <- array_from_list(scaling)
+    vcv <- combine_mat(vcv)
     weight <- unlist(weight)
   }
   
   list(autocorrelation = autocorrelation,
        mean = mean,
        scaling = scaling,
+       vcv = vcv,
        weight = weight)
 }
