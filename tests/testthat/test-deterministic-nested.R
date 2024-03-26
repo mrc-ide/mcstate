@@ -96,7 +96,8 @@ test_that("Can run a nested adaptive proposal, increasing acceptance rate", {
                                   dat$index)
   control1 <- pmcmc_control(100, save_trajectories = TRUE,
                             adaptive_proposal = adaptive_proposal_control(
-                              acceptance_target = 0.5))
+                              acceptance_target = 0.5,
+                              adapt_end = 90))
   control2 <- pmcmc_control(100, save_trajectories = TRUE)
   
   res1 <- pmcmc(dat$pars, p, NULL, control1)

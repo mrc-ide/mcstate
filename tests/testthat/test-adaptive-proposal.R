@@ -45,6 +45,24 @@ test_that("mean and autocorrelation calculated correctly", {
   expect_equal(obj$mean, expected_mean)
   expected_vcv <- cov(p[26:100, ])
   expect_equal(obj$vcv, expected_vcv)
+  
+  control <- adaptive_proposal_control(initial_vcv_weight = 50,
+                                       forget_rate = 0.5,
+                                       forget_end = 50,
+                                       adapt_end = 75)
+  obj <- adaptive_proposal$new(pars, control)
+  for (i in 1:100) {
+    obj$update(p[i, ], TRUE, p_list, i)
+  }
+  ## forget_rate = 0.5 and forget_end = 50, so mean and autocorrelation should
+  ## exclude first 25 parameter sets (half of the first 50), and then should
+  ## exclude the last 25 parameter sets as adapt_end = 75
+  expect_equal(obj$weight, 50)
+  expect_equal(obj$included, seq(26, 75))
+  expected_mean <- colMeans(p[26:75, ])
+  expect_equal(obj$mean, expected_mean)
+  expected_vcv <- cov(p[26:75, ])
+  expect_equal(obj$vcv, expected_vcv)
 })
 
 
