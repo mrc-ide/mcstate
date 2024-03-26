@@ -5,36 +5,83 @@
 \title{Adaptive proposal control}
 \usage{
 adaptive_proposal_control(
-  initial_scaling = 0.2,
-  scaling_increment = 0.01,
+  initial_vcv_weight = 1000,
+  initial_scaling = 1,
+  initial_scaling_weight = NULL,
+  min_scaling = 0,
+  scaling_increment = NULL,
+  log_scaling_update = TRUE,
   acceptance_target = 0.234,
-  initial_weight = 1000,
-  adaptive_contribution = 0.95
+  forget_rate = 0.2,
+  forget_end = Inf,
+  adapt_end = Inf,
+  pre_diminish = 0
 )
 }
 \arguments{
-\item{initial_scaling}{The initial scaling of the variance
-covariance matrix to be used to generate the multivariate normal
-proposal for the random-walk Metropolis-Hasting algorithm.}
-
-\item{scaling_increment}{The scaling increment which is added or
-substracted to the scaling factor of the variance-covariance
-after each adaptive step.}
-
-\item{acceptance_target}{The target for the fraction of proposals
-that should be accepted (optimally) for the adaptive part of the
-mixture model.}
-
-\item{initial_weight}{Initial weight of the variance-covariance
+\item{initial_vcv_weight}{Weight of the initial variance-covariance
 matrix used to build the proposal of the random-walk. Higher
 values translate into higher confidence of the initial
 variance-covariance matrix and means that update from additional
 samples will be slower.}
 
-\item{adaptive_contribution}{The fractional contribution of the
-adaptive part of the proposal. The proposal is based on a
-mixture model, with the non adaptive part used for the proposal
-with a probability 1-adaptive_contribution.}
+\item{initial_scaling}{The initial scaling of the variance
+covariance matrix to be used to generate the multivariate normal
+proposal for the random-walk Metropolis-Hastings algorithm. To generate
+the proposal matrix, the weighted variance covariance matrix is
+multiplied by the scaling parameter squared times 2.38^2 / n_pars (where
+n_pars is the number of fitted parameters). Thus, in a Gaussian target
+parameter space, the optimal scaling will be around 1.}
+
+\item{initial_scaling_weight}{The initial weight used in the scaling update.
+The scaling weight will increase after the first \code{pre_diminish}
+iterations, and as the scaling weight increases the adaptation of the
+scaling diminishes. If \code{NULL} (the default) the value is
+5 / (acceptance_target * (1 - acceptance_target)).}
+
+\item{min_scaling}{The minimum scaling of the variance covariance
+matrix to be used to generate the multivariate normal proposal
+for the random-walk Metropolis-Hastings algorithm.}
+
+\item{scaling_increment}{The scaling increment which is added or
+subtracted to the scaling factor of the variance-covariance
+after each adaptive step. If \code{NULL} (the default) then an optimal
+value will be calculated.}
+
+\item{log_scaling_update}{Logical, whether or not changes to the
+scaling parameter are made on the log-scale.}
+
+\item{acceptance_target}{The target for the fraction of proposals
+that should be accepted (optimally) for the adaptive part of the
+mixture model.}
+
+\item{forget_rate}{The rate of forgetting early parameter sets from the
+empirical variance-covariance matrix in the MCMC chains. For example,
+\code{forget_rate = 0.2} (the default) means that once in every 5th iterations
+we remove the earliest parameter set included, so would remove the 1st
+parameter set on the 5th update, the 2nd on the 10th update, and so
+on. Setting \code{forget_rate = 0} means early parameter sets are never
+forgotten.}
+
+\item{forget_end}{The final iteration at which early parameter sets can
+be forgotten. Setting \code{forget_rate = Inf} (the default) means that the
+forgetting mechanism continues throughout the chains. Forgetting early
+parameter sets becomes less useful once the chains have settled into the
+posterior mode, so this parameter might be set as an estimate of how long
+that would take.}
+
+\item{adapt_end}{The final iteration at which we can adapt the multivariate
+normal proposal. Thereafter the empirical variance-covariance matrix, its
+scaling and its weight remain fixed. This allows the adaptation to be
+switched off at a certain point to help ensure convergence of the chain.}
+
+\item{pre_diminish}{The number of updates before adaptation of the scaling
+parameter starts to diminish. Setting \code{pre_diminish = 0} means there is
+diminishing adaptation of the scaling parameter from the offset, while
+\code{pre_diminish = Inf} would mean there is never diminishing adaptation.
+Diminishing adaptation should help the scaling parameter to converge
+better, but while the chains find the location and scale of the posterior
+mode it might be useful to explore with it switched off.}
 }
 \description{
 Control for adaptive proposals, used in \link{pmcmc_control}
@@ -51,12 +98,12 @@ variance-covariance matrix and rescale it at each adaptive step of
 the MCMC.
 
 Our implementation of an adaptive MCMC algorithm is based on an
-adaptation of the "BlkAdpMul" algorithm in Sherlock et
-al. (ALGORITHM 6). The algorithm is based on a random-walk
-Metropolis-Hasting algorithm where the proposal is a multi-variate
-Normal distribution centered on the current point.
+adaptation of the "accelerated shaping" algorithm in Spencer (2021).
+The algorithm is based on a random-walk Metropolis-Hasting algorithm where
+the proposal is a multi-variate Normal distribution centered on the current
+point.
 
-Sherlock C, Fearnhead P, Roberts GO (2010) The Random Walk
-Metropolis: Linking Theory and Practice Through a Case
-Study. Statistical Science 25:172–190.
+Spencer SEF (2021) Accelerating adaptation in the adaptive
+Metropolis–Hastings random walk algorithm. Australian & New Zealand Journal
+of Statistics 63:468-484.
 }

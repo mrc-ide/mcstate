@@ -115,7 +115,8 @@ test_that("run pmcmc with the particle filter and retain history", {
   expect_setequal(
     names(results1),
     c("nested", "chain", "iteration", "pars_index",
-      "pars", "probabilities", "state", "trajectories", "restart", "predict"))
+      "pars", "probabilities", "state", "trajectories", "restart", "predict",
+      "adaptive"))
 
   expect_null(results1$pars_index)
   expect_null(results1$chain)

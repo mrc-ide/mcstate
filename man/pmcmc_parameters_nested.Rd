@@ -53,6 +53,8 @@ pars$model(p)
 \item \href{#method-pmcmc_parameters_nested-validate}{\code{pmcmc_parameters_nested$validate()}}
 \item \href{#method-pmcmc_parameters_nested-summary}{\code{pmcmc_parameters_nested$summary()}}
 \item \href{#method-pmcmc_parameters_nested-initial}{\code{pmcmc_parameters_nested$initial()}}
+\item \href{#method-pmcmc_parameters_nested-mean}{\code{pmcmc_parameters_nested$mean()}}
+\item \href{#method-pmcmc_parameters_nested-vcv}{\code{pmcmc_parameters_nested$vcv()}}
 \item \href{#method-pmcmc_parameters_nested-prior}{\code{pmcmc_parameters_nested$prior()}}
 \item \href{#method-pmcmc_parameters_nested-propose}{\code{pmcmc_parameters_nested$propose()}}
 \item \href{#method-pmcmc_parameters_nested-model}{\code{pmcmc_parameters_nested$model()}}
@@ -181,6 +183,28 @@ rows corresponding to parameters and columns to populations.
 
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-pmcmc_parameters_nested-mean"></a>}}
+\if{latex}{\out{\hypertarget{method-pmcmc_parameters_nested-mean}{}}}
+\subsection{Method \code{mean()}}{
+Return the estimate of the mean of the parameters,
+as set when created (this is not updated by any fitting!)
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters_nested$mean(type)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-pmcmc_parameters_nested-vcv"></a>}}
+\if{latex}{\out{\hypertarget{method-pmcmc_parameters_nested-vcv}{}}}
+\subsection{Method \code{vcv()}}{
+Return the variance-covariance matrix used for the
+proposal.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters_nested$vcv(type)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-pmcmc_parameters_nested-prior"></a>}}
 \if{latex}{\out{\hypertarget{method-pmcmc_parameters_nested-prior}{}}}
 \subsection{Method \code{prior()}}{
@@ -210,7 +234,7 @@ parameters until they lie within \code{min}:\code{max}. Returns matrix with rows
 corresponding to parameters and columns to populations (i.e.,
 the same orientation as \code{theta}).
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters_nested$propose(theta, type, scale = 1)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{pmcmc_parameters_nested$propose(theta, type, scale = 1, vcv = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

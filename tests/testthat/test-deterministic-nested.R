@@ -89,13 +89,49 @@ test_that("Can run an mcmc on a nested model", {
 })
 
 
-test_that("Can't use adaptive proposal with nested models", {
+test_that("Can run a nested adaptive proposal, increasing acceptance rate", {
   dat <- example_sir_shared()
 
   p <- particle_deterministic$new(dat$data, dat$model, dat$compare,
                                   dat$index)
-  control <- pmcmc_control(30, adaptive_proposal = TRUE)
-  expect_error(
-    pmcmc(dat$pars, p, control = control),
-    "Can't yet use adaptive proposal with nested mcmc")
+  control1 <- pmcmc_control(100, save_trajectories = TRUE,
+                            adaptive_proposal = adaptive_proposal_control(
+                              acceptance_target = 0.5,
+                              adapt_end = 40))
+  control2 <- pmcmc_control(100, save_trajectories = TRUE)
+  
+  res1 <- pmcmc(dat$pars, p, NULL, control1)
+  res2 <- pmcmc(dat$pars, p, NULL, control2)
+  
+  expect_lt(coda::rejectionRate(coda::mcmc(res1$pars[, , "a"]))[[1]],
+            coda::rejectionRate(coda::mcmc(res2$pars[, , "a"]))[[1]])
+  expect_lt(coda::rejectionRate(coda::mcmc(res1$pars[, , "a"]))[[2]],
+            coda::rejectionRate(coda::mcmc(res2$pars[, , "a"]))[[2]])
+  expect_lt(coda::rejectionRate(coda::mcmc(res1$pars[, , "b"]))[[2]],
+            coda::rejectionRate(coda::mcmc(res2$pars[, , "b"]))[[2]])
+  
+  expect_setequal(names(res1$adaptive),
+                  c("autocorrelation", "mean", "scaling", "vcv", "weight"))
+  expect_setequal(names(res1$adaptive$autocorrelation), c("fixed", "varied"))
+  expect_setequal(names(res1$adaptive$mean), c("fixed", "varied"))
+  expect_setequal(names(res1$adaptive$scaling), c("fixed", "varied"))
+  expect_setequal(names(res1$adaptive$vcv), c("fixed", "varied"))
+  expect_setequal(names(res1$adaptive$weight), c("fixed", "varied"))
+  expect_null(res2$adaptive)
+  
+  combined <- pmcmc_combine(samples = rep(list(res1), 3))
+  expect_equal(dim(combined$adaptive$autocorrelation$fixed), c(1, 1, 3)) 
+  expect_equal(dim(combined$adaptive$autocorrelation$varied$a), c(1, 1, 3))
+  expect_equal(dim(combined$adaptive$autocorrelation$varied$b), c(1, 1, 3))
+  expect_equal(dim(combined$adaptive$mean$fixed), c(1, 3))
+  expect_equal(dim(combined$adaptive$mean$varied$a), c(1, 3))
+  expect_equal(dim(combined$adaptive$mean$varied$b), c(1, 3))
+  expect_equal(dim(combined$adaptive$scaling$fixed), c(100, 3))
+  expect_equal(dim(combined$adaptive$scaling$varied$a), c(100, 3))
+  expect_equal(dim(combined$adaptive$scaling$varied$b), c(100, 3))
+  expect_equal(dim(combined$adaptive$vcv$fixed), c(1, 1, 3)) 
+  expect_equal(dim(combined$adaptive$vcv$varied$a), c(1, 1, 3))
+  expect_equal(dim(combined$adaptive$vcv$varied$b), c(1, 1, 3))
+  expect_equal(length(combined$adaptive$weight$fixed), 3)
+  expect_equal(length(combined$adaptive$weight$varied), 3)
 })

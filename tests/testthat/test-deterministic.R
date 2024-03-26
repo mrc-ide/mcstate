@@ -456,6 +456,20 @@ test_that("Can run an adaptive proposal, increasing acceptance rate", {
 
   expect_lt(coda::rejectionRate(coda::mcmc(res1$pars))[[1]],
             coda::rejectionRate(coda::mcmc(res2$pars))[[1]])
+
+  expect_setequal(names(res1$adaptive),
+                  c("autocorrelation", "mean", "scaling", "vcv", "weight"))
+  expect_equal(dim(res1$adaptive$autocorrelation), c(2, 2))
+  expect_equal(length(res1$adaptive$mean), 2)
+  expect_equal(length(res1$adaptive$scaling), 100)
+  expect_equal(dim(res1$adaptive$vcv), c(2, 2))
+  expect_null(res2$adaptive)
+  
+  combined <- pmcmc_combine(samples = rep(list(res1), 3))
+  expect_equal(dim(combined$adaptive$autocorrelation), c(2, 2, 3)) 
+  expect_equal(dim(combined$adaptive$mean), c(2, 3))
+  expect_equal(dim(combined$adaptive$scaling), c(100, 3))
+  expect_equal(length(combined$adaptive$weight), 3)
 })
 
 
