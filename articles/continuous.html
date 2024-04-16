@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png">
 <link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png">
 <link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png">
-<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
+<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
 <script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
@@ -40,7 +40,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.20</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.21</span>
       </span>
     </div>
 
@@ -179,7 +179,7 @@
 <span><span class="co"><span style="color: #00BB00; font-weight: bold;">#&gt; </span>1 warning generated.</span></span>
 <span><span class="co">#&gt; clang++ -arch x86_64 -std=gnu++17 -dynamiclib -Wl,-headerpad_max_install_names -undefined dynamic_lookup -L/Library/Frameworks/R.framework/Resources/lib -L/opt/R/x86_64/lib -o odin4ebc392f.so cpp11.o dust.o -F/Library/Frameworks/R.framework/.. -framework R -Wl,-framework -Wl,CoreFoundation</span></span>
 <span><span class="co">#&gt; ld: warning: -undefined dynamic_lookup may not work with chained fixups</span></span>
-<span><span class="co">#&gt; installing to /private/var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T/RtmpxoG4YR/devtools_install_19d174c58da8/00LOCK-file19d12d22ab6b/00new/odin4ebc392f/libs</span></span>
+<span><span class="co">#&gt; installing to /private/var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T/Rtmpk5U73Z/devtools_install_1b5b509aa7bc/00LOCK-file1b5b53bc3fb6/00new/odin4ebc392f/libs</span></span>
 <span><span class="co">#&gt; ** checking absolute paths in shared objects and dynamic libraries</span></span>
 <span><span class="co">#&gt; * DONE (odin4ebc392f)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Loading <span style="color: #0000BB;">odin4ebc392f</span></span></span></code></pre></div>
@@ -249,7 +249,7 @@
 <span>                                  save_trajectories <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>                                  progress <span class="op">=</span> <span class="cn">TRUE</span>, <span class="op">)</span></span>
 <span><span class="va">mcmc_run</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc.html">pmcmc</a></span><span class="op">(</span><span class="va">mcmc_pars</span>, <span class="va">filter</span>, control <span class="op">=</span> <span class="va">control</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Finished 40000 steps in 33 secs</span></span>
+<span><span class="co">#&gt; Finished 40000 steps in 45 secs</span></span>
 <span><span class="va">mcmc_sample</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_thin.html">pmcmc_sample</a></span><span class="op">(</span><span class="va">mcmc_run</span>, n_sample <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span></code></pre></div>
 <p>We can visually check the chains have converged and assess the accuracy of our parameter estimates using a sample from the posterior distribution.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
@@ -304,7 +304,7 @@
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.8.</p>
 </div>
 
       </footer>

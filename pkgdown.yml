@@ -1,5 +1,5 @@
 pandoc: 2.7.3
-pkgdown: 2.0.7
+pkgdown: 2.0.8
 pkgdown_sha: ~
 articles:
   continuous: continuous.html
@@ -10,5 +10,5 @@ articles:
   parallelisation: parallelisation.html
   restart: restart.html
   sir_models: sir_models.html
-last_built: 2024-02-19T15:33Z
+last_built: 2024-04-16T12:44Z
 
