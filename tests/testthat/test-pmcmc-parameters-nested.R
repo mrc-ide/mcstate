@@ -402,6 +402,28 @@ test_that("pmcmc_parameters_nested propose - fixed only", {
 })
 
 
+test_that("Can provide our own covariance matrix in proposal", {
+  parameters <- list(
+    a = pmcmc_varied_parameter("a", c("p1", "p2"), 1:2),
+    b = pmcmc_varied_parameter("b", c("p1", "p2"), 3:4),
+    c = pmcmc_parameter("c", 5),
+    d = pmcmc_parameter("d", 6))
+  proposal_fixed <- diag(2)
+  proposal_varied <- diag(2) + 1
+  p <- pmcmc_parameters_nested$new(parameters, proposal_varied, proposal_fixed)
+  theta <- p$initial()
+
+  vcv_fixed <- diag(2) * 0.001
+  vcv_varied <- lapply(seq_len(2), function(x) diag(2) * 0.001 * x)
+
+  p$propose(theta, "fixed", vcv = vcv_fixed)
+  p$propose(theta, "fixed", vcv = NULL)
+
+  p$propose(theta, "varied", vcv = vcv_varied)
+  p$propose(theta, "varied", vcv = NULL)
+})
+
+
 test_that("pmcmc_parameters_nested fix errors", {
   parameters <- list(
     a = pmcmc_parameter("a", 1, prior = dexp),

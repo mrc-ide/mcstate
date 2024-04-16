@@ -203,6 +203,30 @@ pmcmc_parameters_nested <- R6::R6Class(
       ret
     },
 
+    ##' @description Return the estimate of the mean of the parameters,
+    ##'   as set when created (this is not updated by any fitting!)
+    mean = function(type) {
+      if (type == "varied") {
+        lapply(private$inner$varied, function(p) p$mean())
+      } else if (type == "fixed") {
+        private$inner$fixed$mean()
+      } else if (type == "both") {
+        stop("type = 'both' not supported by mean()")
+      }
+    },
+
+    ##' @description Return the variance-covariance matrix used for the
+    ##'   proposal.
+    vcv = function(type) {
+      if (type == "varied") {
+        lapply(private$inner$varied, function(p) p$vcv())
+      } else if (type == "fixed") {
+        private$inner$fixed$vcv()
+      } else if (type == "both") {
+        stop("type = 'both' not supported by mean()")
+      }
+    },
+
     ##' @description Compute the prior(s) for a parameter matrix. Returns a
     ##' named vector with names corresponding to populations.
     ##'
@@ -247,21 +271,26 @@ pmcmc_parameters_nested <- R6::R6Class(
     ##' proposal distribution. This may be useful in sampling starting
     ##' points. The parameter is equivalent to a multiplicative factor
     ##' applied to the variance covariance matrix.
-    propose = function(theta, type, scale = 1) {
+    propose = function(theta, type, scale = 1, vcv = NULL) {
       theta <- self$validate(theta)
       type <- match_value(type, c("both", "varied", "fixed"))
+
+      if (!is.null(vcv) && type == "both") {
+        stop("Can't provide a variance covariance matrix with type = 'both'")
+      }
 
       nms_fixed <- self$names("fixed")
       if (type %in% c("fixed", "both") && length(nms_fixed) > 0) {
         theta[nms_fixed, ] <-
-          private$inner$fixed$propose(theta[nms_fixed, 1], scale)
+          private$inner$fixed$propose(theta[nms_fixed, 1], scale, vcv)
       }
 
       nms_varied <- self$names("varied")
       if (type %in% c("varied", "both") && length(nms_varied) > 0) {
         theta[nms_varied, ] <-
-          vapply(self$populations(), function(x)
-            private$inner$varied[[x]]$propose(theta[nms_varied, x], scale),
+          vapply(seq_along(self$populations()), function(i)
+            private$inner$varied[[i]]$propose(theta[nms_varied, i], scale,
+                                              vcv[[i]]),
             numeric(length(nms_varied)))
       }
 
