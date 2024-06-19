@@ -119,6 +119,22 @@ test_that("Can run a nested adaptive proposal, increasing acceptance rate", {
   expect_setequal(names(res1$adaptive$weight), c("fixed", "varied"))
   expect_null(res2$adaptive)
   
+  i_fixed <- seq(17, 80, by = 2)
+  i_varied <- i_fixed + 1
+  
+  expect_equivalent(res1$adaptive$mean$fixed,
+                    mean(res1$pars[i_fixed, "gamma", "a"]))
+  expect_equivalent(res1$adaptive$vcv$fixed,
+                    var(res1$pars[i_fixed, "gamma", "a"]))
+  expect_equivalent(res1$adaptive$mean$varied$a,
+                    mean(res1$pars[i_varied, "beta", "a"]))
+  expect_equivalent(res1$adaptive$vcv$varied$a,
+                    var(res1$pars[i_varied, "beta", "a"]))
+  expect_equivalent(res1$adaptive$mean$varied$b,
+                    mean(res1$pars[i_varied, "beta", "b"]))
+  expect_equivalent(res1$adaptive$vcv$varied$b,
+                    var(res1$pars[i_varied, "beta", "b"]))
+  
   combined <- pmcmc_combine(samples = rep(list(res1), 3))
   expect_equal(dim(combined$adaptive$autocorrelation$fixed), c(1, 1, 3)) 
   expect_equal(dim(combined$adaptive$autocorrelation$varied$a), c(1, 1, 3))
@@ -134,4 +150,6 @@ test_that("Can run a nested adaptive proposal, increasing acceptance rate", {
   expect_equal(dim(combined$adaptive$vcv$varied$b), c(1, 1, 3))
   expect_equal(length(combined$adaptive$weight$fixed), 3)
   expect_equal(length(combined$adaptive$weight$varied), 3)
+  
+  
 })
