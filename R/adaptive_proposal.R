@@ -324,8 +324,7 @@ adaptive_proposal_nested <- R6::R6Class(
           theta_remove <- lapply(seq_len(ncol(theta_remove)), function(j)
             theta_remove[idx, j, drop = TRUE])
         }
-        self$included[[type]] <-
-          c(self$included[[type]][-1L], i)
+        self$included[[type]] <- c(self$included[[type]][-1L], i)
       } else {
         if (type == "fixed") {
           theta_remove <- NULL

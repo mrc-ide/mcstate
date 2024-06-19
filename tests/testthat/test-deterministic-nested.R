@@ -150,6 +150,4 @@ test_that("Can run a nested adaptive proposal, increasing acceptance rate", {
   expect_equal(dim(combined$adaptive$vcv$varied$b), c(1, 1, 3))
   expect_equal(length(combined$adaptive$weight$fixed), 3)
   expect_equal(length(combined$adaptive$weight$varied), 3)
-  
-  
 })
