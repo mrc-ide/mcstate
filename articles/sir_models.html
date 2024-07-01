@@ -40,7 +40,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mcstate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.21</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.22</span>
       </span>
     </div>
 
@@ -175,14 +175,15 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span><span class="co">#&gt; Warning in mcstate::particle_filter_data(data = incidence, time = "day", :</span></span>
 <span><span class="co">#&gt; 'initial_time' should be provided. I'm assuming '0' which is one time unit</span></span>
 <span><span class="co">#&gt; before the first time in your data (1), but this might not be appropriate. This</span></span>
-<span><span class="co">#&gt; will become an error in a future version of mcstate</span></span>
-<span><span class="fu">rmarkdown</span><span class="fu">::</span><span class="fu"><a href="https://pkgs.rstudio.com/rmarkdown/reference/paged_table.html" class="external-link">paged_table</a></span><span class="op">(</span><span class="va">sir_data</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co">#&gt; will become an error in a future version of mcstate</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">rmarkdown</span><span class="fu">::</span><span class="fu"><a href="https://pkgs.rstudio.com/rmarkdown/reference/paged_table.html" class="external-link">paged_table</a></span><span class="op">(</span><span class="va">sir_data</span><span class="op">)</span></span></code></pre></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
 {"columns":[{"label":["day_start"],"name":[1],"type":["int"],"align":["right"]},{"label":["day_end"],"name":[2],"type":["int"],"align":["right"]},{"label":["time_start"],"name":[3],"type":["int"],"align":["right"]},{"label":["time_end"],"name":[4],"type":["int"],"align":["right"]},{"label":["cases"],"name":[5],"type":["int"],"align":["right"]}],"data":[{"1":"0","2":"1","3":"0","4":"4","5":"3"},{"1":"1","2":"2","3":"4","4":"8","5":"2"},{"1":"2","2":"3","3":"8","4":"12","5":"2"},{"1":"3","2":"4","3":"12","4":"16","5":"2"},{"1":"4","2":"5","3":"16","4":"20","5":"1"},{"1":"5","2":"6","3":"20","4":"24","5":"3"},{"1":"6","2":"7","3":"24","4":"28","5":"2"},{"1":"7","2":"8","3":"28","4":"32","5":"5"},{"1":"8","2":"9","3":"32","4":"36","5":"5"},{"1":"9","2":"10","3":"36","4":"40","5":"6"},{"1":"10","2":"11","3":"40","4":"44","5":"9"},{"1":"11","2":"12","3":"44","4":"48","5":"3"},{"1":"12","2":"13","3":"48","4":"52","5":"5"},{"1":"13","2":"14","3":"52","4":"56","5":"7"},{"1":"14","2":"15","3":"56","4":"60","5":"9"},{"1":"15","2":"16","3":"60","4":"64","5":"12"},{"1":"16","2":"17","3":"64","4":"68","5":"13"},{"1":"17","2":"18","3":"68","4":"72","5":"13"},{"1":"18","2":"19","3":"72","4":"76","5":"17"},{"1":"19","2":"20","3":"76","4":"80","5":"16"},{"1":"20","2":"21","3":"80","4":"84","5":"14"},{"1":"21","2":"22","3":"84","4":"88","5":"24"},{"1":"22","2":"23","3":"88","4":"92","5":"16"},{"1":"23","2":"24","3":"92","4":"96","5":"16"},{"1":"24","2":"25","3":"96","4":"100","5":"21"},{"1":"25","2":"26","3":"100","4":"104","5":"18"},{"1":"26","2":"27","3":"104","4":"108","5":"17"},{"1":"27","2":"28","3":"108","4":"112","5":"14"},{"1":"28","2":"29","3":"112","4":"116","5":"15"},{"1":"29","2":"30","3":"116","4":"120","5":"18"},{"1":"30","2":"31","3":"120","4":"124","5":"14"},{"1":"31","2":"32","3":"124","4":"128","5":"13"},{"1":"32","2":"33","3":"128","4":"132","5":"17"},{"1":"33","2":"34","3":"132","4":"136","5":"9"},{"1":"34","2":"35","3":"136","4":"140","5":"21"},{"1":"35","2":"36","3":"140","4":"144","5":"15"},{"1":"36","2":"37","3":"144","4":"148","5":"20"},{"1":"37","2":"38","3":"148","4":"152","5":"19"},{"1":"38","2":"39","3":"152","4":"156","5":"18"},{"1":"39","2":"40","3":"156","4":"160","5":"20"},{"1":"40","2":"41","3":"160","4":"164","5":"21"},{"1":"41","2":"42","3":"164","4":"168","5":"25"},{"1":"42","2":"43","3":"168","4":"172","5":"14"},{"1":"43","2":"44","3":"172","4":"176","5":"7"},{"1":"44","2":"45","3":"176","4":"180","5":"13"},{"1":"45","2":"46","3":"180","4":"184","5":"9"},{"1":"46","2":"47","3":"184","4":"188","5":"18"},{"1":"47","2":"48","3":"188","4":"192","5":"12"},{"1":"48","2":"49","3":"192","4":"196","5":"10"},{"1":"49","2":"50","3":"196","4":"200","5":"16"},{"1":"50","2":"51","3":"200","4":"204","5":"6"},{"1":"51","2":"52","3":"204","4":"208","5":"10"},{"1":"52","2":"53","3":"208","4":"212","5":"4"},{"1":"53","2":"54","3":"212","4":"216","5":"15"},{"1":"54","2":"55","3":"216","4":"220","5":"3"},{"1":"55","2":"56","3":"220","4":"224","5":"4"},{"1":"56","2":"57","3":"224","4":"228","5":"8"},{"1":"57","2":"58","3":"228","4":"232","5":"8"},{"1":"58","2":"59","3":"232","4":"236","5":"2"},{"1":"59","2":"60","3":"236","4":"240","5":"2"},{"1":"60","2":"61","3":"240","4":"244","5":"5"},{"1":"61","2":"62","3":"244","4":"248","5":"5"},{"1":"62","2":"63","3":"248","4":"252","5":"4"},{"1":"63","2":"64","3":"252","4":"256","5":"3"},{"1":"64","2":"65","3":"256","4":"260","5":"2"},{"1":"65","2":"66","3":"260","4":"264","5":"5"},{"1":"66","2":"67","3":"264","4":"268","5":"6"},{"1":"67","2":"68","3":"268","4":"272","5":"0"},{"1":"68","2":"69","3":"272","4":"276","5":"3"},{"1":"69","2":"70","3":"276","4":"280","5":"3"},{"1":"70","2":"71","3":"280","4":"284","5":"4"},{"1":"71","2":"72","3":"284","4":"288","5":"1"},{"1":"72","2":"73","3":"288","4":"292","5":"1"},{"1":"73","2":"74","3":"292","4":"296","5":"0"},{"1":"74","2":"75","3":"296","4":"300","5":"3"},{"1":"75","2":"76","3":"300","4":"304","5":"3"},{"1":"76","2":"77","3":"304","4":"308","5":"4"},{"1":"77","2":"78","3":"308","4":"312","5":"1"},{"1":"78","2":"79","3":"312","4":"316","5":"3"},{"1":"79","2":"80","3":"316","4":"320","5":"1"},{"1":"80","2":"81","3":"320","4":"324","5":"0"},{"1":"81","2":"82","3":"324","4":"328","5":"0"},{"1":"82","2":"83","3":"328","4":"332","5":"3"},{"1":"83","2":"84","3":"332","4":"336","5":"3"},{"1":"84","2":"85","3":"336","4":"340","5":"1"},{"1":"85","2":"86","3":"340","4":"344","5":"0"},{"1":"86","2":"87","3":"344","4":"348","5":"0"},{"1":"87","2":"88","3":"348","4":"352","5":"3"},{"1":"88","2":"89","3":"352","4":"356","5":"1"},{"1":"89","2":"90","3":"356","4":"360","5":"3"},{"1":"90","2":"91","3":"360","4":"364","5":"7"},{"1":"91","2":"92","3":"364","4":"368","5":"5"},{"1":"92","2":"93","3":"368","4":"372","5":"0"},{"1":"93","2":"94","3":"372","4":"376","5":"1"},{"1":"94","2":"95","3":"376","4":"380","5":"0"},{"1":"95","2":"96","3":"380","4":"384","5":"4"},{"1":"96","2":"97","3":"384","4":"388","5":"1"},{"1":"97","2":"98","3":"388","4":"392","5":"0"},{"1":"98","2":"99","3":"392","4":"396","5":"5"},{"1":"99","2":"100","3":"396","4":"400","5":"1"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">incidence</span><span class="op">$</span><span class="va">day</span>, <span class="va">incidence</span><span class="op">$</span><span class="va">cases</span>,</span>
 <span>     type <span class="op">=</span> <span class="st">"l"</span>, xlab <span class="op">=</span> <span class="st">"Day"</span>, ylab <span class="op">=</span> <span class="st">"New cases"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="sir_models_files/figure-html/unnamed-chunk-4-1.png" width="672"></p>
@@ -193,7 +194,7 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 </h3>
 <p>The comparison function will typically be a likelihood, the probability of the simulation run given the data. This can be any function in R which takes the current simulated <code>state</code>, a <code>data</code> row for the current time point and a list of any parameters <code>pars</code> the function needs.</p>
 <p>For this model the daily number of cases is calculated within update function and returned as the 5th state element. In this comparison function, the number of cases within each time interval is modelled as being Poisson distributed. A small amount of noise is added to prevent zero expectations.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">case_compare</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">state</span>, <span class="va">observed</span>, <span class="va">pars</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">exp_noise</span> <span class="op">&lt;-</span> <span class="fl">1e6</span></span>
 <span></span>
@@ -204,7 +205,7 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span>  <span class="fu"><a href="https://rdrr.io/r/stats/Poisson.html" class="external-link">dpois</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">incidence_observed</span>, lambda <span class="op">=</span> <span class="va">lambda</span>, log <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <p>We can use the <code>info()</code> method on a dust model to inspect what order the state variables will come in:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gen_sir</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>pars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>, time <span class="op">=</span> <span class="fl">0</span>, n_particles <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span><span class="op">$</span><span class="fu">info</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; $vars</span></span>
 <span><span class="co">#&gt; [1] "S"           "I"           "R"           "cases_cumul" "cases_inc"  </span></span>
@@ -216,7 +217,7 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span><span class="co">#&gt; $pars$gamma</span></span>
 <span><span class="co">#&gt; [1] 0.1</span></span></code></pre></div>
 <p>The SIR example actually outputs incidence directly as part of the state, so the comparison function can be written without needing to recalculate this:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">incidence_compare</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">state</span>, <span class="va">prev_state</span>, <span class="va">observed</span>, <span class="va">pars</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">exp_noise</span> <span class="op">&lt;-</span> <span class="fl">1e6</span></span>
 <span></span>
@@ -230,7 +231,7 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <h3 id="inferring-parameters">Inferring parameters<a class="anchor" aria-label="anchor" href="#inferring-parameters"></a>
 </h3>
 <p>Using these pieces, we can set up a particle filter as follows:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">n_particles</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
 <span><span class="va">filter</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="va"><a href="../reference/particle_filter.html">particle_filter</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>data <span class="op">=</span> <span class="va">sir_data</span>,</span>
 <span>                                       model <span class="op">=</span> <span class="va">gen_sir</span>,</span>
@@ -238,11 +239,11 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span>                                       compare <span class="op">=</span> <span class="va">case_compare</span>,</span>
 <span>                                       seed <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span></code></pre></div>
 <p>We can now run the particle filter forward, which will run and resample 100 trajectories, and return the final likelihood. It is important to set the correct time-step <code>dt</code> here, as we are using 0.25, rather than the default value of 1 defined in the odin model. We will also save the history, which allows us to plot the particle trajectories, as well as use the likelihood:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">filter</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span>save_history <span class="op">=</span> <span class="cn">TRUE</span>, pars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>dt <span class="op">=</span> <span class="va">dt</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] -243.511</span></span></code></pre></div>
 <p>If we plot these along with the data, we can see compared to above that only trajectories consistent with the data are kept, and the variance between particles has been reduced compared to the simulations shown in the <code>odin.dust</code> vignette:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plot_particle_filter</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">history</span>, <span class="va">true_history</span>, <span class="va">times</span>, <span class="va">obs_end</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">obs_end</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="va">obs_end</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">times</span><span class="op">)</span></span>
@@ -264,17 +265,18 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span><span class="fu">plot_particle_filter</span><span class="op">(</span><span class="va">filter</span><span class="op">$</span><span class="fu">history</span><span class="op">(</span><span class="op">)</span>, <span class="va">true_history</span>, <span class="va">incidence</span><span class="op">$</span><span class="va">day</span><span class="op">)</span></span></code></pre></div>
 <p><img src="sir_models_files/figure-html/unnamed-chunk-10-1.png" width="672"></p>
 <p>Doing the same with a <span class="math inline">\(\beta\)</span> and <span class="math inline">\(\gamma\)</span> which are further from the truth yields a lower likelihood:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">filter</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span>save_history <span class="op">=</span> <span class="cn">TRUE</span>, pars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>dt <span class="op">=</span> <span class="va">dt</span>, beta <span class="op">=</span> <span class="fl">0.4</span>, gamma <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] -257.304</span></span>
-<span><span class="fu">plot_particle_filter</span><span class="op">(</span><span class="va">filter</span><span class="op">$</span><span class="fu">history</span><span class="op">(</span><span class="op">)</span>, <span class="va">true_history</span>, <span class="va">incidence</span><span class="op">$</span><span class="va">day</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] -257.304</span></span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">plot_particle_filter</span><span class="op">(</span><span class="va">filter</span><span class="op">$</span><span class="fu">history</span><span class="op">(</span><span class="op">)</span>, <span class="va">true_history</span>, <span class="va">incidence</span><span class="op">$</span><span class="va">day</span><span class="op">)</span></span></code></pre></div>
 <p><img src="sir_models_files/figure-html/unnamed-chunk-11-1.png" width="672"></p>
 <p>You can use the <code>run()</code> function of the particle filter directly, but for parameter inference, or forecasting after parameter inference, you should usually use the functions below to infer parameters.</p>
 <div class="section level4">
 <h4 id="using-mcmc-to-infer-parameters">Using MCMC to infer parameters<a class="anchor" aria-label="anchor" href="#using-mcmc-to-infer-parameters"></a>
 </h4>
 <p>Using this, we can do a MCMC using the Metropolis-Hastings algorithm to infer the values of <span class="math inline">\(\beta\)</span> and <span class="math inline">\(\gamma\)</span> from daily case counts. Let’s first describe the parameters we wish to infer, giving a minimum, maximum. For <span class="math inline">\(\gamma\)</span> we will also apply a gamma prior with shape 1 and rate 0.2: <span class="math inline">\(\Gamma(1, 0.2)\)</span>:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">beta</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_parameter.html">pmcmc_parameter</a></span><span class="op">(</span><span class="st">"beta"</span>, <span class="fl">0.2</span>, min <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
 <span><span class="va">gamma</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_parameter.html">pmcmc_parameter</a></span><span class="op">(</span><span class="st">"gamma"</span>, <span class="fl">0.1</span>, min <span class="op">=</span> <span class="fl">0</span>, prior <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/stats/GammaDist.html" class="external-link">dgamma</a></span><span class="op">(</span><span class="va">p</span>, shape <span class="op">=</span> <span class="fl">1</span>, scale <span class="op">=</span> <span class="fl">0.2</span>, log <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
@@ -285,11 +287,11 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <p>The proposals for each MCMC step are also set here. Proposals are drawn from a multi-variate normal distribution, with the variance-covariance matrix set here. In this case we have simply set <span class="math inline">\(\beta_{n+1} \sim N(\beta_{n}, 0.01)\)</span> and <span class="math inline">\(\gamma_{n+1} \sim N(\gamma_{n}, 0.01)\)</span> so there is no covariance. We show how to improve this below.</p>
 <p>Note that in this very simple case, the parameters that our model takes as input (<code>alpha</code> and <code>beta</code>) happen to be exactly the same as the ones that we are interested in inferring. For nontrivial models this is very unlikely to the case, see the section “Parameter transformations” in <code><a href="../reference/pmcmc_parameter.html">?mcstate::pmcmc_parameter</a></code> for details on how to cope with this.</p>
 <p>The sampler can now be run using these parameters, and the particle filter defined above.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">n_steps</span> <span class="op">&lt;-</span> <span class="fl">500</span></span>
 <span><span class="va">n_burnin</span> <span class="op">&lt;-</span> <span class="fl">200</span></span></code></pre></div>
 <p>Taking 500 steps on a single chain:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">control</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_control.html">pmcmc_control</a></span><span class="op">(</span></span>
 <span>    <span class="va">n_steps</span>,</span>
 <span>    save_state <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -297,18 +299,19 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span>    progress <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">pmcmc_run</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc.html">pmcmc</a></span><span class="op">(</span><span class="va">mcmc_pars</span>, <span class="va">filter</span>, control <span class="op">=</span> <span class="va">control</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Running chain 1 / 1</span></span>
-<span><span class="co">#&gt; Finished 500 steps in 15 secs</span></span>
-<span><span class="fu">plot_particle_filter</span><span class="op">(</span><span class="va">pmcmc_run</span><span class="op">$</span><span class="va">trajectories</span><span class="op">$</span><span class="va">state</span>, <span class="va">true_history</span>, <span class="va">incidence</span><span class="op">$</span><span class="va">day</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co">#&gt; Finished 500 steps in 4 secs</span></span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">plot_particle_filter</span><span class="op">(</span><span class="va">pmcmc_run</span><span class="op">$</span><span class="va">trajectories</span><span class="op">$</span><span class="va">state</span>, <span class="va">true_history</span>, <span class="va">incidence</span><span class="op">$</span><span class="va">day</span><span class="op">)</span></span></code></pre></div>
 <p><img src="sir_models_files/figure-html/pmcmc_combined-1.png" width="672"></p>
 <p>We also provide some basic tools for dealing with this output, before running prediction (see below). We can remove burn-in and thin the four chains as follows:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">processed_chains</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_thin.html">pmcmc_thin</a></span><span class="op">(</span><span class="va">pmcmc_run</span>, burnin <span class="op">=</span> <span class="va">n_burnin</span>, thin <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="va">parameter_mean_hpd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">processed_chains</span><span class="op">$</span><span class="va">pars</span>, <span class="fl">2</span>, <span class="va">mean</span><span class="op">)</span></span>
 <span><span class="va">parameter_mean_hpd</span></span>
 <span><span class="co">#&gt;      beta     gamma </span></span>
 <span><span class="co">#&gt; 0.2069454 0.1044010</span></span></code></pre></div>
 <p>The resulting objects can also be analysed in a typical MCMC analysis package such as <a href="https://cran.r-project.org/web/packages/coda/index.html" class="external-link"><code>coda</code></a>. We will need to combine the two parts of the object which contain the probabilities and parameter values across the iterations:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mcmc1</span> <span class="op">&lt;-</span> <span class="fu">coda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/coda/man/mcmc.html" class="external-link">as.mcmc</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">pmcmc_run</span><span class="op">$</span><span class="va">probabilities</span>, <span class="va">pmcmc_run</span><span class="op">$</span><span class="va">pars</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">mcmc1</span><span class="op">)</span></span>
@@ -335,8 +338,9 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span><span class="co">#&gt; log_likelihood -246.9184 -245.828 -245.828 -245.828 -245.8279</span></span>
 <span><span class="co">#&gt; log_posterior  -245.9465 -244.718 -244.718 -244.718 -244.7184</span></span>
 <span><span class="co">#&gt; beta              0.2000    0.200    0.200    0.200    0.2434</span></span>
-<span><span class="co">#&gt; gamma             0.1000    0.100    0.100    0.100    0.1275</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">mcmc1</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co">#&gt; gamma             0.1000    0.100    0.100    0.100    0.1275</span></span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">mcmc1</span><span class="op">)</span></span></code></pre></div>
 <p><img src="sir_models_files/figure-html/coda_plots-1.png" width="672"><img src="sir_models_files/figure-html/coda_plots-2.png" width="672"></p>
 </div>
 </div>
@@ -344,15 +348,16 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <h3 id="tuning-the-pmcmc">Tuning the pMCMC<a class="anchor" aria-label="anchor" href="#tuning-the-pmcmc"></a>
 </h3>
 <p>The MCMC above is not particularly efficient in terms of effective sample size per iteration:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">coda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/coda/man/effectiveSize.html" class="external-link">effectiveSize</a></span><span class="op">(</span><span class="va">mcmc1</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      log_prior log_likelihood  log_posterior           beta          gamma </span></span>
-<span><span class="co">#&gt;       5.306729       5.306729       5.306729       5.306729       5.306729</span></span>
-<span><span class="fl">1</span> <span class="op">-</span> <span class="fu">coda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/coda/man/rejectionRate.html" class="external-link">rejectionRate</a></span><span class="op">(</span><span class="va">mcmc1</span><span class="op">)</span></span>
+<span><span class="co">#&gt;       5.306729       5.306729       5.306729       5.306729       5.306729</span></span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fl">1</span> <span class="op">-</span> <span class="fu">coda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/coda/man/rejectionRate.html" class="external-link">rejectionRate</a></span><span class="op">(</span><span class="va">mcmc1</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      log_prior log_likelihood  log_posterior           beta          gamma </span></span>
 <span><span class="co">#&gt;    0.002004008    0.002004008    0.002004008    0.002004008    0.002004008</span></span></code></pre></div>
 <p>Clearly the acceptance rate is too low. Generally a target of 0.5, reducing to 0.234 as the number of parameters increases, <a href="https://dx.doi.org/10.1016/j.spa.2007.12.005" class="external-link">is thought to be optimal</a>. The proposal distribution needs to be modified, in this case reducing the variance of the jump sizes. One option to automate this process is to run a chain for a bit, as above, then use the covariance of the state as the proposal matrix:</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">proposal_matrix</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cov</a></span><span class="op">(</span><span class="va">pmcmc_run</span><span class="op">$</span><span class="va">pars</span><span class="op">)</span></span>
 <span><span class="va">mcmc_pars</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="va"><a href="../reference/pmcmc_parameters.html">pmcmc_parameters</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>beta <span class="op">=</span> <span class="va">beta</span>, gamma <span class="op">=</span> <span class="va">gamma</span><span class="op">)</span>,</span>
@@ -362,7 +367,7 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span><span class="co">#&gt; beta  0.0001638582 1.038287e-04</span></span>
 <span><span class="co">#&gt; gamma 0.0001038287 6.579108e-05</span></span></code></pre></div>
 <p>Let’s now run four independent chains with these proposals:</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">control</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc_control.html">pmcmc_control</a></span><span class="op">(</span></span>
 <span>    <span class="va">n_steps</span>,</span>
 <span>    save_state <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -371,14 +376,15 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span>    n_chains <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span>
 <span><span class="va">pmcmc_tuned_run</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="fu"><a href="../reference/pmcmc.html">pmcmc</a></span><span class="op">(</span><span class="va">mcmc_pars</span>, <span class="va">filter</span>, control <span class="op">=</span> <span class="va">control</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Running chain 1 / 4</span></span>
-<span><span class="co">#&gt; Finished 500 steps in 17 secs</span></span>
+<span><span class="co">#&gt; Finished 500 steps in 5 secs</span></span>
 <span><span class="co">#&gt; Running chain 2 / 4</span></span>
-<span><span class="co">#&gt; Finished 500 steps in 17 secs</span></span>
+<span><span class="co">#&gt; Finished 500 steps in 5 secs</span></span>
 <span><span class="co">#&gt; Running chain 3 / 4</span></span>
-<span><span class="co">#&gt; Finished 500 steps in 14 secs</span></span>
+<span><span class="co">#&gt; Finished 500 steps in 4 secs</span></span>
 <span><span class="co">#&gt; Running chain 4 / 4</span></span>
-<span><span class="co">#&gt; Finished 500 steps in 14 secs</span></span>
-<span></span>
+<span><span class="co">#&gt; Finished 500 steps in 4 secs</span></span></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
 <span><span class="va">mcmc2</span> <span class="op">&lt;-</span> <span class="fu">coda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/coda/man/mcmc.html" class="external-link">as.mcmc</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span></span>
 <span>  <span class="va">pmcmc_tuned_run</span><span class="op">$</span><span class="va">probabilities</span>, <span class="va">pmcmc_tuned_run</span><span class="op">$</span><span class="va">pars</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -406,15 +412,17 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span><span class="co">#&gt; log_likelihood -246.74188 -244.85765 -244.0475 -243.4730 -242.2685</span></span>
 <span><span class="co">#&gt; log_posterior  -245.64671 -243.78390 -243.0167 -242.3229 -241.1562</span></span>
 <span><span class="co">#&gt; beta              0.16611    0.19320    0.2122    0.2285    0.2545</span></span>
-<span><span class="co">#&gt; gamma             0.07852    0.09569    0.1077    0.1180    0.1345</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">mcmc2</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co">#&gt; gamma             0.07852    0.09569    0.1077    0.1180    0.1345</span></span></code></pre></div>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">mcmc2</span><span class="op">)</span></span></code></pre></div>
 <p><img src="sir_models_files/figure-html/unnamed-chunk-18-1.png" width="672"><img src="sir_models_files/figure-html/unnamed-chunk-18-2.png" width="672"></p>
 <p>Looking again at the effective sample size and rejection rate, these chains were a lot more efficient, and have a much better effective sample size thanks for the four chains:</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">coda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/coda/man/effectiveSize.html" class="external-link">effectiveSize</a></span><span class="op">(</span><span class="va">mcmc2</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      log_prior log_likelihood  log_posterior           beta          gamma </span></span>
-<span><span class="co">#&gt;        67.9180       179.6991       177.6126        67.9180        67.9180</span></span>
-<span><span class="fl">1</span> <span class="op">-</span> <span class="fu">coda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/coda/man/rejectionRate.html" class="external-link">rejectionRate</a></span><span class="op">(</span><span class="va">mcmc2</span><span class="op">)</span></span>
+<span><span class="co">#&gt;        67.9180       179.6991       177.6126        67.9180        67.9180</span></span></code></pre></div>
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fl">1</span> <span class="op">-</span> <span class="fu">coda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/coda/man/rejectionRate.html" class="external-link">rejectionRate</a></span><span class="op">(</span><span class="va">mcmc2</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      log_prior log_likelihood  log_posterior           beta          gamma </span></span>
 <span><span class="co">#&gt;      0.4142071      0.4142071      0.4142071      0.4142071      0.4142071</span></span></code></pre></div>
 </div>
@@ -422,7 +430,7 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <h3 id="running-predictions">Running predictions<a class="anchor" aria-label="anchor" href="#running-predictions"></a>
 </h3>
 <p>Going back to the simple SIR model above, we can easily continue running the fitted model forward in time using the posterior estimated by <code><a href="../reference/pmcmc.html">pmcmc()</a></code> to create a forecast past the end of the data, sampling 10 particles:</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## TODO: the use of times here is confusing, which is it?</span></span>
 <span><span class="va">forecast</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">processed_chains</span>,</span>
 <span>                    times <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">400</span>, <span class="fl">800</span>, <span class="fl">4</span><span class="op">)</span>,</span>
@@ -443,7 +451,7 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <h3 id="fitting-to-multiple-datastreams">Fitting to multiple datastreams<a class="anchor" aria-label="anchor" href="#fitting-to-multiple-datastreams"></a>
 </h3>
 <p>The set up of the particle filter and observation function makes it easy to fit to multiple datastreams within a Bayesian framework. Let us model a disease where a proportion of infected cases <span class="math inline">\(p_{\mathrm{death}} = 0.05\)</span> die rather than recover by adding the following lines to the odin code:</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## Definition of the time-step and output as "time"</span></span>
 <span><span class="va">steps_per_day</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">dt</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">/</span> <span class="va">steps_per_day</span></span>
@@ -489,11 +497,11 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span><span class="va">gamma</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="fl">0.1</span><span class="op">)</span></span>
 <span><span class="va">p_death</span> <span class="op">&lt;-</span> <span class="fu">user</span><span class="op">(</span><span class="fl">0.05</span><span class="op">)</span></span></code></pre></div>
 <p>Creating a model from this code:</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gen_death</span> <span class="op">&lt;-</span> <span class="fu">odin.dust</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/odin.dust/man/odin_dust.html" class="external-link">odin_dust</a></span><span class="op">(</span><span class="st">"deaths.R"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Loading required namespace: pkgbuild</span></span></code></pre></div>
 <p>We can simulate some data to fit to, as before. We have also made the case data patchy, so it is missing on some days:</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dt</span> <span class="op">&lt;-</span> <span class="fl">0.25</span></span>
 <span><span class="va">death_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span><span class="st">"death_data.csv"</span>, header <span class="op">=</span> <span class="cn">TRUE</span>, sep <span class="op">=</span> <span class="st">","</span><span class="op">)</span></span>
 <span><span class="va">true_history_deaths</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="st">"deaths_true_history.rds"</span><span class="op">)</span></span>
@@ -506,8 +514,9 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span><span class="co">#&gt; Warning in mcstate::particle_filter_data(death_data, time = "day", rate =</span></span>
 <span><span class="co">#&gt; 1/dt): 'initial_time' should be provided. I'm assuming '0' which is one time</span></span>
 <span><span class="co">#&gt; unit before the first time in your data (1), but this might not be appropriate.</span></span>
-<span><span class="co">#&gt; This will become an error in a future version of mcstate</span></span>
-<span><span class="fu">rmarkdown</span><span class="fu">::</span><span class="fu"><a href="https://pkgs.rstudio.com/rmarkdown/reference/paged_table.html" class="external-link">paged_table</a></span><span class="op">(</span><span class="va">combined_data</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co">#&gt; This will become an error in a future version of mcstate</span></span></code></pre></div>
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">rmarkdown</span><span class="fu">::</span><span class="fu"><a href="https://pkgs.rstudio.com/rmarkdown/reference/paged_table.html" class="external-link">paged_table</a></span><span class="op">(</span><span class="va">combined_data</span><span class="op">)</span></span></code></pre></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
 {"columns":[{"label":["day_start"],"name":[1],"type":["int"],"align":["right"]},{"label":["day_end"],"name":[2],"type":["int"],"align":["right"]},{"label":["time_start"],"name":[3],"type":["int"],"align":["right"]},{"label":["time_end"],"name":[4],"type":["int"],"align":["right"]},{"label":["cases"],"name":[5],"type":["int"],"align":["right"]},{"label":["deaths"],"name":[6],"type":["int"],"align":["right"]}],"data":[{"1":"0","2":"1","3":"0","4":"4","5":"1","6":"0"},{"1":"1","2":"2","3":"4","4":"8","5":"0","6":"0"},{"1":"2","2":"3","3":"8","4":"12","5":"0","6":"0"},{"1":"3","2":"4","3":"12","4":"16","5":"1","6":"0"},{"1":"4","2":"5","3":"16","4":"20","5":"1","6":"0"},{"1":"5","2":"6","3":"20","4":"24","5":"1","6":"0"},{"1":"6","2":"7","3":"24","4":"28","5":"0","6":"0"},{"1":"7","2":"8","3":"28","4":"32","5":"2","6":"0"},{"1":"8","2":"9","3":"32","4":"36","5":"1","6":"0"},{"1":"9","2":"10","3":"36","4":"40","5":"1","6":"0"},{"1":"10","2":"11","3":"40","4":"44","5":"3","6":"0"},{"1":"11","2":"12","3":"44","4":"48","5":"2","6":"1"},{"1":"12","2":"13","3":"48","4":"52","5":"0","6":"0"},{"1":"13","2":"14","3":"52","4":"56","5":"NA","6":"0"},{"1":"14","2":"15","3":"56","4":"60","5":"0","6":"0"},{"1":"15","2":"16","3":"60","4":"64","5":"5","6":"0"},{"1":"16","2":"17","3":"64","4":"68","5":"4","6":"0"},{"1":"17","2":"18","3":"68","4":"72","5":"4","6":"0"},{"1":"18","2":"19","3":"72","4":"76","5":"2","6":"0"},{"1":"19","2":"20","3":"76","4":"80","5":"4","6":"0"},{"1":"20","2":"21","3":"80","4":"84","5":"NA","6":"0"},{"1":"21","2":"22","3":"84","4":"88","5":"NA","6":"0"},{"1":"22","2":"23","3":"88","4":"92","5":"3","6":"0"},{"1":"23","2":"24","3":"92","4":"96","5":"2","6":"0"},{"1":"24","2":"25","3":"96","4":"100","5":"2","6":"0"},{"1":"25","2":"26","3":"100","4":"104","5":"6","6":"1"},{"1":"26","2":"27","3":"104","4":"108","5":"4","6":"0"},{"1":"27","2":"28","3":"108","4":"112","5":"11","6":"0"},{"1":"28","2":"29","3":"112","4":"116","5":"6","6":"1"},{"1":"29","2":"30","3":"116","4":"120","5":"6","6":"0"},{"1":"30","2":"31","3":"120","4":"124","5":"8","6":"0"},{"1":"31","2":"32","3":"124","4":"128","5":"11","6":"1"},{"1":"32","2":"33","3":"128","4":"132","5":"6","6":"0"},{"1":"33","2":"34","3":"132","4":"136","5":"6","6":"1"},{"1":"34","2":"35","3":"136","4":"140","5":"10","6":"0"},{"1":"35","2":"36","3":"140","4":"144","5":"7","6":"2"},{"1":"36","2":"37","3":"144","4":"148","5":"4","6":"0"},{"1":"37","2":"38","3":"148","4":"152","5":"8","6":"0"},{"1":"38","2":"39","3":"152","4":"156","5":"5","6":"1"},{"1":"39","2":"40","3":"156","4":"160","5":"14","6":"0"},{"1":"40","2":"41","3":"160","4":"164","5":"17","6":"0"},{"1":"41","2":"42","3":"164","4":"168","5":"19","6":"0"},{"1":"42","2":"43","3":"168","4":"172","5":"15","6":"0"},{"1":"43","2":"44","3":"172","4":"176","5":"13","6":"0"},{"1":"44","2":"45","3":"176","4":"180","5":"20","6":"1"},{"1":"45","2":"46","3":"180","4":"184","5":"23","6":"1"},{"1":"46","2":"47","3":"184","4":"188","5":"17","6":"0"},{"1":"47","2":"48","3":"188","4":"192","5":"18","6":"0"},{"1":"48","2":"49","3":"192","4":"196","5":"8","6":"1"},{"1":"49","2":"50","3":"196","4":"200","5":"23","6":"1"},{"1":"50","2":"51","3":"200","4":"204","5":"27","6":"0"},{"1":"51","2":"52","3":"204","4":"208","5":"20","6":"2"},{"1":"52","2":"53","3":"208","4":"212","5":"26","6":"1"},{"1":"53","2":"54","3":"212","4":"216","5":"15","6":"0"},{"1":"54","2":"55","3":"216","4":"220","5":"12","6":"3"},{"1":"55","2":"56","3":"220","4":"224","5":"11","6":"3"},{"1":"56","2":"57","3":"224","4":"228","5":"11","6":"1"},{"1":"57","2":"58","3":"228","4":"232","5":"16","6":"1"},{"1":"58","2":"59","3":"232","4":"236","5":"17","6":"0"},{"1":"59","2":"60","3":"236","4":"240","5":"14","6":"0"},{"1":"60","2":"61","3":"240","4":"244","5":"16","6":"3"},{"1":"61","2":"62","3":"244","4":"248","5":"8","6":"1"},{"1":"62","2":"63","3":"248","4":"252","5":"15","6":"0"},{"1":"63","2":"64","3":"252","4":"256","5":"19","6":"2"},{"1":"64","2":"65","3":"256","4":"260","5":"7","6":"0"},{"1":"65","2":"66","3":"260","4":"264","5":"8","6":"2"},{"1":"66","2":"67","3":"264","4":"268","5":"6","6":"1"},{"1":"67","2":"68","3":"268","4":"272","5":"13","6":"0"},{"1":"68","2":"69","3":"272","4":"276","5":"13","6":"1"},{"1":"69","2":"70","3":"276","4":"280","5":"11","6":"1"},{"1":"70","2":"71","3":"280","4":"284","5":"17","6":"1"},{"1":"71","2":"72","3":"284","4":"288","5":"12","6":"1"},{"1":"72","2":"73","3":"288","4":"292","5":"6","6":"1"},{"1":"73","2":"74","3":"292","4":"296","5":"10","6":"1"},{"1":"74","2":"75","3":"296","4":"300","5":"6","6":"1"},{"1":"75","2":"76","3":"300","4":"304","5":"8","6":"0"},{"1":"76","2":"77","3":"304","4":"308","5":"10","6":"1"},{"1":"77","2":"78","3":"308","4":"312","5":"2","6":"0"},{"1":"78","2":"79","3":"312","4":"316","5":"3","6":"0"},{"1":"79","2":"80","3":"316","4":"320","5":"4","6":"0"},{"1":"80","2":"81","3":"320","4":"324","5":"4","6":"2"},{"1":"81","2":"82","3":"324","4":"328","5":"6","6":"1"},{"1":"82","2":"83","3":"328","4":"332","5":"3","6":"0"},{"1":"83","2":"84","3":"332","4":"336","5":"7","6":"1"},{"1":"84","2":"85","3":"336","4":"340","5":"5","6":"0"},{"1":"85","2":"86","3":"340","4":"344","5":"3","6":"0"},{"1":"86","2":"87","3":"344","4":"348","5":"2","6":"0"},{"1":"87","2":"88","3":"348","4":"352","5":"2","6":"0"},{"1":"88","2":"89","3":"352","4":"356","5":"4","6":"0"},{"1":"89","2":"90","3":"356","4":"360","5":"4","6":"2"},{"1":"90","2":"91","3":"360","4":"364","5":"3","6":"0"},{"1":"91","2":"92","3":"364","4":"368","5":"2","6":"0"},{"1":"92","2":"93","3":"368","4":"372","5":"3","6":"0"},{"1":"93","2":"94","3":"372","4":"376","5":"5","6":"0"},{"1":"94","2":"95","3":"376","4":"380","5":"2","6":"0"},{"1":"95","2":"96","3":"380","4":"384","5":"NA","6":"0"},{"1":"96","2":"97","3":"384","4":"388","5":"4","6":"0"},{"1":"97","2":"98","3":"388","4":"392","5":"6","6":"0"},{"1":"98","2":"99","3":"392","4":"396","5":"3","6":"0"},{"1":"99","2":"100","3":"396","4":"400","5":"0","6":"0"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
@@ -515,7 +524,7 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 </div>
 <p>We then need to add this into our comparison function, and in doing so we will also demonstrate the use of the <code>index</code> parameter for the particle filter.</p>
 <p>For models with a very large state space returning only those states required by the comparison function can be important for efficiency. The only model outputs needed from the comparison function are <span class="math inline">\(S_inc\)</span> and <span class="math inline">\(D_inc\)</span>, i.e. the number of new cases and deaths. So, an index function to extract just this part of the state can be defined, which operates on dust generators <code>info()</code>:</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">index</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">info</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>run <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>cases <span class="op">=</span> <span class="va">info</span><span class="op">$</span><span class="va">index</span><span class="op">$</span><span class="va">S_inc</span>,</span>
 <span>               deaths <span class="op">=</span> <span class="va">info</span><span class="op">$</span><span class="va">index</span><span class="op">$</span><span class="va">D_inc</span><span class="op">)</span>,</span>
@@ -535,7 +544,7 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span><span class="co">#&gt; S I R D </span></span>
 <span><span class="co">#&gt; 2 3 4 5</span></span></code></pre></div>
 <p>The index function sends the comparison function the indices listed under <code>run</code>, in this case the number of new cases and deaths, and saves any compartments listed under <code>state</code> if the history is kept. If the <code>run</code> and <code>state</code> vectors have named entries, these names will be passed to the particle filter, making it simple to refer to the model states in the comparison function and in the state history. In the comparison function, missing data must be checked for and must contribute 0 to the likelihood if found:</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># log-likelihood of Poisson count</span></span>
 <span><span class="va">ll_pois</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">obs</span>, <span class="va">model</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">exp_noise</span> <span class="op">&lt;-</span> <span class="fl">1e6</span></span>
@@ -557,7 +566,7 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span>  <span class="va">ll_cases</span> <span class="op">+</span> <span class="va">ll_deaths</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <p>The comparison and <code>index()</code> functions can be used to set up a particle filter as before, which now has a named history:</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">n_particles</span> <span class="op">&lt;-</span> <span class="fl">100L</span></span>
 <span><span class="va">filter</span> <span class="op">&lt;-</span> <span class="fu">mcstate</span><span class="fu">::</span><span class="va"><a href="../reference/particle_filter.html">particle_filter</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>data <span class="op">=</span> <span class="va">combined_data</span>,</span>
 <span>                                       model <span class="op">=</span> <span class="va">gen_death</span>,</span>
@@ -566,8 +575,9 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 <span>                                       index <span class="op">=</span> <span class="va">index</span>,</span>
 <span>                                       seed <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
 <span><span class="va">filter</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span>save_history <span class="op">=</span> <span class="cn">TRUE</span>, pars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>dt <span class="op">=</span> <span class="va">dt</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] -1479.164</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/dimnames.html" class="external-link">dimnames</a></span><span class="op">(</span><span class="va">filter</span><span class="op">$</span><span class="fu">history</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] -1479.164</span></span></code></pre></div>
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/dimnames.html" class="external-link">dimnames</a></span><span class="op">(</span><span class="va">filter</span><span class="op">$</span><span class="fu">history</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [[1]]</span></span>
 <span><span class="co">#&gt; [1] "S" "I" "R" "D"</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -598,7 +608,7 @@ n_{IR} &amp;\sim B(I, 1 - e^{-\gamma \cdot dt})
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.8.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
 </div>
 
       </footer>
